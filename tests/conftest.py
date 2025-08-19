@@ -407,6 +407,12 @@ def git_repo(temp_dir: Path) -> Path:
     return repo_dir
 
 
+@pytest.fixture  
+def mock_git_repo(git_repo: Path) -> Path:
+    """Alias for git_repo fixture for backward compatibility."""
+    return git_repo
+
+
 @pytest.fixture
 def sample_template_metadata() -> Dict[str, Any]:
     """Create sample template metadata for testing."""
