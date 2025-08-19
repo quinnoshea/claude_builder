@@ -1,0 +1,859 @@
+"""Document generator for Claude Builder."""
+
+import json
+from datetime import datetime
+from pathlib import Path
+from typing import Dict, List, Optional, Any
+from string import Template
+
+from .models import ProjectAnalysis, GeneratedContent, TemplateRequest
+from .agents import UniversalAgentSystem
+from ..utils.exceptions import GenerationError
+
+
+class DocumentGenerator:
+    """Generates documentation and configuration files based on analysis."""
+    
+    def __init__(self, config: Optional[Dict[str, Any]] = None):
+        self.config = config or {}
+        self.template_loader = TemplateLoader()
+        self.content_composer = ContentComposer()
+        self.agent_system = UniversalAgentSystem()
+        
+    def generate(self, analysis: ProjectAnalysis, output_path: Path) -> GeneratedContent:
+        """Generate all documentation for the project."""
+        try:
+            # Create template request
+            request = TemplateRequest(
+                analysis=analysis,
+                template_name=self.config.get('preferred_template'),
+                output_format=self.config.get('output_format', 'files'),
+                customizations=self.config.get('customizations', {})
+            )
+            
+            # Load appropriate templates
+            templates = self.template_loader.load_templates(analysis)
+            
+            # Generate content
+            generated_files = {}
+            
+            # Core documentation
+            generated_files.update(self._generate_core_docs(analysis, templates))
+            
+            # Agent configuration
+            generated_files.update(self._generate_agent_config(analysis, templates))
+            
+            # Development workflows
+            generated_files.update(self._generate_workflows(analysis, templates))
+            
+            # Project-specific documentation
+            generated_files.update(self._generate_project_docs(analysis, templates))
+            
+            return GeneratedContent(
+                files=generated_files,
+                metadata={
+                    'generation_timestamp': datetime.now().isoformat(),
+                    'analyzer_version': '0.1.0',
+                    'template_version': '0.1.0'
+                },
+                template_info=self._get_template_info(templates)
+            )
+            
+        except Exception as e:
+            raise GenerationError(f"Failed to generate documentation: {e}")
+    
+    def _generate_core_docs(self, analysis: ProjectAnalysis, templates: Dict[str, str]) -> Dict[str, str]:
+        """Generate core documentation files."""
+        files = {}
+        
+        # CLAUDE.md - Main Claude Code instructions
+        # Prefer language-specific, then base, then default
+        language = analysis.language.lower() if analysis.language else None
+        claude_template = (
+            templates.get(f'{language}_claude_instructions') or
+            templates.get('claude_instructions') or
+            self._get_default_claude_template()
+        )
+        files['CLAUDE.md'] = self._render_template(claude_template, analysis)
+        
+        # Development guide - prefer language-specific template
+        dev_guide_template = (
+            templates.get(f'{language}_development_guide') or
+            templates.get('development_workflow') or
+            None
+        )
+        if dev_guide_template:
+            files['DEVELOPMENT.md'] = self._render_template(dev_guide_template, analysis)
+        
+        return files
+    
+    def _generate_agent_config(self, analysis: ProjectAnalysis, templates: Dict[str, str]) -> Dict[str, str]:
+        """Generate agent configuration files."""
+        files = {}
+        
+        # Generate intelligent agent configuration using Universal Agent System
+        agent_config = self.agent_system.select_agents(analysis)
+        
+        # AGENTS.md - Agent configuration and workflows  
+        # Prefer language-specific, then base, then intelligent default
+        language = analysis.language.lower() if analysis.language else None
+        agent_template = (
+            templates.get(f'{language}_agents_config') or
+            templates.get('agent_coordination') or
+            self._get_intelligent_agents_template()
+        )
+        
+        # Add agent configuration to analysis for template rendering
+        analysis.agent_configuration = agent_config
+        files['AGENTS.md'] = self._render_template(agent_template, analysis)
+        
+        return files
+    
+    def _generate_workflows(self, analysis: ProjectAnalysis, templates: Dict[str, str]) -> Dict[str, str]:
+        """Generate development workflow files."""
+        files = {}
+        
+        # Feature development workflow
+        if templates.get('feature_workflow'):
+            files['.claude/workflows/FEATURE_DEVELOPMENT.md'] = self._render_template(
+                templates['feature_workflow'], analysis
+            )
+        
+        # Testing workflow
+        if analysis.has_tests and templates.get('testing_workflow'):
+            files['.claude/workflows/TESTING.md'] = self._render_template(
+                templates['testing_workflow'], analysis
+            )
+        
+        return files
+    
+    def _generate_project_docs(self, analysis: ProjectAnalysis, templates: Dict[str, str]) -> Dict[str, str]:
+        """Generate project-specific documentation."""
+        files = {}
+        
+        # Architecture documentation
+        if analysis.complexity_level.value in ['complex', 'enterprise']:
+            arch_template = templates.get('architecture_doc', self._get_default_architecture_template())
+            files['.claude/ARCHITECTURE.md'] = self._render_template(arch_template, analysis)
+        
+        # API documentation for web projects
+        if analysis.is_web_project and templates.get('api_doc'):
+            files['.claude/API_DESIGN.md'] = self._render_template(templates['api_doc'], analysis)
+        
+        # Performance guide for complex projects
+        if analysis.complexity_level.value in ['complex', 'enterprise']:
+            perf_template = templates.get('performance_guide', self._get_default_performance_template())
+            files['.claude/PERFORMANCE.md'] = self._render_template(perf_template, analysis)
+        
+        return files
+    
+    def _render_template(self, template: str, analysis: ProjectAnalysis) -> str:
+        """Render a template with analysis data."""
+        # Create template variables
+        variables = self._create_template_variables(analysis)
+        
+        # Use string.Template for safe substitution
+        template_obj = Template(template)
+        
+        try:
+            return template_obj.safe_substitute(**variables)
+        except Exception as e:
+            # If template rendering fails, return template with error note
+            return f"{template}\\n\\n<!-- Template rendering error: {e} -->"
+    
+    def _create_template_variables(self, analysis: ProjectAnalysis) -> Dict[str, str]:
+        """Create variables for template substitution."""
+        variables = {
+            'project_name': analysis.project_path.name,
+            'project_path': str(analysis.project_path),
+            'language': analysis.language or 'Unknown',
+            'framework': analysis.framework or 'None',
+            'project_type': analysis.project_type.value.replace('_', ' ').title(),
+            'complexity': analysis.complexity_level.value.title(),
+            'architecture': analysis.architecture_pattern.value.replace('_', ' ').title(),
+            'has_tests': 'Yes' if analysis.has_tests else 'No',
+            'has_ci_cd': 'Yes' if analysis.has_ci_cd else 'No',
+            'uses_database': 'Yes' if analysis.uses_database else 'No',
+            'is_containerized': 'Yes' if analysis.is_containerized else 'No',
+            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'date': datetime.now().strftime('%Y-%m-%d'),
+            
+            # Language-specific variables
+            'package_managers': ', '.join(analysis.dev_environment.package_managers),
+            'testing_frameworks': ', '.join(analysis.dev_environment.testing_frameworks),
+            'ci_cd_systems': ', '.join(analysis.dev_environment.ci_cd_systems),
+            
+            # File counts
+            'total_files': str(analysis.filesystem_info.total_files),
+            'source_files': str(analysis.filesystem_info.source_files),
+            'test_files': str(analysis.filesystem_info.test_files),
+        }
+        
+        # Add intelligent agent variables if agent configuration exists
+        if hasattr(analysis, 'agent_configuration') and analysis.agent_configuration:
+            agent_config = analysis.agent_configuration
+            
+            variables.update({
+                'core_agents': ', '.join([a.name for a in agent_config.core_agents]),
+                'domain_agents': ', '.join([a.name for a in agent_config.domain_agents]),
+                'workflow_agents': ', '.join([a.name for a in agent_config.workflow_agents]),
+                'custom_agents': ', '.join([a.name for a in agent_config.custom_agents]),
+                'total_agents': str(len(agent_config.all_agents)),
+                'primary_agent': agent_config.core_agents[0].name if agent_config.core_agents else 'rapid-prototyper',
+                'analysis_confidence': f"{analysis.analysis_confidence:.1f}",
+                'language_confidence': f"{analysis.language_info.confidence:.1f}" if analysis.language_info else "0.0",
+                
+                # Agent workflow patterns
+                'feature_workflow': '\n'.join(f"- {step}" for step in agent_config.coordination_patterns.get('feature_development_workflow', [])),
+                'bug_workflow': '\n'.join(f"- {step}" for step in agent_config.coordination_patterns.get('bug_fixing_workflow', [])),
+                'deployment_workflow': '\n'.join(f"- {step}" for step in agent_config.coordination_patterns.get('deployment_workflow', []))
+            })
+        
+        return variables
+    
+    def _get_template_info(self, templates: Dict[str, str]) -> Dict[str, str]:
+        """Get information about used templates."""
+        return {
+            'templates_used': list(templates.keys()),
+            'template_count': len(templates)
+        }
+    
+    def _get_default_claude_template(self) -> str:
+        """Get default CLAUDE.md template."""
+        return """# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Overview
+
+This is a **${project_type}** project written in **${language}**${ framework and f' using the {framework} framework' or ''}.
+
+**Project Details:**
+- **Language**: ${language}
+- **Framework**: ${framework}
+- **Architecture**: ${architecture}
+- **Complexity**: ${complexity}
+- **Testing**: ${has_tests}
+- **CI/CD**: ${has_ci_cd}
+- **Containerized**: ${is_containerized}
+
+## Development Commands
+
+### Setup
+```bash
+# Project setup commands will be generated based on detected package managers
+${package_managers and f'Package managers detected: {package_managers}' or 'No package managers detected'}
+```
+
+### Testing
+```bash
+# Testing commands will be generated based on detected frameworks
+${testing_frameworks and f'Testing frameworks: {testing_frameworks}' or 'No testing frameworks detected'}
+```
+
+### Build and Run
+```bash
+# Build commands specific to ${language} projects
+# Run commands for ${project_type} applications
+```
+
+## Architecture Overview
+
+This ${project_type} follows a ${architecture} architecture pattern.
+
+**File Structure:**
+- Total files: ${total_files}
+- Source files: ${source_files}
+- Test files: ${test_files}
+
+## Agent Recommendations
+
+Based on the project analysis, the following Claude Code agents are recommended:
+
+### Core Agents
+- **${language}-pro**: Primary language specialist
+- **backend-developer**: Server-side development (for web projects)
+- **test-automator**: Testing and quality assurance
+
+### Specialized Agents
+- Additional agents will be recommended based on specific project characteristics
+
+## Development Workflow
+
+1. **Analysis**: Use project analysis to understand structure
+2. **Planning**: Create feature plans with appropriate agents
+3. **Implementation**: Use language-specific and framework agents
+4. **Testing**: Ensure comprehensive test coverage
+5. **Review**: Use code review agents for quality assurance
+
+## Quality Standards
+
+- **Testing**: Maintain test coverage appropriate for ${complexity} projects
+- **Documentation**: Keep code well-documented
+- **Performance**: Follow ${language} performance best practices
+- **Security**: Implement appropriate security measures
+
+---
+
+*Generated by Claude Builder on ${timestamp}*
+*Project analysis confidence: ${analysis.analysis_confidence:.1f}%*
+"""
+    
+    def _get_default_agents_template(self) -> str:
+        """Get default AGENTS.md template."""
+        return """# Claude Code Agents Configuration
+
+> Agent configurations for ${project_name} (${project_type})
+> Generated: ${timestamp}
+
+## Installation
+
+### 1. Install Standard Agents
+```bash
+# Install awesome-claude-code-subagents
+git clone https://github.com/VoltAgent/awesome-claude-code-subagents.git
+mkdir -p ~/.claude/agents
+ln -sf "$(pwd)/awesome-claude-code-subagents/agents/" ~/.claude/agents/
+```
+
+### 2. Verify Installation
+```bash
+# Check available agents in Claude Code
+/agents
+```
+
+## Recommended Agents for This Project
+
+### Core Development Agents
+
+#### ${language}-pro
+**Purpose**: Primary ${language} development
+**Use for**:
+- Language-specific best practices
+- Framework integration
+- Performance optimization
+- Code review
+
+#### backend-developer
+**Purpose**: Server-side architecture
+**Use for**:
+- API design and implementation
+- Business logic
+- Service architecture
+- Database integration
+
+#### test-automator
+**Purpose**: Testing strategy and implementation
+**Use for**:
+- Test suite design
+- Coverage analysis
+- Test automation
+- Quality assurance
+
+### Project-Specific Agents
+
+Based on your ${project_type} project, consider these additional agents:
+
+${analysis.is_web_project and '''
+#### api-designer
+**Purpose**: API architecture and design
+**Use for**:
+- RESTful API design
+- OpenAPI specifications
+- API documentation
+- Rate limiting strategies
+
+#### frontend-developer
+**Purpose**: Client-side development
+**Use for**:
+- User interface development
+- Component architecture
+- State management
+- Performance optimization
+''' or ''}
+
+${analysis.uses_database and '''
+#### database-architect
+**Purpose**: Database design and optimization
+**Use for**:
+- Schema design
+- Query optimization
+- Migration strategies
+- Performance tuning
+''' or ''}
+
+${analysis.has_ci_cd and '''
+#### devops-engineer
+**Purpose**: Deployment and operations
+**Use for**:
+- CI/CD pipeline optimization
+- Infrastructure as code
+- Monitoring setup
+- Deployment strategies
+''' or ''}
+
+## Agent Workflows
+
+### Feature Development Workflow
+1. **Planning**: Use backend-developer to design feature architecture
+2. **Implementation**: Use ${language}-pro for core development
+3. **Testing**: Use test-automator to create comprehensive tests
+4. **Review**: Use code-reviewer for quality assurance
+
+### Bug Fixing Workflow
+1. **Investigation**: Use debugging specialists to identify issues
+2. **Fix**: Use appropriate language/framework agents
+3. **Testing**: Use test-automator to prevent regressions
+4. **Documentation**: Update relevant documentation
+
+### Performance Optimization
+1. **Analysis**: Use performance-engineer to identify bottlenecks
+2. **Database**: Use database-architect for query optimization
+3. **Code**: Use ${language}-pro for language-specific optimizations
+4. **Validation**: Use test-automator for performance testing
+
+## Best Practices
+
+### Agent Selection
+- **Start with core agents** for most tasks
+- **Add specialized agents** for complex requirements
+- **Use orchestrator** for multi-component features
+
+### Communication
+- **Be specific** about what you want each agent to focus on
+- **Provide context** about existing code and architecture
+- **Ask for explanations** when learning new patterns
+
+### Quality Assurance
+- **Always use test-automator** for new features
+- **Have code-reviewer** check important changes
+- **Use security-auditor** for security-sensitive code
+
+---
+
+*Agent configuration generated for ${project_type} project*
+*Detected: ${language}${framework and f' with {framework}' or ''} | Complexity: ${complexity}*
+"""
+    
+    def _get_intelligent_agents_template(self) -> str:
+        """Get intelligent AGENTS.md template with dynamic agent selection."""
+        return """# Claude Code Agents Configuration
+
+> **Intelligent Agent Configuration** for **${project_name}** (${project_type})
+> **Analysis Confidence**: ${analysis_confidence}%
+> **Generated**: ${timestamp}
+
+## 🎯 Project-Specific Agent Selection
+
+Based on comprehensive project analysis, the following agents have been intelligently selected:
+
+### 🔧 Core Development Agents (${total_agents} total)
+**Primary**: `${primary_agent}` - Your main development agent
+
+#### Selected Core Agents
+${core_agents and f'**Core Agents**: {core_agents}' or 'No core agents selected'}
+
+${domain_agents and f'''#### 🎪 Domain-Specific Agents
+**Specialized for your domain**: {domain_agents}
+''' or ''}
+
+${workflow_agents and f'''#### ⚡ Workflow Enhancement Agents  
+**Process optimization**: {workflow_agents}
+''' or ''}
+
+${custom_agents and f'''#### 🚀 Custom Agents (Generated for Your Project)
+**Unique to your patterns**: {custom_agents}
+''' or ''}
+
+## 📋 Intelligent Workflows
+
+### Feature Development Workflow
+${feature_workflow}
+
+### Bug Resolution Workflow  
+${bug_workflow}
+
+### Deployment Workflow
+${deployment_workflow}
+
+## 🔗 Agent Coordination Patterns
+
+### Primary Development Chain
+1. **${primary_agent}** → **test-writer-fixer** → **devops-automator**
+2. Use primary agent for core development
+3. Always validate with testing agent
+4. Deploy through DevOps automation
+
+### Parallel Development Tracks
+- **Frontend/Backend**: Can run simultaneously for web applications
+- **Development/Operations**: Ops preparation can run parallel to development
+
+### Handoff Triggers
+- **Code Complete** → Switch to test-writer-fixer
+- **Tests Passing** → Switch to devops-automator  
+- **Performance Issues** → Switch to performance-benchmarker
+
+## 🎯 Agent Selection Intelligence
+
+### Why These Agents Were Selected
+
+**Language Analysis**: ${language} detected with ${language_confidence}% confidence
+${framework and f'**Framework**: {framework} detected' or '**Framework**: No framework detected'}
+**Project Type**: ${project_type} (${analysis.complexity} complexity)
+**Architecture**: ${architecture} pattern
+
+### Selection Criteria Applied
+- ✅ Language-specific expertise prioritized
+- ✅ Framework compatibility verified  
+- ✅ Project complexity level matched
+- ✅ Domain patterns recognized
+- ✅ Workflow optimization included
+
+## 📚 Installation & Usage
+
+### 1. Install Standard Agents
+```bash
+# Clone the awesome-claude-code-subagents repository
+git clone https://github.com/VoltAgent/awesome-claude-code-subagents.git
+mkdir -p ~/.claude/agents
+ln -sf "$(pwd)/awesome-claude-code-subagents/agents/" ~/.claude/agents/
+```
+
+### 2. Verify Agent Installation
+```bash
+# Check available agents in Claude Code
+/agents
+```
+
+### 3. Using Your Selected Agents
+
+#### Primary Development Command
+```
+Use ${primary_agent} to [specific task]
+```
+
+#### Multi-Agent Coordination
+```
+Use ${primary_agent} and test-writer-fixer to develop and test [feature]
+```
+
+#### Workflow Orchestration  
+```
+Use studio-coach to coordinate ${core_agents} for [complex task]
+```
+
+## 🎛️ Advanced Configuration
+
+### Agent Priorities (Confidence-Based)
+Agents are listed in order of relevance to your project:
+
+1. **Highest Priority**: Core development agents (${core_agents})
+2. **Medium Priority**: Workflow agents (${workflow_agents})  
+3. **Specialized**: Domain agents (${domain_agents})
+4. **Custom**: Project-specific agents (${custom_agents})
+
+### Dynamic Agent Adjustment
+
+As your project evolves, you may need different agents:
+
+- **Adding Testing**: Include more test-writer-fixer usage
+- **Performance Issues**: Activate performance-benchmarker
+- **Security Concerns**: Engage security-engineer
+- **Scaling Up**: Consider devops-automator for deployment
+
+### Custom Agent Extensions
+
+${custom_agents and f'''Your project generated custom agents for unique patterns:
+{custom_agents}
+
+These agents were created because your project has specific characteristics that benefit from specialized expertise.
+''' or 'No custom agents were needed - your project fits standard patterns well.'}
+
+## 🚀 Getting Started
+
+### Quick Start Workflow
+1. **Start Development**: `Use ${primary_agent} to analyze the codebase and suggest improvements`
+2. **Add Features**: `Use ${primary_agent} to implement [specific feature]`  
+3. **Ensure Quality**: `Use test-writer-fixer to create comprehensive tests`
+4. **Deploy**: `Use devops-automator to set up deployment pipeline`
+
+### Best Practices for Your Project
+- **Always** start with your primary agent: `${primary_agent}`
+- **Never** skip testing - use `test-writer-fixer` for all changes
+- **Consider** using `studio-coach` for complex multi-step features
+- **Remember** agent handoffs improve quality and efficiency
+
+---
+
+**🤖 Intelligent Configuration Complete**  
+*Selected ${total_agents} agents optimized for ${language} ${project_type}*  
+*Analysis confidence: ${analysis_confidence}% | Generated: ${timestamp}*
+"""
+    
+    def _get_default_architecture_template(self) -> str:
+        """Get default architecture documentation template."""
+        return """# Architecture Documentation
+
+## System Overview
+
+This ${project_type} project follows a ${architecture} architecture pattern.
+
+### Technology Stack
+- **Primary Language**: ${language}
+- **Framework**: ${framework}
+- **Architecture Pattern**: ${architecture}
+- **Complexity Level**: ${complexity}
+
+### Project Statistics
+- **Total Files**: ${total_files}
+- **Source Files**: ${source_files}
+- **Test Files**: ${test_files}
+
+## Architecture Decisions
+
+### Language Choice: ${language}
+${language == 'python' and 'Python was chosen for its versatility, extensive ecosystem, and ease of development.' or ''}
+${language == 'rust' and 'Rust was chosen for its performance, memory safety, and modern language features.' or ''}
+${language == 'javascript' and 'JavaScript/TypeScript was chosen for its ubiquity and extensive ecosystem.' or ''}
+
+### Framework: ${framework}
+Framework-specific architectural considerations and patterns.
+
+### Database Strategy
+${uses_database == 'Yes' and 'This project uses a database for persistent storage.' or 'This project does not appear to use a database.'}
+
+### Testing Strategy
+${has_tests == 'Yes' and 'Comprehensive testing strategy is in place.' or 'Consider implementing a testing strategy.'}
+
+## Component Architecture
+
+### Core Components
+- Main application logic
+- Configuration management
+- Error handling
+
+### Integration Points
+- External service integrations
+- Database connections
+- API endpoints
+
+## Development Patterns
+
+### Code Organization
+- Follow ${language} conventions
+- Maintain clear separation of concerns
+- Use appropriate design patterns
+
+### Quality Assurance
+- Automated testing
+- Code review processes
+- Continuous integration
+
+---
+
+*Architecture documentation for ${project_name}*
+*Generated: ${timestamp}*
+"""
+    
+    def _get_default_performance_template(self) -> str:
+        """Get default performance guide template."""
+        return """# Performance Guide
+
+## Performance Targets
+
+For ${project_type} applications in ${language}:
+
+### Response Times
+- API endpoints: < 100ms p95
+- Database queries: < 50ms p95
+- Page loads: < 2s p95
+
+### Resource Usage
+- Memory: Appropriate for ${complexity} complexity
+- CPU: Efficient algorithm usage
+- Storage: Optimized data structures
+
+## Optimization Strategies
+
+### ${language} Specific
+${language == 'python' and '''
+- Use appropriate data structures
+- Leverage async/await for I/O operations
+- Profile with cProfile for bottlenecks
+- Consider Cython for performance-critical code
+''' or ''}
+
+${language == 'rust' and '''
+- Leverage zero-cost abstractions
+- Use appropriate collection types
+- Profile with cargo bench
+- Optimize memory allocations
+''' or ''}
+
+${language == 'javascript' and '''
+- Minimize bundle size
+- Use code splitting
+- Optimize rendering performance
+- Leverage browser caching
+''' or ''}
+
+### Database Optimization
+${uses_database == 'Yes' and '''
+- Index frequently queried columns
+- Optimize query patterns
+- Use connection pooling
+- Monitor query performance
+''' or ''}
+
+### Caching Strategies
+- Application-level caching
+- Database query caching
+- Static asset caching
+- CDN utilization
+
+## Monitoring and Profiling
+
+### Performance Metrics
+- Response time distribution
+- Error rates
+- Resource utilization
+- User experience metrics
+
+### Profiling Tools
+- Language-specific profilers
+- Database query analyzers
+- Network performance tools
+- Memory usage monitors
+
+---
+
+*Performance guide for ${project_name}*
+*Generated: ${timestamp}*
+"""
+
+
+class TemplateLoader:
+    """Loads and manages templates."""
+    
+    def __init__(self):
+        self.template_cache = {}
+        self.templates_dir = Path(__file__).parent.parent / "templates"
+    
+    def load_templates(self, analysis: ProjectAnalysis) -> Dict[str, str]:
+        """Load appropriate templates based on analysis."""
+        templates = {}
+        
+        # Load base templates (always included)
+        templates.update(self._load_base_templates())
+        
+        # Load language-specific templates
+        if analysis.language:
+            templates.update(self._load_language_templates(analysis.language.lower()))
+        
+        # Load framework-specific templates
+        if analysis.framework:
+            templates.update(self._load_framework_templates(analysis.framework.lower()))
+        
+        # Load project type templates
+        templates.update(self._load_project_type_templates(analysis.project_type.value))
+        
+        return templates
+    
+    def _load_template_file(self, file_path: Path) -> Optional[str]:
+        """Load a single template file with caching."""
+        file_key = str(file_path)
+        
+        # Check cache first
+        if file_key in self.template_cache:
+            return self.template_cache[file_key]
+        
+        # Load from file
+        try:
+            if file_path.exists():
+                content = file_path.read_text(encoding='utf-8')
+                self.template_cache[file_key] = content
+                return content
+        except Exception as e:
+            print(f"Warning: Could not load template {file_path}: {e}")
+        
+        return None
+    
+    def _load_base_templates(self) -> Dict[str, str]:
+        """Load base templates that apply to all projects."""
+        templates = {}
+        base_dir = self.templates_dir / "base"
+        
+        # Load base template files
+        template_files = {
+            'claude_instructions': 'claude_instructions.md',
+            'development_workflow': 'development_workflow.md',
+            'agent_coordination': 'agent_coordination.md'
+        }
+        
+        for key, filename in template_files.items():
+            template_path = base_dir / filename
+            content = self._load_template_file(template_path)
+            if content:
+                templates[key] = content
+        
+        return templates
+    
+    def _load_language_templates(self, language: str) -> Dict[str, str]:
+        """Load language-specific templates."""
+        templates = {}
+        language_dir = self.templates_dir / "languages" / language
+        
+        if not language_dir.exists():
+            return templates
+        
+        # Load language-specific template files
+        template_files = {
+            f'{language}_claude_instructions': 'claude_instructions.md',
+            f'{language}_development_guide': 'development_guide.md',
+            f'{language}_agents_config': 'agents_config.md'
+        }
+        
+        for key, filename in template_files.items():
+            template_path = language_dir / filename
+            content = self._load_template_file(template_path)
+            if content:
+                templates[key] = content
+        
+        return templates
+    
+    def _load_framework_templates(self, framework: str) -> Dict[str, str]:
+        """Load framework-specific templates."""
+        templates = {}
+        framework_dir = self.templates_dir / "frameworks" / framework
+        
+        if not framework_dir.exists():
+            return templates
+        
+        # Load framework-specific template files
+        template_files = {
+            f'{framework}_claude_instructions': 'claude_instructions.md',
+            f'{framework}_development_guide': 'development_guide.md'
+        }
+        
+        for key, filename in template_files.items():
+            template_path = framework_dir / filename
+            content = self._load_template_file(template_path)
+            if content:
+                templates[key] = content
+        
+        return templates
+    
+    def _load_project_type_templates(self, project_type: str) -> Dict[str, str]:
+        """Load project type specific templates."""
+        # For now, project type templates are handled through language/framework combinations
+        # This could be expanded later for specific project patterns like 'microservice', 'monolith', etc.
+        return {}
+
+
+class ContentComposer:
+    """Composes content from multiple template layers."""
+    
+    def compose(self, templates: List[str]) -> str:
+        """Compose multiple templates into final content."""
+        # TODO: Implement intelligent template composition
+        return "\\n\\n".join(templates)
