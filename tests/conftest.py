@@ -1,11 +1,9 @@
 """Global test configuration and fixtures for Claude Builder tests."""
 
 import json
-import shutil
 import tempfile
 from pathlib import Path
 from typing import Dict, Any, Generator
-from unittest.mock import Mock
 
 import pytest
 
