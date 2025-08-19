@@ -1,6 +1,6 @@
 [MAIN]
 # Python code to execute, usually for sys.path manipulation
-init-hook='import sys; sys.path.append(".")'
+init-hook='import sys; sys.path.extend([".", "src"])'
 
 # Files or directories to be skipped
 ignore=.git,__pycache__,docs,build,dist,.venv,venv,migrations
