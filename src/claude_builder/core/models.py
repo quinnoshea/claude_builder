@@ -3,7 +3,8 @@
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Any
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
 
 
@@ -82,8 +83,8 @@ class DevelopmentEnvironment:
     containerization: List[str] = field(default_factory=list)
     databases: List[str] = field(default_factory=list)
     documentation_tools: List[str] = field(default_factory=list)
-    
-    
+
+
 @dataclass
 class FileSystemInfo:
     """Information about project file system structure."""
@@ -111,64 +112,64 @@ class ProjectAnalysis:
     architecture_pattern: ArchitecturePattern = ArchitecturePattern.UNKNOWN
     dev_environment: DevelopmentEnvironment = field(default_factory=DevelopmentEnvironment)
     filesystem_info: FileSystemInfo = field(default_factory=FileSystemInfo)
-    
+
     # Analysis metadata
     analysis_confidence: float = 0.0
     analysis_timestamp: Optional[str] = None
     analyzer_version: Optional[str] = None
     warnings: List[str] = field(default_factory=list)
     suggestions: List[str] = field(default_factory=list)
-    
+
     @property
     def language(self) -> Optional[str]:
         """Primary language shorthand."""
         return self.language_info.primary
-    
+
     @property
     def framework(self) -> Optional[str]:
         """Primary framework shorthand."""
         return self.framework_info.primary
-    
+
     @property
     def has_tests(self) -> bool:
         """Whether project has test files."""
         return self.filesystem_info.test_files > 0
-    
+
     @property
     def has_ci_cd(self) -> bool:
         """Whether project has CI/CD configured."""
         return len(self.dev_environment.ci_cd_systems) > 0
-    
+
     @property
     def is_containerized(self) -> bool:
         """Whether project uses containerization."""
         return len(self.dev_environment.containerization) > 0
-    
+
     @property
     def is_web_project(self) -> bool:
         """Check if this is a web-related project."""
         return self.project_type in [ProjectType.WEB_APPLICATION, ProjectType.API_SERVICE]
-    
+
     @property
     def is_cli_project(self) -> bool:
         """Check if this is a CLI tool project."""
         return self.project_type == ProjectType.CLI_TOOL
-    
+
     @property
     def uses_database(self) -> bool:
         """Check if project uses a database."""
         return len(self.dev_environment.databases) > 0
-    
+
     @property
     def has_tests(self) -> bool:
         """Check if project has testing setup."""
         return len(self.dev_environment.testing_frameworks) > 0 or self.filesystem_info.test_files > 0
-    
+
     @property
     def has_ci_cd(self) -> bool:
         """Check if project has CI/CD setup."""
         return len(self.dev_environment.ci_cd_systems) > 0
-    
+
     @property
     def is_containerized(self) -> bool:
         """Check if project uses containerization."""
@@ -208,8 +209,8 @@ class GeneratedContent:
     agent_selection: Optional[AgentSelection] = None
     template_info: Dict[str, str] = field(default_factory=dict)
     generation_timestamp: Optional[str] = None
-    
-    
+
+
 @dataclass
 class ValidationResult:
     """Result of validation operations."""
@@ -225,7 +226,7 @@ class TemplateRequest(BaseModel):
     template_name: Optional[str] = None
     output_format: str = "files"
     customizations: Dict[str, Any] = Field(default_factory=dict)
-    
+
     class Config:
         arbitrary_types_allowed = True
 
@@ -239,6 +240,6 @@ class ExecutionResult(BaseModel):
     errors: List[str] = Field(default_factory=list)
     warnings: List[str] = Field(default_factory=list)
     execution_time: Optional[float] = None
-    
+
     class Config:
         arbitrary_types_allowed = True

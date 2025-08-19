@@ -2,20 +2,23 @@
 
 Tests cover the fundamental project analysis capabilities including:
 - Language detection and confidence scoring
-- Framework identification 
+- Framework identification
 - Project type classification
 - Complexity assessment
 - Filesystem analysis
 - Domain detection
 """
 
-import pytest
-from pathlib import Path
-from unittest.mock import Mock, patch
 
-from claude_builder.core.analyzer import ProjectAnalyzer, LanguageDetector, FrameworkDetector
-from claude_builder.core.models import ProjectType, ComplexityLevel
-from tests.conftest import create_test_project, assert_file_exists
+import pytest
+
+from claude_builder.core.analyzer import (
+    FrameworkDetector,
+    LanguageDetector,
+    ProjectAnalyzer,
+)
+from claude_builder.core.models import ComplexityLevel, ProjectType
+from tests.conftest import create_test_project
 
 
 @pytest.mark.unit
@@ -27,27 +30,27 @@ class TestProjectAnalyzer:
         """Test analyzer initializes with correct defaults."""
         analyzer = ProjectAnalyzer()
         assert analyzer is not None
-        assert hasattr(analyzer, 'language_detector')
-        assert hasattr(analyzer, 'framework_detector')
+        assert hasattr(analyzer, "language_detector")
+        assert hasattr(analyzer, "framework_detector")
 
     def test_analyzer_with_config(self):
         """Test analyzer initializes with custom configuration."""
         config = {
-            'confidence_threshold': 70,
-            'parallel_processing': False,
-            'cache_enabled': False
+            "confidence_threshold": 70,
+            "parallel_processing": False,
+            "cache_enabled": False
         }
         analyzer = ProjectAnalyzer(config=config)
-        assert analyzer.config['confidence_threshold'] == 70
-        assert analyzer.config['parallel_processing'] is False
+        assert analyzer.config["confidence_threshold"] == 70
+        assert analyzer.config["parallel_processing"] is False
 
     def test_analyze_python_project(self, temp_dir):
         """Test analysis of a Python project."""
         project_path = create_test_project(temp_dir, "python")
         analyzer = ProjectAnalyzer()
-        
+
         result = analyzer.analyze(project_path)
-        
+
         assert result.project_path == project_path
         assert result.language_info.primary == "python"
         assert result.language_info.confidence >= 80
@@ -59,9 +62,9 @@ class TestProjectAnalyzer:
         """Test analysis of a Rust project."""
         project_path = create_test_project(temp_dir, "rust")
         analyzer = ProjectAnalyzer()
-        
+
         result = analyzer.analyze(project_path)
-        
+
         assert result.language_info.primary == "rust"
         assert result.language_info.confidence >= 90  # Cargo.toml is a strong indicator
         assert result.project_type == ProjectType.CLI_TOOL
@@ -71,9 +74,9 @@ class TestProjectAnalyzer:
         """Test analysis of a JavaScript/Node.js project."""
         project_path = create_test_project(temp_dir, "javascript")
         analyzer = ProjectAnalyzer()
-        
+
         result = analyzer.analyze(project_path)
-        
+
         assert result.language_info.primary == "javascript"
         assert result.language_info.confidence >= 80
         assert result.build_system == "npm"
@@ -83,7 +86,7 @@ class TestProjectAnalyzer:
         """Test analysis of non-existent project raises appropriate error."""
         nonexistent_path = temp_dir / "does_not_exist"
         analyzer = ProjectAnalyzer()
-        
+
         with pytest.raises(FileNotFoundError):
             analyzer.analyze(nonexistent_path)
 
@@ -92,9 +95,9 @@ class TestProjectAnalyzer:
         empty_dir = temp_dir / "empty"
         empty_dir.mkdir()
         analyzer = ProjectAnalyzer()
-        
+
         result = analyzer.analyze(empty_dir)
-        
+
         assert result.language_info.primary is None
         assert result.project_type == ProjectType.UNKNOWN
         assert result.complexity_level == ComplexityLevel.SIMPLE
@@ -104,16 +107,16 @@ class TestProjectAnalyzer:
         """Test analysis of project with multiple languages."""
         project_path = temp_dir / "mixed_project"
         project_path.mkdir()
-        
+
         # Create files in multiple languages
         (project_path / "main.py").write_text("print('Python')")
         (project_path / "script.js").write_text("console.log('JavaScript');")
         (project_path / "style.css").write_text("body { margin: 0; }")
         (project_path / "README.md").write_text("# Mixed Project")
-        
+
         analyzer = ProjectAnalyzer()
         result = analyzer.analyze(project_path)
-        
+
         assert result.language_info.primary in ["python", "javascript"]
         assert len(result.language_info.secondary) >= 1
         assert result.filesystem_info.total_files >= 4
@@ -123,11 +126,11 @@ class TestProjectAnalyzer:
         """Test analysis performance on larger project structure."""
         project_path = temp_dir / "large_project"
         project_path.mkdir()
-        
+
         # Create many files to test performance
         for i in range(100):
             (project_path / f"file_{i}.py").write_text(f"# File {i}\nprint({i})")
-        
+
         # Create nested directories
         for depth in range(5):
             nested_dir = project_path
@@ -135,10 +138,10 @@ class TestProjectAnalyzer:
                 nested_dir = nested_dir / f"level_{level}"
                 nested_dir.mkdir(exist_ok=True)
             (nested_dir / f"nested_{depth}.py").write_text(f"# Nested file {depth}")
-        
+
         analyzer = ProjectAnalyzer()
         result = analyzer.analyze(project_path)
-        
+
         assert result.language_info.primary == "python"
         assert result.filesystem_info.total_files >= 100
         assert result.complexity_level == ComplexityLevel.HIGH
@@ -146,14 +149,14 @@ class TestProjectAnalyzer:
     def test_analyze_with_cache_enabled(self, temp_dir):
         """Test analyzer caching functionality."""
         project_path = create_test_project(temp_dir, "python")
-        analyzer = ProjectAnalyzer(config={'cache_enabled': True})
-        
+        analyzer = ProjectAnalyzer(config={"cache_enabled": True})
+
         # First analysis
         result1 = analyzer.analyze(project_path)
-        
+
         # Second analysis should use cache
         result2 = analyzer.analyze(project_path)
-        
+
         assert result1.language_info.primary == result2.language_info.primary
         assert result1.project_type == result2.project_type
 
@@ -161,15 +164,15 @@ class TestProjectAnalyzer:
         """Test analyzer with language/framework overrides."""
         project_path = create_test_project(temp_dir, "python")
         config = {
-            'overrides': {
-                'language': 'typescript',
-                'framework': 'react'
+            "overrides": {
+                "language": "typescript",
+                "framework": "react"
             }
         }
         analyzer = ProjectAnalyzer(config=config)
-        
+
         result = analyzer.analyze(project_path)
-        
+
         # Overrides should be applied
         assert result.language_info.primary == "typescript"
         assert result.framework_info.primary == "react"
@@ -187,10 +190,10 @@ class TestLanguageDetector:
         (project_path / "main.py").write_text("#!/usr/bin/env python3\nprint('Hello')")
         (project_path / "utils.py").write_text("def helper(): pass")
         (project_path / "requirements.txt").write_text("requests")
-        
+
         detector = LanguageDetector()
         result = detector.detect_primary_language(project_path)
-        
+
         assert result.primary == "python"
         assert result.confidence >= 80
         assert "python" in result.version_info
@@ -204,10 +207,10 @@ class TestLanguageDetector:
         src_dir.mkdir()
         (src_dir / "main.rs").write_text("fn main() {}")
         (src_dir / "lib.rs").write_text("pub fn hello() {}")
-        
+
         detector = LanguageDetector()
         result = detector.detect_primary_language(project_path)
-        
+
         assert result.primary == "rust"
         assert result.confidence >= 90  # Cargo.toml is strong indicator
 
@@ -218,10 +221,10 @@ class TestLanguageDetector:
         (project_path / "package.json").write_text('{"name": "test"}')
         (project_path / "index.js").write_text("console.log('test');")
         (project_path / "utils.js").write_text("module.exports = {};")
-        
+
         detector = LanguageDetector()
         result = detector.detect_primary_language(project_path)
-        
+
         assert result.primary == "javascript"
         assert result.confidence >= 80
 
@@ -233,10 +236,10 @@ class TestLanguageDetector:
         (project_path / "app.js").write_text("console.log('js');")
         (project_path / "style.css").write_text("body {}")
         (project_path / "README.md").write_text("# Docs")
-        
+
         detector = LanguageDetector()
         result = detector.detect_primary_language(project_path)
-        
+
         assert result.primary in ["python", "javascript"]
         assert len(result.secondary) >= 1
         assert "css" in result.secondary or "markdown" in result.secondary
@@ -245,17 +248,17 @@ class TestLanguageDetector:
         """Test confidence scoring accuracy."""
         project_path = temp_dir / "confidence_test"
         project_path.mkdir()
-        
+
         # Strong Python indicators
         (project_path / "setup.py").write_text("from setuptools import setup")
         (project_path / "requirements.txt").write_text("django")
         (project_path / "main.py").write_text("#!/usr/bin/env python3")
         (project_path / "utils.py").write_text("def func(): pass")
         (project_path / "__init__.py").write_text("")
-        
+
         detector = LanguageDetector()
         result = detector.detect_primary_language(project_path)
-        
+
         assert result.primary == "python"
         assert result.confidence >= 95  # Should be very confident
 
@@ -266,10 +269,10 @@ class TestLanguageDetector:
         (project_path / "README.txt").write_text("Documentation")
         (project_path / "data.csv").write_text("col1,col2\n1,2")
         (project_path / "image.jpg").write_bytes(b"fake image data")
-        
+
         detector = LanguageDetector()
         result = detector.detect_primary_language(project_path)
-        
+
         assert result.primary is None
         assert result.confidence < 50
 
@@ -293,10 +296,10 @@ app = FastAPI()
 def read_root():
     return {"Hello": "World"}
 """)
-        
+
         detector = FrameworkDetector()
         result = detector.detect_framework(project_path, "python")
-        
+
         assert result.primary == "fastapi"
         assert result.confidence >= 80
         assert result.details.get("web_framework") is True
@@ -308,10 +311,10 @@ def read_root():
         (project_path / "requirements.txt").write_text("Django>=4.0.0")
         (project_path / "manage.py").write_text("#!/usr/bin/env python\nfrom django.core.management import execute_from_command_line")
         (project_path / "settings.py").write_text("INSTALLED_APPS = ['django.contrib.admin']")
-        
+
         detector = FrameworkDetector()
         result = detector.detect_framework(project_path, "python")
-        
+
         assert result.primary == "django"
         assert result.confidence >= 90
 
@@ -329,10 +332,10 @@ function App() {
 
 export default App;
 """)
-        
+
         detector = FrameworkDetector()
         result = detector.detect_framework(project_path, "javascript")
-        
+
         assert result.primary == "react"
         assert result.confidence >= 80
 
@@ -359,10 +362,10 @@ async fn main() {
     let app = Router::new().route("/", get(|| async { "Hello, World!" }));
 }
 """)
-        
+
         detector = FrameworkDetector()
         result = detector.detect_framework(project_path, "rust")
-        
+
         assert result.primary == "axum"
         assert result.confidence >= 80
 
@@ -371,10 +374,10 @@ async fn main() {
         project_path = temp_dir / "simple_script"
         project_path.mkdir()
         (project_path / "simple.py").write_text("print('Hello, World!')")
-        
+
         detector = FrameworkDetector()
         result = detector.detect_framework(project_path, "python")
-        
+
         assert result.primary is None
         assert result.confidence < 50
 
@@ -385,10 +388,10 @@ async fn main() {
         (project_path / "requirements.txt").write_text("fastapi\nflask\ndjango")
         (project_path / "fastapi_app.py").write_text("from fastapi import FastAPI")
         (project_path / "flask_app.py").write_text("from flask import Flask")
-        
+
         detector = FrameworkDetector()
         result = detector.detect_framework(project_path, "python")
-        
+
         assert result.primary in ["fastapi", "flask", "django"]
         assert len(result.secondary) >= 1
 
@@ -411,10 +414,10 @@ app = FastAPI()
 def get_users():
     return []
 """)
-        
+
         analyzer = ProjectAnalyzer()
         result = analyzer.analyze(project_path)
-        
+
         assert result.project_type == ProjectType.WEB_API
 
     def test_classify_cli_tool_project(self, temp_dir):
@@ -433,10 +436,10 @@ def hello(count):
 if __name__ == '__main__':
     hello()
 """)
-        
+
         analyzer = ProjectAnalyzer()
         result = analyzer.analyze(project_path)
-        
+
         assert result.project_type == ProjectType.CLI_TOOL
 
     def test_classify_library_project(self, temp_dir):
@@ -455,10 +458,10 @@ setup(
         lib_dir.mkdir()
         (lib_dir / "__init__.py").write_text("__version__ = '1.0.0'")
         (lib_dir / "core.py").write_text("def public_function(): pass")
-        
+
         analyzer = ProjectAnalyzer()
         result = analyzer.analyze(project_path)
-        
+
         assert result.project_type == ProjectType.LIBRARY
 
     def test_classify_web_frontend_project(self, temp_dir):
@@ -481,10 +484,10 @@ setup(
         src_dir = project_path / "src"
         src_dir.mkdir()
         (src_dir / "App.js").write_text("import React from 'react';")
-        
+
         analyzer = ProjectAnalyzer()
         result = analyzer.analyze(project_path)
-        
+
         assert result.project_type == ProjectType.WEB_FRONTEND
 
 
@@ -498,53 +501,53 @@ class TestComplexityAssessment:
         project_path = temp_dir / "simple_project"
         project_path.mkdir()
         (project_path / "main.py").write_text("print('Hello, World!')")
-        
+
         analyzer = ProjectAnalyzer()
         result = analyzer.analyze(project_path)
-        
+
         assert result.complexity_level == ComplexityLevel.SIMPLE
 
     def test_medium_complexity(self, temp_dir):
         """Test medium complexity assessment."""
         project_path = temp_dir / "medium_project"
         project_path.mkdir()
-        
+
         # Create moderate number of files with some structure
         (project_path / "main.py").write_text("from utils import helper")
         (project_path / "utils.py").write_text("def helper(): pass")
         (project_path / "config.py").write_text("CONFIG = {}")
         (project_path / "requirements.txt").write_text("requests\nclick")
-        
+
         tests_dir = project_path / "tests"
         tests_dir.mkdir()
         (tests_dir / "test_main.py").write_text("def test_main(): pass")
-        
+
         analyzer = ProjectAnalyzer()
         result = analyzer.analyze(project_path)
-        
+
         assert result.complexity_level in [ComplexityLevel.SIMPLE, ComplexityLevel.MEDIUM]
 
     def test_high_complexity(self, temp_dir):
         """Test high complexity assessment."""
         project_path = temp_dir / "complex_project"
         project_path.mkdir()
-        
+
         # Create many files and directories
         for i in range(20):
             (project_path / f"module_{i}.py").write_text(f"# Module {i}")
-        
+
         for subdir in ["api", "models", "utils", "tests", "docs"]:
             sub_path = project_path / subdir
             sub_path.mkdir()
             for i in range(5):
                 (sub_path / f"file_{i}.py").write_text(f"# {subdir} file {i}")
-        
+
         # Add configuration files
         (project_path / "requirements.txt").write_text("django\ncelery\nredis\npostgresql")
         (project_path / "docker-compose.yml").write_text("version: '3'")
         (project_path / "Dockerfile").write_text("FROM python:3.11")
-        
+
         analyzer = ProjectAnalyzer()
         result = analyzer.analyze(project_path)
-        
+
         assert result.complexity_level == ComplexityLevel.HIGH

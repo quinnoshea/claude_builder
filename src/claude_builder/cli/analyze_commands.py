@@ -6,12 +6,10 @@ from typing import Optional
 
 import click
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
+from rich.table import Table
 
-from ..core.analyzer import ProjectAnalyzer
-from ..utils.exceptions import ClaudeBuilderError
-
+from claude_builder.core.analyzer import ProjectAnalyzer
 
 console = Console()
 
@@ -19,50 +17,49 @@ console = Console()
 @click.group()
 def analyze():
     """Analyze project structure and characteristics."""
-    pass
 
 
 @analyze.command()
-@click.argument('project_path', type=click.Path(exists=True, file_okay=False, dir_okay=True))
-@click.option('--output', '-o', type=click.Path(), help='Save analysis to file (JSON format)')
-@click.option('--format', 'output_format', type=click.Choice(['json', 'yaml', 'table']), 
-              default='table', help='Output format')
-@click.option('--confidence-threshold', type=int, default=0, 
-              help='Minimum confidence for reporting (0-100)')
-@click.option('--include-suggestions', is_flag=True, help='Include improvement suggestions')
-@click.option('--verbose', '-v', count=True, help='Verbose output')
-def project(project_path: str, output: Optional[str], output_format: str, 
+@click.argument("project_path", type=click.Path(exists=True, file_okay=False, dir_okay=True))
+@click.option("--output", "-o", type=click.Path(), help="Save analysis to file (JSON format)")
+@click.option("--format", "output_format", type=click.Choice(["json", "yaml", "table"]),
+              default="table", help="Output format")
+@click.option("--confidence-threshold", type=int, default=0,
+              help="Minimum confidence for reporting (0-100)")
+@click.option("--include-suggestions", is_flag=True, help="Include improvement suggestions")
+@click.option("--verbose", "-v", count=True, help="Verbose output")
+def project(project_path: str, output: Optional[str], output_format: str,
            confidence_threshold: int, include_suggestions: bool, verbose: int):
     """Analyze a project directory."""
     try:
         path = Path(project_path).resolve()
-        
+
         if verbose > 0:
             console.print(f"[cyan]Analyzing project at: {path}[/cyan]")
-        
+
         # Create analyzer and run analysis
         analyzer = ProjectAnalyzer()
         analysis = analyzer.analyze(path)
-        
+
         # Apply confidence threshold
         if analysis.analysis_confidence < confidence_threshold:
             console.print(f"[yellow]Analysis confidence {analysis.analysis_confidence:.1f}% is below threshold {confidence_threshold}%[/yellow]")
             if not include_suggestions:
                 return
-        
+
         # Display results based on format
-        if output_format == 'json':
+        if output_format == "json":
             _display_analysis_json(analysis, include_suggestions)
-        elif output_format == 'yaml':
+        elif output_format == "yaml":
             _display_analysis_yaml(analysis, include_suggestions)
         else:
             _display_analysis_table(analysis, include_suggestions, verbose)
-        
+
         # Save to file if requested
         if output:
             _save_analysis_to_file(analysis, Path(output), include_suggestions)
             console.print(f"[green]Analysis saved to: {output}[/green]")
-            
+
     except Exception as e:
         console.print(f"[red]Error analyzing project: {e}[/red]")
         raise click.ClickException(f"Failed to analyze project: {e}")
@@ -78,74 +75,74 @@ def _display_analysis_table(analysis, include_suggestions: bool, verbose: int):
         f"**Analysis Time**: {analysis.analysis_timestamp or 'Unknown'}",
         title="Analysis Summary"
     ))
-    
+
     # Language information
     lang_table = Table(title="Language Analysis")
     lang_table.add_column("Attribute", style="cyan")
     lang_table.add_column("Value", style="green")
     lang_table.add_column("Confidence", style="yellow")
-    
+
     lang_table.add_row(
         "Primary Language",
         analysis.language_info.primary or "Unknown",
         f"{analysis.language_info.confidence:.1f}%"
     )
-    
+
     if analysis.language_info.secondary:
         lang_table.add_row(
             "Secondary Languages",
             ", ".join(analysis.language_info.secondary),
             "-"
         )
-    
+
     console.print(lang_table)
-    
+
     # Framework information
     if analysis.framework_info.primary or verbose > 0:
         fw_table = Table(title="Framework Analysis")
         fw_table.add_column("Attribute", style="cyan")
         fw_table.add_column("Value", style="green")
         fw_table.add_column("Confidence", style="yellow")
-        
+
         fw_table.add_row(
             "Primary Framework",
             analysis.framework_info.primary or "None detected",
             f"{analysis.framework_info.confidence:.1f}%"
         )
-        
+
         if analysis.framework_info.secondary:
             fw_table.add_row(
                 "Secondary Frameworks",
                 ", ".join(analysis.framework_info.secondary),
                 "-"
             )
-        
+
         if analysis.framework_info.version:
             fw_table.add_row(
                 "Version",
                 analysis.framework_info.version,
                 "-"
             )
-        
+
         console.print(fw_table)
-    
+
     # Project characteristics
     char_table = Table(title="Project Characteristics")
     char_table.add_column("Characteristic", style="cyan")
     char_table.add_column("Value", style="green")
-    
-    char_table.add_row("Project Type", analysis.project_type.value.replace('_', ' ').title())
+
+    char_table.add_row("Project Type", analysis.project_type.value.replace("_", " ").title())
     char_table.add_row("Complexity Level", analysis.complexity_level.value.title())
-    char_table.add_row("Architecture Pattern", analysis.architecture_pattern.value.replace('_', ' ').title())
-    
+    char_table.add_row("Architecture Pattern", analysis.architecture_pattern.value.replace("_", " ").title())
+
     console.print(char_table)
-    
+
     # File system information
     if verbose > 0:
         fs_table = Table(title="File System Analysis")
         fs_table.add_column("Metric", style="cyan")
         fs_table.add_column("Count", style="green")
-        
+
         fs_info = analysis.filesystem_info
         fs_table.add_row("Total Files", str(fs_info.total_files))
         fs_table.add_row("Total Directories", str(fs_info.total_directories))
@@ -153,60 +150,60 @@ def _display_analysis_table(analysis, include_suggestions: bool, verbose: int):
         fs_table.add_row("Test Files", str(fs_info.test_files))
         fs_table.add_row("Config Files", str(fs_info.config_files))
         fs_table.add_row("Documentation Files", str(fs_info.documentation_files))
-        
+
         console.print(fs_table)
-    
+
     # Development environment
     if analysis.dev_environment.package_managers or verbose > 0:
         dev_table = Table(title="Development Environment")
         dev_table.add_column("Category", style="cyan")
         dev_table.add_column("Detected Tools", style="green")
-        
+
         if analysis.dev_environment.package_managers:
             dev_table.add_row("Package Managers", ", ".join(analysis.dev_environment.package_managers))
-        
+
         if analysis.dev_environment.testing_frameworks:
             dev_table.add_row("Testing Frameworks", ", ".join(analysis.dev_environment.testing_frameworks))
-        
+
         if analysis.dev_environment.ci_cd_systems:
             dev_table.add_row("CI/CD Systems", ", ".join(analysis.dev_environment.ci_cd_systems))
-        
+
         if analysis.dev_environment.containerization:
             dev_table.add_row("Containerization", ", ".join(analysis.dev_environment.containerization))
-        
+
         if analysis.dev_environment.databases:
             dev_table.add_row("Databases", ", ".join(analysis.dev_environment.databases))
-        
+
         console.print(dev_table)
-    
+
     # Domain information
     if analysis.domain_info.domain:
         domain_table = Table(title="Domain Analysis")
         domain_table.add_column("Attribute", style="cyan")
         domain_table.add_column("Value", style="green")
         domain_table.add_column("Confidence", style="yellow")
-        
+
         domain_table.add_row(
             "Domain",
-            analysis.domain_info.domain.replace('_', ' ').title(),
+            analysis.domain_info.domain.replace("_", " ").title(),
             f"{analysis.domain_info.confidence:.1f}%"
         )
-        
+
         if analysis.domain_info.indicators:
             domain_table.add_row(
                 "Indicators",
                 ", ".join(analysis.domain_info.indicators),
                 "-"
             )
-        
+
         console.print(domain_table)
-    
+
     # Warnings and suggestions
     if analysis.warnings:
         console.print("[yellow]Warnings:[/yellow]")
         for warning in analysis.warnings:
             console.print(f"  ⚠ {warning}")
-    
+
     if include_suggestions and analysis.suggestions:
         console.print("[blue]Suggestions:[/blue]")
         for suggestion in analysis.suggestions:
@@ -283,29 +280,29 @@ def _analysis_to_dict(analysis, include_suggestions: bool) -> dict:
         },
         "warnings": analysis.warnings
     }
-    
+
     if include_suggestions:
         data["suggestions"] = analysis.suggestions
-    
+
     return data
 
 
 def _save_analysis_to_file(analysis, output_path: Path, include_suggestions: bool):
     """Save analysis to file."""
     data = _analysis_to_dict(analysis, include_suggestions)
-    
-    if output_path.suffix.lower() in ['.yaml', '.yml']:
+
+    if output_path.suffix.lower() in [".yaml", ".yml"]:
         try:
             import yaml
-            with open(output_path, 'w', encoding='utf-8') as f:
+            with open(output_path, "w", encoding="utf-8") as f:
                 yaml.dump(data, f, default_flow_style=False)
         except ImportError:
             # Fallback to JSON
             console.print("[yellow]YAML not available, saving as JSON instead[/yellow]")
-            output_path = output_path.with_suffix('.json')
-            with open(output_path, 'w', encoding='utf-8') as f:
+            output_path = output_path.with_suffix(".json")
+            with open(output_path, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2)
     else:
         # Default to JSON
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2)

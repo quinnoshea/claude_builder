@@ -3,15 +3,20 @@
 import json
 import tempfile
 from pathlib import Path
-from typing import Dict, Any, Generator
+from typing import Any, Dict, Generator
 
 import pytest
 
-from claude_builder.core.models import (
-    ProjectAnalysis, LanguageInfo, FrameworkInfo, DomainInfo, 
-    FileSystemInfo, ProjectType, ComplexityLevel
-)
 from claude_builder.core.config import Config, ConfigManager
+from claude_builder.core.models import (
+    ComplexityLevel,
+    DomainInfo,
+    FileSystemInfo,
+    FrameworkInfo,
+    LanguageInfo,
+    ProjectAnalysis,
+    ProjectType,
+)
 
 
 @pytest.fixture
@@ -26,25 +31,25 @@ def sample_project_path(temp_dir: Path) -> Path:
     """Create a sample project directory structure."""
     project_dir = temp_dir / "sample_project"
     project_dir.mkdir()
-    
+
     # Create basic files
     (project_dir / "README.md").write_text("# Sample Project\nA test project.")
     (project_dir / "main.py").write_text("#!/usr/bin/env python3\nprint('Hello, World!')")
     (project_dir / "requirements.txt").write_text("requests>=2.25.0\nclick>=8.0.0")
     (project_dir / "setup.py").write_text("from setuptools import setup\nsetup(name='sample')")
-    
+
     # Create source directory
     src_dir = project_dir / "src"
     src_dir.mkdir()
     (src_dir / "__init__.py").write_text("")
     (src_dir / "core.py").write_text("def main():\n    pass")
-    
+
     # Create tests directory
     tests_dir = project_dir / "tests"
     tests_dir.mkdir()
     (tests_dir / "__init__.py").write_text("")
     (tests_dir / "test_core.py").write_text("def test_main():\n    assert True")
-    
+
     return project_dir
 
 
@@ -104,18 +109,18 @@ def git_repo(temp_dir: Path) -> Path:
     """Create a git repository for testing."""
     repo_dir = temp_dir / "git_repo"
     repo_dir.mkdir()
-    
+
     # Initialize git repository
     import subprocess
     subprocess.run(["git", "init"], cwd=repo_dir, check=True, capture_output=True)
     subprocess.run(["git", "config", "user.name", "Test User"], cwd=repo_dir, check=True)
     subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=repo_dir, check=True)
-    
+
     # Create initial commit
     (repo_dir / "README.md").write_text("# Test Repository")
     subprocess.run(["git", "add", "README.md"], cwd=repo_dir, check=True)
     subprocess.run(["git", "commit", "-m", "Initial commit"], cwd=repo_dir, check=True)
-    
+
     return repo_dir
 
 
@@ -157,34 +162,34 @@ def mock_http_responses():
             ]
         }
     }
-    
+
     class MockResponse:
         def __init__(self, json_data: Dict[str, Any], status_code: int = 200):
             self.json_data = json_data
             self.status_code = status_code
-        
+
         def read(self) -> bytes:
-            return json.dumps(self.json_data).encode('utf-8')
-        
+            return json.dumps(self.json_data).encode("utf-8")
+
         def __enter__(self):
             return self
-        
+
         def __exit__(self, *args):
             pass
-    
+
     def mock_urlopen(request, timeout=None):
-        url = request.get_full_url() if hasattr(request, 'get_full_url') else str(request)
+        url = request.get_full_url() if hasattr(request, "get_full_url") else str(request)
         if url in responses:
             return MockResponse(responses[url])
         raise Exception(f"Mock URL not found: {url}")
-    
+
     return mock_urlopen
 
 
 @pytest.fixture(autouse=True)
 def cleanup_temp_files():
     """Clean up temporary files after each test."""
-    yield
+    return
     # Cleanup happens automatically with temp_dir fixture
 
 
@@ -193,13 +198,13 @@ def create_test_project(base_path: Path, project_type: str = "python") -> Path:
     """Create a test project of specified type."""
     project_path = base_path / f"test_{project_type}_project"
     project_path.mkdir(exist_ok=True)
-    
+
     if project_type == "python":
         # Python project structure
         (project_path / "main.py").write_text("#!/usr/bin/env python3\nprint('Hello')")
         (project_path / "requirements.txt").write_text("requests>=2.25.0")
         (project_path / "setup.py").write_text("from setuptools import setup\nsetup(name='test')")
-        
+
     elif project_type == "rust":
         # Rust project structure
         (project_path / "Cargo.toml").write_text("""[package]
@@ -211,8 +216,8 @@ edition = "2021"
 """)
         src_dir = project_path / "src"
         src_dir.mkdir()
-        (src_dir / "main.rs").write_text("fn main() {\n    println!(\"Hello, world!\");\n}")
-        
+        (src_dir / "main.rs").write_text('fn main() {\n    println!("Hello, world!");\n}')
+
     elif project_type == "javascript":
         # JavaScript/Node.js project structure
         (project_path / "package.json").write_text(json.dumps({
@@ -225,7 +230,7 @@ edition = "2021"
             }
         }, indent=2))
         (project_path / "index.js").write_text("console.log('Hello, world!');")
-        
+
     return project_path
 
 
@@ -241,7 +246,7 @@ def assert_directory_structure(base_path: Path, expected_structure: Dict[str, An
     """Assert that directory structure matches expected layout."""
     for item_name, item_spec in expected_structure.items():
         item_path = base_path / item_name
-        
+
         if isinstance(item_spec, dict):
             # It's a directory
             assert item_path.is_dir(), f"Expected directory: {item_path}"

@@ -2,18 +2,17 @@
 
 import json
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Optional
 
 import click
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
-from rich.prompt import Prompt, Confirm, IntPrompt
-from rich.syntax import Syntax
+from rich.prompt import Confirm, IntPrompt, Prompt
+from rich.table import Table
 
-from ..core.config import ConfigManager, Config
-from ..core.analyzer import ProjectAnalyzer
-from ..utils.exceptions import ClaudeBuilderError, ConfigError
+from claude_builder.core.analyzer import ProjectAnalyzer
+from claude_builder.core.config import Config, ConfigManager
+from claude_builder.utils.exceptions import ConfigError
 
 console = Console()
 
@@ -21,51 +20,50 @@ console = Console()
 @click.group()
 def config():
     """Manage claude-builder configurations."""
-    pass
 
 
 @config.command()
-@click.argument('project_path', type=click.Path(exists=True, file_okay=False), 
-                default='.', required=False)
-@click.option('--format', 'output_format', type=click.Choice(['json', 'toml']), 
-              default='json', help='Configuration file format')
-@click.option('--interactive', is_flag=True, help='Interactive configuration creation')
-@click.option('--from-analysis', is_flag=True, help='Generate config based on project analysis')
+@click.argument("project_path", type=click.Path(exists=True, file_okay=False),
+                default=".", required=False)
+@click.option("--format", "output_format", type=click.Choice(["json", "toml"]),
+              default="json", help="Configuration file format")
+@click.option("--interactive", is_flag=True, help="Interactive configuration creation")
+@click.option("--from-analysis", is_flag=True, help="Generate config based on project analysis")
 def init(project_path: str, output_format: str, interactive: bool, from_analysis: bool):
     """Create initial configuration file for a project."""
     try:
         project_path_obj = Path(project_path).resolve()
         config_manager = ConfigManager()
-        
+
         # Start with default config
         config = config_manager.create_default_config(project_path_obj)
-        
+
         # Enhance with project analysis if requested
         if from_analysis:
             console.print("[cyan]Analyzing project to generate optimal configuration...[/cyan]")
             analyzer = ProjectAnalyzer()
             analysis = analyzer.analyze(project_path_obj)
-            
+
             # Customize config based on analysis
             config = _customize_config_from_analysis(config, analysis)
             console.print(f"[green]✓ Configuration optimized for {analysis.language} {analysis.project_type.value}[/green]")
-        
+
         # Interactive configuration
         if interactive:
             config = _interactive_config_setup(config)
-        
+
         # Save configuration
         config_filename = f"claude-builder.{output_format}"
         config_path = project_path_obj / config_filename
-        
+
         if config_path.exists():
             if not Confirm.ask(f"Configuration file {config_filename} already exists. Overwrite?"):
                 console.print("[yellow]Configuration creation cancelled[/yellow]")
                 return
-        
+
         config_manager.save_config(config, config_path)
         console.print(f"[green]✓ Configuration saved to {config_path}[/green]")
-        
+
         # Show next steps
         console.print(Panel(
             f"Configuration created successfully!\n\n"
@@ -76,30 +74,30 @@ def init(project_path: str, output_format: str, interactive: bool, from_analysis
             f"• Create project profiles with `claude-builder config create-profile`",
             title="Configuration Setup Complete"
         ))
-        
+
     except Exception as e:
         console.print(f"[red]Error creating configuration: {e}[/red]")
         raise click.ClickException(f"Failed to create configuration: {e}")
 
 
 @config.command()
-@click.argument('config_file', type=click.Path(exists=True), required=True)
-@click.option('--strict', is_flag=True, help='Treat warnings as errors')
-@click.option('--project-path', type=click.Path(exists=True, file_okay=False), 
-              help='Validate against specific project')
+@click.argument("config_file", type=click.Path(exists=True), required=True)
+@click.option("--strict", is_flag=True, help="Treat warnings as errors")
+@click.option("--project-path", type=click.Path(exists=True, file_okay=False),
+              help="Validate against specific project")
 def validate(config_file: str, strict: bool, project_path: Optional[str]):
     """Validate a configuration file."""
     try:
         config_manager = ConfigManager()
         config_path = Path(config_file)
-        
+
         console.print(f"[cyan]Validating configuration: {config_path}[/cyan]")
-        
+
         # Load and validate configuration
         if project_path:
             project_path_obj = Path(project_path).resolve()
             config = config_manager.load_config(project_path_obj, config_path)
-            
+
             # Additional validation with project context
             analyzer = ProjectAnalyzer()
             analysis = analyzer.analyze(project_path_obj)
@@ -110,21 +108,21 @@ def validate(config_file: str, strict: bool, project_path: Optional[str]):
             config = config_manager._dict_to_config(config_data)
             config_manager._validate_config(config)
             warnings = []
-        
+
         # Display results
-        console.print(f"[green]✓ Configuration is valid[/green]")
-        
+        console.print("[green]✓ Configuration is valid[/green]")
+
         if warnings:
-            console.print(f"\n[yellow]Warnings:[/yellow]")
+            console.print("\n[yellow]Warnings:[/yellow]")
             for warning in warnings:
                 console.print(f"  • {warning}")
-            
+
             if strict:
                 raise click.ClickException("Configuration validation failed (strict mode)")
-        
+
         if not warnings:
             console.print("[green]No issues found[/green]")
-        
+
     except ConfigError as e:
         console.print(f"[red]✗ Configuration validation failed: {e}[/red]")
         raise click.ClickException("Configuration validation failed")
@@ -134,79 +132,79 @@ def validate(config_file: str, strict: bool, project_path: Optional[str]):
 
 
 @config.command()
-@click.argument('project_path', type=click.Path(exists=True, file_okay=False), 
-                default='.', required=False)
-@click.option('--format', 'output_format', type=click.Choice(['table', 'json', 'yaml']), 
-              default='table', help='Output format')
-@click.option('--section', help='Show only specific configuration section')
+@click.argument("project_path", type=click.Path(exists=True, file_okay=False),
+                default=".", required=False)
+@click.option("--format", "output_format", type=click.Choice(["table", "json", "yaml"]),
+              default="table", help="Output format")
+@click.option("--section", help="Show only specific configuration section")
 def show(project_path: str, output_format: str, section: Optional[str]):
     """Show effective configuration for a project."""
     try:
         project_path_obj = Path(project_path).resolve()
         config_manager = ConfigManager()
-        
+
         config = config_manager.load_config(project_path_obj)
-        
-        if output_format == 'json':
+
+        if output_format == "json":
             config_dict = config_manager._config_to_dict(config)
             if section and section in config_dict:
                 config_dict = {section: config_dict[section]}
             console.print(json.dumps(config_dict, indent=2, default=str))
-        elif output_format == 'yaml':
+        elif output_format == "yaml":
             # Would need PyYAML for this
             console.print("[yellow]YAML output not yet implemented[/yellow]")
         else:
             _display_config_table(config, section)
-        
+
     except Exception as e:
         console.print(f"[red]Error showing configuration: {e}[/red]")
         raise click.ClickException(f"Failed to show configuration: {e}")
 
 
 @config.command()
-@click.argument('old_config', type=click.Path(exists=True), required=True)
-@click.option('--output', type=click.Path(), help='Output path for migrated config')
-@click.option('--format', 'output_format', type=click.Choice(['json', 'toml']), 
-              default='json', help='Output format')
+@click.argument("old_config", type=click.Path(exists=True), required=True)
+@click.option("--output", type=click.Path(), help="Output path for migrated config")
+@click.option("--format", "output_format", type=click.Choice(["json", "toml"]),
+              default="json", help="Output format")
 def migrate(old_config: str, output: Optional[str], output_format: str):
     """Migrate configuration from old format."""
     try:
         old_config_path = Path(old_config)
-        
+
         # This would implement migration logic for older config versions
         console.print(f"[cyan]Migrating configuration from: {old_config_path}[/cyan]")
-        
+
         # For now, just copy and validate
         config_manager = ConfigManager()
         config_data = config_manager._load_config_file(old_config_path)
         config = config_manager._dict_to_config(config_data)
-        
+
         # Save migrated config
         if output:
             output_path = Path(output)
         else:
             output_path = old_config_path.parent / f"claude-builder-migrated.{output_format}"
-        
+
         config_manager.save_config(config, output_path)
         console.print(f"[green]✓ Configuration migrated to: {output_path}[/green]")
-        
+
     except Exception as e:
         console.print(f"[red]Error migrating configuration: {e}[/red]")
         raise click.ClickException(f"Failed to migrate configuration: {e}")
 
 
 @config.command()
-@click.argument('profile_name', required=True)
-@click.option('--description', help='Profile description')
-@click.option('--config-file', type=click.Path(exists=True), help='Configuration file to use as base')
-@click.option('--project-path', type=click.Path(exists=True, file_okay=False), 
-              help='Create profile from project configuration')
-def create_profile(profile_name: str, description: Optional[str], 
+@click.argument("profile_name", required=True)
+@click.option("--description", help="Profile description")
+@click.option("--config-file", type=click.Path(exists=True), help="Configuration file to use as base")
+@click.option("--project-path", type=click.Path(exists=True, file_okay=False),
+              help="Create profile from project configuration")
+def create_profile(profile_name: str, description: Optional[str],
                   config_file: Optional[str], project_path: Optional[str]):
     """Create a reusable project profile."""
     try:
         config_manager = ConfigManager()
-        
+
         if config_file:
             # Create profile from config file
             config_path = Path(config_file)
@@ -219,13 +217,13 @@ def create_profile(profile_name: str, description: Optional[str],
         else:
             # Create profile from default
             config = Config()
-        
+
         if not description:
             description = Prompt.ask("Profile description", default=f"Profile for {profile_name}")
-        
+
         config_manager.create_project_profile(profile_name, config, description)
         console.print(f"[green]✓ Project profile '{profile_name}' created[/green]")
-        
+
         # Show usage instructions
         console.print(Panel(
             f"Profile created successfully!\n\n"
@@ -235,48 +233,48 @@ def create_profile(profile_name: str, description: Optional[str],
             f"• View profile details: `claude-builder config show-profile {profile_name}`",
             title=f"Profile: {profile_name}"
         ))
-        
+
     except Exception as e:
         console.print(f"[red]Error creating profile: {e}[/red]")
         raise click.ClickException(f"Failed to create profile: {e}")
 
 
 @config.command()
-@click.option('--format', 'output_format', type=click.Choice(['table', 'json']), 
-              default='table', help='Output format')
+@click.option("--format", "output_format", type=click.Choice(["table", "json"]),
+              default="table", help="Output format")
 def list_profiles(output_format: str):
     """List available project profiles."""
     try:
         config_manager = ConfigManager()
         profiles = config_manager.list_project_profiles()
-        
+
         if not profiles:
             console.print("[yellow]No project profiles found[/yellow]")
             return
-        
-        if output_format == 'json':
+
+        if output_format == "json":
             console.print(json.dumps(profiles, indent=2, default=str))
         else:
             _display_profiles_table(profiles)
-        
+
     except Exception as e:
         console.print(f"[red]Error listing profiles: {e}[/red]")
         raise click.ClickException(f"Failed to list profiles: {e}")
 
 
 @config.command()
-@click.argument('profile_name', required=True)
+@click.argument("profile_name", required=True)
 def show_profile(profile_name: str):
     """Show details of a project profile."""
     try:
         config_manager = ConfigManager()
         profiles = config_manager.list_project_profiles()
-        
-        profile = next((p for p in profiles if p['name'] == profile_name), None)
+
+        profile = next((p for p in profiles if p["name"] == profile_name), None)
         if not profile:
             console.print(f"[red]Profile not found: {profile_name}[/red]")
             return
-        
+
         # Display profile information
         info_panel = f"""[bold]{profile['name']}[/bold]
 
@@ -285,21 +283,21 @@ def show_profile(profile_name: str):
 
 [bold]Configuration Preview:[/bold]
 """
-        
+
         # Show key configuration sections
         config_preview = {}
-        if 'config' in profile:
-            config_data = profile['config']
+        if "config" in profile:
+            config_data = profile["config"]
             config_preview = {
-                'agents': config_data.get('agents', {}).get('priority_agents', []),
-                'templates': config_data.get('templates', {}).get('preferred_templates', []),
-                'git_integration': config_data.get('git_integration', {}).get('mode', 'unknown')
+                "agents": config_data.get("agents", {}).get("priority_agents", []),
+                "templates": config_data.get("templates", {}).get("preferred_templates", []),
+                "git_integration": config_data.get("git_integration", {}).get("mode", "unknown")
             }
-        
+
         info_panel += f"\n{json.dumps(config_preview, indent=2)}"
-        
+
         console.print(Panel(info_panel, title=f"Profile: {profile_name}"))
-        
+
     except Exception as e:
         console.print(f"[red]Error showing profile: {e}[/red]")
         raise click.ClickException(f"Failed to show profile: {e}")
@@ -308,22 +306,22 @@ def show_profile(profile_name: str):
 def _customize_config_from_analysis(config: Config, analysis) -> Config:
     """Customize configuration based on project analysis."""
     # Customize based on language
-    if analysis.language == 'python':
-        config.agents.priority_agents = ['python-pro', 'backend-developer', 'test-automator']
-        config.templates.preferred_templates = ['python-web' if 'web' in str(analysis.project_type) else 'python-cli']
-    elif analysis.language == 'rust':
-        config.agents.priority_agents = ['rust-engineer', 'performance-engineer', 'cli-developer']
-        config.templates.preferred_templates = ['rust-cli']
-    elif analysis.language == 'javascript':
-        config.agents.priority_agents = ['javascript-pro', 'frontend-developer', 'backend-developer']
-        config.templates.preferred_templates = ['javascript-react']
-    
+    if analysis.language == "python":
+        config.agents.priority_agents = ["python-pro", "backend-developer", "test-automator"]
+        config.templates.preferred_templates = ["python-web" if "web" in str(analysis.project_type) else "python-cli"]
+    elif analysis.language == "rust":
+        config.agents.priority_agents = ["rust-engineer", "performance-engineer", "cli-developer"]
+        config.templates.preferred_templates = ["rust-cli"]
+    elif analysis.language == "javascript":
+        config.agents.priority_agents = ["javascript-pro", "frontend-developer", "backend-developer"]
+        config.templates.preferred_templates = ["javascript-react"]
+
     # Customize based on project type
-    if 'web' in str(analysis.project_type).lower():
-        config.agents.priority_agents.extend(['ui-designer', 'api-designer'])
-    elif 'cli' in str(analysis.project_type).lower():
-        config.agents.priority_agents.extend(['cli-developer', 'documentation-engineer'])
-    
+    if "web" in str(analysis.project_type).lower():
+        config.agents.priority_agents.extend(["ui-designer", "api-designer"])
+    elif "cli" in str(analysis.project_type).lower():
+        config.agents.priority_agents.extend(["cli-developer", "documentation-engineer"])
+
     return config
 
 
@@ -331,45 +329,45 @@ def _interactive_config_setup(config: Config) -> Config:
     """Interactive configuration setup."""
     console.print("[bold]Interactive Configuration Setup[/bold]")
     console.print("Configure key settings (press Enter to keep current values)\n")
-    
+
     # Analysis settings
     console.print("[cyan]Analysis Settings[/cyan]")
     new_threshold = IntPrompt.ask(
-        f"Confidence threshold (0-100)", 
+        "Confidence threshold (0-100)",
         default=config.analysis.confidence_threshold
     )
     config.analysis.confidence_threshold = new_threshold
-    
+
     # Git integration
     console.print("\n[cyan]Git Integration[/cyan]")
-    git_modes = ['no_integration', 'exclude_generated', 'track_generated']
+    git_modes = ["no_integration", "exclude_generated", "track_generated"]
     current_mode = config.git_integration.mode.value
     git_mode = Prompt.ask(
-        f"Git integration mode",
+        "Git integration mode",
         choices=git_modes,
         default=current_mode
     )
-    from ..core.models import GitIntegrationMode
+    from claude_builder.core.models import GitIntegrationMode
     config.git_integration.mode = GitIntegrationMode(git_mode)
-    
+
     # Claude mention policy
-    mention_policies = ['forbidden', 'minimal', 'allowed']
+    mention_policies = ["forbidden", "minimal", "allowed"]
     current_policy = config.git_integration.claude_mention_policy.value
     mention_policy = Prompt.ask(
-        f"Claude mention policy",
+        "Claude mention policy",
         choices=mention_policies,
         default=current_policy
     )
-    from ..core.models import ClaudeMentionPolicy
+    from claude_builder.core.models import ClaudeMentionPolicy
     config.git_integration.claude_mention_policy = ClaudeMentionPolicy(mention_policy)
-    
+
     # User preferences
     console.print("\n[cyan]User Preferences[/cyan]")
     config.user_preferences.prefer_verbose_output = Confirm.ask(
         "Enable verbose output by default?",
         default=config.user_preferences.prefer_verbose_output
     )
-    
+
     return config
 
 
@@ -382,10 +380,10 @@ def _display_config_table(config: Config, section: Optional[str] = None):
             table = Table(title=f"Configuration: {section}")
             table.add_column("Setting", style="cyan")
             table.add_column("Value", style="white")
-            
+
             for key, value in section_data.__dict__.items():
                 table.add_row(key, str(value))
-            
+
             console.print(table)
         else:
             console.print(f"[red]Unknown section: {section}[/red]")
@@ -394,28 +392,28 @@ def _display_config_table(config: Config, section: Optional[str] = None):
         table = Table(title="Configuration Overview")
         table.add_column("Section", style="cyan")
         table.add_column("Key Settings", style="white")
-        
+
         table.add_row(
-            "Analysis", 
+            "Analysis",
             f"Threshold: {config.analysis.confidence_threshold}%, Cache: {config.analysis.cache_enabled}"
         )
         table.add_row(
-            "Templates", 
+            "Templates",
             f"Preferred: {', '.join(config.templates.preferred_templates) or 'Auto'}"
         )
         table.add_row(
-            "Agents", 
+            "Agents",
             f"Priority: {', '.join(config.agents.priority_agents) or 'Auto'}"
         )
         table.add_row(
-            "Git Integration", 
+            "Git Integration",
             f"Mode: {config.git_integration.mode.value}, Mentions: {config.git_integration.claude_mention_policy.value}"
         )
         table.add_row(
-            "Output", 
+            "Output",
             f"Format: {config.output.format}, Backup: {config.output.backup_existing}"
         )
-        
+
         console.print(table)
 
 
@@ -425,12 +423,12 @@ def _display_profiles_table(profiles: list):
     table.add_column("Name", style="cyan")
     table.add_column("Description", style="white")
     table.add_column("Created", style="dim")
-    
+
     for profile in profiles:
         table.add_row(
-            profile['name'],
-            profile.get('description', 'No description')[:50] + ('...' if len(profile.get('description', '')) > 50 else ''),
-            profile.get('created', 'Unknown')[:10]  # Show date only
+            profile["name"],
+            profile.get("description", "No description")[:50] + ("..." if len(profile.get("description", "")) > 50 else ""),
+            profile.get("created", "Unknown")[:10]  # Show date only
         )
-    
+
     console.print(table)

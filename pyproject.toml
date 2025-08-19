@@ -197,6 +197,7 @@ title = "Claude Builder Coverage Report"
 [dependency-groups]
 dev = [
     "coverage>=7.6.1",
+    "pylint>=3.2.7",
     "pytest>=8.3.5",
     "pytest-cov>=5.0.0",
 ]

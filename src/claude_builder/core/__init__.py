@@ -1,13 +1,13 @@
 """Core components for Claude Builder."""
 
-from .analyzer import ProjectAnalyzer, ProjectAnalysis
-from .generator import DocumentGenerator
-from .config import Config, ConfigManager
+from claude_builder.core.analyzer import ProjectAnalysis, ProjectAnalyzer
+from claude_builder.core.config import Config, ConfigManager
+from claude_builder.core.generator import DocumentGenerator
 
 __all__ = [
-    "ProjectAnalyzer",
-    "ProjectAnalysis", 
-    "DocumentGenerator",
     "Config",
-    "ConfigManager"
+    "ConfigManager",
+    "DocumentGenerator",
+    "ProjectAnalysis",
+    "ProjectAnalyzer"
 ]
