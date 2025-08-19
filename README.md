@@ -437,8 +437,6 @@ Claude Builder is entering **Phase 4: Community Expansion** with clear opportuni
 - **Real impact** enabling community template ecosystem  
 - **Mentorship available** with weekly check-ins
 
-See [11-PLAN.md](11-PLAN.md) for detailed junior engineering roadmap.
-
 #### **🎯 Experienced Developers - High Impact Features**  
 - **Agent Intelligence Enhancement**: ML-based recommendations
 - **IDE Integrations**: VS Code, JetBrains extensions
