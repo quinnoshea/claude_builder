@@ -422,13 +422,13 @@ class TestOutputGeneration:
 
     def test_performance_with_large_project(self, temp_dir):
         """Test generation performance with large project analysis."""
-        from claude_builder.core.models import ProjectAnalysis, LanguageInfo, FilesystemInfo
+        from claude_builder.core.models import ProjectAnalysis, LanguageInfo, FileSystemInfo
         
         # Create analysis for large project
         large_analysis = ProjectAnalysis(
             project_path=temp_dir,
             language_info=LanguageInfo(primary="python", confidence=95.0),
-            filesystem_info=FilesystemInfo(
+            filesystem_info=FileSystemInfo(
                 total_files=1000,
                 source_files=800,
                 test_files=150,

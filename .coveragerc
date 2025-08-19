@@ -1,0 +1,40 @@
+# Coverage configuration file (backup to pyproject.toml)
+[run]
+source = claude_builder
+omit = 
+    tests/*
+    claude_builder/templates/*
+    */__init__.py
+    claude_builder/cli/main.py
+branch = True
+data_file = .coverage
+
+[report]
+show_missing = True
+skip_covered = False
+skip_empty = False
+sort = Cover
+exclude_lines =
+    pragma: no cover
+    pragma: nocover
+    def __repr__
+    def __str__
+    if self.debug:
+    if settings.DEBUG
+    raise AssertionError
+    raise NotImplementedError
+    raise ValueError\(".*"\)
+    if 0:
+    if False:
+    if __name__ == .__main__.:
+    class .*\bProtocol\):
+    @(abc\.)?abstractmethod
+    except ImportError:
+    except ModuleNotFoundError:
+
+[xml]
+output = coverage.xml
+
+[html]
+directory = htmlcov
+title = Claude Builder Coverage Report

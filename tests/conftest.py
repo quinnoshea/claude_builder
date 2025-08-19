@@ -11,7 +11,7 @@ import pytest
 
 from claude_builder.core.models import (
     ProjectAnalysis, LanguageInfo, FrameworkInfo, DomainInfo, 
-    FilesystemInfo, ProjectType, ComplexityLevel
+    FileSystemInfo, ProjectType, ComplexityLevel
 )
 from claude_builder.core.config import Config, ConfigManager
 
@@ -69,7 +69,7 @@ def sample_analysis() -> ProjectAnalysis:
         ),
         project_type=ProjectType.WEB_API,
         complexity_level=ComplexityLevel.MEDIUM,
-        filesystem_info=FilesystemInfo(
+        filesystem_info=FileSystemInfo(
             total_files=42,
             source_files=25,
             test_files=8,

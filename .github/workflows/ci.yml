@@ -63,9 +63,15 @@ jobs:
       run: |
         bandit -r claude_builder -f json -o bandit-report.json
         
-    - name: Run tests
+    - name: Run tests with coverage
       run: |
-        pytest --cov=claude_builder --cov-report=xml --cov-report=html --junitxml=junit.xml -v
+        pytest --cov=claude_builder --cov-report=xml:coverage.xml --cov-report=html:htmlcov --cov-report=term-missing --junitxml=junit.xml -v
+        
+    - name: Display coverage summary
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      run: |
+        echo "## Coverage Summary" >> $GITHUB_STEP_SUMMARY
+        coverage report --format=markdown >> $GITHUB_STEP_SUMMARY
         
     - name: Upload coverage to Codecov
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
@@ -74,6 +80,8 @@ jobs:
         file: ./coverage.xml
         flags: unittests
         name: codecov-umbrella
+        fail_ci_if_error: false
+        verbose: true
         
     - name: Upload coverage to Codacy
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
@@ -81,6 +89,7 @@ jobs:
       with:
         project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
         coverage-reports: coverage.xml
+        force-coverage-parser: python
         
     - name: Upload test results
       if: always()

@@ -2,7 +2,7 @@
 
 import json
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 
 import click
 from rich.console import Console
@@ -394,7 +394,7 @@ def info(template_name: str):
         raise click.ClickException(f"Failed to get template info: {e}")
 
 
-def _display_templates_table(templates: list[CommunityTemplate], show_compatibility: bool = False):
+def _display_templates_table(templates: List[CommunityTemplate], show_compatibility: bool = False):
     """Display templates in table format."""
     if not templates:
         console.print("[yellow]No templates found[/yellow]")
@@ -433,7 +433,7 @@ def _display_templates_table(templates: list[CommunityTemplate], show_compatibil
     console.print(table)
 
 
-def _display_templates_list(templates: list[CommunityTemplate]):
+def _display_templates_list(templates: List[CommunityTemplate]):
     """Display templates in simple list format."""
     if not templates:
         console.print("[yellow]No templates found[/yellow]")
@@ -444,7 +444,7 @@ def _display_templates_list(templates: list[CommunityTemplate]):
         console.print(f"{status} {template.metadata.name} - {template.metadata.description}")
 
 
-def _display_templates_json(templates: list[CommunityTemplate]):
+def _display_templates_json(templates: List[CommunityTemplate]):
     """Display templates in JSON format."""
     template_data = []
     for template in templates:

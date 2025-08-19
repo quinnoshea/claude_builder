@@ -180,3 +180,60 @@ def validate_output_directory(output_dir: Path, create_if_missing: bool = False)
         )
     
     return ValidationResult(is_valid=True)
+
+
+def validate_directory_structure(directory: Path, expected_structure: dict) -> ValidationResult:
+    """Validate that a directory has the expected structure.
+    
+    Args:
+        directory: Directory to validate
+        expected_structure: Dict describing expected files/folders
+        
+    Returns:
+        ValidationResult indicating if structure is valid
+    """
+    if not directory.exists():
+        return ValidationResult(
+            is_valid=False,
+            error=f"Directory does not exist: {directory}"
+        )
+    
+    if not directory.is_dir():
+        return ValidationResult(
+            is_valid=False,
+            error=f"Path is not a directory: {directory}"
+        )
+    
+    warnings = []
+    suggestions = []
+    
+    # Check for required files/directories
+    for item_name, item_info in expected_structure.items():
+        item_path = directory / item_name
+        
+        if isinstance(item_info, dict):
+            # It's a directory with nested structure
+            if not item_path.exists():
+                warnings.append(f"Missing directory: {item_name}")
+                suggestions.append(f"Create directory: {item_path}")
+            elif item_path.is_file():
+                warnings.append(f"Expected directory but found file: {item_name}")
+            else:
+                # Recursively validate subdirectory
+                sub_result = validate_directory_structure(item_path, item_info)
+                warnings.extend([f"{item_name}/{w}" for w in sub_result.warnings])
+                suggestions.extend([f"{item_name}/{s}" for s in sub_result.suggestions])
+        else:
+            # It's a file (item_info would be file extension or True)
+            if not item_path.exists():
+                warnings.append(f"Missing file: {item_name}")
+                suggestions.append(f"Create file: {item_path}")
+            elif item_path.is_dir():
+                warnings.append(f"Expected file but found directory: {item_name}")
+    
+    # Structure is valid even with warnings (missing files can be created)
+    return ValidationResult(
+        is_valid=True,
+        warnings=warnings,
+        suggestions=suggestions
+    )

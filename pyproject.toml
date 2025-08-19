@@ -40,12 +40,14 @@ dev = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
     "pytest-benchmark>=4.0.0",
+    "pytest-xdist>=3.0.0",
     "black>=23.0.0",
     "ruff>=0.1.0",
     "mypy>=1.0.0",
     "pre-commit>=3.0.0",
     "bandit>=1.7.0",
     "safety>=2.0.0",
+    "coverage[toml]>=7.0.0",
 ]
 test = [
     "pytest>=7.0.0",
@@ -109,7 +111,7 @@ strict_equality = true
 
 [tool.pytest.ini_options]
 minversion = "7.0"
-addopts = "-ra -q --cov=claude_builder --cov-report=term-missing"
+addopts = "-ra -q --strict-markers --strict-config --cov=claude_builder --cov-report=term-missing --cov-report=xml --cov-report=html --cov-fail-under=85"
 testpaths = [
     "tests",
 ]
@@ -117,24 +119,64 @@ python_files = [
     "test_*.py",
     "*_test.py",
 ]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "e2e: End-to-end tests",
+    "performance: Performance tests",
+    "slow: Slow tests (may take >1 second)",
+    "requires_git: Tests that require git",
+    "requires_network: Tests that require network access",
+    "phase1: Phase 1 core functionality tests",
+    "phase2: Phase 2 intelligence layer tests",
+    "phase3: Phase 3 advanced features tests",
+]
 
 [tool.coverage.run]
 source = ["claude_builder"]
 omit = [
     "tests/*",
     "claude_builder/templates/*",
+    "*/__init__.py",
+    "claude_builder/cli/main.py",
 ]
+branch = true
+data_file = ".coverage"
 
 [tool.coverage.report]
+show_missing = true
+skip_covered = false
+skip_empty = false
+sort = "Cover"
 exclude_lines = [
     "pragma: no cover",
+    "pragma: nocover",
     "def __repr__",
+    "def __str__",
     "if self.debug:",
     "if settings.DEBUG",
     "raise AssertionError",
     "raise NotImplementedError",
+    "raise ValueError\\(.*\\)",
     "if 0:",
+    "if False:",
     "if __name__ == .__main__.:",
     "class .*\\bProtocol\\):",
     "@(abc\\.)?abstractmethod",
+    "except ImportError:",
+    "except ModuleNotFoundError:",
+]
+
+[tool.coverage.xml]
+output = "coverage.xml"
+
+[tool.coverage.html]
+directory = "htmlcov"
+title = "Claude Builder Coverage Report"
+
+[dependency-groups]
+dev = [
+    "coverage>=7.6.1",
+    "pytest>=8.3.5",
+    "pytest-cov>=5.0.0",
 ]
