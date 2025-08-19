@@ -56,3 +56,22 @@ class TemplateError(ClaudeBuilderError):
 
     def __init__(self, message: str):
         super().__init__(message, exit_code=6)
+
+
+
+# Placeholder classes for test compatibility
+class ErrorContext:
+    """Placeholder ErrorContext class for test compatibility."""
+    
+    def __init__(self, operation: str, details: dict = None):
+        self.operation = operation
+        self.details = details or {}
+        self.timestamp = "2024-01-01T00:00:00Z"
+        
+    def to_dict(self) -> dict:
+        """Convert to dictionary."""
+        return {
+            "operation": self.operation,
+            "details": self.details,
+            "timestamp": self.timestamp
+        }

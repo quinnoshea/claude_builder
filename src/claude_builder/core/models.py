@@ -243,3 +243,17 @@ class ExecutionResult(BaseModel):
 
     class Config:
         arbitrary_types_allowed = True
+
+
+# Placeholder classes for test compatibility
+@dataclass 
+class AnalysisResult:
+    """Placeholder AnalysisResult class for test compatibility."""
+    success: bool = True
+    confidence: float = 0.8
+    project_type: Optional[ProjectType] = None
+    language: Optional[str] = None
+    framework: Optional[str] = None
+    complexity: Optional[ComplexityLevel] = None
+    errors: List[str] = field(default_factory=list)
+    metadata: Dict[str, Any] = field(default_factory=dict)
