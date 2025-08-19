@@ -84,7 +84,6 @@ jobs:
       with:
         project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
         coverage-reports: coverage.xml
-        force-coverage-parser: python
         
     - name: Upload test results
       if: always()

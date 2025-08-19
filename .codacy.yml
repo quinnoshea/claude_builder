@@ -10,12 +10,12 @@ engines:
       - "examples/**"
       - "docs/**"
   
+  # ENABLE: Ruff for modern Python linting (recommended to enable in Codacy)
   ruff:
     enabled: true
     exclude_paths:
       - "examples/**"
       - "docs/**"
-    # Include tests for ruff since it's fast and catches real issues
   
   pylint:
     enabled: true
