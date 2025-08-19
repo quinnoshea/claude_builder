@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional
 from claude_builder.utils.exceptions import GenerationError
 from claude_builder.core.agents import UniversalAgentSystem
 from claude_builder.core.models import GeneratedContent, ProjectAnalysis, TemplateRequest
+from claude_builder.core.template_manager import CoreTemplateManager
 
 
 class DocumentGenerator:
@@ -15,8 +16,7 @@ class DocumentGenerator:
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
-        self.template_loader = TemplateLoader()
-        self.content_composer = ContentComposer()
+        self.template_manager = CoreTemplateManager()
         self.agent_system = UniversalAgentSystem()
 
     def generate(self, analysis: ProjectAnalysis, output_path: Path) -> GeneratedContent:
@@ -30,23 +30,20 @@ class DocumentGenerator:
                 customizations=self.config.get("customizations", {})
             )
 
-            # Load appropriate templates
-            templates = self.template_loader.load_templates(analysis)
-
-            # Generate content
+            # Generate content using new template system
             generated_files = {}
 
-            # Core documentation
-            generated_files.update(self._generate_core_docs(analysis, templates))
+            # Core documentation - CLAUDE.md
+            generated_files.update(self._generate_core_docs(analysis))
 
-            # Agent configuration
-            generated_files.update(self._generate_agent_config(analysis, templates))
+            # Agent configuration - AGENTS.md
+            generated_files.update(self._generate_agent_config(analysis))
 
             # Development workflows
-            generated_files.update(self._generate_workflows(analysis, templates))
+            generated_files.update(self._generate_workflows(analysis))
 
             # Project-specific documentation
-            generated_files.update(self._generate_project_docs(analysis, templates))
+            generated_files.update(self._generate_project_docs(analysis))
 
             return GeneratedContent(
                 files=generated_files,
@@ -55,110 +52,129 @@ class DocumentGenerator:
                     "analyzer_version": "0.1.0",
                     "template_version": "0.1.0"
                 },
-                template_info=self._get_template_info(templates)
+                template_info=self._get_template_info()
             )
 
         except Exception as e:
             raise GenerationError(f"Failed to generate documentation: {e}")
 
-    def _generate_core_docs(self, analysis: ProjectAnalysis, templates: Dict[str, str]) -> Dict[str, str]:
-        """Generate core documentation files."""
+    def _generate_core_docs(self, analysis: ProjectAnalysis) -> Dict[str, str]:
+        """Generate core documentation files using new template system."""
         files = {}
 
-        # CLAUDE.md - Main Claude Code instructions
-        # Prefer language-specific, then base, then default
-        language = analysis.language.lower() if analysis.language else None
-        claude_template = (
-            templates.get(f"{language}_claude_instructions") or
-            templates.get("claude_instructions") or
-            self._get_default_claude_template()
-        )
-        files["CLAUDE.md"] = self._render_template(claude_template, analysis)
-
-        # Development guide - prefer language-specific template
-        dev_guide_template = (
-            templates.get(f"{language}_development_guide") or
-            templates.get("development_workflow") or
-            None
-        )
-        if dev_guide_template:
-            files["DEVELOPMENT.md"] = self._render_template(dev_guide_template, analysis)
+        try:
+            # Generate CLAUDE.md using hierarchical template system
+            claude_content = self.template_manager.generate_from_analysis(
+                analysis, 
+                template_name="base"
+            )
+            files["CLAUDE.md"] = claude_content
+            
+        except Exception as e:
+            # Fallback to default template if template system fails
+            default_context = self.template_manager._create_context_from_analysis(analysis)
+            files["CLAUDE.md"] = self.template_manager.render_template(
+                self._get_default_claude_template(), 
+                default_context
+            )
 
         return files
 
-    def _generate_agent_config(self, analysis: ProjectAnalysis, templates: Dict[str, str]) -> Dict[str, str]:
-        """Generate agent configuration files."""
+    def _generate_agent_config(self, analysis: ProjectAnalysis) -> Dict[str, str]:
+        """Generate agent configuration files using new template system."""
         files = {}
 
-        # Generate intelligent agent configuration using Universal Agent System
-        agent_config = self.agent_system.select_agents(analysis)
-
-        # AGENTS.md - Agent configuration and workflows
-        # Prefer language-specific, then base, then intelligent default
-        language = analysis.language.lower() if analysis.language else None
-        agent_template = (
-            templates.get(f"{language}_agents_config") or
-            templates.get("agent_coordination") or
-            self._get_intelligent_agents_template()
-        )
-
-        # Add agent configuration to analysis for template rendering
-        analysis.agent_configuration = agent_config
-        files["AGENTS.md"] = self._render_template(agent_template, analysis)
+        try:
+            # Generate intelligent agent configuration using Universal Agent System
+            agent_config = self.agent_system.select_agents(analysis)
+            
+            # Add agent configuration to analysis for template rendering
+            analysis.agent_configuration = agent_config
+            
+            # Create context with agent information
+            context = self.template_manager._create_context_from_analysis(analysis)
+            
+            # Add agent-specific variables to context
+            if hasattr(agent_config, 'core_agents'):
+                context['core_agents'] = ", ".join([a.name for a in agent_config.core_agents])
+                context['primary_agent'] = agent_config.core_agents[0].name if agent_config.core_agents else "rapid-prototyper"
+            else:
+                context['core_agents'] = "rapid-prototyper, backend-architect, test-writer-fixer"
+                context['primary_agent'] = "rapid-prototyper"
+            
+            # Use intelligent agents template
+            agent_content = self.template_manager.render_template(
+                self._get_intelligent_agents_template(),
+                context
+            )
+            files["AGENTS.md"] = agent_content
+            
+        except Exception as e:
+            # Fallback to basic agents template
+            context = self.template_manager._create_context_from_analysis(analysis)
+            context['core_agents'] = "rapid-prototyper, backend-architect, test-writer-fixer"
+            context['primary_agent'] = "rapid-prototyper"
+            files["AGENTS.md"] = self.template_manager.render_template(
+                self._get_default_agents_template(),
+                context
+            )
 
         return files
 
-    def _generate_workflows(self, analysis: ProjectAnalysis, templates: Dict[str, str]) -> Dict[str, str]:
-        """Generate development workflow files."""
+    def _generate_workflows(self, analysis: ProjectAnalysis) -> Dict[str, str]:
+        """Generate development workflow files using new template system."""
         files = {}
-
+        
+        # Create basic workflow documentation
+        context = self.template_manager._create_context_from_analysis(analysis)
+        
         # Feature development workflow
-        if templates.get("feature_workflow"):
-            files[".claude/workflows/FEATURE_DEVELOPMENT.md"] = self._render_template(
-                templates["feature_workflow"], analysis
-            )
+        feature_workflow = self._get_feature_workflow_template()
+        files[".claude/workflows/FEATURE_DEVELOPMENT.md"] = self.template_manager.render_template(
+            feature_workflow, context
+        )
 
-        # Testing workflow
-        if analysis.has_tests and templates.get("testing_workflow"):
-            files[".claude/workflows/TESTING.md"] = self._render_template(
-                templates["testing_workflow"], analysis
+        # Testing workflow (if project has tests)
+        if getattr(analysis, 'has_tests', False) or (
+            hasattr(analysis, 'filesystem_info') and 
+            analysis.filesystem_info and 
+            analysis.filesystem_info.test_files > 0
+        ):
+            testing_workflow = self._get_testing_workflow_template()
+            files[".claude/workflows/TESTING.md"] = self.template_manager.render_template(
+                testing_workflow, context
             )
 
         return files
 
-    def _generate_project_docs(self, analysis: ProjectAnalysis, templates: Dict[str, str]) -> Dict[str, str]:
-        """Generate project-specific documentation."""
+    def _generate_project_docs(self, analysis: ProjectAnalysis) -> Dict[str, str]:
+        """Generate project-specific documentation using new template system."""
         files = {}
+        context = self.template_manager._create_context_from_analysis(analysis)
 
-        # Architecture documentation
-        if analysis.complexity_level.value in ["complex", "enterprise"]:
-            arch_template = templates.get("architecture_doc", self._get_default_architecture_template())
-            files[".claude/ARCHITECTURE.md"] = self._render_template(arch_template, analysis)
+        # Architecture documentation for complex projects
+        complexity = getattr(analysis, 'complexity_level', None)
+        if complexity and complexity.value in ["complex", "enterprise"]:
+            arch_template = self._get_default_architecture_template()
+            files[".claude/ARCHITECTURE.md"] = self.template_manager.render_template(arch_template, context)
 
         # API documentation for web projects
-        if analysis.is_web_project and templates.get("api_doc"):
-            files[".claude/API_DESIGN.md"] = self._render_template(templates["api_doc"], analysis)
+        is_web = getattr(analysis, 'is_web_project', False)
+        if is_web:
+            api_template = self._get_api_documentation_template()
+            files[".claude/API_DESIGN.md"] = self.template_manager.render_template(api_template, context)
 
         # Performance guide for complex projects
-        if analysis.complexity_level.value in ["complex", "enterprise"]:
-            perf_template = templates.get("performance_guide", self._get_default_performance_template())
-            files[".claude/PERFORMANCE.md"] = self._render_template(perf_template, analysis)
+        if complexity and complexity.value in ["complex", "enterprise"]:
+            perf_template = self._get_default_performance_template()
+            files[".claude/PERFORMANCE.md"] = self.template_manager.render_template(perf_template, context)
 
         return files
 
     def _render_template(self, template: str, analysis: ProjectAnalysis) -> str:
-        """Render a template with analysis data."""
-        # Create template variables
-        variables = self._create_template_variables(analysis)
-
-        # Use string.Template for safe substitution
-        template_obj = Template(template)
-
-        try:
-            return template_obj.safe_substitute(**variables)
-        except Exception as e:
-            # If template rendering fails, return template with error note
-            return f"{template}\\n\\n<!-- Template rendering error: {e} -->"
+        """Legacy template rendering method - now uses new template system."""
+        context = self.template_manager._create_context_from_analysis(analysis)
+        return self.template_manager.render_template(template, context)
 
     def _create_template_variables(self, analysis: ProjectAnalysis) -> Dict[str, str]:
         """Create variables for template substitution."""
@@ -210,11 +226,141 @@ class DocumentGenerator:
 
         return variables
 
-    def _get_template_info(self, templates: Dict[str, str]) -> Dict[str, str]:
-        """Get information about used templates."""
+    def _get_feature_workflow_template(self) -> str:
+        """Get feature development workflow template."""
+        return """# Feature Development Workflow
+
+## Overview
+
+This workflow guides feature development for the ${project_name} project.
+
+## Development Process
+
+### 1. Planning Phase
+- Define feature requirements
+- Design API/interface changes
+- Identify testing requirements
+- Plan implementation approach
+
+### 2. Implementation Phase
+- Create feature branch
+- Implement core functionality
+- Add comprehensive tests
+- Update documentation
+
+### 3. Quality Assurance
+- Run full test suite
+- Perform code review
+- Check for performance impacts
+- Verify security considerations
+
+### 4. Integration
+- Merge to main branch
+- Deploy to staging environment
+- Run integration tests
+- Deploy to production
+
+## Recommended Agents
+
+- **${primary_language}-pro**: Core implementation
+- **test-writer-fixer**: Testing strategy
+- **backend-architect**: System design
+- **devops-automator**: Deployment
+
+---
+
+*Workflow for ${project_type} project*
+"""
+
+    def _get_testing_workflow_template(self) -> str:
+        """Get testing workflow template."""
+        return """# Testing Workflow
+
+## Testing Strategy
+
+Comprehensive testing approach for ${project_name}.
+
+## Test Types
+
+### Unit Tests
+- Test individual functions and methods
+- Mock external dependencies
+- Aim for >80% code coverage
+
+### Integration Tests
+- Test component interactions
+- Verify database operations
+- Test API endpoints
+
+### End-to-End Tests
+- Test complete user workflows
+- Verify system behavior
+- Test deployment scenarios
+
+## Testing Commands
+
+```bash
+# Run all tests
+# Generate coverage report
+# Run specific test suites
+```
+
+## Quality Gates
+
+- All tests must pass
+- Coverage threshold: 80%+
+- No critical security issues
+- Performance benchmarks met
+
+---
+
+*Testing guide for ${project_type} project*
+"""
+
+    def _get_api_documentation_template(self) -> str:
+        """Get API documentation template."""
+        return """# API Design Documentation
+
+## API Overview
+
+API design and documentation for ${project_name}.
+
+## Endpoints
+
+### Core Resources
+- RESTful API design principles
+- Consistent naming conventions
+- Proper HTTP status codes
+- Comprehensive error handling
+
+### Authentication
+- Authentication strategy
+- Authorization levels
+- Security considerations
+
+### Data Models
+- Request/response schemas
+- Validation rules
+- Data transformation
+
+## Best Practices
+
+- Use appropriate HTTP methods
+- Implement proper error handling
+- Provide clear documentation
+- Version your API appropriately
+
+---
+
+*API documentation for ${project_name}*
+"""
+
+    def _get_template_info(self) -> Dict[str, str]:
+        """Get information about available templates."""
+        available_templates = self.template_manager.list_available_templates()
         return {
-            "templates_used": list(templates.keys()),
-            "template_count": len(templates)
+            "templates_available": available_templates,
+            "template_count": len(available_templates)
         }
 
     def _get_default_claude_template(self) -> str:
@@ -731,128 +877,4 @@ ${uses_database == 'Yes' and '''
 """
 
 
-class TemplateLoader:
-    """Loads and manages templates."""
-
-    def __init__(self):
-        self.template_cache = {}
-        self.templates_dir = Path(__file__).parent.parent / "templates"
-
-    def load_templates(self, analysis: ProjectAnalysis) -> Dict[str, str]:
-        """Load appropriate templates based on analysis."""
-        templates = {}
-
-        # Load base templates (always included)
-        templates.update(self._load_base_templates())
-
-        # Load language-specific templates
-        if analysis.language:
-            templates.update(self._load_language_templates(analysis.language.lower()))
-
-        # Load framework-specific templates
-        if analysis.framework:
-            templates.update(self._load_framework_templates(analysis.framework.lower()))
-
-        # Load project type templates
-        templates.update(self._load_project_type_templates(analysis.project_type.value))
-
-        return templates
-
-    def _load_template_file(self, file_path: Path) -> Optional[str]:
-        """Load a single template file with caching."""
-        file_key = str(file_path)
-
-        # Check cache first
-        if file_key in self.template_cache:
-            return self.template_cache[file_key]
-
-        # Load from file
-        try:
-            if file_path.exists():
-                content = file_path.read_text(encoding="utf-8")
-                self.template_cache[file_key] = content
-                return content
-        except Exception as e:
-            print(f"Warning: Could not load template {file_path}: {e}")
-
-        return None
-
-    def _load_base_templates(self) -> Dict[str, str]:
-        """Load base templates that apply to all projects."""
-        templates = {}
-        base_dir = self.templates_dir / "base"
-
-        # Load base template files
-        template_files = {
-            "claude_instructions": "claude_instructions.md",
-            "development_workflow": "development_workflow.md",
-            "agent_coordination": "agent_coordination.md"
-        }
-
-        for key, filename in template_files.items():
-            template_path = base_dir / filename
-            content = self._load_template_file(template_path)
-            if content:
-                templates[key] = content
-
-        return templates
-
-    def _load_language_templates(self, language: str) -> Dict[str, str]:
-        """Load language-specific templates."""
-        templates = {}
-        language_dir = self.templates_dir / "languages" / language
-
-        if not language_dir.exists():
-            return templates
-
-        # Load language-specific template files
-        template_files = {
-            f"{language}_claude_instructions": "claude_instructions.md",
-            f"{language}_development_guide": "development_guide.md",
-            f"{language}_agents_config": "agents_config.md"
-        }
-
-        for key, filename in template_files.items():
-            template_path = language_dir / filename
-            content = self._load_template_file(template_path)
-            if content:
-                templates[key] = content
-
-        return templates
-
-    def _load_framework_templates(self, framework: str) -> Dict[str, str]:
-        """Load framework-specific templates."""
-        templates = {}
-        framework_dir = self.templates_dir / "frameworks" / framework
-
-        if not framework_dir.exists():
-            return templates
-
-        # Load framework-specific template files
-        template_files = {
-            f"{framework}_claude_instructions": "claude_instructions.md",
-            f"{framework}_development_guide": "development_guide.md"
-        }
-
-        for key, filename in template_files.items():
-            template_path = framework_dir / filename
-            content = self._load_template_file(template_path)
-            if content:
-                templates[key] = content
-
-        return templates
-
-    def _load_project_type_templates(self, project_type: str) -> Dict[str, str]:
-        """Load project type specific templates."""
-        # For now, project type templates are handled through language/framework combinations
-        # This could be expanded later for specific project patterns like 'microservice', 'monolith', etc.
-        return {}
-
-
-class ContentComposer:
-    """Composes content from multiple template layers."""
-
-    def compose(self, templates: List[str]) -> str:
-        """Compose multiple templates into final content."""
-        # TODO: Implement intelligent template composition
-        return "\\n\\n".join(templates)
+# Legacy classes removed - now using CoreTemplateManager from template_manager.py
