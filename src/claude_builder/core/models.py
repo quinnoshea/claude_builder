@@ -257,3 +257,39 @@ class AnalysisResult:
     complexity: Optional[ComplexityLevel] = None
     errors: List[str] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class DependencyInfo:
+    """Placeholder DependencyInfo class for test compatibility."""
+    package_managers: List[str] = field(default_factory=list)
+    dependencies: Dict[str, str] = field(default_factory=dict)
+    dev_dependencies: Dict[str, str] = field(default_factory=dict)
+
+
+@dataclass
+class FileStructure:
+    """Placeholder FileStructure class for test compatibility."""
+    source_files: List[str] = field(default_factory=list)
+    test_files: List[str] = field(default_factory=list)
+    config_files: List[str] = field(default_factory=list)
+    documentation_files: List[str] = field(default_factory=list)
+
+
+@dataclass
+class GenerationConfig:
+    """Placeholder GenerationConfig class for test compatibility."""
+    template_name: str = "default"
+    output_path: str = "."
+    variables: Dict[str, str] = field(default_factory=dict)
+    overwrite_existing: bool = False
+
+
+@dataclass
+class ProjectInfo:
+    """Placeholder ProjectInfo class for test compatibility."""
+    name: str = "unknown"
+    path: str = "."
+    language: str = "unknown"
+    framework: str = "none"
+    dependencies: List[str] = field(default_factory=list)
