@@ -1,0 +1,161 @@
+# Codacy configuration file for Claude Builder
+# https://docs.codacy.com/repositories-configure/codacy-configuration-file/
+
+engines:
+  # ENABLE: Core Python security and quality analysis
+  bandit:
+    enabled: true
+    exclude_paths:
+      - "tests/**"
+      - "examples/**"
+      - "docs/**"
+  
+  ruff:
+    enabled: true
+    exclude_paths:
+      - "examples/**"
+      - "docs/**"
+    # Include tests for ruff since it's fast and catches real issues
+  
+  pylint:
+    enabled: true
+    exclude_paths:
+      - "tests/**"  # Pylint can be too strict for tests
+      - "examples/**"
+    python_version: 3
+  
+  # ENABLE: Advanced security scanning
+  semgrep:
+    enabled: true
+    exclude_paths:
+      - "tests/**"
+      - "examples/**"
+      - "docs/**"
+  
+  trivy:
+    enabled: true
+    exclude_paths:
+      - "tests/**"
+      - "examples/**"
+  
+  # ENABLE: Complexity and maintainability
+  lizard:
+    enabled: true
+    exclude_paths:
+      - "tests/**"
+      - "examples/**"
+      - "docs/**"
+  
+  # ENABLE: Documentation quality
+  markdownlint:
+    enabled: true
+    exclude_paths:
+      - "examples/**"
+  
+  remark-lint:
+    enabled: true
+    exclude_paths:
+      - "examples/**"
+  
+  # DISABLE: prospector (redundant with ruff + pylint combination)
+  prospector:
+    enabled: false
+
+exclude_paths:
+  # Version control and CI
+  - ".git/**"
+  - ".github/**"
+  - ".pytest_cache/**"
+  - "__pycache__/**"
+  - "*.pyc"
+  
+  # Build and distribution
+  - "build/**"
+  - "dist/**"
+  - "*.egg-info/**"
+  
+  # Documentation and examples
+  - "docs/**"
+  - "examples/**"
+  - "*.md"
+  - "*.rst"
+  - "*.txt"
+  
+  # Configuration files
+  - "*.yml"
+  - "*.yaml"
+  - "*.json"
+  - "*.toml"
+  - "*.cfg"
+  - "*.ini"
+  
+  # Test fixtures and data
+  - "tests/fixtures/**"
+  - "tests/data/**"
+  - "tests/test_data/**"
+
+# Coverage settings
+coverage:
+  # Ignore test files for coverage metrics
+  exclude_paths:
+    - "tests/**"
+    - "test_*.py"
+    - "*_test.py"
+    - "conftest.py"
+
+# Duplication detection settings
+duplication:
+  # Exclude common patterns that may have legitimate duplication
+  exclude_paths:
+    - "tests/**"
+    - "examples/**"
+  
+  # Minimum lines to consider as duplication
+  min_tokens: 50
+
+# Complexity thresholds
+complexity:
+  # Maximum cyclomatic complexity for methods
+  max_complexity_per_method: 10
+  
+  # Maximum complexity for classes
+  max_complexity_per_class: 50
+  
+  # Maximum complexity for files
+  max_complexity_per_file: 200
+
+# Issue severity settings
+issues:
+  # Set minimum severity level to report
+  min_severity: "Info"
+  
+  # Maximum number of issues to report per file
+  max_issues_per_file: 50
+  
+  # Skip specific issue categories
+  exclude_categories:
+    - "Security"  # Handled by bandit
+    
+  # Skip specific issue patterns
+  exclude_patterns:
+    - "tests/**"  # Skip test-specific issues
+
+# File size limits
+file_size:
+  # Maximum file size in lines
+  max_file_size: 1000
+  
+  # Files to exclude from size checks
+  exclude_paths:
+    - "tests/**"
+    - "examples/**"
+
+# Comment settings
+comments:
+  # Minimum comment coverage percentage
+  min_coverage: 10
+  
+  # Exclude from comment coverage requirements
+  exclude_paths:
+    - "tests/**"
+    - "__init__.py"

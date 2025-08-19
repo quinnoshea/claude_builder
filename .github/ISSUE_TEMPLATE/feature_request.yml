@@ -1,0 +1,163 @@
+name: ✨ Feature Request
+description: Suggest a new feature or enhancement
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a new feature! Please provide details to help us understand your request.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submission checks
+      description: Please verify these items before submitting
+      options:
+        - label: I have searched existing issues and this feature has not been requested
+          required: true
+        - label: I have checked the documentation for existing functionality
+          required: true
+        - label: This feature would benefit the broader Claude Builder community
+          required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Feature Summary
+      description: Brief summary of the feature you'd like to see
+      placeholder: A clear and concise description of the feature...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Feature Category
+      description: What category does this feature fall into?
+      options:
+        - Project Analysis (language/framework detection)
+        - Template System (new templates or template features)
+        - Agent System (agent selection or coordination)
+        - CLI Interface (command-line improvements)
+        - Git Integration (git-related features)
+        - Configuration (config management features)
+        - Performance (speed or efficiency improvements)
+        - Documentation (docs or examples)
+        - Other (specify in description)
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Description
+      description: What problem does this feature solve?
+      placeholder: |
+        Describe the problem or pain point this feature would address...
+        - What workflow is currently difficult or impossible?
+        - What manual steps could be automated?
+        - What gaps exist in current functionality?
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe your ideal solution
+      placeholder: |
+        Describe how you envision this feature working...
+        - What would the user interface look like?
+        - How would users interact with this feature?
+        - What would the expected behavior be?
+    validations:
+      required: true
+
+  - type: textarea
+    id: examples
+    attributes:
+      label: Usage Examples
+      description: Provide examples of how this feature would be used
+      placeholder: |
+        Show examples of commands, configurations, or workflows:
+        
+        ```bash
+        # Example command
+        claude-builder --new-feature-flag /path/to/project
+        ```
+        
+        ```json
+        {
+          "new_feature": {
+            "option": "value"
+          }
+        }
+        ```
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: What other solutions have you considered?
+      placeholder: |
+        - Alternative approach 1: ...
+        - Alternative approach 2: ...
+        - Why the proposed solution is preferred: ...
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority Level
+      description: How important is this feature to you?
+      options:
+        - Low (nice to have)
+        - Medium (would improve workflow)
+        - High (blocks important use cases)
+        - Critical (essential for adoption)
+
+  - type: dropdown
+    id: complexity
+    attributes:
+      label: Estimated Complexity
+      description: How complex do you think this feature would be to implement?
+      options:
+        - Small (configuration option, minor enhancement)
+        - Medium (new command, template improvements)
+        - Large (new analysis capability, major feature)
+        - Unknown (needs investigation)
+
+  - type: textarea
+    id: technical
+    attributes:
+      label: Technical Considerations
+      description: Any technical details, constraints, or implementation ideas
+      placeholder: |
+        - Dependencies or integrations required
+        - Performance considerations
+        - Backward compatibility concerns
+        - Implementation suggestions
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution Interest
+      description: Would you be interested in contributing to this feature?
+      options:
+        - label: I would like to implement this feature myself
+        - label: I can help with testing and feedback
+        - label: I can provide domain expertise or examples
+        - label: I can help with documentation
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any other context, mockups, or related information
+      placeholder: |
+        - Links to similar features in other tools
+        - Screenshots or mockups
+        - Related issues or discussions
+        - Community feedback or demand
