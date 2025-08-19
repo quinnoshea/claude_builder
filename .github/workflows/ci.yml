@@ -1,4 +1,4 @@
-name: CI/CD
+name: CI
 
 on:
   push:
@@ -93,7 +93,7 @@ jobs:
         
     - name: Upload test results
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: test-results-${{ matrix.os }}-${{ matrix.python-version }}
         path: |
@@ -125,11 +125,13 @@ jobs:
         
     - name: Generate code complexity report
       run: |
+        pip install radon
         radon cc claude_builder --show-complexity --min B
         radon mi claude_builder --show
         
     - name: Check documentation coverage
       run: |
+        pip install interrogate
         interrogate claude_builder --ignore-init-method --ignore-magic --ignore-module --ignore-nested-functions --fail-under=80
 
   integration-tests:
@@ -186,7 +188,7 @@ jobs:
         safety check --json --output safety-report.json
         
     - name: Upload security reports
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: security-reports
         path: |
@@ -218,7 +220,7 @@ jobs:
         python -m pytest tests/performance/ --benchmark-json=benchmark-report.json
         
     - name: Upload performance report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: performance-report
         path: benchmark-report.json
@@ -248,7 +250,7 @@ jobs:
         twine check dist/*
         
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: dist
         path: dist/
