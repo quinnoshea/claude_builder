@@ -59,7 +59,7 @@ jobs:
         
     - name: Run tests with coverage
       run: |
-        pytest --cov=src --cov-report=xml:coverage.xml --cov-report=html:htmlcov --cov-report=term-missing --junitxml=junit.xml -v
+        pytest --cov=src/claude_builder --cov-report=xml:coverage.xml --cov-report=html:htmlcov --cov-report=term-missing --junitxml=junit.xml -v
         
     - name: Debug coverage file
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'

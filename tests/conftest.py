@@ -54,6 +54,289 @@ def sample_project_path(temp_dir: Path) -> Path:
 
 
 @pytest.fixture
+def sample_python_project(temp_dir: Path) -> Path:
+    """Create a comprehensive Python project for integration testing."""
+    project_dir = temp_dir / "python_project"
+    project_dir.mkdir()
+
+    # Project metadata files
+    (project_dir / "README.md").write_text("""# Python Test Project
+A comprehensive test project for integration testing.
+
+## Features
+- CLI interface with Click
+- Web API with FastAPI
+- Database integration
+- Testing with pytest
+""")
+    
+    (project_dir / "pyproject.toml").write_text("""[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "test-project"
+version = "0.1.0"
+description = "Test project for integration testing"
+dependencies = [
+    "click>=8.0.0",
+    "fastapi>=0.95.0",
+    "uvicorn>=0.20.0",
+    "pydantic>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+]
+""")
+
+    (project_dir / "requirements.txt").write_text("""click>=8.0.0
+fastapi>=0.95.0
+uvicorn>=0.20.0
+pydantic>=2.0.0
+requests>=2.25.0
+""")
+
+    # Main source structure
+    src_dir = project_dir / "src" / "testproject"
+    src_dir.mkdir(parents=True)
+    (src_dir / "__init__.py").write_text('"""Test project package."""\n__version__ = "0.1.0"')
+    
+    # CLI module
+    (src_dir / "cli.py").write_text("""#!/usr/bin/env python3
+\"\"\"Command line interface for test project.\"\"\"
+import click
+
+@click.group()
+def main():
+    \"\"\"Test project CLI.\"\"\"
+    pass
+
+@main.command()
+@click.option('--name', default='World', help='Name to greet')
+def hello(name):
+    \"\"\"Say hello.\"\"\"
+    click.echo(f'Hello, {name}!')
+
+if __name__ == '__main__':
+    main()
+""")
+
+    # Core business logic
+    (src_dir / "core.py").write_text("""\"\"\"Core business logic for test project.\"\"\"
+from typing import List, Dict, Any
+
+class ProjectManager:
+    \"\"\"Manages project operations.\"\"\"
+    
+    def __init__(self):
+        self.projects: List[Dict[str, Any]] = []
+    
+    def create_project(self, name: str, description: str = "") -> Dict[str, Any]:
+        \"\"\"Create a new project.\"\"\"
+        project = {
+            "id": len(self.projects) + 1,
+            "name": name,
+            "description": description,
+            "status": "active"
+        }
+        self.projects.append(project)
+        return project
+    
+    def get_project(self, project_id: int) -> Dict[str, Any]:
+        \"\"\"Get project by ID.\"\"\"
+        for project in self.projects:
+            if project["id"] == project_id:
+                return project
+        raise ValueError(f"Project {project_id} not found")
+    
+    def list_projects(self) -> List[Dict[str, Any]]:
+        \"\"\"List all projects.\"\"\"
+        return self.projects.copy()
+""")
+
+    # API module
+    (src_dir / "api.py").write_text("""\"\"\"FastAPI web application.\"\"\"
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from typing import List
+from .core import ProjectManager
+
+app = FastAPI(title="Test Project API", version="0.1.0")
+manager = ProjectManager()
+
+class ProjectCreate(BaseModel):
+    name: str
+    description: str = ""
+
+class Project(BaseModel):
+    id: int
+    name: str
+    description: str
+    status: str
+
+@app.get("/")
+async def root():
+    return {"message": "Test Project API"}
+
+@app.post("/projects/", response_model=Project)
+async def create_project(project: ProjectCreate):
+    return manager.create_project(project.name, project.description)
+
+@app.get("/projects/", response_model=List[Project])
+async def list_projects():
+    return manager.list_projects()
+
+@app.get("/projects/{project_id}", response_model=Project)
+async def get_project(project_id: int):
+    try:
+        return manager.get_project(project_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+""")
+
+    # Configuration module
+    (src_dir / "config.py").write_text("""\"\"\"Configuration management.\"\"\"
+import os
+from pathlib import Path
+from typing import Optional
+
+class Config:
+    \"\"\"Application configuration.\"\"\"
+    
+    def __init__(self):
+        self.debug = os.getenv("DEBUG", "false").lower() == "true"
+        self.database_url = os.getenv("DATABASE_URL", "sqlite:///./test.db")
+        self.api_key = os.getenv("API_KEY")
+        self.log_level = os.getenv("LOG_LEVEL", "INFO")
+    
+    @property
+    def is_development(self) -> bool:
+        return self.debug
+    
+    def get_data_dir(self) -> Path:
+        return Path.home() / ".testproject"
+""")
+
+    # Tests structure
+    tests_dir = project_dir / "tests"
+    tests_dir.mkdir()
+    (tests_dir / "__init__.py").write_text("")
+    
+    (tests_dir / "conftest.py").write_text("""\"\"\"Test configuration.\"\"\"
+import pytest
+from pathlib import Path
+from src.testproject.core import ProjectManager
+
+@pytest.fixture
+def project_manager():
+    return ProjectManager()
+
+@pytest.fixture
+def sample_project_data():
+    return {
+        "name": "Test Project",
+        "description": "A test project for testing"
+    }
+""")
+
+    (tests_dir / "test_core.py").write_text("""\"\"\"Tests for core module.\"\"\"
+import pytest
+from src.testproject.core import ProjectManager
+
+def test_create_project(project_manager):
+    project = project_manager.create_project("Test", "Description")
+    assert project["name"] == "Test"
+    assert project["description"] == "Description"
+    assert project["status"] == "active"
+
+def test_get_project(project_manager):
+    project = project_manager.create_project("Test", "Description")
+    retrieved = project_manager.get_project(project["id"])
+    assert retrieved == project
+
+def test_list_projects(project_manager):
+    project1 = project_manager.create_project("Test1", "Desc1")
+    project2 = project_manager.create_project("Test2", "Desc2")
+    projects = project_manager.list_projects()
+    assert len(projects) == 2
+    assert project1 in projects
+    assert project2 in projects
+""")
+
+    (tests_dir / "test_api.py").write_text("""\"\"\"Tests for API module.\"\"\"
+import pytest
+from fastapi.testclient import TestClient
+from src.testproject.api import app
+
+@pytest.fixture
+def client():
+    return TestClient(app)
+
+def test_root(client):
+    response = client.get("/")
+    assert response.status_code == 200
+    assert response.json() == {"message": "Test Project API"}
+
+def test_create_project(client):
+    response = client.post("/projects/", json={"name": "Test", "description": "Desc"})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["name"] == "Test"
+    assert data["description"] == "Desc"
+""")
+
+    # Documentation
+    docs_dir = project_dir / "docs"
+    docs_dir.mkdir()
+    (docs_dir / "README.md").write_text("""# Documentation
+
+This is the documentation directory for the test project.
+""")
+
+    # Configuration files
+    (project_dir / ".gitignore").write_text("""__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+.coverage
+htmlcov/
+.pytest_cache/
+""")
+
+    return project_dir
+
+
+@pytest.fixture
 def sample_analysis() -> ProjectAnalysis:
     """Create a sample project analysis for testing."""
     return ProjectAnalysis(

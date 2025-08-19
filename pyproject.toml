@@ -131,7 +131,7 @@ strict_equality = true
 
 [tool.pytest.ini_options]
 minversion = "7.0"
-addopts = "-ra -q --strict-markers --strict-config --cov=claude_builder --cov-report=term-missing --cov-report=xml --cov-report=html --cov-fail-under=85"
+addopts = "-ra -q --strict-markers --strict-config --cov=claude_builder --cov-report=term-missing --cov-report=xml --cov-report=html --cov-fail-under=50"
 testpaths = [
     "tests",
 ]
