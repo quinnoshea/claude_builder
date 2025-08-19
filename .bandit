@@ -1,4 +1,6 @@
 [bandit]
 # Bandit configuration for Claude Builder
-exclude_dirs = tests,docs,build,dist,.git,.github
-skips = B101,B601,B602,B603
+# Include tests in analysis for comprehensive security coverage
+exclude_dirs = build,dist,.git,.github,__pycache__
+# Only skip specific checks that are problematic in test context
+skips = B101

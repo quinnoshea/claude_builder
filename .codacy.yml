@@ -1,27 +1,17 @@
-# Codacy configuration file for Claude Builder
-# Simplified configuration to ensure tools can run properly
-
+---
 engines:
   bandit:
     enabled: true
-  
   ruff:
+    enabled: true  
+  pylintpython3:
     enabled: true
-  
-  pylint:
-    enabled: true
-    python_version: 3
-  
   markdownlint:
     enabled: true
 
 exclude_paths:
   - ".git/**"
-  - ".github/**"
-  - ".pytest_cache/**"
   - "__pycache__/**"
   - "build/**"
   - "dist/**"
   - "*.egg-info/**"
-  - "tests/fixtures/**"
-  - "tests/data/**"
