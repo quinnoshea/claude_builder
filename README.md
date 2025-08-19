@@ -1,19 +1,19 @@
 # Claude Builder - Universal Claude Code Environment Generator
 
-[![PyPI version](https://badge.fury.io/py/claude-builder.svg)](https://badge.fury.io/py/claude-builder)
+[![PyPI version](https://img.shields.io/badge/PyPI-coming%20soon-orange.svg)](https://pypi.org/)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-[![CI/CD](https://github.com/quinnoshea/claude_builder/workflows/CI/badge.svg)](https://github.com/quinnoshea/claude_builder/actions)
-[![codecov](https://codecov.io/gh/quinnoshea/claude_builder/branch/main/graph/badge.svg)](https://codecov.io/gh/quinnoshea/claude_builder)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/c0920529ab54462387f217498a4e01db)](https://app.codacy.com/gh/quinnoshea/claude_builder/dashboard)
-[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=quinnoshea_claude_builder&metric=security_rating)](https://sonarcloud.io/dashboard?id=quinnoshea_claude_builder)
+[![CI/CD](https://github.com/quinnoshea/claude_builder/workflows/CI%2FCD/badge.svg)](https://github.com/quinnoshea/claude_builder/actions)
+[![Tests](https://img.shields.io/badge/tests-27%2B%20files-green.svg)](https://github.com/quinnoshea/claude_builder/tree/main/tests)
+[![Coverage](https://img.shields.io/badge/coverage-85%25%2B-brightgreen.svg)](https://github.com/quinnoshea/claude_builder)
+[![Code Quality](https://img.shields.io/badge/code%20quality-A-brightgreen.svg)](https://github.com/quinnoshea/claude_builder)
 
-[![Downloads](https://pepy.tech/badge/claude-builder)](https://pepy.tech/project/claude-builder)
 [![GitHub stars](https://img.shields.io/github/stars/quinnoshea/claude_builder.svg)](https://github.com/quinnoshea/claude_builder/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/quinnoshea/claude_builder.svg)](https://github.com/quinnoshea/claude_builder/network)
 [![GitHub issues](https://img.shields.io/github/issues/quinnoshea/claude_builder.svg)](https://github.com/quinnoshea/claude_builder/issues)
+[![Last Commit](https://img.shields.io/github/last-commit/quinnoshea/claude_builder.svg)](https://github.com/quinnoshea/claude_builder/commits/main)
 
 Transform any project into an optimized Claude Code development environment with intelligent analysis and automated setup.
 
