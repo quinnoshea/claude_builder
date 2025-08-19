@@ -59,7 +59,13 @@ jobs:
         
     - name: Run tests with coverage
       run: |
-        pytest --cov=. --cov-report=xml:coverage.xml --cov-report=html:htmlcov --cov-report=term-missing --junitxml=junit.xml -v || true
+        pytest --cov=src --cov-report=xml:coverage.xml --cov-report=html:htmlcov --cov-report=term-missing --junitxml=junit.xml -v
+        
+    - name: Debug coverage file
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      run: |
+        ls -la coverage.xml || echo "coverage.xml not found"
+        cat coverage.xml | head -20 || echo "Cannot read coverage.xml"
         
     - name: Display coverage summary
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'

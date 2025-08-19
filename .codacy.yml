@@ -1,17 +1,10 @@
 ---
 engines:
-  bandit:
-    enabled: true
   ruff:
-    enabled: true  
-  pylintpython3:
+    enabled: true
+  pylint:
+    enabled: true
+  bandit:
     enabled: true
   markdownlint:
     enabled: true
-
-exclude_paths:
-  - ".git/**"
-  - "__pycache__/**"
-  - "build/**"
-  - "dist/**"
-  - "*.egg-info/**"
