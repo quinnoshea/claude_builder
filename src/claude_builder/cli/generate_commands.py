@@ -330,3 +330,146 @@ def _write_generated_files(generated_content, output_path: Path, backup_existing
 
     if verbose > 0:
         console.print(f"[green]Wrote {files_written} files[/green]")
+
+
+@generate.command()
+@click.argument("project_path", type=click.Path(exists=True, file_okay=False, dir_okay=True))
+@click.option("--from-analysis", type=click.Path(exists=True, file_okay=True),
+              help="Use existing analysis file")
+@click.option("--template", help="Override template selection")
+@click.option("--output-file", type=click.Path(), help="Output file (default: CLAUDE.md)")
+@click.option("--dry-run", is_flag=True, help="Show what would be generated without creating files")
+@click.option("--verbose", "-v", count=True, help="Verbose output")
+def claude_md(project_path: str, from_analysis: Optional[str], template: Optional[str],
+             output_file: Optional[str], dry_run: bool, verbose: int):
+    """Generate CLAUDE.md file."""
+    try:
+        path = Path(project_path).resolve()
+        
+        if verbose > 0:
+            console.print(f"[cyan]Generating CLAUDE.md for: {path}[/cyan]")
+
+        # Get project analysis
+        if from_analysis:
+            analysis = _load_analysis_from_file(Path(from_analysis))
+            if verbose > 0:
+                console.print(f"[green]Loaded analysis from: {from_analysis}[/green]")
+        else:
+            if verbose > 0:
+                console.print("[cyan]Analyzing project...[/cyan]")
+            analyzer = ProjectAnalyzer()
+            analysis = analyzer.analyze(path)
+
+        # Configure generator
+        config = {}
+        if template:
+            config["preferred_template"] = template
+
+        # Generate CLAUDE.md content
+        generator = DocumentGenerator(config)
+        generated_content = generator.generate(analysis, path)
+        
+        # Extract only CLAUDE.md content
+        claude_content = generated_content.files.get("CLAUDE.md")
+        if not claude_content:
+            console.print("[red]Failed to generate CLAUDE.md content[/red]")
+            return
+
+        if dry_run or verbose > 0:
+            console.print(Panel(
+                f"**CLAUDE.md Preview** ({len(claude_content)} characters)\\n\\n"
+                f"First 200 characters:\\n{claude_content[:200]}...",
+                title="CLAUDE.md Generation Preview"
+            ))
+
+        if dry_run:
+            console.print("[yellow]Dry run complete - no files were created[/yellow]")
+            return
+
+        # Write CLAUDE.md file
+        output_path = Path(output_file) if output_file else path / "CLAUDE.md"
+        
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write(claude_content)
+            
+        console.print(f"[green]✓ CLAUDE.md generated successfully[/green]")
+        console.print(f"Output location: {output_path}")
+
+    except Exception as e:
+        console.print(f"[red]Error generating CLAUDE.md: {e}[/red]")
+        raise click.ClickException(f"Failed to generate CLAUDE.md: {e}")
+
+
+@generate.command()
+@click.argument("project_path", type=click.Path(exists=True, file_okay=False, dir_okay=True))
+@click.option("--from-analysis", type=click.Path(exists=True, file_okay=True),
+              help="Use existing analysis file")
+@click.option("--agents-dir", type=click.Path(), help="Custom agents directory")
+@click.option("--output-file", type=click.Path(), help="Output file (default: AGENTS.md)")
+@click.option("--dry-run", is_flag=True, help="Show what would be generated without creating files")
+@click.option("--verbose", "-v", count=True, help="Verbose output")
+def agents_md(project_path: str, from_analysis: Optional[str], agents_dir: Optional[str],
+             output_file: Optional[str], dry_run: bool, verbose: int):
+    """Generate AGENTS.md file."""
+    try:
+        path = Path(project_path).resolve()
+        
+        if verbose > 0:
+            console.print(f"[cyan]Generating AGENTS.md for: {path}[/cyan]")
+
+        # Get project analysis
+        if from_analysis:
+            analysis = _load_analysis_from_file(Path(from_analysis))
+            if verbose > 0:
+                console.print(f"[green]Loaded analysis from: {from_analysis}[/green]")
+        else:
+            if verbose > 0:
+                console.print("[cyan]Analyzing project...[/cyan]")
+            analyzer = ProjectAnalyzer()
+            analysis = analyzer.analyze(path)
+
+        # Generate agent configuration
+        from claude_builder.core.agents import UniversalAgentSystem
+        agent_system = UniversalAgentSystem()
+        agent_config = agent_system.select_agents(analysis)
+
+        if verbose > 0:
+            console.print(f"[green]Selected {len(agent_config.all_agents)} agents[/green]")
+
+        # Generate AGENTS.md content
+        generator = DocumentGenerator({"agents_only": True})
+        generated_content = generator.generate(analysis, path)
+        
+        # Extract only AGENTS.md content
+        agents_content = generated_content.files.get("AGENTS.md")
+        if not agents_content:
+            console.print("[red]Failed to generate AGENTS.md content[/red]")
+            return
+
+        if dry_run or verbose > 0:
+            console.print(Panel(
+                f"**AGENTS.md Preview**\\n\\n"
+                f"Core agents: {len(agent_config.core_agents)}\\n"
+                f"Domain agents: {len(agent_config.domain_agents)}\\n"
+                f"Workflow agents: {len(agent_config.workflow_agents)}\\n"
+                f"Custom agents: {len(agent_config.custom_agents)}\\n\\n"
+                f"Content size: {len(agents_content)} characters",
+                title="AGENTS.md Generation Preview"
+            ))
+
+        if dry_run:
+            console.print("[yellow]Dry run complete - no files were created[/yellow]")
+            return
+
+        # Write AGENTS.md file
+        output_path = Path(output_file) if output_file else path / "AGENTS.md"
+        
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write(agents_content)
+            
+        console.print(f"[green]✓ AGENTS.md generated successfully[/green]")
+        console.print(f"Output location: {output_path}")
+
+    except Exception as e:
+        console.print(f"[red]Error generating AGENTS.md: {e}[/red]")
+        raise click.ClickException(f"Failed to generate AGENTS.md: {e}")

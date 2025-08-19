@@ -5,7 +5,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class ProjectType(Enum):
@@ -223,17 +223,18 @@ class ValidationResult:
 
 class TemplateRequest(BaseModel):
     """Request for template generation."""
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    
     analysis: ProjectAnalysis
     template_name: Optional[str] = None
     output_format: str = "files"
     customizations: Dict[str, Any] = Field(default_factory=dict)
 
-    class Config:
-        arbitrary_types_allowed = True
-
 
 class ExecutionResult(BaseModel):
     """Result of main execution."""
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    
     success: bool
     analysis: Optional[ProjectAnalysis] = None
     generated_content: Optional[GeneratedContent] = None
@@ -241,9 +242,6 @@ class ExecutionResult(BaseModel):
     errors: List[str] = Field(default_factory=list)
     warnings: List[str] = Field(default_factory=list)
     execution_time: Optional[float] = None
-
-    class Config:
-        arbitrary_types_allowed = True
 
 
 # Placeholder classes for test compatibility

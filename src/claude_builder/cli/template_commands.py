@@ -37,6 +37,10 @@ def templates():
     """Manage templates and template sources."""
 
 
+# Alias for backward compatibility  
+template = templates
+
+
 @templates.command()
 @click.option("--installed-only", is_flag=True, help="Show only installed templates")
 @click.option("--community-only", is_flag=True, help="Show only community templates")
@@ -453,3 +457,9 @@ def _display_templates_json(templates: List[CommunityTemplate]):
         template_data.append(data)
 
     console.print(json.dumps(template_data, indent=2))
+
+
+# Function aliases for backward compatibility with tests
+list_templates = templates.commands["list"]
+show_template = templates.commands["info"] 
+validate_template = templates.commands["validate"]

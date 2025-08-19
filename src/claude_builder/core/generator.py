@@ -878,3 +878,36 @@ ${uses_database == 'Yes' and '''
 
 
 # Legacy classes removed - now using CoreTemplateManager from template_manager.py
+
+
+class TemplateLoader:
+    """Template loading and processing."""
+    
+    def __init__(self):
+        self.template_manager = CoreTemplateManager()
+    
+    def load_template(self, template_name: str) -> str:
+        """Load a template by name."""
+        try:
+            return self.template_manager.get_template(template_name)
+        except Exception as e:
+            raise GenerationError(f"Failed to load template '{template_name}': {e}")
+    
+    def load_templates(self, template_names: List[str]) -> Dict[str, str]:
+        """Load multiple templates."""
+        templates = {}
+        for name in template_names:
+            templates[name] = self.load_template(name)
+        return templates
+    
+    def list_available_templates(self) -> List[str]:
+        """List all available templates."""
+        return self.template_manager.list_available_templates()
+    
+    def validate_template(self, template_content: str) -> bool:
+        """Validate template syntax."""
+        try:
+            Template(template_content)
+            return True
+        except Exception:
+            return False

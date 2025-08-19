@@ -456,3 +456,123 @@ def cleanup_backups(project_path: str, keep: int, force: bool):
     except Exception as e:
         console.print(f"[red]Error cleaning up backups: {e}[/red]")
         raise click.ClickException(f"Failed to cleanup backups: {e}")
+
+
+def setup_exclude(project_path: str):
+    """Setup git exclude patterns."""
+    try:
+        project_path_obj = Path(project_path).resolve()
+
+        if not (project_path_obj / ".git").exists():
+            console.print("[red]Not a git repository[/red]")
+            return
+
+        # Load configuration to get files to exclude
+        config_manager = ConfigManager()
+        config = config_manager.load_config(project_path_obj)
+
+        git_manager = GitIntegrationManager()
+
+        console.print("[cyan]Adding generated files to .git/info/exclude...[/cyan]")
+
+        # Add excludes
+        result = git_manager.exclude_manager.add_excludes(
+            project_path_obj, config.git_integration.files_to_exclude
+        )
+
+        if result.success:
+            console.print("[green]✓ Files added to .git/info/exclude[/green]")
+            for operation in result.operations_performed:
+                console.print(f"  {operation}")
+
+            # Show what was excluded
+            console.print("\n[bold]Excluded patterns:[/bold]")
+            for pattern in config.git_integration.files_to_exclude:
+                console.print(f"  • {pattern}")
+        else:
+            console.print("[red]Failed to add excludes:[/red]")
+            for error in result.errors:
+                console.print(f"  • {error}")
+            raise GitError("Exclude setup failed")
+
+    except Exception as e:
+        console.print(f"[red]Error setting up excludes: {e}[/red]")
+        raise GitError(f"Failed to setup excludes: {e}")
+
+
+def remove_exclude(project_path: str):
+    """Remove git exclude patterns."""
+    try:
+        project_path_obj = Path(project_path).resolve()
+
+        if not (project_path_obj / ".git").exists():
+            console.print("[red]Not a git repository[/red]")
+            return
+
+        # Load configuration
+        config_manager = ConfigManager()
+        config = config_manager.load_config(project_path_obj)
+
+        console.print("[cyan]Removing files from .git/info/exclude...[/cyan]")
+
+        git_manager = GitIntegrationManager()
+        result = git_manager.exclude_manager.remove_excludes(
+            project_path_obj, config.git_integration.files_to_exclude
+        )
+
+        if result.success:
+            console.print("[green]✓ Claude Builder patterns removed from .git/info/exclude[/green]")
+            for operation in result.operations_performed:
+                console.print(f"  {operation}")
+        else:
+            console.print("[red]Failed to remove excludes:[/red]")
+            for error in result.errors:
+                console.print(f"  • {error}")
+            raise GitError("Unexclude operation failed")
+
+    except Exception as e:
+        console.print(f"[red]Error removing excludes: {e}[/red]")
+        raise GitError(f"Failed to remove excludes: {e}")
+
+
+def backup(project_path: str = "."):
+    """Create backup of git configuration."""
+    try:
+        project_path_obj = Path(project_path).resolve()
+
+        if not (project_path_obj / ".git").exists():
+            console.print("[red]Not a git repository[/red]")
+            return
+
+        backup_manager = GitBackupManager()
+        backup_id = backup_manager.create_backup(project_path_obj)
+        
+        console.print(f"[green]✓ Backup created: {backup_id}[/green]")
+        return backup_id
+
+    except Exception as e:
+        console.print(f"[red]Error creating backup: {e}[/red]")
+        raise GitError(f"Failed to create backup: {e}")
+
+
+def restore(backup_id: str, project_path: str = "."):
+    """Restore git configuration from backup."""
+    try:
+        project_path_obj = Path(project_path).resolve()
+
+        if not (project_path_obj / ".git").exists():
+            console.print("[red]Not a git repository[/red]")
+            return
+
+        backup_manager = GitBackupManager()
+        success = backup_manager.restore_backup(project_path_obj, backup_id)
+        
+        if success:
+            console.print(f"[green]✓ Restored from backup: {backup_id}[/green]")
+        else:
+            console.print(f"[red]Failed to restore backup: {backup_id}[/red]")
+            raise GitError(f"Failed to restore backup: {backup_id}")
+
+    except Exception as e:
+        console.print(f"[red]Error restoring backup: {e}[/red]")
+        raise GitError(f"Failed to restore backup: {e}")
