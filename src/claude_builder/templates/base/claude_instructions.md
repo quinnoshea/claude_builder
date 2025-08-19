@@ -1,6 +1,7 @@
 # ${project_name} - Claude Code Instructions
 
 ## Project Context
+
 ${project_description}
 
 **Project Type**: ${project_type}
@@ -11,18 +12,21 @@ ${project_description}
 ## Development Guidelines
 
 ### Code Quality Standards
+
 - Follow ${primary_language} best practices and conventions
 - Maintain consistent code style throughout the project
 - Write clear, self-documenting code with meaningful variable names
 - Implement proper error handling and logging
 
 ### Testing Requirements
+
 - Write comprehensive unit tests for all new functionality
 - Maintain test coverage above ${test_coverage_threshold}%
 - Include integration tests for critical user workflows
 - Use appropriate testing frameworks for ${primary_language}
 
 ### Documentation Standards
+
 - Update documentation alongside code changes
 - Include clear API documentation for public interfaces
 - Maintain up-to-date README with setup instructions
@@ -31,13 +35,16 @@ ${project_description}
 ## Agent Coordination
 
 ### Primary Development Agents
+
 ${development_agents}
 
 ### Testing and Quality Assurance
+
 - **test-writer-fixer**: Comprehensive test coverage and debugging
 - **performance-benchmarker**: Performance optimization and monitoring
 
 ### Deployment and Operations
+
 - **devops-automator**: CI/CD pipeline management and deployment
 - **infrastructure-maintainer**: Production environment management
 
@@ -50,6 +57,7 @@ ${project_structure}
 ## Development Workflow
 
 ### 1. Feature Development
+
 1. Create feature branch from main
 2. Implement feature with appropriate tests
 3. Run full test suite and quality checks
@@ -57,12 +65,14 @@ ${project_structure}
 5. Merge after approval
 
 ### 2. Testing Protocol
+
 - Unit tests: Test individual components in isolation
 - Integration tests: Test component interactions
 - E2E tests: Test complete user workflows
 - Performance tests: Validate performance requirements
 
 ### 3. Quality Gates
+
 - All tests must pass
 - Code coverage requirements met
 - No critical security vulnerabilities

@@ -3,22 +3,30 @@
 ## Environment Setup
 
 ### Python and FastAPI Installation
+
 ```bash
+
 # Create and activate virtual environment
+
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install FastAPI and dependencies
+
 pip install fastapi[all]==${fastapi_version}
 pip install -r requirements-dev.txt
 
 # Verify installation
+
 python -c "import fastapi; print(fastapi.__version__)"
 ```
 
 ### Dependencies Configuration
+
 ```txt
+
 # requirements.txt (Production)
+
 fastapi[all]==${fastapi_version}
 uvicorn[standard]==0.20.0
 sqlalchemy==1.4.46
@@ -35,6 +43,7 @@ aiofiles==22.1.0
 python-decouple==3.6
 
 # requirements-dev.txt (Development)
+
 -r requirements.txt
 pytest==7.2.0
 pytest-asyncio==0.20.3
@@ -49,8 +58,11 @@ pre-commit==3.0.3
 ```
 
 ### Project Initialization
+
 ```bash
+
 # Create project structure
+
 mkdir -p app/{api/{v1/{endpoints}},core,models,schemas,services,utils,tests}
 mkdir -p alembic/versions
 touch app/__init__.py app/main.py
@@ -63,13 +75,17 @@ touch app/utils/{__init__.py,email.py}
 touch app/tests/{__init__.py,conftest.py}
 
 # Create configuration files
+
 touch .env.example alembic.ini
 ```
 
 ### Environment Configuration
+
 ```bash
+
 # .env.example
 # Application
+
 PROJECT_NAME="${project_name}"
 VERSION="1.0.0"
 DESCRIPTION="${project_description}"
@@ -80,16 +96,20 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 REFRESH_TOKEN_EXPIRE_MINUTES=11520
 
 # Database
+
 DATABASE_URL=postgresql://user:password@localhost:5432/${project_name}
 ASYNC_DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/${project_name}
 
 # Redis
+
 REDIS_URL=redis://localhost:6379/0
 
 # CORS
+
 BACKEND_CORS_ORIGINS=http://localhost:3000,http://localhost:8000
 
 # Email
+
 SMTP_TLS=True
 SMTP_PORT=587
 SMTP_HOST=smtp.gmail.com
@@ -99,18 +119,23 @@ EMAILS_FROM_EMAIL=noreply@${project_name}.com
 EMAILS_FROM_NAME=${project_name}
 
 # Superuser
+
 FIRST_SUPERUSER=admin@${project_name}.com
 FIRST_SUPERUSER_PASSWORD=changethis
 
 # Testing
+
 TEST_DATABASE_URL=postgresql://user:password@localhost:5432/${project_name}_test
 ```
 
 ## Database Setup with SQLAlchemy and Alembic
 
 ### Database Configuration
+
 ```python
+
 # app/core/database.py
+
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -119,6 +144,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from app.core.config import settings
 
 # Sync database engine
+
 engine = create_engine(
     settings.DATABASE_URL,
     pool_pre_ping=True,
@@ -134,6 +160,7 @@ SessionLocal = sessionmaker(
 )
 
 # Async database engine (optional)
+
 if settings.ASYNC_DATABASE_URL:
     async_engine = create_async_engine(
         settings.ASYNC_DATABASE_URL,
@@ -153,8 +180,11 @@ Base = declarative_base()
 ```
 
 ### Alembic Configuration
+
 ```ini
+
 # alembic.ini
+
 [alembic]
 script_location = alembic
 prepend_sys_path = .
@@ -203,7 +233,9 @@ datefmt = %H:%M:%S
 ```
 
 ```python
+
 # alembic/env.py
+
 import asyncio
 from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
@@ -211,6 +243,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from alembic import context
 
 # Import your models here
+
 from app.models.base import Base
 from app.models.user import User  # Import all models
 from app.models.${model} import ${model_name}  # Import all models
@@ -266,49 +299,67 @@ else:
 ```
 
 ### Database Migration Commands
+
 ```bash
+
 # Initialize Alembic (first time only)
+
 alembic init alembic
 
 # Create migration
+
 alembic revision --autogenerate -m "Initial migration"
 
 # Run migrations
+
 alembic upgrade head
 
 # Downgrade migrations
+
 alembic downgrade -1
 
 # Show current migration status
+
 alembic current
 
 # Show migration history
+
 alembic history
 
 # Create empty migration for data changes
+
 alembic revision -m "Add initial data"
 ```
 
 ## Development Server and Debugging
 
 ### Running the Development Server
+
 ```bash
+
 # Run with uvicorn directly
+
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 # Run with detailed logging
+
 uvicorn app.main:app --reload --log-level debug --access-log
 
 # Run with environment variables
+
 uvicorn app.main:app --reload --env-file .env
 
 # Run with multiple workers (production)
+
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
 ```
 
 ### Development Scripts
+
 ```python
+
 # scripts/start_dev.py
+
 import os
 import uvicorn
 
@@ -324,6 +375,7 @@ if __name__ == "__main__":
     )
 
 # scripts/create_superuser.py
+
 import asyncio
 from app.core.database import SessionLocal
 from app.services.user import UserService
@@ -337,6 +389,7 @@ async def create_superuser():
         user_service = UserService(db)
         
         # Check if superuser exists
+
         superuser = user_service.get_by_email(settings.FIRST_SUPERUSER)
         if not superuser:
             user_in = UserCreate(
@@ -359,8 +412,11 @@ if __name__ == "__main__":
 ## Testing Framework
 
 ### pytest Configuration
+
 ```python
+
 # app/tests/conftest.py
+
 import pytest
 import asyncio
 from typing import Generator, Dict, Any
@@ -379,6 +435,7 @@ from app.schemas.user import UserCreate
 from app.core.security import create_access_token
 
 # Test database
+
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, 
@@ -470,6 +527,7 @@ def superuser_token_headers(superuser: User) -> Dict[str, str]:
     return {"Authorization": f"Bearer {access_token}"}
 
 # Event loop for async tests
+
 @pytest.fixture(scope="session")
 def event_loop():
     """Create event loop for async tests."""
@@ -479,8 +537,11 @@ def event_loop():
 ```
 
 ### API Testing Examples
+
 ```python
+
 # app/tests/test_auth.py
+
 import pytest
 from fastapi.testclient import TestClient
 from app.core.config import settings
@@ -546,6 +607,7 @@ def test_create_user_existing_email(client: TestClient, test_user):
     assert response.status_code == 400
 
 # app/tests/test_${feature}.py
+
 import pytest
 from uuid import uuid4
 from fastapi.testclient import TestClient
@@ -590,7 +652,9 @@ class Test${model_name}API:
         user_token_headers
     ):
         """Test reading ${model_name_lower}s."""
+
         # Create test ${model_name_lower}
+
         service = ${service_name}Service(db_session)
         from app.schemas.${schema} import ${model_name}Create
         
@@ -617,7 +681,9 @@ class Test${model_name}API:
         user_token_headers
     ):
         """Test reading single ${model_name_lower}."""
+
         # Create test ${model_name_lower}
+
         service = ${service_name}Service(db_session)
         from app.schemas.${schema} import ${model_name}Create
         
@@ -648,7 +714,9 @@ class Test${model_name}API:
         user_token_headers
     ):
         """Test updating ${model_name_lower}."""
+
         # Create test ${model_name_lower}
+
         service = ${service_name}Service(db_session)
         from app.schemas.${schema} import ${model_name}Create
         
@@ -685,7 +753,9 @@ class Test${model_name}API:
         user_token_headers
     ):
         """Test deleting ${model_name_lower}."""
+
         # Create test ${model_name_lower}
+
         service = ${service_name}Service(db_session)
         from app.schemas.${schema} import ${model_name}Create
         
@@ -706,6 +776,7 @@ class Test${model_name}API:
         assert response.status_code == 204
         
         # Verify deletion
+
         ${model_name_lower}_deleted = service.get(${model_name_lower}.id)
         assert ${model_name_lower}_deleted is None
 
@@ -722,7 +793,9 @@ class Test${model_name}API:
         user_token_headers
     ):
         """Test accessing other user's ${model_name_lower}."""
+
         # Create another user and ${model_name_lower}
+
         from app.services.user import UserService
         from app.schemas.user import UserCreate
         
@@ -747,6 +820,7 @@ class Test${model_name}API:
         )
         
         # Try to update other user's ${model_name_lower}
+
         response = client.put(
             f"{settings.API_V1_STR}/${model_name_lower}s/{other_${model_name_lower}.id}",
             headers=user_token_headers,
@@ -783,8 +857,11 @@ class TestAsync${model_name}API:
 ```
 
 ### Performance and Load Testing
+
 ```python
+
 # app/tests/test_performance.py
+
 import pytest
 import time
 import asyncio
@@ -809,6 +886,7 @@ class TestPerformance:
             return response.status_code
 
         # Execute 10 concurrent requests
+
         with ThreadPoolExecutor(max_workers=10) as executor:
             start_time = time.time()
             futures = [executor.submit(make_request) for _ in range(10)]
@@ -816,9 +894,11 @@ class TestPerformance:
             end_time = time.time()
 
         # All requests should succeed
+
         assert all(status == 200 for status in results)
         
         # Should complete within reasonable time
+
         assert end_time - start_time < 5.0
 
     def test_response_time(self, client: TestClient, user_token_headers):
@@ -859,84 +939,112 @@ class TestPerformance:
 ## Production Deployment
 
 ### Docker Configuration
+
 ```dockerfile
+
 # Dockerfile
+
 FROM python:3.11-slim
 
 WORKDIR /app
 
 # Install system dependencies
+
 RUN apt-get update && apt-get install -y \
     build-essential \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
+
 COPY ./app /app/app
 COPY ./alembic /app/alembic
 COPY ./alembic.ini /app/alembic.ini
 
 # Create non-root user
+
 RUN adduser --disabled-password --gecos '' appuser
 RUN chown -R appuser:appuser /app
 USER appuser
 
 # Expose port
+
 EXPOSE 8000
 
 # Run the application
+
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 ```
 
 ```yaml
+
 # docker-compose.yml
+
 version: '3.8'
 
 services:
   web:
     build: .
     ports:
+
       - "8000:8000"
+
     environment:
+
       - DATABASE_URL=postgresql://postgres:password@db:5432/${project_name}
       - REDIS_URL=redis://redis:6379/0
       - SECRET_KEY=your-secret-key
       - FIRST_SUPERUSER=admin@${project_name}.com
       - FIRST_SUPERUSER_PASSWORD=changethis
+
     depends_on:
+
       - db
       - redis
+
     volumes:
+
       - ./app:/app/app
+
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   db:
     image: postgres:14
     environment:
+
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=password
       - POSTGRES_DB=${project_name}
+
     volumes:
+
       - postgres_data:/var/lib/postgresql/data
+
     ports:
+
       - "5432:5432"
 
   redis:
     image: redis:7-alpine
     ports:
+
       - "6379:6379"
 
   celery:
     build: .
     command: celery -A app.core.celery worker --loglevel=info
     environment:
+
       - DATABASE_URL=postgresql://postgres:password@db:5432/${project_name}
       - REDIS_URL=redis://redis:6379/0
+
     depends_on:
+
       - db
       - redis
 
@@ -945,8 +1053,11 @@ volumes:
 ```
 
 ### Production Configuration
+
 ```python
+
 # app/core/config.py - Production settings
+
 class ProductionSettings(Settings):
     """Production-specific settings."""
     
@@ -954,17 +1065,21 @@ class ProductionSettings(Settings):
     ENVIRONMENT: str = "production"
     
     # Security
+
     SECURE_COOKIES: bool = True
     COOKIE_DOMAIN: str = ".${project_name}.com"
     
     # Database
+
     DATABASE_URL: str = Field(..., env="DATABASE_URL")
     ASYNC_DATABASE_URL: Optional[str] = Field(None, env="ASYNC_DATABASE_URL")
     
     # Logging
+
     LOG_LEVEL: str = "INFO"
     
     # CORS - restrict in production
+
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = [
         "https://${project_name}.com",
         "https://www.${project_name}.com"
@@ -974,13 +1089,17 @@ class ProductionSettings(Settings):
         env_file = ".env.production"
 
 # Use production settings based on environment
+
 if settings.ENVIRONMENT == "production":
     settings = ProductionSettings()
 ```
 
 ### Health Checks and Monitoring
+
 ```python
+
 # app/api/v1/endpoints/health.py
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from redis import Redis
@@ -1006,6 +1125,7 @@ async def detailed_health_check(db: Session = Depends(deps.get_db)):
     health_status = {"status": "healthy", "checks": {}}
     
     # Database check
+
     try:
         db.execute("SELECT 1")
         health_status["checks"]["database"] = "healthy"
@@ -1014,6 +1134,7 @@ async def detailed_health_check(db: Session = Depends(deps.get_db)):
         health_status["status"] = "unhealthy"
     
     # Redis check
+
     try:
         redis_client = Redis.from_url(settings.REDIS_URL)
         redis_client.ping()
@@ -1023,6 +1144,7 @@ async def detailed_health_check(db: Session = Depends(deps.get_db)):
         health_status["status"] = "unhealthy"
     
     # System resources
+
     health_status["checks"]["memory"] = f"{psutil.virtual_memory().percent}%"
     health_status["checks"]["cpu"] = f"{psutil.cpu_percent()}%"
     health_status["checks"]["disk"] = f"{psutil.disk_usage('/').percent}%"

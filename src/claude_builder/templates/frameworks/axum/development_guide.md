@@ -3,15 +3,20 @@
 ## Environment Setup
 
 ### Rust and Axum Installation
+
 ```bash
+
 # Install Rust using rustup (if not already installed)
+
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 source ~/.cargo/env
 
 # Update Rust to latest stable version
+
 rustup update stable
 
 # Install useful cargo extensions
+
 cargo install cargo-watch      # Auto-recompile on file changes
 cargo install cargo-expand     # Show macro expansions
 cargo install cargo-audit      # Security vulnerability scanning
@@ -19,39 +24,51 @@ cargo install sqlx-cli         # SQLx database CLI
 cargo install cargo-nextest    # Next-generation test runner
 
 # Verify installation
+
 rustc --version
 cargo --version
 ```
 
 ### Project Initialization
+
 ```bash
+
 # Create new Axum project
+
 cargo new ${project_name}
 cd ${project_name}
 
 # Create project structure
+
 mkdir -p src/{config,handlers,models,services,middleware,utils,routes}
 mkdir -p migrations tests/{integration,common}
 mkdir config
 
 # Initialize database (PostgreSQL example)
+
 sqlx database create
 sqlx migrate add initial
 ```
 
 ### Database Setup with SQLx
+
 ```bash
+
 # Install PostgreSQL (Ubuntu/Debian)
+
 sudo apt update
 sudo apt install postgresql postgresql-contrib
 
 # Or using Docker
+
 docker run --name postgres -e POSTGRES_PASSWORD=password -p 5432:5432 -d postgres:14
 
 # Set DATABASE_URL environment variable
+
 echo "DATABASE_URL=postgresql://username:password@localhost:5432/${project_name}" > .env
 
 # Create database and run migrations
+
 sqlx database create
 sqlx migrate run
 ```
@@ -59,6 +76,7 @@ sqlx migrate run
 ### Development Configuration Files
 
 #### Cargo.toml Configuration
+
 ```toml
 [package]
 name = "${project_name}"
@@ -66,7 +84,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+
 # Web framework
+
 axum = { version = "0.7", features = ["macros"] }
 tokio = { version = "1.0", features = ["full"] }
 tower = "0.4"
@@ -74,17 +94,21 @@ tower-http = { version = "0.5", features = ["cors", "trace", "compression", "fs"
 hyper = { version = "1.0", features = ["full"] }
 
 # Database
+
 sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid", "migrate"] }
 
 # Serialization
+
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
 # Authentication
+
 jsonwebtoken = "9.0"
 bcrypt = "0.14"
 
 # Utilities
+
 uuid = { version = "1.0", features = ["serde", "v4"] }
 chrono = { version = "0.4", features = ["serde"] }
 anyhow = "1.0"
@@ -92,17 +116,21 @@ thiserror = "1.0"
 validator = { version = "0.16", features = ["derive"] }
 
 # Configuration
+
 config = "0.13"
 dotenvy = "0.15"
 
 # Logging
+
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # HTTP client
+
 reqwest = { version = "0.11", features = ["json", "rustls-tls"] }
 
 # Caching
+
 redis = { version = "0.23", features = ["tokio-comp"] }
 
 [dev-dependencies]
@@ -128,8 +156,11 @@ strip = true
 ```
 
 #### Environment Configuration
+
 ```bash
+
 # .env.development
+
 DATABASE_URL=postgresql://username:password@localhost:5432/${project_name}
 REDIS_URL=redis://localhost:6379
 JWT_SECRET=your-jwt-secret-key-here
@@ -139,6 +170,7 @@ SERVER_PORT=3000
 CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8080
 
 # .env.production  
+
 DATABASE_URL=postgresql://prod_user:prod_pass@db_host:5432/prod_db
 REDIS_URL=redis://redis_host:6379
 JWT_SECRET=secure-production-secret
@@ -149,8 +181,11 @@ CORS_ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
 ```
 
 #### Configuration Files
+
 ```yaml
+
 # config/default.yml
+
 server:
   host: "127.0.0.1"
   port: 3000
@@ -170,6 +205,7 @@ auth:
 
 cors:
   allowed_origins:
+
     - "http://localhost:3000"
     - "http://localhost:8080"
 
@@ -178,6 +214,7 @@ redis:
   pool_size: 10
 
 # config/production.yml
+
 server:
   host: "0.0.0.0"
   port: 8000
@@ -192,18 +229,24 @@ auth:
 
 cors:
   allowed_origins:
+
     - "https://yourdomain.com"
     - "https://www.yourdomain.com"
+
 ```
 
 ## Development Workflow
 
 ### Database Migrations
+
 ```bash
+
 # Create new migration
+
 sqlx migrate add create_users_table
 
 # Create migration with SQL content
+
 cat > migrations/001_create_users_table.sql << 'EOF'
 -- Create users table
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -227,72 +270,96 @@ CREATE INDEX idx_users_active ON users(is_active);
 EOF
 
 # Run migrations
+
 sqlx migrate run
 
 # Revert last migration
+
 sqlx migrate revert
 
 # Check migration status
+
 sqlx migrate info
 ```
 
 ### Development Commands
+
 ```bash
+
 # Run development server with auto-reload
+
 cargo watch -x run
 
 # Run with environment variables
+
 RUST_LOG=debug cargo run
 
 # Run tests
+
 cargo test
 
 # Run tests with output
+
 cargo test -- --nocapture
 
 # Run integration tests
+
 cargo test --test integration_tests
 
 # Run benchmarks
+
 cargo bench
 
 # Check code formatting
+
 cargo fmt --check
 
 # Format code
+
 cargo fmt
 
 # Run clippy lints
+
 cargo clippy -- -D warnings
 
 # Audit for security vulnerabilities
+
 cargo audit
 
 # Generate documentation
+
 cargo doc --open
 ```
 
 ### Database Operations
+
 ```bash
+
 # Prepare queries for offline compilation
+
 cargo sqlx prepare
 
 # Check queries against database
+
 cargo sqlx check
 
 # Generate database schema introspection
+
 sqlx migrate info
 
 # Create database backup
+
 pg_dump ${DATABASE_URL} > backup.sql
 
 # Restore from backup
+
 psql ${DATABASE_URL} < backup.sql
 ```
 
 ## Testing Framework
 
 ### Test Organization
+
 ```rust
 // tests/common/mod.rs
 use anyhow::Result;
@@ -369,6 +436,7 @@ impl TestContext {
 ```
 
 ### Unit Testing Examples
+
 ```rust
 // src/services/${service}.rs - Unit tests
 #[cfg(test)]
@@ -453,6 +521,7 @@ mod tests {
 ```
 
 ### Integration Testing
+
 ```rust
 // tests/integration/${feature}_test.rs
 use axum::{
@@ -596,6 +665,7 @@ async fn test_health_check() -> anyhow::Result<()> {
 ```
 
 ### Performance Testing
+
 ```rust
 // benches/api_benchmarks.rs
 use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
@@ -706,13 +776,17 @@ criterion_main!(benches);
 ## Production Deployment
 
 ### Docker Configuration
+
 ```dockerfile
+
 # Dockerfile
+
 FROM rust:1.75-slim as builder
 
 WORKDIR /app
 
 # Install system dependencies
+
 RUN apt-get update && apt-get install -y \
     pkg-config \
     libssl-dev \
@@ -720,27 +794,34 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy manifests
+
 COPY Cargo.toml Cargo.lock ./
 
 # Create dummy main.rs to build dependencies
+
 RUN mkdir src && echo "fn main() {}" > src/main.rs
 
 # Build dependencies
+
 RUN cargo build --release && rm -rf src/
 
 # Copy source code
+
 COPY src ./src
 COPY migrations ./migrations
 
 # Build application
+
 RUN cargo build --release
 
 # Runtime image
+
 FROM debian:bookworm-slim
 
 WORKDIR /app
 
 # Install runtime dependencies
+
 RUN apt-get update && apt-get install -y \
     libssl3 \
     libpq5 \
@@ -748,12 +829,15 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy binary from builder
+
 COPY --from=builder /app/target/release/${project_name} ./
 
 # Copy migrations
+
 COPY migrations ./migrations
 
 # Create non-root user
+
 RUN useradd -r -s /bin/false appuser
 RUN chown -R appuser:appuser /app
 USER appuser
@@ -764,35 +848,46 @@ CMD ["./$(project_name)"]
 ```
 
 ```yaml
+
 # docker-compose.yml
+
 version: '3.8'
 
 services:
   app:
     build: .
     ports:
+
       - "8000:8000"
+
     environment:
+
       - DATABASE_URL=postgresql://postgres:password@db:5432/${project_name}
       - REDIS_URL=redis://redis:6379
       - RUST_LOG=info,${project_name}=debug
       - JWT_SECRET=your-jwt-secret
+
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
     volumes:
+
       - ./config:/app/config:ro
 
   db:
     image: postgres:14
     environment:
+
       - POSTGRES_DB=${project_name}
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=password
+
     volumes:
+
       - postgres_data:/var/lib/postgresql/data
+
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 30s
@@ -812,8 +907,11 @@ volumes:
 ```
 
 ### Production Optimizations
+
 ```bash
+
 # Build optimizations in Cargo.toml
+
 [profile.release]
 lto = true              # Link-time optimization
 codegen-units = 1       # Better optimization
@@ -822,16 +920,21 @@ strip = true            # Remove debug info
 opt-level = 3           # Maximum optimization
 
 # Cross-compilation for different architectures
+
 rustup target add x86_64-unknown-linux-musl
 cargo build --target x86_64-unknown-linux-musl --release
 
 # Static linking for minimal Docker images
+
 RUSTFLAGS="-C target-feature=+crt-static" cargo build --release --target x86_64-unknown-linux-musl
 ```
 
 ### CI/CD Pipeline
+
 ```yaml
+
 # .github/workflows/ci.yml
+
 name: CI/CD Pipeline
 
 on:
@@ -860,6 +963,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
         ports:
+
           - 5432:5432
       
       redis:
@@ -870,12 +974,15 @@ jobs:
           --health-timeout 5s
           --health-retries 5
         ports:
+
           - 6379:6379
     
     steps:
+
     - uses: actions/checkout@v4
     
     - name: Install Rust
+
       uses: actions-rs/toolchain@v1
       with:
         toolchain: stable
@@ -883,6 +990,7 @@ jobs:
         override: true
     
     - name: Cache dependencies
+
       uses: actions/cache@v3
       with:
         path: |
@@ -892,26 +1000,32 @@ jobs:
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
     
     - name: Install SQLx CLI
+
       run: cargo install sqlx-cli --no-default-features --features postgres
     
     - name: Run migrations
+
       run: |
         export DATABASE_URL=postgresql://postgres:postgres@localhost/test_db
         sqlx migrate run
         
     - name: Check formatting
+
       run: cargo fmt -- --check
     
     - name: Run clippy
+
       run: cargo clippy -- -D warnings
     
     - name: Run tests
+
       run: cargo test
       env:
         DATABASE_URL: postgresql://postgres:postgres@localhost/test_db
         REDIS_URL: redis://localhost:6379
     
     - name: Run integration tests
+
       run: cargo test --test '*'
       env:
         DATABASE_URL: postgresql://postgres:postgres@localhost/test_db
@@ -923,9 +1037,11 @@ jobs:
     needs: test
     
     steps:
+
     - uses: actions/checkout@v4
     
     - name: Install Rust
+
       uses: actions-rs/toolchain@v1
       with:
         toolchain: stable
@@ -933,11 +1049,13 @@ jobs:
         override: true
     
     - name: Build binary
+
       run: |
         sudo apt-get update && sudo apt-get install -y musl-tools
         cargo build --release --target x86_64-unknown-linux-musl
     
     - name: Upload binary
+
       uses: actions/upload-artifact@v3
       with:
         name: ${project_name}-binary
@@ -950,14 +1068,17 @@ jobs:
     if: github.ref == 'refs/heads/main'
     
     steps:
+
     - uses: actions/checkout@v4
     
     - name: Download binary
+
       uses: actions/download-artifact@v3
       with:
         name: ${project_name}-binary
     
     - name: Build and push Docker image
+
       env:
         DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
@@ -971,6 +1092,7 @@ jobs:
 ```
 
 ### Monitoring and Logging
+
 ```rust
 // src/middleware/metrics.rs
 use axum::{

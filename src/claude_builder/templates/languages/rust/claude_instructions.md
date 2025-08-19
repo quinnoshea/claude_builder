@@ -1,6 +1,7 @@
 # ${project_name} - Rust Development Instructions
 
 ## Project Context
+
 ${project_description}
 
 **Language**: Rust ${rust_version}
@@ -11,12 +12,14 @@ ${project_description}
 ## Rust Development Standards
 
 ### Code Style and Formatting
+
 - Follow official Rust style guidelines (rustfmt)
 - Use `cargo fmt` for automatic formatting
 - Enable clippy for additional linting
 - Use `cargo clippy -- -D warnings` to treat warnings as errors
 
 ### Project Structure
+
 ```
 ${project_name}/
 ├── Cargo.toml                    # Project configuration
@@ -41,6 +44,7 @@ ${project_name}/
 ```
 
 ### Error Handling Patterns
+
 ```rust
 use anyhow::{Context, Result};
 use thiserror::Error;
@@ -88,6 +92,7 @@ pub fn complex_operation() -> Result<()> {
 ```
 
 ### Memory Safety and Ownership
+
 ```rust
 use std::sync::Arc;
 use std::collections::HashMap;
@@ -139,6 +144,7 @@ impl Drop for ${resource_manager} {
 ## Testing Standards
 
 ### Test Organization
+
 ```rust
 // Unit tests in the same file
 #[cfg(test)]
@@ -184,6 +190,7 @@ proptest! {
 ```
 
 ### Integration Testing
+
 ```rust
 // tests/${integration_test}.rs
 use ${project_name}::*;
@@ -217,6 +224,7 @@ async fn test_full_workflow() {
 ```
 
 ### Benchmark Testing
+
 ```rust
 // benches/${benchmark}.rs
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
@@ -250,6 +258,7 @@ criterion_main!(benches);
 ## Async Programming Patterns
 
 ### Tokio Best Practices
+
 ```rust
 use tokio::{
     sync::{mpsc, oneshot},
@@ -344,6 +353,7 @@ where
 ## Configuration Management
 
 ### Configuration Structure
+
 ```rust
 use serde::{Deserialize, Serialize};
 use config::{Config, ConfigError, Environment, File};
@@ -389,6 +399,7 @@ impl ${config_name} {
 ## Logging and Observability
 
 ### Structured Logging
+
 ```rust
 use tracing::{info, warn, error, debug, instrument, span, Level};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -437,6 +448,7 @@ pub fn handle_error(error: &${project_name}Error) {
 ## Performance Guidelines
 
 ### Memory Management
+
 ```rust
 // Use appropriate collection types
 use std::collections::{HashMap, BTreeMap, HashSet};
@@ -480,8 +492,11 @@ pub fn maybe_transform<'a>(input: &'a str, should_transform: bool) -> Cow<'a, st
 ```
 
 ### Compilation Optimizations
+
 ```toml
+
 # Cargo.toml optimization profiles
+
 [profile.release]
 lto = true              # Link-time optimization
 codegen-units = 1       # Better optimization
@@ -496,6 +511,7 @@ debug = true            # Keep debug info for profiling
 ## Security Best Practices
 
 ### Input Validation
+
 ```rust
 use validator::{Validate, ValidationError};
 use serde::{Deserialize, Serialize};
@@ -532,6 +548,7 @@ pub fn sanitize_input(input: &str) -> String {
 ```
 
 ### Secure Data Handling
+
 ```rust
 use ring::digest::{digest, SHA256};
 use ring::hmac;

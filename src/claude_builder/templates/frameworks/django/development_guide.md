@@ -3,30 +3,40 @@
 ## Environment Setup
 
 ### Python and Django Installation
+
 ```bash
+
 # Create and activate virtual environment
+
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install Django and dependencies
+
 pip install django==${django_version}
 pip install -r requirements-dev.txt
 
 # Verify installation
+
 python -m django --version
 ```
 
 ### Project Creation and Setup
+
 ```bash
+
 # Create Django project
+
 django-admin startproject ${project_name}
 cd ${project_name}
 
 # Create Django apps
+
 python manage.py startapp users
 python manage.py startapp ${app_name}
 
 # Create directory structure
+
 mkdir -p apps/{users,${app_name}}
 mkdir -p ${project_name}/settings
 mkdir -p static/{css,js,images}
@@ -39,8 +49,11 @@ mkdir -p tests
 ```
 
 ### Dependencies Configuration
+
 ```txt
+
 # requirements.txt (Production)
+
 Django==${django_version}
 psycopg2-binary==2.9.5
 django-environ==0.9.0
@@ -54,6 +67,7 @@ whitenoise==6.2.0
 Pillow==9.3.0
 
 # requirements-dev.txt (Development)
+
 -r requirements.txt
 django-extensions==3.2.1
 django-debug-toolbar==3.2.4
@@ -68,11 +82,15 @@ pre-commit==2.20.0
 ```
 
 ### Settings Configuration
+
 ```python
+
 # ${project_name}/settings/__init__.py
+
 import os
 
 # Determine which settings to use
+
 env = os.environ.get('DJANGO_SETTINGS_MODULE')
 if not env:
     try:
@@ -81,24 +99,29 @@ if not env:
         from .development import *  # noqa
 
 # ${project_name}/settings/base.py
+
 """Base settings for ${project_name} project."""
 import os
 from pathlib import Path
 import environ
 
 # Build paths
+
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 APPS_DIR = BASE_DIR / 'apps'
 
 # Environment variables
+
 env = environ.Env()
 
 # Core Django settings
+
 SECRET_KEY = env('SECRET_KEY')
 DEBUG = env.bool('DEBUG', False)
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[])
 
 # Application definition
+
 DJANGO_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -139,6 +162,7 @@ MIDDLEWARE = [
 ROOT_URLCONF = '${project_name}.urls'
 
 # Template configuration
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -156,15 +180,18 @@ TEMPLATES = [
 ]
 
 # Database configuration
+
 DATABASES = {
     'default': env.db(),
 }
 DATABASES['default']['ATOMIC_REQUESTS'] = True
 
 # Custom user model
+
 AUTH_USER_MODEL = 'users.User'
 
 # Password validation
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -181,6 +208,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # Internationalization
+
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
@@ -189,15 +217,18 @@ USE_TZ = True
 SITE_ID = 1
 
 # Static files configuration
+
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
 # Media files configuration
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # Django REST Framework
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
@@ -227,6 +258,7 @@ REST_FRAMEWORK = {
 }
 
 # Logging configuration
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -272,14 +304,17 @@ LOGGING = {
 }
 
 # Security settings
+
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
 
 # CORS settings
+
 CORS_ALLOW_CREDENTIALS = True
 
 # Cache configuration
+
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
@@ -291,6 +326,7 @@ CACHES = {
 }
 
 # Celery configuration
+
 CELERY_BROKER_URL = env('CELERY_BROKER_URL', default='redis://localhost:6379/0')
 CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND', default='redis://localhost:6379/0')
 ```
@@ -298,30 +334,41 @@ CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND', default='redis://localhost:
 ## Database Management
 
 ### Migration Best Practices
+
 ```bash
+
 # Create and run migrations
+
 python manage.py makemigrations
 python manage.py migrate
 
 # Create migration for specific app
+
 python manage.py makemigrations ${app_name}
 
 # Show migration status
+
 python manage.py showmigrations
 
 # Create empty migration for data migration
+
 python manage.py makemigrations --empty ${app_name}
 
 # Reverse migrations
+
 python manage.py migrate ${app_name} 0001
 
 # Generate SQL for migration
+
 python manage.py sqlmigrate ${app_name} 0001
 ```
 
 ### Custom Data Migration Example
+
 ```python
+
 # apps/${app_name}/migrations/0002_populate_initial_data.py
+
 from django.db import migrations
 
 def populate_initial_data(apps, schema_editor):
@@ -358,8 +405,11 @@ class Migration(migrations.Migration):
 ```
 
 ### Database Optimization
+
 ```python
+
 # apps/${app_name}/querysets.py
+
 from django.db import models
 
 class OptimizedQuerySet(models.QuerySet):
@@ -384,8 +434,11 @@ class OptimizedQuerySet(models.QuerySet):
 ## Testing Framework
 
 ### pytest Configuration
+
 ```python
+
 # pytest.ini
+
 [tool:pytest]
 DJANGO_SETTINGS_MODULE = ${project_name}.settings.testing
 python_files = tests.py test_*.py *_tests.py
@@ -401,6 +454,7 @@ addopts =
     --cov-fail-under=80
 
 # conftest.py
+
 import pytest
 from django.conf import settings
 from django.test import RequestFactory
@@ -450,8 +504,11 @@ def request_factory():
 ```
 
 ### Model Testing
+
 ```python
+
 # apps/${app_name}/tests/test_models.py
+
 import pytest
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
@@ -517,7 +574,9 @@ class Test${model_name}Model:
 
     def test_manager_published_method(self, user):
         """Test custom manager published method."""
+
         # Create published item
+
         published = ${model_name}.objects.create(
             title='Published Item',
             author=user,
@@ -525,6 +584,7 @@ class Test${model_name}Model:
         )
         
         # Create draft item
+
         ${model_name}.objects.create(
             title='Draft Item',
             author=user,
@@ -537,8 +597,11 @@ class Test${model_name}Model:
 ```
 
 ### API Testing
+
 ```python
+
 # apps/${app_name}/tests/test_views.py
+
 import pytest
 from django.urls import reverse
 from rest_framework import status
@@ -550,7 +613,9 @@ class Test${model_name}API:
 
     def test_list_${model_name_lower}s(self, api_client, user):
         """Test listing ${model_name_lower}s."""
+
         # Create test data
+
         ${model_name}.objects.create(
             title='Test ${model_name}',
             author=user,
@@ -624,7 +689,9 @@ class Test${model_name}API:
 
     def test_featured_${model_name_lower}s_endpoint(self, api_client, user):
         """Test featured ${model_name_lower}s endpoint."""
+
         # Create featured item
+
         featured = ${model_name}.objects.create(
             title='Featured Item',
             author=user,
@@ -633,6 +700,7 @@ class Test${model_name}API:
         )
         
         # Create non-featured item
+
         ${model_name}.objects.create(
             title='Regular Item',
             author=user,
@@ -659,12 +727,14 @@ class Test${model_name}API:
         )
         
         # Create user's item
+
         my_item = ${model_name}.objects.create(
             title='My Item',
             author=user
         )
         
         # Create other user's item
+
         ${model_name}.objects.create(
             title='Other Item',
             author=other_user
@@ -701,8 +771,11 @@ class Test${model_name}API:
 ## Performance and Optimization
 
 ### Database Query Optimization
+
 ```python
+
 # apps/${app_name}/views.py - Optimized ViewSet
+
 from django.db import models
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
@@ -737,6 +810,7 @@ class OptimizedViewSet(ModelViewSet):
         instance = serializer.save(author=self.request.user)
         
         # Bulk create related objects if needed
+
         if 'tag_ids' in serializer.validated_data:
             tag_ids = serializer.validated_data['tag_ids']
             instance.tags.set(tag_ids)
@@ -745,8 +819,11 @@ class OptimizedViewSet(ModelViewSet):
 ```
 
 ### Caching Strategies
+
 ```python
+
 # apps/${app_name}/utils/cache.py
+
 from django.core.cache import cache
 from django.conf import settings
 import hashlib
@@ -781,25 +858,34 @@ class CacheManager:
         cache.delete(cache_key)
 
 # Usage in models.py
+
 from .utils.cache import CacheManager
 
 class ${model_name}(TimeStampedModel):
+
     # ... model definition ...
     
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
+
         # Update cache after save
+
         CacheManager.cache_${model_name_lower}(self)
     
     def delete(self, *args, **kwargs):
+
         # Invalidate cache before delete
+
         CacheManager.invalidate_${model_name_lower}_cache(self.id)
         super().delete(*args, **kwargs)
 ```
 
 ### Celery Task Management
+
 ```python
+
 # apps/${app_name}/tasks.py
+
 from celery import shared_task
 from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
@@ -856,19 +942,25 @@ def bulk_update_${model_name_lower}_status(${model_name_lower}_ids, new_status):
 ## Security Best Practices
 
 ### Authentication and Permissions
+
 ```python
+
 # apps/${app_name}/permissions.py
+
 from rest_framework import permissions
 
 class IsAuthorOrReadOnly(permissions.BasePermission):
     """Permission to only allow authors to edit their own objects."""
 
     def has_object_permission(self, request, view, obj):
+
         # Read permissions for any request
+
         if request.method in permissions.SAFE_METHODS:
             return True
 
         # Write permissions only for author
+
         return obj.author == request.user
 
 class IsAuthorOrAdminOrReadOnly(permissions.BasePermission):
@@ -881,6 +973,7 @@ class IsAuthorOrAdminOrReadOnly(permissions.BasePermission):
         return obj.author == request.user or request.user.is_staff
 
 # Input validation and sanitization
+
 from django.core.exceptions import ValidationError
 import bleach
 
@@ -892,6 +985,7 @@ def clean_html_content(content):
     return bleach.clean(content, tags=allowed_tags, attributes=allowed_attributes)
 
 # Rate limiting
+
 from django_ratelimit.decorators import ratelimit
 
 @ratelimit(key='ip', rate='10/m', method='POST')
@@ -901,8 +995,11 @@ def limited_view(request):
 ```
 
 ### Environment Variables and Security
+
 ```bash
+
 # .env.example
+
 DEBUG=False
 SECRET_KEY=your-secret-key-here
 DATABASE_URL=postgres://user:password@localhost:5432/dbname
@@ -918,29 +1015,37 @@ CORS_ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
 ## Deployment Configuration
 
 ### Docker Setup
+
 ```dockerfile
+
 # Dockerfile
+
 FROM python:3.11-slim
 
 WORKDIR /app
 
 # Install system dependencies
+
 RUN apt-get update && apt-get install -y \
     build-essential \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy project
+
 COPY . .
 
 # Create logs directory
+
 RUN mkdir -p logs
 
 # Collect static files
+
 RUN python manage.py collectstatic --noinput
 
 EXPOSE 8000
@@ -949,22 +1054,31 @@ CMD ["gunicorn", "${project_name}.wsgi:application", "--bind", "0.0.0.0:8000"]
 ```
 
 ```yaml
+
 # docker-compose.yml
+
 version: '3.8'
 
 services:
   web:
     build: .
     ports:
+
       - "8000:8000"
+
     environment:
+
       - DEBUG=False
       - DATABASE_URL=postgres://postgres:password@db:5432/myapp
       - REDIS_URL=redis://redis:6379/0
+
     depends_on:
+
       - db
       - redis
+
     volumes:
+
       - media_volume:/app/media
       - static_volume:/app/staticfiles
 
@@ -975,20 +1089,25 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
     volumes:
+
       - postgres_data:/var/lib/postgresql/data
 
   redis:
     image: redis:7-alpine
     ports:
+
       - "6379:6379"
 
   celery:
     build: .
     command: celery -A ${project_name} worker -l info
     environment:
+
       - DATABASE_URL=postgres://postgres:password@db:5432/myapp
       - REDIS_URL=redis://redis:6379/0
+
     depends_on:
+
       - db
       - redis
 

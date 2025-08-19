@@ -5,7 +5,9 @@
 ### Primary Development Agents
 
 #### backend-architect
+
 **Primary Role**: Rust system architecture, performance optimization, memory safety
+
 - **Specialization**: High-performance Rust applications, concurrent systems, memory management
 - **Responsibilities**: 
   - Design scalable Rust architectures using ownership and borrowing
@@ -14,7 +16,9 @@
   - Database integration with SQLx and connection pooling
 
 #### rapid-prototyper  
+
 **Primary Role**: Fast Rust prototyping and proof of concepts
+
 - **Specialization**: Quick Rust development, crate integration, MVP validation
 - **Responsibilities**:
   - Rapid development of Rust prototypes with appropriate error handling
@@ -25,7 +29,9 @@
 ### Specialized Rust Agents
 
 #### rust-performance-specialist
+
 **Role**: Performance optimization and systems programming
+
 - **Focus Areas**: 
   - Memory usage optimization and zero-allocation patterns
   - Async performance tuning and task scheduling
@@ -33,7 +39,9 @@
   - Profiling with cargo flamegraph and criterion benchmarks
 
 #### rust-safety-expert
+
 **Role**: Memory safety, security, and correctness
+
 - **Focus Areas**:
   - Ownership pattern design and borrow checker satisfaction
   - Thread safety with Send/Sync traits and Arc/Mutex patterns
@@ -43,7 +51,9 @@
 ### Testing and Quality Agents
 
 #### test-writer-fixer
+
 **Rust Testing Specialization**:
+
 - **Unit Testing**: Built-in test framework with #[test] attributes
 - **Integration Testing**: Full integration tests in tests/ directory
 - **Property Testing**: Proptest for property-based validation
@@ -51,6 +61,7 @@
 - **Benchmarking**: Criterion for performance regression testing
 
 **Responsibilities**:
+
 - Write comprehensive unit tests following Rust testing conventions
 - Implement integration tests with proper test setup and teardown
 - Create property-based tests for complex data transformations
@@ -58,7 +69,9 @@
 - Mock external dependencies using wiremock and test doubles
 
 #### performance-benchmarker
+
 **Rust Performance Focus**:
+
 - **Benchmarking**: Criterion for statistical benchmarking
 - **Profiling**: Flamegraph, perf, and valgrind integration
 - **Memory Analysis**: Memory profiling with massif and heaptrack
@@ -67,8 +80,10 @@
 ### Framework-Specific Agents
 
 #### ${framework}-specialist
+
 **Framework**: ${framework}
 **Specialization**: ${framework}-specific patterns and optimizations
+
 - **Responsibilities**:
   - Implement ${framework}-specific features using idiomatic Rust patterns
   - Optimize ${framework} applications for performance and resource usage
@@ -78,42 +93,69 @@
 ## Agent Coordination Workflows
 
 ### Rust Development Pipeline
+
 ```
+
 1. rapid-prototyper: Initial Rust implementation with proper error handling
+
    ↓
+
 2. backend-architect: Architecture review, ownership pattern optimization
+
    ↓
+
 3. rust-safety-expert: Safety review, borrow checker optimization
+
    ↓
+
 4. test-writer-fixer: Comprehensive test coverage including property tests
+
    ↓
+
 5. rust-performance-specialist: Performance optimization and benchmarking
+
    ↓
+
 6. devops-automator: Deployment with optimized build configuration
+
 ```
 
 ### Quality Assurance Pipeline
+
 ```
+
 1. Any Agent: Rust code implementation
+
    ↓
+
 2. Automated Quality Checks:
    - cargo fmt: Code formatting
    - cargo clippy: Linting and best practices
    - cargo audit: Security vulnerability scanning
    - cargo test: Unit and integration tests
+
    ↓
+
 3. rust-safety-expert: Manual safety and security review
+
    ↓
+
 4. performance-benchmarker: Performance validation
+
    ↓
+
 5. Code review and merge
+
 ```
 
 ## Rust-Specific Development Standards
 
 ### Cargo Configuration
+
 ```toml
+
 # Cargo.toml
+
 [package]
 name = "${project_name}"
 version = "0.1.0"
@@ -121,17 +163,22 @@ edition = "2021"
 rust-version = "${minimum_rust_version}"
 
 [dependencies]
+
 # Core async runtime
+
 tokio = { version = "${tokio_version}", features = ["full"] }
 
 # Error handling
+
 anyhow = "${anyhow_version}"
 thiserror = "${thiserror_version}"
 
 # Serialization
+
 serde = { version = "${serde_version}", features = ["derive"] }
 
 # Tracing and logging
+
 tracing = "${tracing_version}"
 tracing-subscriber = { version = "${tracing_subscriber_version}", features = ["json"] }
 
@@ -151,8 +198,11 @@ strip = true
 ```
 
 ### Development Tools Configuration
+
 ```toml
+
 # rustfmt.toml
+
 max_width = 100
 hard_tabs = false
 tab_spaces = 4
@@ -164,6 +214,7 @@ remove_nested_parens = true
 edition = "2021"
 
 # clippy.toml
+
 cognitive-complexity-threshold = 30
 type-complexity-threshold = 250
 too-many-arguments-threshold = 7
@@ -172,6 +223,7 @@ too-many-arguments-threshold = 7
 ### Agent-Specific Guidelines
 
 #### For backend-architect
+
 ```rust
 // Example service architecture pattern
 use std::sync::Arc;
@@ -242,6 +294,7 @@ pub trait ${repository_name}Repository: Send + Sync {
 ```
 
 #### For test-writer-fixer
+
 ```rust
 // Example comprehensive test suite
 #[cfg(test)]
@@ -431,6 +484,7 @@ mod benchmarks {
 ```
 
 #### For rust-performance-specialist
+
 ```rust
 // Performance optimization examples
 use std::sync::Arc;
@@ -498,8 +552,11 @@ where
 ## Environment-Specific Configurations
 
 ### Development Environment
+
 ```toml
+
 # config/development.toml
+
 [server]
 host = "127.0.0.1"
 port = ${dev_port}
@@ -515,8 +572,11 @@ json_format = false
 ```
 
 ### Production Environment
+
 ```toml
+
 # config/production.toml
+
 [server]
 host = "0.0.0.0"
 port = ${prod_port}

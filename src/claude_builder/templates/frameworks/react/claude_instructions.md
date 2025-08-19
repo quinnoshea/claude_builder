@@ -1,6 +1,7 @@
 # ${project_name} - React Development Instructions
 
 ## Project Context
+
 ${project_description}
 
 **Framework**: React ${react_version}
@@ -12,6 +13,7 @@ ${project_description}
 ## React Development Standards
 
 ### Project Structure
+
 ```
 ${project_name}/
 ├── public/
@@ -82,6 +84,7 @@ ${project_name}/
 ```
 
 ### TypeScript Configuration
+
 ```json
 // tsconfig.json
 {
@@ -124,6 +127,7 @@ ${project_name}/
 ```
 
 ### Component Best Practices
+
 ```tsx
 // src/components/ui/Button/Button.tsx
 import React from 'react';
@@ -315,6 +319,7 @@ export default Button;
 ```
 
 ### Custom Hooks
+
 ```tsx
 // src/hooks/useApi.ts
 import { useState, useEffect, useCallback } from 'react';
@@ -522,6 +527,7 @@ export function useAuth(): UseAuthReturn {
 ```
 
 ### State Management with Redux Toolkit
+
 ```tsx
 // src/store/index.ts
 import { configureStore } from '@reduxjs/toolkit';
@@ -666,6 +672,7 @@ export const {
 ```
 
 ### Form Handling with React Hook Form
+
 ```tsx
 // src/components/forms/${model_name}Form.tsx
 import React from 'react';
@@ -809,6 +816,7 @@ export const ${model_name}Form: React.FC<${model_name}FormProps> = ({
 ```
 
 ### Error Boundaries and Error Handling
+
 ```tsx
 // src/components/ErrorBoundary.tsx
 import React from 'react';
@@ -918,6 +926,7 @@ export function useErrorHandler() {
 ```
 
 ### Performance Optimization
+
 ```tsx
 // src/components/LazyComponent.tsx
 import React, { Suspense, lazy } from 'react';
@@ -1042,6 +1051,7 @@ export const SearchComponent: React.FC = () => {
 ```
 
 ### Accessibility Best Practices
+
 ```tsx
 // src/components/ui/Modal/Modal.tsx
 import React, { useEffect, useRef } from 'react';

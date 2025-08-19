@@ -3,24 +3,32 @@
 ## Environment Setup
 
 ### Node.js and React Installation
+
 ```bash
+
 # Ensure Node.js is installed (v18 or higher recommended)
+
 node --version
 npm --version
 
 # Create React application with TypeScript
+
 npx create-react-app ${project_name} --template typescript
 cd ${project_name}
 
 # Or using Vite (recommended for better performance)
+
 npm create vite@latest ${project_name} -- --template react-ts
 cd ${project_name}
 npm install
 ```
 
 ### Dependencies Installation
+
 ```bash
+
 # Core dependencies
+
 npm install @reduxjs/toolkit react-redux
 npm install react-router-dom
 npm install react-hook-form @hookform/resolvers yup
@@ -29,11 +37,13 @@ npm install classnames
 npm install react-hot-toast
 
 # UI and Styling
+
 npm install tailwindcss postcss autoprefixer
 npm install @headlessui/react @heroicons/react
 npm install framer-motion
 
 # Development dependencies
+
 npm install --save-dev @types/node
 npm install --save-dev eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin
 npm install --save-dev prettier eslint-config-prettier eslint-plugin-prettier
@@ -42,6 +52,7 @@ npm install --save-dev msw
 npm install --save-dev husky lint-staged
 
 # Performance and optimization
+
 npm install react-window react-window-infinite-loader
 npm install @react-aria/focus @react-aria/dialog @react-aria/overlays
 ```
@@ -49,6 +60,7 @@ npm install @react-aria/focus @react-aria/dialog @react-aria/overlays
 ### Project Configuration
 
 #### TypeScript Configuration
+
 ```json
 {
   "compilerOptions": {
@@ -86,6 +98,7 @@ npm install @react-aria/focus @react-aria/dialog @react-aria/overlays
 ```
 
 #### ESLint Configuration
+
 ```json
 {
   "extends": [
@@ -109,6 +122,7 @@ npm install @react-aria/focus @react-aria/dialog @react-aria/overlays
 ```
 
 #### Prettier Configuration
+
 ```json
 {
   "semi": true,
@@ -123,8 +137,11 @@ npm install @react-aria/focus @react-aria/dialog @react-aria/overlays
 ```
 
 #### Tailwind CSS Configuration
+
 ```bash
+
 # Initialize Tailwind CSS
+
 npx tailwindcss init -p
 ```
 
@@ -173,6 +190,7 @@ module.exports = {
 ```
 
 #### Package.json Scripts
+
 ```json
 {
   "scripts": {
@@ -201,8 +219,11 @@ module.exports = {
 ## Development Workflow
 
 ### Component Development Pattern
+
 ```bash
+
 # Create new component directory structure
+
 mkdir -p src/components/ui/ComponentName
 touch src/components/ui/ComponentName/ComponentName.tsx
 touch src/components/ui/ComponentName/ComponentName.module.css
@@ -212,6 +233,7 @@ touch src/components/ui/ComponentName/index.ts
 ```
 
 #### Component Template
+
 ```tsx
 // src/components/ui/ComponentName/ComponentName.tsx
 import React from 'react';
@@ -253,6 +275,7 @@ export default ComponentName;
 ```
 
 #### Index Export Pattern
+
 ```tsx
 // src/components/ui/ComponentName/index.ts
 export { ComponentName } from './ComponentName';
@@ -262,6 +285,7 @@ export type { ComponentNameProps } from './ComponentName';
 ### Testing Setup and Patterns
 
 #### Test Setup
+
 ```tsx
 // src/tests/setup.ts
 import '@testing-library/jest-dom';
@@ -290,6 +314,7 @@ global.ResizeObserver = jest.fn().mockImplementation(() => ({
 ```
 
 #### Test Utilities
+
 ```tsx
 // src/tests/utils.tsx
 import React from 'react';
@@ -341,6 +366,7 @@ export const renderHookWithProviders = <TProps, TResult>(
 ```
 
 #### Component Testing Example
+
 ```tsx
 // src/components/ui/Button/Button.test.tsx
 import React from 'react';
@@ -393,6 +419,7 @@ describe('Button', () => {
 ```
 
 #### Hook Testing Example
+
 ```tsx
 // src/hooks/useLocalStorage.test.tsx
 import { renderHook, act } from '@testing-library/react';
@@ -466,6 +493,7 @@ describe('useLocalStorage', () => {
 ### Mock Service Worker (MSW) Setup
 
 #### API Mocking Setup
+
 ```tsx
 // src/mocks/handlers.ts
 import { rest } from 'msw';
@@ -584,6 +612,7 @@ export const server = setupServer(...handlers);
 ```
 
 #### Integration with Tests
+
 ```tsx
 // src/setupTests.ts
 import '@testing-library/jest-dom';
@@ -597,6 +626,7 @@ afterAll(() => server.close());
 ### Performance Optimization Techniques
 
 #### Code Splitting with React.lazy
+
 ```tsx
 // src/pages/LazyPages.tsx
 import React, { Suspense } from 'react';
@@ -622,6 +652,7 @@ export const AppRoutes: React.FC = () => {
 ```
 
 #### Memoization Strategies
+
 ```tsx
 // src/components/optimized/${model_name}List.tsx
 import React, { memo, useMemo, useCallback } from 'react';
@@ -690,6 +721,7 @@ ${model_name}List.displayName = '${model_name}List';
 ```
 
 #### Virtual Scrolling Implementation
+
 ```tsx
 // src/components/VirtualList.tsx
 import React, { memo } from 'react';
@@ -746,36 +778,47 @@ VirtualList.displayName = 'VirtualList';
 ### Build Optimization
 
 #### Bundle Analysis
+
 ```bash
+
 # Install bundle analyzer
+
 npm install --save-dev webpack-bundle-analyzer
 
 # Add script to package.json
+
 "analyze": "npm run build && npx webpack-bundle-analyzer build/static/js/*.js"
 
 # Run analysis
+
 npm run analyze
 ```
 
 #### Environment Configuration
+
 ```bash
+
 # .env.development
+
 REACT_APP_API_URL=http://localhost:8000/api
 REACT_APP_ENV=development
 REACT_APP_LOG_LEVEL=debug
 
 # .env.production
+
 REACT_APP_API_URL=https://api.${project_name}.com
 REACT_APP_ENV=production
 REACT_APP_LOG_LEVEL=error
 
 # .env.test
+
 REACT_APP_API_URL=http://localhost:3001/api
 REACT_APP_ENV=test
 REACT_APP_LOG_LEVEL=silent
 ```
 
 #### Build Configuration
+
 ```json
 // package.json build optimization
 {
@@ -790,29 +833,38 @@ REACT_APP_LOG_LEVEL=silent
 ### Deployment Configuration
 
 #### Docker Setup
+
 ```dockerfile
+
 # Dockerfile
+
 FROM node:18-alpine as build
 
 WORKDIR /app
 
 # Install dependencies
+
 COPY package*.json ./
 RUN npm ci --only=production
 
 # Copy source code
+
 COPY . .
 
 # Build application
+
 RUN npm run build
 
 # Production stage
+
 FROM nginx:alpine
 
 # Copy built assets
+
 COPY --from=build /app/build /usr/share/nginx/html
 
 # Copy nginx configuration
+
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
@@ -821,7 +873,9 @@ CMD ["nginx", "-g", "daemon off;"]
 ```
 
 ```nginx
+
 # nginx.conf
+
 server {
     listen 80;
     server_name localhost;
@@ -830,23 +884,27 @@ server {
     index index.html;
     
     # Enable gzip compression
+
     gzip on;
     gzip_vary on;
     gzip_min_length 1024;
     gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
     
     # Handle client-side routing
+
     location / {
         try_files $uri $uri/ /index.html;
     }
     
     # Cache static assets
+
     location /static/ {
         expires 1y;
         add_header Cache-Control "public, immutable";
     }
     
     # Security headers
+
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-Content-Type-Options "nosniff" always;
     add_header Referrer-Policy "no-referrer-when-downgrade" always;
@@ -854,8 +912,11 @@ server {
 ```
 
 #### CI/CD Pipeline
+
 ```yaml
+
 # .github/workflows/ci.yml
+
 name: CI/CD Pipeline
 
 on:
@@ -869,27 +930,34 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+
     - uses: actions/checkout@v3
     
     - name: Setup Node.js
+
       uses: actions/setup-node@v3
       with:
         node-version: '18'
         cache: 'npm'
     
     - name: Install dependencies
+
       run: npm ci
     
     - name: Run linter
+
       run: npm run lint
     
     - name: Run type check
+
       run: npm run type-check
     
     - name: Run tests
+
       run: npm run test:coverage
     
     - name: Upload coverage
+
       uses: codecov/codecov-action@v3
       with:
         file: ./coverage/lcov.info
@@ -899,21 +967,26 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+
     - uses: actions/checkout@v3
     
     - name: Setup Node.js
+
       uses: actions/setup-node@v3
       with:
         node-version: '18'
         cache: 'npm'
     
     - name: Install dependencies
+
       run: npm ci
     
     - name: Build application
+
       run: npm run build
     
     - name: Upload build artifacts
+
       uses: actions/upload-artifact@v3
       with:
         name: build-files

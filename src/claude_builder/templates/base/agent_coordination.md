@@ -1,6 +1,7 @@
 # ${project_name} - Agent Coordination Guide
 
 ## Overview
+
 This document defines the agent coordination patterns and workflows for ${project_name} development.
 
 **Project Type**: ${project_type}
@@ -10,17 +11,21 @@ This document defines the agent coordination patterns and workflows for ${projec
 ## Agent Architecture
 
 ### Primary Development Team
+
 ${development_agents}
 
 ### Specialized Agents
+
 ${specialized_agents}
 
 ### Agent Coordination Patterns
+
 ${coordination_patterns}
 
 ## Workflow Orchestration
 
 ### Feature Development Workflow
+
 1. **Planning Phase**
    - **studio-coach**: Project planning and task breakdown
    - **rapid-prototyper**: Initial architecture and design
@@ -40,6 +45,7 @@ ${coordination_patterns}
 ### Agent Handoff Protocols
 
 #### Code Implementation → Testing
+
 ```
 ${primary_development_agent} completes feature
   ↓
@@ -51,6 +57,7 @@ security-specialist reviews security implications
 ```
 
 #### Testing → Deployment
+
 ```
 All tests pass and quality gates met
   ↓
@@ -64,14 +71,17 @@ analytics-reporter tracks performance metrics
 ## Agent-Specific Guidelines
 
 ### Development Agents
+
 ${development_agent_guidelines}
 
 ### Testing Agents
+
 - **test-writer-fixer**: Focus on comprehensive coverage and edge cases
 - **api-tester**: Validate API contracts and integration points
 - **performance-benchmarker**: Ensure performance requirements are met
 
 ### Operations Agents
+
 - **devops-automator**: Automate deployment and CI/CD processes
 - **infrastructure-maintainer**: Monitor and maintain production systems
 - **analytics-reporter**: Track business and technical metrics
@@ -79,14 +89,17 @@ ${development_agent_guidelines}
 ## Communication Protocols
 
 ### Agent Information Sharing
+
 - Use standardized data formats for agent handoffs
 - Maintain shared context through documentation updates
 - Ensure traceability of decisions and implementations
 
 ### Coordination Patterns
+
 ${coordination_communication}
 
 ### Escalation Procedures
+
 - Complex issues require **studio-coach** coordination
 - Performance issues escalate to **performance-benchmarker**
 - Security concerns escalate to **security-specialist**
@@ -95,6 +108,7 @@ ${coordination_communication}
 ## Quality Gates and Checkpoints
 
 ### Development Checkpoints
+
 1. **Feature Complete**: Core functionality implemented
 2. **Tests Written**: Comprehensive test coverage achieved
 3. **Performance Validated**: Performance requirements met
@@ -102,48 +116,58 @@ ${coordination_communication}
 5. **Documentation Updated**: All documentation current
 
 ### Agent Responsibilities at Each Gate
+
 ${quality_gate_responsibilities}
 
 ## Tools and Integration
 
 ### Development Tools
+
 ${development_tools}
 
 ### Testing Tools
+
 ${testing_tools}
 
 ### Deployment Tools
+
 ${deployment_tools}
 
 ### Monitoring Tools
+
 ${monitoring_tools}
 
 ## Metrics and Success Criteria
 
 ### Development Metrics
+
 - Code quality scores
 - Test coverage percentage
 - Feature completion velocity
 - Bug detection and resolution time
 
 ### Operational Metrics
+
 - Deployment frequency and success rate
 - System uptime and performance
 - User satisfaction and engagement
 - Business impact measurements
 
 ### Agent Performance Indicators
+
 ${agent_performance_metrics}
 
 ## Continuous Improvement
 
 ### Retrospective Process
+
 - Regular agent workflow reviews
 - Performance optimization opportunities
 - Tool and process improvements
 - Knowledge sharing and best practices
 
 ### Adaptation Guidelines
+
 - Update agent roles based on project evolution
 - Refine coordination patterns based on experience
 - Incorporate new tools and technologies

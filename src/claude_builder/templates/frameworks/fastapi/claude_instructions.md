@@ -1,6 +1,7 @@
 # ${project_name} - FastAPI Development Instructions
 
 ## Project Context
+
 ${project_description}
 
 **Framework**: FastAPI ${fastapi_version}
@@ -12,6 +13,7 @@ ${project_description}
 ## FastAPI Development Standards
 
 ### Project Structure
+
 ```
 ${project_name}/
 ├── app/
@@ -67,8 +69,11 @@ ${project_name}/
 ```
 
 ### Application Configuration
+
 ```python
+
 # app/core/config.py
+
 from typing import Optional, List, Union
 from pydantic import BaseSettings, AnyHttpUrl, EmailStr, validator
 
@@ -76,18 +81,21 @@ class Settings(BaseSettings):
     """Application settings."""
     
     # API Configuration
+
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str = "${project_name}"
     VERSION: str = "1.0.0"
     DESCRIPTION: str = "${project_description}"
     
     # Security
+
     SECRET_KEY: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8  # 8 days
     ALGORITHM: str = "HS256"
     
     # CORS
+
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
     
     @validator("BACKEND_CORS_ORIGINS", pre=True)
@@ -99,6 +107,7 @@ class Settings(BaseSettings):
         raise ValueError(v)
     
     # Database
+
     DATABASE_URL: str
     ASYNC_DATABASE_URL: Optional[str] = None
     
@@ -109,9 +118,11 @@ class Settings(BaseSettings):
         return values.get("DATABASE_URL", "").replace("postgresql://", "postgresql+asyncpg://")
     
     # Redis
+
     REDIS_URL: str = "redis://localhost:6379/0"
     
     # Email
+
     SMTP_TLS: bool = True
     SMTP_PORT: Optional[int] = None
     SMTP_HOST: Optional[str] = None
@@ -121,17 +132,21 @@ class Settings(BaseSettings):
     EMAILS_FROM_NAME: Optional[str] = None
     
     # Superuser
+
     FIRST_SUPERUSER: EmailStr
     FIRST_SUPERUSER_PASSWORD: str
     
     # Testing
+
     TEST_DATABASE_URL: Optional[str] = None
     
     # Environment
+
     ENVIRONMENT: str = "development"
     DEBUG: bool = False
     
     # Logging
+
     LOG_LEVEL: str = "INFO"
     
     class Config:
@@ -142,8 +157,11 @@ settings = Settings()
 ```
 
 ### Database Models with SQLAlchemy
+
 ```python
+
 # app/models/base.py
+
 from typing import Any
 from sqlalchemy import Column, Integer, DateTime
 from sqlalchemy.ext.declarative import as_declarative, declared_attr
@@ -155,6 +173,7 @@ class Base:
     __name__: str
     
     # Generate __tablename__ automatically
+
     @declared_attr
     def __tablename__(cls) -> str:
         return cls.__name__.lower()
@@ -165,6 +184,7 @@ class TimestampMixin:
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
 # app/models/${model}.py
+
 from sqlalchemy import Column, Integer, String, Text, Boolean, ForeignKey, Enum
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
@@ -190,6 +210,7 @@ class ${model_name}(Base, TimestampMixin):
     is_featured = Column(Boolean, default=False, nullable=False, index=True)
     
     # Relationships
+
     author_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False)
     author = relationship("User", back_populates="${model_name_lower}s")
     
@@ -197,6 +218,7 @@ class ${model_name}(Base, TimestampMixin):
         return f"<${model_name}(id={self.id}, title='{self.title}')>"
 
 # app/models/user.py
+
 from sqlalchemy import Column, String, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
@@ -217,6 +239,7 @@ class User(Base, TimestampMixin):
     is_superuser = Column(Boolean, default=False, nullable=False)
     
     # Relationships
+
     ${model_name_lower}s = relationship("${model_name}", back_populates="author")
     
     def __repr__(self):
@@ -224,8 +247,11 @@ class User(Base, TimestampMixin):
 ```
 
 ### Pydantic Schemas
+
 ```python
+
 # app/schemas/${schema}.py
+
 from typing import Optional, List
 from uuid import UUID
 from datetime import datetime
@@ -274,6 +300,7 @@ class ${model_name}InDB(${model_name}InDBBase):
     pass
 
 # User schemas
+
 class UserBase(BaseModel):
     """Base user schema."""
     email: str = Field(..., regex=r'^[^@]+@[^@]+\.[^@]+$')
@@ -324,6 +351,7 @@ class UserInDB(UserInDBBase):
     hashed_password: str
 
 # Authentication schemas
+
 class Token(BaseModel):
     """Token schema."""
     access_token: str
@@ -342,8 +370,11 @@ class LoginRequest(BaseModel):
 ```
 
 ### API Endpoints
+
 ```python
+
 # app/api/v1/endpoints/${resource}.py
+
 from typing import List, Optional
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Query
@@ -424,8 +455,11 @@ async def read_${model_name_lower}(
         )
     
     # Check permissions
+
     if not current_user.is_superuser and ${model_name_lower}.author_id != current_user.id:
+
         # Only show published items to non-owners
+
         if ${model_name_lower}.status != "${model_name}Status.PUBLISHED":
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -454,6 +488,7 @@ async def update_${model_name_lower}(
         )
     
     # Check permissions
+
     if not current_user.is_superuser and ${model_name_lower}.author_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -485,6 +520,7 @@ async def delete_${model_name_lower}(
         )
     
     # Check permissions
+
     if not current_user.is_superuser and ${model_name_lower}.author_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -528,8 +564,11 @@ async def toggle_featured_${model_name_lower}(
 ```
 
 ### Service Layer
+
 ```python
+
 # app/services/${service}.py
+
 from typing import List, Optional, Dict, Any
 from uuid import UUID
 from sqlalchemy.orm import Session
@@ -689,6 +728,7 @@ class ${service_name}Service(CRUDBase[${model_name}, ${model_name}Create, ${mode
         return slug
 
 # Base CRUD service
+
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -749,8 +789,11 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 ```
 
 ### Authentication and Security
+
 ```python
+
 # app/core/security.py
+
 from datetime import datetime, timedelta
 from typing import Any, Union, Optional
 from jose import jwt
@@ -807,6 +850,7 @@ def decode_token(token: str) -> Optional[dict]:
         return None
 
 # app/api/deps.py
+
 from typing import Generator, Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer
@@ -880,8 +924,11 @@ def get_current_active_superuser(
 ```
 
 ### Main Application Setup
+
 ```python
+
 # app/main.py
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
@@ -902,6 +949,7 @@ app = FastAPI(
 )
 
 # Set CORS
+
 if settings.BACKEND_CORS_ORIGINS:
     app.add_middleware(
         CORSMiddleware,
@@ -912,12 +960,15 @@ if settings.BACKEND_CORS_ORIGINS:
     )
 
 # Add trusted host middleware
+
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])
 
 # Include API router
+
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
 # Exception handlers
+
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request, exc):
     """Handle HTTP exceptions."""

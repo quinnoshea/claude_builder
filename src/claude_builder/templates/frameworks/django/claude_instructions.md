@@ -1,6 +1,7 @@
 # ${project_name} - Django Development Instructions
 
 ## Project Context
+
 ${project_description}
 
 **Framework**: Django ${django_version}
@@ -12,6 +13,7 @@ ${project_description}
 ## Django Development Standards
 
 ### Project Structure
+
 ```
 ${project_name}/
 ├── manage.py                     # Django management script
@@ -69,8 +71,11 @@ ${project_name}/
 ```
 
 ### Settings Configuration
+
 ```python
+
 # settings/base.py
+
 import os
 from pathlib import Path
 from decouple import config
@@ -78,11 +83,13 @@ from decouple import config
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # Security
+
 SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='', cast=lambda v: [s.strip() for s in v.split(',')])
 
 # Application definition
+
 DJANGO_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -140,6 +147,7 @@ TEMPLATES = [
 WSGI_APPLICATION = '${project_name}.wsgi.application'
 
 # Database
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -156,6 +164,7 @@ DATABASES = {
 }
 
 # Password validation
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -172,9 +181,11 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # Custom user model
+
 AUTH_USER_MODEL = 'users.User'
 
 # Internationalization
+
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
@@ -182,15 +193,18 @@ USE_L10N = True
 USE_TZ = True
 
 # Static files
+
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
 # Media files
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # Django REST Framework
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
@@ -212,6 +226,7 @@ REST_FRAMEWORK = {
 }
 
 # Logging
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -253,6 +268,7 @@ LOGGING = {
 }
 
 # Celery Configuration
+
 CELERY_BROKER_URL = config('REDIS_URL', default='redis://localhost:6379/0')
 CELERY_RESULT_BACKEND = config('REDIS_URL', default='redis://localhost:6379/0')
 CELERY_ACCEPT_CONTENT = ['json']
@@ -261,6 +277,7 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
 
 # Cache Configuration
+
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
@@ -274,6 +291,7 @@ CACHES = {
 }
 
 # Email Configuration
+
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = config('EMAIL_HOST', default='localhost')
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
@@ -283,6 +301,7 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@${project_name}.com')
 
 # Security Settings
+
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
@@ -291,6 +310,7 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 
 # CORS Settings
+
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = config(
     'CORS_ALLOWED_ORIGINS',
@@ -300,8 +320,11 @@ CORS_ALLOWED_ORIGINS = config(
 ```
 
 ### Model Best Practices
+
 ```python
+
 # apps/${app_name}/models.py
+
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -380,6 +403,7 @@ class ${model_name}(TimeStampedModel):
     )
     
     # Use custom manager
+
     objects = ${model_name}Manager()
 
     class Meta:
@@ -405,12 +429,15 @@ class ${model_name}(TimeStampedModel):
         return reverse('${app_name}:${model_name_lower}-detail', kwargs={'slug': self.slug})
 
     def save(self, *args, **kwargs):
+
         # Auto-generate slug if not provided
+
         if not self.slug:
             from django.utils.text import slugify
             self.slug = slugify(self.title)
         
         # Set published_at when status changes to published
+
         if self.status == self.Status.PUBLISHED and not self.published_at:
             self.published_at = timezone.now()
         
@@ -457,8 +484,11 @@ class Tag(models.Model):
 ```
 
 ### Custom Managers and QuerySets
+
 ```python
+
 # apps/${app_name}/managers.py
+
 from django.db import models
 from django.utils import timezone
 
@@ -516,8 +546,11 @@ class ${model_name}Manager(models.Manager):
 ```
 
 ### Django REST Framework Serializers
+
 ```python
+
 # apps/${app_name}/serializers.py
+
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from .models import ${model_name}, Tag
@@ -592,7 +625,9 @@ class ${model_name}DetailSerializer(serializers.ModelSerializer):
         return obj.is_published()
 
     def create(self, validated_data):
+
         # Set the author to the current user
+
         validated_data['author'] = self.context['request'].user
         return super().create(validated_data)
 
@@ -627,8 +662,11 @@ class ${model_name}CreateUpdateSerializer(serializers.ModelSerializer):
 ```
 
 ### API Views with Django REST Framework
+
 ```python
+
 # apps/${app_name}/views.py
+
 from rest_framework import generics, permissions, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -673,7 +711,9 @@ class ${model_name}ViewSet(ModelViewSet):
         queryset = super().get_queryset()
         
         if self.action == 'list':
+
             # Show published items to everyone, all items to authors
+
             if self.request.user.is_authenticated:
                 return queryset.filter(
                     models.Q(status='published') | 
@@ -749,8 +789,11 @@ class TagViewSet(ModelViewSet):
 ```
 
 ### Testing Best Practices
+
 ```python
+
 # apps/${app_name}/tests/test_models.py
+
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -837,7 +880,9 @@ class ${model_name}ModelTest(TestCase):
 
     def test_get_related_items(self):
         """Test get_related_items method."""
+
         # Create main item with tags
+
         main_item = ${model_name}.objects.create(
             title='Main Item',
             author=self.user,
@@ -846,6 +891,7 @@ class ${model_name}ModelTest(TestCase):
         main_item.tags.add(self.tag)
         
         # Create related item with same tag
+
         related_item = ${model_name}.objects.create(
             title='Related Item',
             author=self.user,
@@ -854,6 +900,7 @@ class ${model_name}ModelTest(TestCase):
         related_item.tags.add(self.tag)
         
         # Create unrelated item
+
         ${model_name}.objects.create(
             title='Unrelated Item',
             author=self.user,
@@ -866,7 +913,9 @@ class ${model_name}ModelTest(TestCase):
 
     def test_manager_methods(self):
         """Test custom manager methods."""
+
         # Create published item
+
         published_item = ${model_name}.objects.create(
             title='Published Item',
             author=self.user,
@@ -874,6 +923,7 @@ class ${model_name}ModelTest(TestCase):
         )
         
         # Create draft item
+
         ${model_name}.objects.create(
             title='Draft Item',
             author=self.user,
@@ -881,6 +931,7 @@ class ${model_name}ModelTest(TestCase):
         )
         
         # Test published manager method
+
         published_items = ${model_name}.objects.published()
         self.assertEqual(published_items.count(), 1)
         self.assertEqual(published_items.first(), published_item)

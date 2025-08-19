@@ -1,6 +1,7 @@
 # ${project_name} - Axum Development Instructions
 
 ## Project Context
+
 ${project_description}
 
 **Framework**: Axum ${axum_version}
@@ -12,6 +13,7 @@ ${project_description}
 ## Axum Development Standards
 
 ### Project Structure
+
 ```
 ${project_name}/
 ├── Cargo.toml                   # Project configuration
@@ -69,8 +71,11 @@ ${project_name}/
 ```
 
 ### Cargo Configuration
+
 ```toml
+
 # Cargo.toml
+
 [package]
 name = "${project_name}"
 version = "0.1.0"
@@ -81,7 +86,9 @@ description = "${project_description}"
 repository = "${repository_url}"
 
 [dependencies]
+
 # Core web framework
+
 axum = { version = "${axum_version}", features = ["macros"] }
 tokio = { version = "${tokio_version}", features = ["full"] }
 tower = "${tower_version}"
@@ -89,47 +96,60 @@ tower-http = { version = "${tower_http_version}", features = ["cors", "trace", "
 hyper = { version = "${hyper_version}", features = ["full"] }
 
 # Async runtime and utilities
+
 tokio-util = "${tokio_util_version}"
 futures = "${futures_version}"
 
 # Serialization
+
 serde = { version = "${serde_version}", features = ["derive"] }
 serde_json = "${serde_json_version}"
 
 # Database
+
 sqlx = { version = "${sqlx_version}", features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid", "migrate"] }
 
 # Authentication & Security
+
 jsonwebtoken = "${jwt_version}"
 bcrypt = "${bcrypt_version}"
 uuid = { version = "${uuid_version}", features = ["serde", "v4"] }
 
 # Configuration
+
 config = "${config_version}"
 dotenvy = "${dotenvy_version}"
 
 # Logging and tracing
+
 tracing = "${tracing_version}"
 tracing-subscriber = { version = "${tracing_subscriber_version}", features = ["env-filter"] }
 
 # Error handling
+
 anyhow = "${anyhow_version}"
 thiserror = "${thiserror_version}"
 
 # Validation
+
 validator = { version = "${validator_version}", features = ["derive"] }
 
 # HTTP client (for external APIs)
+
 reqwest = { version = "${reqwest_version}", features = ["json", "rustls-tls"] }
 
 # Time handling
+
 chrono = { version = "${chrono_version}", features = ["serde"] }
 
 # Redis for caching and sessions
+
 redis = { version = "${redis_version}", features = ["tokio-comp"] }
 
 [dev-dependencies]
+
 # Testing
+
 tokio-test = "${tokio_test_version}"
 sqlx-test = "${sqlx_test_version}"
 httpx = "${httpx_version}"
@@ -137,6 +157,7 @@ wiremock = "${wiremock_version}"
 assert_matches = "${assert_matches_version}"
 
 # Benchmarking
+
 criterion = { version = "${criterion_version}", features = ["html_reports"] }
 
 [profile.release]
@@ -155,6 +176,7 @@ harness = false
 ```
 
 ### Application Setup
+
 ```rust
 // src/main.rs
 use anyhow::Result;
@@ -295,6 +317,7 @@ pub async fn create_app(settings: &Settings) -> anyhow::Result<Router> {
 ```
 
 ### Configuration Management
+
 ```rust
 // src/config/settings.rs
 use config::{Config, ConfigError, Environment, File};
@@ -385,6 +408,7 @@ pub async fn create_pool(settings: &DatabaseSettings) -> anyhow::Result<PgPool> 
 ```
 
 ### Models and Database
+
 ```rust
 // src/models/user.rs
 use chrono::{DateTime, Utc};
@@ -572,6 +596,7 @@ impl Default for ${model_name}Query {
 ```
 
 ### Services Layer
+
 ```rust
 // src/services/${service}.rs
 use anyhow::Result;
@@ -820,6 +845,7 @@ impl ${service_name}Service {
 ```
 
 ### Handlers (Controllers)
+
 ```rust
 // src/handlers/${resource}.rs
 use axum::{
@@ -943,6 +969,7 @@ pub async fn delete_${model_name_lower}(
 ```
 
 ### Middleware
+
 ```rust
 // src/middleware/auth.rs
 use axum::{
@@ -1031,6 +1058,7 @@ async fn auth_middleware(
 ```
 
 ### Error Handling
+
 ```rust
 // src/utils/errors.rs
 use axum::{

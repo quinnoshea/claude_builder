@@ -3,37 +3,49 @@
 ## Development Environment Setup
 
 ### Node.js and Package Management
+
 ```bash
+
 # Install Node.js using nvm (recommended)
+
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
 source ~/.bashrc
 
 # Install and use specific Node.js version
+
 nvm install ${node_version}
 nvm use ${node_version}
 nvm alias default ${node_version}
 
 # Verify installation
+
 node --version
 npm --version
 ```
 
 ### Project Initialization
+
 ```bash
+
 # Initialize new project
+
 npm init -y
 
 # Install core dependencies
+
 npm install ${core_dependencies}
 
 # Install development dependencies
+
 npm install --save-dev ${dev_dependencies}
 
 # Install global tools
+
 npm install -g nodemon eslint prettier
 ```
 
 ### Package.json Configuration
+
 ```json
 {
   "name": "${project_name}",
@@ -91,6 +103,7 @@ npm install -g nodemon eslint prettier
 ## Code Quality Configuration
 
 ### ESLint Configuration
+
 ```javascript
 // .eslintrc.js
 module.exports = {
@@ -143,6 +156,7 @@ module.exports = {
 ```
 
 ### Prettier Configuration
+
 ```json
 {
   "semi": true,
@@ -158,6 +172,7 @@ module.exports = {
 ```
 
 ### Pre-commit Hooks
+
 ```json
 {
   "husky": {
@@ -178,6 +193,7 @@ module.exports = {
 ## Application Architecture
 
 ### Express.js Application Setup
+
 ```javascript
 // src/app.js
 const express = require('express');
@@ -258,6 +274,7 @@ module.exports = app;
 ```
 
 ### Database Connection Management
+
 ```javascript
 // src/config/database.js
 const mongoose = require('mongoose');
@@ -344,6 +361,7 @@ module.exports = new Database();
 ## Testing Framework Setup
 
 ### Jest Configuration
+
 ```javascript
 // jest.config.js
 module.exports = {
@@ -389,6 +407,7 @@ module.exports = {
 ```
 
 ### Test Setup and Utilities
+
 ```javascript
 // tests/setup.js
 const { MongoMemoryServer } = require('mongodb-memory-server');
@@ -460,6 +479,7 @@ global.testUtils = {
 ```
 
 ### Advanced Testing Patterns
+
 ```javascript
 // tests/integration/users.test.js
 const request = require('supertest');
@@ -597,6 +617,7 @@ describe('User API Integration Tests', () => {
 ## Performance Optimization
 
 ### Caching Strategies
+
 ```javascript
 // src/utils/cache.js
 const redis = require('redis');
@@ -709,6 +730,7 @@ module.exports = new CacheManager();
 ```
 
 ### Database Query Optimization
+
 ```javascript
 // src/repositories/BaseRepository.js
 class BaseRepository {
@@ -844,6 +866,7 @@ module.exports = BaseRepository;
 ## Security Best Practices
 
 ### Authentication and Authorization
+
 ```javascript
 // src/middleware/auth.js
 const jwt = require('jsonwebtoken');

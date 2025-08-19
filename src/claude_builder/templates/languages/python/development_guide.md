@@ -3,39 +3,54 @@
 ## Development Environment Setup
 
 ### Python Version Management
+
 ```bash
+
 # Install Python ${python_version}
+
 pyenv install ${python_version}
 pyenv local ${python_version}
 
 # Verify installation
+
 python --version
 ```
 
 ### Virtual Environment Setup
+
 ```bash
+
 # Create virtual environment
+
 python -m venv venv
 
 # Activate virtual environment
 # On Linux/Mac:
+
 source venv/bin/activate
+
 # On Windows:
+
 venv\Scripts\activate
 
 # Install dependencies
+
 pip install -r requirements.txt
 pip install -r requirements-dev.txt
 ```
 
 ### Development Dependencies
+
 ```bash
+
 # Core development tools
+
 pip install black isort flake8 mypy
 pip install pytest pytest-cov pytest-mock
 pip install pre-commit bandit safety
 
 # Optional tools
+
 pip install ipython jupyter
 pip install ${additional_dev_tools}
 ```
@@ -43,15 +58,20 @@ pip install ${additional_dev_tools}
 ## Code Quality Standards
 
 ### Automated Code Formatting
+
 ```bash
+
 # Black configuration in pyproject.toml
+
 [tool.black]
 line-length = 88
 target-version = ['py${python_short_version}']
 include = '\.pyi?$'
 extend-exclude = '''
 /(
+
   # directories
+
   \.eggs
   | \.git
   | \.venv
@@ -61,15 +81,20 @@ extend-exclude = '''
 '''
 
 # Format all Python files
+
 black .
 
 # Check formatting without changes
+
 black --check .
 ```
 
 ### Import Sorting
+
 ```bash
+
 # isort configuration in pyproject.toml
+
 [tool.isort]
 profile = "black"
 multi_line_output = 3
@@ -78,15 +103,20 @@ known_first_party = ["${package_name}"]
 sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
 
 # Sort imports
+
 isort .
 
 # Check import sorting
+
 isort --check-only .
 ```
 
 ### Linting Configuration
+
 ```bash
+
 # flake8 configuration in .flake8
+
 [flake8]
 max-line-length = 88
 extend-ignore = 
@@ -101,12 +131,16 @@ exclude =
     dist
 
 # Run linting
+
 flake8 ${package_name}/
 ```
 
 ### Type Checking
+
 ```bash
+
 # mypy configuration in pyproject.toml
+
 [tool.mypy]
 python_version = "${python_version}"
 warn_return_any = true
@@ -128,12 +162,14 @@ module = [
 ignore_missing_imports = true
 
 # Run type checking
+
 mypy ${package_name}/
 ```
 
 ## Testing Strategy
 
 ### Test Structure and Organization
+
 ```
 tests/
 ├── conftest.py                    # Pytest configuration and fixtures
@@ -157,8 +193,11 @@ tests/
 ```
 
 ### Pytest Configuration
+
 ```python
+
 # conftest.py
+
 import pytest
 from unittest.mock import Mock
 from ${package_name}.config import Settings
@@ -187,8 +226,11 @@ def ${core_instance}(test_settings):
 ```
 
 ### Test Writing Patterns
+
 ```python
+
 # test_example.py
+
 import pytest
 from unittest.mock import patch, Mock, call
 from ${package_name}.core.${module} import ${class_name}
@@ -209,27 +251,35 @@ class Test${class_name}:
 
     def test_process_data_success(self, ${core_instance}):
         """Test successful data processing."""
+
         # Arrange
+
         input_data = {"key": "value", "number": 42}
         expected_output = {"processed": True, "data": input_data}
 
         # Act
+
         result = ${core_instance}.process_data(input_data)
 
         # Assert
+
         assert result == expected_output
 
     @patch('${package_name}.core.${module}.external_service_call')
     def test_process_with_external_service(self, mock_service, ${core_instance}):
         """Test processing with mocked external service."""
+
         # Arrange
+
         mock_service.return_value = {"status": "success"}
         input_data = {"test": "data"}
 
         # Act
+
         result = ${core_instance}.process_with_service(input_data)
 
         # Assert
+
         mock_service.assert_called_once_with(input_data)
         assert result["status"] == "success"
 
@@ -258,38 +308,49 @@ class Test${class_name}:
 ```
 
 ### Test Execution Commands
+
 ```bash
+
 # Run all tests
+
 pytest
 
 # Run with coverage report
+
 pytest --cov=${package_name} --cov-report=html --cov-report=term
 
 # Run specific test categories
+
 pytest tests/unit/           # Only unit tests
 pytest tests/integration/    # Only integration tests
 pytest tests/e2e/           # Only end-to-end tests
 
 # Run tests matching pattern
+
 pytest -k "test_process"    # Run tests with "process" in name
 pytest tests/unit/test_core.py::TestCore::test_method  # Specific test
 
 # Run tests with verbose output
+
 pytest -v -s
 
 # Run tests in parallel (with pytest-xdist)
+
 pytest -n auto
 
 # Run tests and stop on first failure
+
 pytest -x
 
 # Run only failed tests from last run
+
 pytest --lf
 ```
 
 ## Performance and Profiling
 
 ### Performance Testing
+
 ```python
 import time
 import pytest
@@ -300,16 +361,20 @@ class TestPerformance:
 
     def test_large_dataset_processing_performance(self):
         """Test processing performance with large dataset."""
+
         # Arrange
+
         large_dataset = self._generate_test_data(10000)
         max_allowed_time = 5.0  # seconds
 
         # Act
+
         start_time = time.time()
         result = ${performance_critical_module}.process_large_dataset(large_dataset)
         execution_time = time.time() - start_time
 
         # Assert
+
         assert execution_time < max_allowed_time
         assert len(result) == len(large_dataset)
 
@@ -322,53 +387,72 @@ class TestPerformance:
 ```
 
 ### Memory Profiling
+
 ```bash
+
 # Install memory profiler
+
 pip install memory-profiler
 
 # Profile memory usage
+
 python -m memory_profiler ${script_name}.py
 
 # Line-by-line memory profiling
+
 @profile
 def memory_intensive_function():
+
     # Function implementation
+
     pass
 ```
 
 ## Security Best Practices
 
 ### Dependency Security Scanning
+
 ```bash
+
 # Check for known vulnerabilities
+
 safety check
 
 # Audit dependencies
+
 pip-audit
 
 # Update dependencies
+
 pip-compile --upgrade requirements.in
 ```
 
 ### Code Security Scanning
+
 ```bash
+
 # Run bandit security linter
+
 bandit -r ${package_name}/
 
 # Check for secrets in code
+
 detect-secrets scan --all-files
 ```
 
 ### Secure Coding Patterns
+
 ```python
 import secrets
 import hashlib
 from cryptography.fernet import Fernet
 
 # Secure random generation
+
 secure_token = secrets.token_urlsafe(32)
 
 # Secure password hashing
+
 def hash_password(password: str) -> str:
     """Hash password securely using PBKDF2."""
     salt = secrets.token_bytes(32)
@@ -376,6 +460,7 @@ def hash_password(password: str) -> str:
     return salt + key
 
 # Environment variable handling
+
 import os
 from typing import Optional
 
@@ -390,8 +475,11 @@ def get_secret(key: str) -> Optional[str]:
 ## Debugging and Development Tools
 
 ### Debug Configuration
+
 ```python
+
 # debug.py - Development debugging utilities
+
 import logging
 import pdb
 from typing import Any
@@ -416,12 +504,16 @@ def log_object_state(obj: Any, name: str = "object") -> None:
 ```
 
 ### Interactive Development
+
 ```python
+
 # IPython configuration for enhanced debugging
+
 %load_ext autoreload
 %autoreload 2
 
 # Enhanced debugging with rich
+
 from rich.console import Console
 from rich.traceback import install
 

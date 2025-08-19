@@ -1,6 +1,7 @@
 # ${project_name} - JavaScript Development Instructions
 
 ## Project Context
+
 ${project_description}
 
 **Language**: JavaScript (Node.js ${node_version})
@@ -11,6 +12,7 @@ ${project_description}
 ## JavaScript Development Standards
 
 ### Code Style and Formatting
+
 - Use ESLint with Airbnb configuration for consistent code style
 - Prettier for automatic code formatting
 - Use modern ES6+ syntax and features
@@ -18,6 +20,7 @@ ${project_description}
 - Use arrow functions where appropriate
 
 ### Project Structure
+
 ```
 ${project_name}/
 ├── package.json                  # Project configuration
@@ -53,6 +56,7 @@ ${project_name}/
 ```
 
 ### Error Handling Patterns
+
 ```javascript
 // Custom error classes
 class AppError extends Error {
@@ -127,6 +131,7 @@ module.exports = {
 ```
 
 ### Async/Await Best Practices
+
 ```javascript
 // Service layer with proper error handling
 class ${service_name}Service {
@@ -285,6 +290,7 @@ module.exports = ${controller_name}Controller;
 ## Testing Standards
 
 ### Test Organization
+
 ```javascript
 // Jest configuration (jest.config.js)
 module.exports = {
@@ -337,6 +343,7 @@ afterEach(async () => {
 ```
 
 ### Unit Testing Patterns
+
 ```javascript
 // tests/unit/services/${service}.test.js
 const ${service_name}Service = require('../../src/services/${service}');
@@ -483,6 +490,7 @@ describe('${service_name}Service', () => {
 ```
 
 ### Integration Testing
+
 ```javascript
 // tests/integration/${controller}.test.js
 const request = require('supertest');
@@ -577,6 +585,7 @@ describe('${controller_name} Integration Tests', () => {
 ## Configuration Management
 
 ### Environment Configuration
+
 ```javascript
 // src/config/index.js
 const dotenv = require('dotenv');
@@ -655,6 +664,7 @@ module.exports = config;
 ## Logging and Monitoring
 
 ### Structured Logging Setup
+
 ```javascript
 // src/config/logger.js
 const winston = require('winston');
@@ -734,6 +744,7 @@ module.exports = {
 ## Performance Guidelines
 
 ### Database Optimization
+
 ```javascript
 // Efficient database queries
 class ${resource_name}Repository {

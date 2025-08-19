@@ -3,17 +3,23 @@
 ## Development Environment Setup
 
 ### Rust Installation and Management
+
 ```bash
+
 # Install Rust using rustup
+
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 # Update Rust to latest stable
+
 rustup update stable
 
 # Install additional components
+
 rustup component add rustfmt clippy
 
 # Install useful cargo extensions
+
 cargo install cargo-watch         # Auto-recompile on file changes
 cargo install cargo-expand        # Show macro expansions
 cargo install cargo-audit         # Security vulnerability scanning
@@ -23,18 +29,23 @@ cargo install cargo-nextest       # Next-generation test runner
 ```
 
 ### Project Setup
+
 ```bash
+
 # Create new project
+
 cargo new ${project_name} --name ${binary_name}
 cd ${project_name}
 
 # Initialize with library and binary
+
 cargo new ${project_name} --lib
 cd ${project_name}
 mkdir src/bin
 ```
 
 ### Cargo.toml Configuration
+
 ```toml
 [package]
 name = "${project_name}"
@@ -51,51 +62,67 @@ keywords = ["${keyword1}", "${keyword2}", "${keyword3}"]
 categories = ["${category1}", "${category2}"]
 
 [dependencies]
+
 # Async runtime
+
 tokio = { version = "${tokio_version}", features = ["full"] }
 
 # Error handling
+
 anyhow = "${anyhow_version}"
 thiserror = "${thiserror_version}"
 
 # Serialization
+
 serde = { version = "${serde_version}", features = ["derive"] }
 serde_json = "${serde_json_version}"
 
 # Logging and tracing
+
 tracing = "${tracing_version}"
 tracing-subscriber = { version = "${tracing_subscriber_version}", features = ["json"] }
 
 # Configuration
+
 config = "${config_version}"
 
 # HTTP client (if needed)
+
 reqwest = { version = "${reqwest_version}", features = ["json", "rustls-tls"] }
 
 # Database (if needed)
+
 sqlx = { version = "${sqlx_version}", features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid"] }
 
 # ${framework_dependencies}
 
 [dev-dependencies]
+
 # Testing
+
 tokio-test = "${tokio_test_version}"
 wiremock = "${wiremock_version}"
 tempfile = "${tempfile_version}"
 pretty_assertions = "${pretty_assertions_version}"
 
 # Property testing
+
 proptest = "${proptest_version}"
 
 # Benchmarking
+
 criterion = { version = "${criterion_version}", features = ["html_reports"] }
 
 [profile.dev]
+
 # Faster linking
+
 split-debuginfo = "unpacked"
 
 [profile.release]
+
 # Optimize for performance
+
 lto = true
 codegen-units = 1
 panic = "abort"
@@ -117,68 +144,92 @@ harness = false
 ## Development Workflow
 
 ### Code Formatting and Linting
+
 ```bash
+
 # Format code (automatic)
+
 cargo fmt
 
 # Check formatting without modifying
+
 cargo fmt -- --check
 
 # Run clippy lints
+
 cargo clippy
 
 # Run clippy with stricter settings
+
 cargo clippy -- -D warnings -D clippy::pedantic
 
 # Run all quality checks
+
 cargo fmt -- --check && cargo clippy -- -D warnings && cargo test
 ```
 
 ### Testing Commands
+
 ```bash
+
 # Run all tests
+
 cargo test
 
 # Run tests with output
+
 cargo test -- --nocapture
 
 # Run specific test
+
 cargo test test_${specific_function}
 
 # Run tests matching pattern
+
 cargo test ${pattern}
 
 # Run tests with nextest (faster)
+
 cargo nextest run
 
 # Run integration tests only
+
 cargo test --test ${integration_test_name}
 
 # Run benchmarks
+
 cargo bench
 
 # Run single benchmark
+
 cargo bench ${benchmark_name}
 ```
 
 ### Development Server
+
 ```bash
+
 # Watch for changes and rebuild
+
 cargo watch -x run
 
 # Watch and run tests
+
 cargo watch -x test
 
 # Watch with clear screen
+
 cargo watch -c -x run
 
 # Watch specific files
+
 cargo watch -w src -x run
 ```
 
 ## Project Structure Best Practices
 
 ### Module Organization
+
 ```rust
 // src/lib.rs
 pub mod config;
@@ -200,6 +251,7 @@ pub mod prelude {
 ```
 
 ### Error Handling Architecture
+
 ```rust
 // src/error.rs
 use thiserror::Error;
@@ -255,6 +307,7 @@ impl Error {
 ```
 
 ### Configuration Management
+
 ```rust
 // src/config.rs
 use serde::{Deserialize, Serialize};
@@ -326,6 +379,7 @@ fn default_json_format() -> bool { false }
 ## Testing Strategies
 
 ### Unit Testing Patterns
+
 ```rust
 // src/services/${service}.rs
 #[cfg(test)]
@@ -386,6 +440,7 @@ mod tests {
 ```
 
 ### Integration Testing
+
 ```rust
 // tests/${integration_test}.rs
 use ${project_name}::{prelude::*, Config};
@@ -469,6 +524,7 @@ async fn test_full_workflow() {
 ```
 
 ### Property-Based Testing
+
 ```rust
 // tests/property_tests.rs
 use ${project_name}::*;
@@ -509,6 +565,7 @@ proptest! {
 ## Performance Optimization
 
 ### Profiling and Benchmarking
+
 ```rust
 // benches/${benchmark}.rs
 use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
@@ -552,46 +609,60 @@ fn generate_test_data(size: usize) -> Vec<${data_type}> {
 ```
 
 ### Memory and Performance Profiling
+
 ```bash
+
 # Install profiling tools
+
 cargo install cargo-profdata
 cargo install flamegraph
 
 # CPU profiling with perf
+
 cargo build --release
 perf record --call-graph=dwarf target/release/${binary_name}
 perf report
 
 # Memory profiling with valgrind
+
 cargo build
 valgrind --tool=massif target/debug/${binary_name}
 
 # Heap profiling
+
 cargo install cargo-valgrind
 cargo valgrind run --bin ${binary_name}
 
 # Flamegraph profiling
+
 cargo flamegraph --bin ${binary_name}
 ```
 
 ## Security Best Practices
 
 ### Dependency Security
+
 ```bash
+
 # Audit dependencies for vulnerabilities
+
 cargo audit
 
 # Check for outdated dependencies
+
 cargo outdated
 
 # Update dependencies
+
 cargo update
 
 # Vendor dependencies for offline builds
+
 cargo vendor
 ```
 
 ### Secure Coding Patterns
+
 ```rust
 // Secure input validation
 use validator::{Validate, ValidationError};
@@ -638,8 +709,11 @@ pub struct SensitiveData {
 ## Deployment Configuration
 
 ### Docker Setup
+
 ```dockerfile
+
 # Dockerfile
+
 FROM rust:${rust_version} as builder
 
 WORKDIR /app
@@ -663,8 +737,11 @@ CMD ["${binary_name}"]
 ```
 
 ### CI/CD Pipeline
+
 ```yaml
+
 # .github/workflows/ci.yml
+
 name: CI
 
 on: [push, pull_request]
@@ -689,26 +766,32 @@ jobs:
           --health-retries 5
     
     steps:
+
     - uses: actions/checkout@v3
     
     - name: Install Rust
+
       uses: actions-rs/toolchain@v1
       with:
         toolchain: stable
         components: rustfmt, clippy
     
     - name: Check formatting
+
       run: cargo fmt -- --check
     
     - name: Run clippy
+
       run: cargo clippy -- -D warnings
     
     - name: Run tests
+
       run: cargo test
       env:
         TEST_DATABASE_URL: postgres://postgres:postgres@localhost/test_db
     
     - name: Run benchmarks
+
       run: cargo bench
 ```
 

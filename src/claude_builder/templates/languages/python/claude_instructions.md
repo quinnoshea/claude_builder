@@ -1,6 +1,7 @@
 # ${project_name} - Python Development Instructions
 
 ## Project Context
+
 ${project_description}
 
 **Language**: Python ${python_version}
@@ -11,6 +12,7 @@ ${project_description}
 ## Python Development Standards
 
 ### Code Style and Formatting
+
 - Follow PEP 8 style guide strictly
 - Use black for automatic code formatting
 - Line length: 88 characters (black default)
@@ -18,37 +20,49 @@ ${project_description}
 - Follow PEP 484 for type hints
 
 ### Type Annotations
+
 ```python
+
 # Required for all public functions and methods
+
 def process_data(items: List[Dict[str, Any]]) -> Optional[ProcessedData]:
     """Process data items with comprehensive type safety."""
     pass
 
 # Class definitions with proper typing
+
 class ${primary_class}:
     def __init__(self, config: ${config_type}) -> None:
         self._config: ${config_type} = config
 ```
 
 ### Import Organization
+
 ```python
+
 # Standard library imports
+
 import os
 import sys
 from typing import Dict, List, Optional, Union
 
 # Third-party imports
+
 import requests
 import pandas as pd
 
 # Local application imports
+
 from ${package_name}.core import ${core_modules}
 from ${package_name}.utils import ${utility_modules}
 ```
 
 ### Error Handling
+
 ```python
+
 # Use specific exceptions
+
 class ${project_name}Error(Exception):
     """Base exception for ${project_name}."""
     pass
@@ -58,6 +72,7 @@ class ValidationError(${project_name}Error):
     pass
 
 # Proper exception handling
+
 try:
     result = risky_operation()
 except SpecificError as e:
@@ -68,6 +83,7 @@ except SpecificError as e:
 ## Testing Standards
 
 ### Test Organization
+
 ```
 tests/
 ├── unit/                 # Unit tests
@@ -81,6 +97,7 @@ tests/
 ```
 
 ### Test Writing Guidelines
+
 ```python
 import pytest
 from unittest.mock import Mock, patch
@@ -95,13 +112,17 @@ class Test${class_name}:
     
     def test_${method_name}_success(self):
         """Test successful ${method_name} operation."""
+
         # Arrange
+
         expected_result = ${expected_value}
         
         # Act
+
         result = self.${instance}.${method_name}(${test_input})
         
         # Assert
+
         assert result == expected_result
     
     def test_${method_name}_with_invalid_input(self):
@@ -111,23 +132,30 @@ class Test${class_name}:
 ```
 
 ### Testing Commands
+
 ```bash
+
 # Run all tests
+
 pytest
 
 # Run with coverage
+
 pytest --cov=${package_name} --cov-report=html
 
 # Run specific test file
+
 pytest tests/unit/test_${module}.py
 
 # Run with verbose output
+
 pytest -v -s
 ```
 
 ## Package Structure
 
 ### Standard Python Package Layout
+
 ```
 ${package_name}/
 ├── __init__.py
@@ -156,8 +184,11 @@ ${package_name}/
 ## Configuration Management
 
 ### Settings Structure
+
 ```python
+
 # config/settings.py
+
 from typing import Optional
 from pydantic import BaseSettings, Field
 
@@ -165,14 +196,17 @@ class Settings(BaseSettings):
     """Application settings with environment variable support."""
     
     # Database configuration
+
     database_url: str = Field(..., env="DATABASE_URL")
     database_pool_size: int = Field(10, env="DATABASE_POOL_SIZE")
     
     # API configuration
+
     api_key: Optional[str] = Field(None, env="API_KEY")
     api_timeout: int = Field(30, env="API_TIMEOUT")
     
     # Application settings
+
     debug: bool = Field(False, env="DEBUG")
     log_level: str = Field("INFO", env="LOG_LEVEL")
     
@@ -186,6 +220,7 @@ settings = Settings()
 ## Logging Configuration
 
 ### Structured Logging Setup
+
 ```python
 import logging
 import structlog
@@ -221,64 +256,88 @@ logger = structlog.get_logger()
 ## Dependency Management
 
 ### Core Dependencies
+
 ${core_dependencies}
 
 ### Development Dependencies
+
 ${dev_dependencies}
 
 ### Optional Dependencies
+
 ${optional_dependencies}
 
 ## Development Tools
 
 ### Code Quality Tools
+
 ```bash
+
 # Format code
+
 black ${package_name}/
 isort ${package_name}/
 
 # Lint code
+
 flake8 ${package_name}/
 pylint ${package_name}/
 
 # Type checking
+
 mypy ${package_name}/
 
 # Security scanning
+
 bandit -r ${package_name}/
 ```
 
 ### Pre-commit Configuration
+
 ```yaml
+
 # .pre-commit-config.yaml
+
 repos:
+
   - repo: https://github.com/psf/black
+
     rev: 22.3.0
     hooks:
+
       - id: black
   - repo: https://github.com/pycqa/isort
+
     rev: 5.10.1
     hooks:
+
       - id: isort
   - repo: https://github.com/pycqa/flake8
+
     rev: 4.0.1
     hooks:
+
       - id: flake8
   - repo: https://github.com/pre-commit/mirrors-mypy
+
     rev: v0.950
     hooks:
+
       - id: mypy
+
 ```
 
 ## Performance Guidelines
 
 ### Best Practices
+
 - Use appropriate data structures (dict, set, list comprehensions)
 - Implement proper caching strategies
 - Use async/await for I/O-bound operations
 - Profile code before optimizing
 
 ### Async Programming
+
 ```python
 import asyncio
 import aiohttp
@@ -299,6 +358,7 @@ async def process_multiple_requests(urls: List[str]) -> List[Dict[str, Any]]:
 ## Documentation Standards
 
 ### Docstring Format
+
 ```python
 def complex_function(
     param1: str,

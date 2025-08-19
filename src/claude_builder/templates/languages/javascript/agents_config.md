@@ -5,7 +5,9 @@
 ### Primary Development Agents
 
 #### backend-architect
+
 **Primary Role**: Node.js backend systems, API design, microservices architecture
+
 - **Specialization**: Express.js applications, MongoDB/PostgreSQL integration, RESTful APIs
 - **Responsibilities**: 
   - Design scalable Node.js architectures with proper separation of concerns
@@ -14,7 +16,9 @@
   - Microservices orchestration and inter-service communication
 
 #### frontend-developer
+
 **Primary Role**: JavaScript frontend development, SPA frameworks, UI implementation
+
 - **Specialization**: ${frontend_framework} applications, modern JavaScript (ES6+), responsive design
 - **Responsibilities**:
   - Implement responsive and interactive user interfaces
@@ -23,7 +27,9 @@
   - Frontend performance optimization and bundle management
 
 #### rapid-prototyper  
+
 **Primary Role**: Quick JavaScript prototyping and proof of concepts
+
 - **Specialization**: Fast MVP development, npm ecosystem integration
 - **Responsibilities**:
   - Rapid development of JavaScript prototypes using modern frameworks
@@ -34,7 +40,9 @@
 ### Specialized JavaScript Agents
 
 #### node-performance-specialist
+
 **Role**: Node.js performance optimization and scaling
+
 - **Focus Areas**: 
   - Event loop optimization and async performance tuning
   - Memory usage optimization and garbage collection tuning
@@ -43,7 +51,9 @@
   - Load testing and performance benchmarking
 
 #### javascript-security-expert
+
 **Role**: Security implementation and vulnerability assessment
+
 - **Focus Areas**:
   - Authentication and authorization (JWT, OAuth, session management)
   - Input validation and sanitization (XSS, injection prevention)
@@ -54,7 +64,9 @@
 ### Testing and Quality Agents
 
 #### test-writer-fixer
+
 **JavaScript Testing Specialization**:
+
 - **Unit Testing**: Jest, Mocha/Chai for comprehensive unit test coverage
 - **Integration Testing**: Supertest for API testing, database integration tests
 - **End-to-End Testing**: Puppeteer, Playwright for browser automation
@@ -62,6 +74,7 @@
 - **Coverage**: Istanbul/nyc for code coverage analysis
 
 **Responsibilities**:
+
 - Write comprehensive unit tests following JavaScript testing best practices
 - Implement integration tests for API endpoints and database operations
 - Create end-to-end tests for critical user workflows
@@ -69,7 +82,9 @@
 - Mock external services and dependencies effectively
 
 #### performance-benchmarker
+
 **JavaScript Performance Focus**:
+
 - **Profiling**: Node.js built-in profiler, Chrome DevTools, clinic.js
 - **Benchmarking**: Benchmark.js for micro-benchmarks, autocannon for API load testing
 - **Memory Analysis**: Memory usage profiling and leak detection
@@ -78,8 +93,10 @@
 ### Framework-Specific Agents
 
 #### ${framework}-specialist
+
 **Framework**: ${framework}
 **Specialization**: ${framework}-specific patterns and optimizations
+
 - **Responsibilities**:
   - Implement ${framework}-specific features using best practices
   - Optimize ${framework} applications for performance and user experience
@@ -89,38 +106,65 @@
 ## Agent Coordination Workflows
 
 ### Full-Stack Development Pipeline
+
 ```
+
 1. rapid-prototyper: Initial feature prototyping and architecture validation
+
    ↓
+
 2. backend-architect: Backend API development and database design
+
    ↓
+
 3. frontend-developer: Frontend implementation and state management
+
    ↓
+
 4. test-writer-fixer: Comprehensive testing across all layers
+
    ↓
+
 5. javascript-security-expert: Security review and vulnerability assessment
+
    ↓
+
 6. node-performance-specialist: Performance optimization and scaling
+
    ↓
+
 7. devops-automator: Deployment and monitoring setup
+
 ```
 
 ### API Development Pipeline
+
 ```
+
 1. backend-architect: API design and endpoint implementation
+
    ↓
+
 2. test-writer-fixer: API testing with supertest and integration tests
+
    ↓
+
 3. javascript-security-expert: Security implementation (auth, validation)
+
    ↓
+
 4. performance-benchmarker: API performance testing and optimization
+
    ↓
+
 5. devops-automator: API deployment and monitoring
+
 ```
 
 ## JavaScript-Specific Development Standards
 
 ### Package.json Configuration
+
 ```json
 {
   "name": "${project_name}",
@@ -162,6 +206,7 @@
 ```
 
 ### Code Quality Configuration
+
 ```javascript
 // .eslintrc.js
 module.exports = {
@@ -190,6 +235,7 @@ module.exports = {
 ### Agent-Specific Guidelines
 
 #### For backend-architect
+
 ```javascript
 // Example service architecture pattern
 class ${service_name}Service {
@@ -283,6 +329,7 @@ module.exports = ${service_name}Service;
 ```
 
 #### For test-writer-fixer
+
 ```javascript
 // Example comprehensive test suite
 const request = require('supertest');
@@ -526,6 +573,7 @@ describe('${service_name}Service Unit Tests', () => {
 ```
 
 #### For node-performance-specialist
+
 ```javascript
 // Performance optimization examples
 const cluster = require('cluster');
@@ -673,6 +721,7 @@ async function processMultipleItems(items) {
 ## Environment-Specific Configurations
 
 ### Development Environment
+
 ```javascript
 // config/development.js
 module.exports = {
@@ -699,6 +748,7 @@ module.exports = {
 ```
 
 ### Production Environment
+
 ```javascript
 // config/production.js
 module.exports = {
