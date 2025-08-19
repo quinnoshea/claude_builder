@@ -27,6 +27,7 @@ class ComplexityLevel(Enum):
     """Project complexity levels."""
     SIMPLE = "simple"
     MODERATE = "moderate"
+    MEDIUM = "moderate"  # Alias for test compatibility
     COMPLEX = "complex"
     ENTERPRISE = "enterprise"
 
