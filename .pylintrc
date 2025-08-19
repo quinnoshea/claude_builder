@@ -1,9 +1,9 @@
 [MAIN]
 # Python code to execute, usually for sys.path manipulation
-init-hook='import sys; sys.path.extend([".", "src"])'
+init-hook='import sys; import os; sys.path.append(os.path.join(os.getcwd(), "src"))'
 
 # Files or directories to be skipped
-ignore=.git,__pycache__,docs,build,dist,.venv,venv,migrations
+ignore=.git,__pycache__,docs,build,dist,.venv,venv,migrations,tests
 
 # Files or directories matching regex patterns are skipped
 ignore-patterns=test_.*\.py,.*_test\.py

@@ -1,0 +1,4 @@
+[bandit]
+# Bandit configuration for Claude Builder
+exclude_dirs = tests,docs,build,dist,.git,.github
+skips = B101,B601,B602,B603
