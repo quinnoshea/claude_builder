@@ -8,6 +8,7 @@ from unittest.mock import Mock, patch
 
 from claude_builder.cli.analyze_commands import analyze, project
 from claude_builder.core.analyzer import ProjectAnalysis, LanguageInfo, FrameworkInfo, DomainInfo
+from claude_builder.core.models import DevelopmentEnvironment, FileSystemInfo
 from claude_builder.models.enums import ProjectType, ComplexityLevel, ArchitecturePattern
 
 
@@ -42,19 +43,19 @@ def mock_analysis():
         project_type=ProjectType.API_SERVICE,
         complexity_level=ComplexityLevel.MEDIUM,
         architecture_pattern=ArchitecturePattern.MVC,
-        dev_environment=Mock(
+        dev_environment=DevelopmentEnvironment(
             package_managers=["pip"],
             testing_frameworks=["pytest"],
             ci_cd_systems=["github-actions"],
             containerization=["docker"],
             databases=["postgresql"]
         ),
-        filesystem_info=Mock(
+        filesystem_info=FileSystemInfo(
             total_files=50,
             source_files=30,
             test_files=10,
             config_files=5,
-            doc_files=5
+            documentation_files=5
         ),
         warnings=["Missing test coverage"],
         suggestions=["Add more unit tests"]
@@ -206,12 +207,16 @@ class TestAnalyzeCommands:
         mock_analyzer_class.return_value = mock_analyzer
         
         runner = CliRunner()
-        with patch('claude_builder.cli.analyze_commands.yaml', None):
-            # Mock ImportError for yaml import
-            with patch('builtins.__import__', side_effect=lambda name, *args: __import__(name, *args) if name != 'yaml' else None):
-                result = runner.invoke(project, [
-                    str(sample_python_project),
-                    "--format", "yaml"
-                ])
-                # Should handle missing PyYAML gracefully
-                assert "YAML format requires PyYAML" in result.output or result.exit_code != 0
+        # Mock ImportError for yaml import
+        def mock_import(name, *args, **kwargs):
+            if name == 'yaml':
+                raise ImportError("No module named 'yaml'")
+            return __import__(name, *args, **kwargs)
+            
+        with patch('builtins.__import__', side_effect=mock_import):
+            result = runner.invoke(project, [
+                str(sample_python_project),
+                "--format", "yaml"
+            ])
+            # Should handle missing PyYAML gracefully
+            assert "YAML format requires PyYAML" in result.output or result.exit_code != 0

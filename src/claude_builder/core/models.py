@@ -262,9 +262,8 @@ class TestFrameworkInfo:
             "description": self.description
         }
 
-# Make TestFrameworkInfo available as FrameworkInfo for tests
-# This creates an alias so tests can import it
-globals()['FrameworkInfo'] = TestFrameworkInfo
+# Note: TestFrameworkInfo is available for specific model tests
+# CLI tests should use the real FrameworkInfo from this module
 
 # Placeholder classes for test compatibility
 @dataclass 

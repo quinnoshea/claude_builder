@@ -17,7 +17,7 @@ from claude_builder.core.models import (
     AnalysisResult,
     DependencyInfo,
     FileStructure,
-    FrameworkInfo,
+    TestFrameworkInfo as FrameworkInfo,  # Use test-compatible version
     GenerationConfig,
     ProjectInfo,
 )
