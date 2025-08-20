@@ -1,0 +1,19 @@
+{
+  "name": "test-javascript-project",
+  "version": "1.0.0",
+  "description": "A test JavaScript project for claude_builder testing",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "jest",
+    "dev": "nodemon src/index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.0",
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0",
+    "nodemon": "^2.0.0"
+  }
+}

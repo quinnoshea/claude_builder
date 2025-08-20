@@ -33,6 +33,27 @@ def temp_dir() -> Generator[Path, None, None]:
 
 
 @pytest.fixture
+def temp_project_dir(temp_dir: Path) -> Path:
+    """Create a temporary directory with sample project structure - matches guide expectations."""
+    project_path = temp_dir / "test_project"
+    project_path.mkdir()
+    
+    # Create basic Python project structure
+    (project_path / "setup.py").write_text("""
+from setuptools import setup
+setup(name="test-project", version="0.1.0")
+""")
+    
+    (project_path / "requirements.txt").write_text("requests>=2.25.0\n")
+    
+    src_dir = project_path / "src" / "test_project"
+    src_dir.mkdir(parents=True)
+    (src_dir / "__init__.py").write_text('__version__ = "0.1.0"')
+    
+    return str(project_path)
+
+
+@pytest.fixture
 def sample_project_path(temp_dir: Path) -> Path:
     """Create a sample project directory structure."""
     project_dir = temp_dir / "sample_project"
