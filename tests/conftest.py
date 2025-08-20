@@ -1,11 +1,17 @@
 """Global test configuration and fixtures for Claude Builder tests."""
 
 import json
+import sys
 import tempfile
 from pathlib import Path
 from typing import Any, Dict, Generator
 
 import pytest
+
+# Add src directory to Python path for src layout
+src_path = Path(__file__).parent.parent / "src"
+if str(src_path) not in sys.path:
+    sys.path.insert(0, str(src_path))
 
 from claude_builder.core.config import Config, ConfigManager
 from claude_builder.core.models import (
@@ -345,15 +351,15 @@ def sample_analysis() -> ProjectAnalysis:
             primary="python",
             secondary=["yaml", "markdown"],
             confidence=95.0,
-            version_info={"python": "3.11"}
+            file_counts={"python": 10, "yaml": 2, "markdown": 1}
         ),
         framework_info=FrameworkInfo(
             primary="fastapi",
             secondary=["pydantic"],
             confidence=85.0,
-            details={"web_framework": True}
+            version="0.95.0"
         ),
-        project_type=ProjectType.WEB_API,
+        project_type=ProjectType.API_SERVICE,
         complexity_level=ComplexityLevel.MEDIUM,
         filesystem_info=FileSystemInfo(
             total_files=42,
@@ -366,7 +372,7 @@ def sample_analysis() -> ProjectAnalysis:
         domain_info=DomainInfo(
             domain="web_api",
             confidence=90.0,
-            features=["rest_api", "authentication", "database"]
+            indicators=["rest_api", "authentication", "database"]
         ),
         analysis_confidence=90.0,
         dependencies={"requests": "2.28.0", "fastapi": "0.95.0"},

@@ -39,11 +39,23 @@ def mock_analysis():
             indicators=["REST API", "web framework"],
             specialized_patterns=["microservice"]
         ),
-        project_type=ProjectType.WEB_API,
+        project_type=ProjectType.API_SERVICE,
         complexity_level=ComplexityLevel.MEDIUM,
         architecture_pattern=ArchitecturePattern.MVC,
-        dev_environment=Mock(),
-        filesystem_info=Mock(),
+        dev_environment=Mock(
+            package_managers=["pip"],
+            testing_frameworks=["pytest"],
+            ci_cd_systems=["github-actions"],
+            containerization=["docker"],
+            databases=["postgresql"]
+        ),
+        filesystem_info=Mock(
+            total_files=50,
+            source_files=30,
+            test_files=10,
+            config_files=5,
+            doc_files=5
+        ),
         warnings=["Missing test coverage"],
         suggestions=["Add more unit tests"]
     )

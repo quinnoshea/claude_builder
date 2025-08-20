@@ -67,6 +67,9 @@ Issues = "https://github.com/quinnoshea/claude_builder/issues"
 [project.scripts]
 claude-builder = "claude_builder.cli.main:main"
 
+[tool.setuptools]
+package-dir = {"" = "src"}
+
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["claude_builder*"]
@@ -132,6 +135,7 @@ strict_equality = true
 [tool.pytest.ini_options]
 minversion = "7.0"
 addopts = "-ra -q --strict-markers --strict-config --cov=claude_builder --cov-report=term-missing --cov-report=xml --cov-report=html --cov-fail-under=50"
+pythonpath = ["src"]
 testpaths = [
     "tests",
 ]
@@ -153,15 +157,21 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["src/claude_builder"]
+source = ["claude_builder"]
 omit = [
     "tests/*",
-    "src/claude_builder/templates/*",
+    "claude_builder/templates/*",
     "*/__init__.py",
-    "src/claude_builder/cli/main.py",
+    "claude_builder/cli/main.py",
 ]
 branch = true
 data_file = ".coverage"
+
+[tool.coverage.paths]
+source = [
+    "src/claude_builder",
+    "*/site-packages/claude_builder",
+]
 
 [tool.coverage.report]
 show_missing = true

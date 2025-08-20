@@ -2,9 +2,23 @@
 engines:
   ruff:
     enabled: true
+    base_sub_dir: src/
   pylint:
     enabled: true
+    python_version: 3
+    base_sub_dir: src/
   bandit:
     enabled: true
+    base_sub_dir: src/
   markdownlint:
     enabled: true
+  semgrep:
+    enabled: true
+    base_sub_dir: src/
+
+exclude_paths:
+  - "tests/**"
+  - "docs/**"
+  - "htmlcov/**"
+  - "*.egg-info/**"
+  - "scripts/**"

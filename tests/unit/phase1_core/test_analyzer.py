@@ -418,7 +418,7 @@ def get_users():
         analyzer = ProjectAnalyzer()
         result = analyzer.analyze(project_path)
 
-        assert result.project_type == ProjectType.WEB_API
+        assert result.project_type == ProjectType.API_SERVICE
 
     def test_classify_cli_tool_project(self, temp_dir):
         """Test classification of CLI tool project."""

@@ -70,7 +70,7 @@ class TestAgentManager:
 
         # Test Python web API project
         sample_analysis.language_info.primary = "python"
-        sample_analysis.project_type = ProjectType.WEB_API
+        sample_analysis.project_type = ProjectType.API_SERVICE
         sample_analysis.framework_info.primary = "fastapi"
 
         selected_agents = manager.select_agents_for_project(sample_analysis)
@@ -193,7 +193,7 @@ class TestAgentSelector:
     def test_select_for_complex_project(self, sample_analysis):
         """Test agent selection adapts to project complexity."""
         sample_analysis.complexity_level = ComplexityLevel.HIGH
-        sample_analysis.project_type = ProjectType.WEB_API
+        sample_analysis.project_type = ProjectType.API_SERVICE
 
         selector = AgentSelector()
         high_complexity_agents = selector.select_agents(sample_analysis)

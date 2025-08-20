@@ -74,7 +74,7 @@ class TestDocumentGenerator:
     def test_generate_web_api_docs(self, sample_analysis, temp_dir):
         """Test document generation for web API project."""
         # Update analysis for web API
-        sample_analysis.project_type = ProjectType.WEB_API
+        sample_analysis.project_type = ProjectType.API_SERVICE
         sample_analysis.framework_info.primary = "fastapi"
 
         generator = DocumentGenerator()
@@ -376,7 +376,7 @@ class TestOutputGeneration:
 
         # Test Rust web API project
         sample_analysis.language_info.primary = "rust"
-        sample_analysis.project_type = ProjectType.WEB_API
+        sample_analysis.project_type = ProjectType.API_SERVICE
         sample_analysis.framework_info.primary = "axum"
         rust_result = generator.generate(sample_analysis, temp_dir)
 
@@ -437,7 +437,7 @@ class TestOutputGeneration:
                 test_files=150,
                 config_files=50
             ),
-            project_type=ProjectType.WEB_API,
+            project_type=ProjectType.API_SERVICE,
             complexity_level=ComplexityLevel.HIGH,
             analysis_confidence=90.0
         )
