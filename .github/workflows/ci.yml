@@ -83,6 +83,12 @@ jobs:
         fail_ci_if_error: false
         verbose: true
         
+    - name: Fix coverage paths for external tools
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      run: |
+        python scripts/fix_coverage_paths.py coverage.xml
+        echo "Coverage paths fixed for Codacy integration"
+        
     - name: Upload coverage to Codacy
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
       continue-on-error: true

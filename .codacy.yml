@@ -13,8 +13,7 @@ engines:
   markdownlint:
     enabled: true
   semgrep:
-    enabled: true
-    base_sub_dir: src/
+    enabled: false  # Disabled due to proprietary extension issues in CI
 
 exclude_paths:
   - "tests/**"

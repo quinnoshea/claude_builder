@@ -366,8 +366,7 @@ def sample_analysis() -> ProjectAnalysis:
             source_files=25,
             test_files=8,
             config_files=5,
-            doc_files=4,
-            largest_files=["main.py", "models.py", "api.py"]
+            documentation_files=4
         ),
         domain_info=DomainInfo(
             domain="web_api",
