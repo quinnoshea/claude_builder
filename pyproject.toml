@@ -166,6 +166,7 @@ omit = [
 ]
 branch = true
 data_file = ".coverage"
+relative_files = true
 
 [tool.coverage.paths]
 source = [
