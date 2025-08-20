@@ -16,6 +16,7 @@ if str(src_path) not in sys.path:
 from claude_builder.core.config import Config, ConfigManager
 from claude_builder.core.models import (
     ComplexityLevel,
+    DevelopmentEnvironment,
     DomainInfo,
     FileSystemInfo,
     FrameworkInfo,
@@ -364,6 +365,74 @@ htmlcov/
 
 
 @pytest.fixture
+def sample_rust_project(temp_dir: Path) -> Path:
+    """Create a sample Rust project for testing."""
+    project_dir = temp_dir / "rust_project"
+    project_dir.mkdir()
+    
+    # Create Cargo.toml
+    (project_dir / "Cargo.toml").write_text("""[package]
+name = "test-rust-project"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+tokio = { version = "1.0", features = ["full"] }
+""")
+    
+    # Create src directory and main.rs
+    src_dir = project_dir / "src"
+    src_dir.mkdir()
+    (src_dir / "main.rs").write_text("""fn main() {
+    println!("Hello, world!");
+}
+""")
+    
+    return project_dir
+
+
+@pytest.fixture
+def sample_javascript_project(temp_dir: Path) -> Path:
+    """Create a sample JavaScript project for testing."""
+    project_dir = temp_dir / "javascript_project"
+    project_dir.mkdir()
+    
+    # Create package.json
+    (project_dir / "package.json").write_text("""{
+  "name": "test-javascript-project",
+  "version": "1.0.0",
+  "description": "A test JavaScript project",
+  "main": "src/index.js",
+  "dependencies": {
+    "express": "^4.18.0",
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0",
+    "eslint": "^8.0.0"
+  }
+}""")
+    
+    # Create src directory and index.js
+    src_dir = project_dir / "src"
+    src_dir.mkdir()
+    (src_dir / "index.js").write_text("""const express = require('express');
+const app = express();
+
+app.get('/', (req, res) => {
+    res.send('Hello World!');
+});
+
+app.listen(3000, () => {
+    console.log('Server running on port 3000');
+});
+""")
+    
+    return project_dir
+
+
+@pytest.fixture
 def sample_analysis() -> ProjectAnalysis:
     """Create a sample project analysis for testing."""
     return ProjectAnalysis(
@@ -395,9 +464,11 @@ def sample_analysis() -> ProjectAnalysis:
             indicators=["rest_api", "authentication", "database"]
         ),
         analysis_confidence=90.0,
-        dependencies={"requests": "2.28.0", "fastapi": "0.95.0"},
-        build_system="pip",
-        metadata={"license": "MIT", "author": "Test Author"}
+        dev_environment=DevelopmentEnvironment(
+            package_managers=["pip"],
+            testing_frameworks=["pytest"],
+            databases=["postgresql"]
+        )
     )
 
 
