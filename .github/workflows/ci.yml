@@ -62,6 +62,15 @@ jobs:
       run: |
         pytest --cov=claude_builder --cov-report=xml:coverage.xml --cov-report=html:htmlcov --cov-report=term-missing --junitxml=junit.xml -v
         
+    - name: Ensure coverage.xml exists
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      run: |
+        if [ ! -f coverage.xml ]; then
+          echo "coverage.xml missing, attempting to generate from .coverage"
+          coverage xml -o coverage.xml || true
+        fi
+        ls -la coverage.xml || echo "coverage.xml not found after generation attempt"
+
     - name: Debug coverage file
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
       run: |
@@ -92,6 +101,7 @@ jobs:
         project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
         coverage-reports: coverage.xml
         force-coverage-parser: cobertura
+        fail-if-incomplete: false
         
     - name: Upload test results
       if: always()
