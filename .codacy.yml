@@ -15,10 +15,26 @@ engines:
     enabled: true
 
 exclude_paths:
+  # Test files - different patterns, not production code
   - "tests/**"
+  
+  # Documentation - separate from code
   - "docs/**"
+  
+  # Generated files and build artifacts
   - "htmlcov/**"
   - "*.egg-info/**"
-  - "scripts/**"
+  - "dist/**"
+  - "build/**"
+  - ".pytest_cache/**"
+  - "**/__pycache__/**"
+  
+  # CI/CD configuration
   - ".github/**"
-  - "src/claude_builder/templates/**"
+  
+  # Shell scripts only (Python scripts in scripts/ will be analyzed)
+  - "scripts/*.sh"
+  
+  # Legacy files if any
+  - "**/*_old.py"
+  - "**/*_backup.py"
