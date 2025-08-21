@@ -11,6 +11,9 @@ from rich.table import Table
 
 from claude_builder.core.analyzer import ProjectAnalyzer
 
+FAILED_TO_ANALYZE_PROJECT = "Failed to analyze project"
+PYYAML_NOT_AVAILABLE = "PyYAML not available"
+
 console = Console()
 
 
@@ -62,7 +65,7 @@ def project(project_path: str, output: Optional[str], output_format: str,
 
     except Exception as e:
         console.print(f"[red]Error analyzing project: {e}[/red]")
-        raise click.ClickException(f"Failed to analyze project: {e}")
+        raise click.ClickException(f"{FAILED_TO_ANALYZE_PROJECT}: {e}")
 
 
 def _display_analysis_table(analysis, include_suggestions: bool, verbose: int):
@@ -225,7 +228,7 @@ def _display_analysis_yaml(analysis, include_suggestions: bool):
     except ImportError:
         console.print("[red]YAML format requires PyYAML to be installed[/red]")
         console.print("Try: pip install PyYAML")
-        raise click.ClickException("PyYAML not available")
+        raise click.ClickException(PYYAML_NOT_AVAILABLE)
 
 
 def _analysis_to_dict(analysis, include_suggestions: bool) -> dict:

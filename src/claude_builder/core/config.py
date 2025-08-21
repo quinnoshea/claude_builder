@@ -11,6 +11,24 @@ import toml
 from claude_builder.core.models import ClaudeMentionPolicy, GitIntegrationMode
 from claude_builder.utils.exceptions import ConfigError
 
+FAILED_TO_LOAD_CONFIGURATION = "Failed to load configuration"
+FAILED_TO_SAVE_CONFIGURATION = "Failed to save configuration"
+CONFIGURATION_FILE_NOT_FOUND = "Configuration file not found"
+FAILED_TO_PARSE_CONFIGURATION_FILE = "Failed to parse configuration file"
+FAILED_TO_CONVERT_DICTIONARY_TO_CONFIG = "Failed to convert dictionary to Config"
+PROJECT_PROFILE_NOT_FOUND = "Project profile not found"
+FAILED_TO_APPLY_PROFILE = "Failed to apply profile"
+UNSUPPORTED_CONFIG_VERSION = "Unsupported config version"
+CONFIDENCE_THRESHOLD_ERROR = "confidence_threshold must be between 0 and 100"
+MAX_CONCURRENT_AGENTS_ERROR = "max_concurrent_agents must be at least 1"
+AGENT_TIMEOUT_ERROR = "agent_timeout must be at least 30 seconds"
+TEMPLATE_CACHE_TTL_ERROR = "template_cache_ttl must be non-negative"
+MAX_FILE_SIZE_ERROR = "max_file_size must be at least 1024 bytes"
+INVALID_FILE_PERMISSIONS_FORMAT = "Invalid file permissions format"
+INVALID_UPDATE_CHECK_FREQUENCY = "Invalid update_check_frequency"
+INVALID_THEME = "Invalid theme"
+INVALID_AGENT_SELECTION_ALGORITHM = "Invalid agent_selection_algorithm"
+
 
 @dataclass
 class AnalysisConfig:
@@ -195,7 +213,7 @@ class ConfigManager:
             return config
 
         except Exception as e:
-            raise ConfigError(f"Failed to load configuration: {e}")
+            raise ConfigError(f"{FAILED_TO_LOAD_CONFIGURATION}: {e}")
 
     def save_config(self, config: Config, config_path: Path) -> None:
         """Save configuration to file."""
@@ -208,7 +226,7 @@ class ConfigManager:
                 self._save_json_config(config_dict, config_path)
 
         except Exception as e:
-            raise ConfigError(f"Failed to save configuration: {e}")
+            raise ConfigError(f"{FAILED_TO_SAVE_CONFIGURATION}: {e}")
 
     def create_default_config(self, project_path: Path) -> Config:
         """Create a default configuration for a project."""
@@ -230,7 +248,7 @@ class ConfigManager:
     def _load_config_file(self, config_path: Path) -> Dict[str, Any]:
         """Load configuration from file."""
         if not config_path.exists():
-            raise ConfigError(f"Configuration file not found: {config_path}")
+            raise ConfigError(f"{CONFIGURATION_FILE_NOT_FOUND}: {config_path}")
 
         try:
             if config_path.suffix.lower() == ".toml":
@@ -238,7 +256,7 @@ class ConfigManager:
             with open(config_path, encoding="utf-8") as f:
                 return json.load(f)
         except Exception as e:
-            raise ConfigError(f"Failed to parse configuration file {config_path}: {e}")
+            raise ConfigError(f"{FAILED_TO_PARSE_CONFIGURATION_FILE} {config_path}: {e}")
 
     def _merge_configs(self, base: Config, override: Dict[str, Any]) -> Config:
         """Merge configuration dictionaries."""
@@ -342,7 +360,7 @@ class ConfigManager:
                 project_profiles=config_dict.get("project_profiles", {})
             )
         except Exception as e:
-            raise ConfigError(f"Failed to convert dictionary to Config: {e}")
+            raise ConfigError(f"{FAILED_TO_CONVERT_DICTIONARY_TO_CONFIG}: {e}")
 
     def _save_json_config(self, config_dict: Dict[str, Any], config_path: Path) -> None:
         """Save configuration as JSON."""
@@ -458,7 +476,7 @@ class ConfigManager:
         profile_path = profiles_dir / f"{profile_name}.json"
 
         if not profile_path.exists():
-            raise ConfigError(f"Project profile not found: {profile_name}")
+            raise ConfigError(f"{PROJECT_PROFILE_NOT_FOUND}: {profile_name}")
 
         try:
             with open(profile_path, encoding="utf-8") as f:
@@ -467,7 +485,7 @@ class ConfigManager:
             profile_config = profile_data["config"]
             return self._merge_configs(base_config, profile_config)
         except Exception as e:
-            raise ConfigError(f"Failed to apply profile {profile_name}: {e}")
+            raise ConfigError(f"{FAILED_TO_APPLY_PROFILE} {profile_name}: {e}")
 
     def validate_config_compatibility(self, config: Config,
                                     project_analysis: Optional[Any] = None) -> List[str]:
@@ -498,27 +516,27 @@ class ConfigManager:
         """Validate configuration object."""
         # Validate version
         if config.version != self.schema_version:
-            raise ConfigError(f"Unsupported config version: {config.version}")
+            raise ConfigError(f"{UNSUPPORTED_CONFIG_VERSION}: {config.version}")
 
         # Validate confidence threshold
         if not 0 <= config.analysis.confidence_threshold <= 100:
-            raise ConfigError("confidence_threshold must be between 0 and 100")
+            raise ConfigError(CONFIDENCE_THRESHOLD_ERROR)
 
         # Validate max concurrent agents
         if config.agents.max_concurrent_agents < 1:
-            raise ConfigError("max_concurrent_agents must be at least 1")
+            raise ConfigError(MAX_CONCURRENT_AGENTS_ERROR)
 
         # Validate agent timeout
         if config.agents.agent_timeout < 30:
-            raise ConfigError("agent_timeout must be at least 30 seconds")
+            raise ConfigError(AGENT_TIMEOUT_ERROR)
 
         # Validate template cache TTL
         if config.templates.template_cache_ttl < 0:
-            raise ConfigError("template_cache_ttl must be non-negative")
+            raise ConfigError(TEMPLATE_CACHE_TTL_ERROR)
 
         # Validate file size limits
         if config.analysis.max_file_size < 1024:  # 1KB minimum
-            raise ConfigError("max_file_size must be at least 1024 bytes")
+            raise ConfigError(MAX_FILE_SIZE_ERROR)
 
         # Validate template search paths
         for path in config.templates.search_paths:
@@ -531,22 +549,22 @@ class ConfigManager:
         try:
             int(config.output.file_permissions, 8)
         except ValueError:
-            raise ConfigError(f"Invalid file permissions format: {config.output.file_permissions}")
+            raise ConfigError(f"{INVALID_FILE_PERMISSIONS_FORMAT}: {config.output.file_permissions}")
 
         # Validate update check frequency
         valid_frequencies = ["never", "daily", "weekly", "monthly"]
         if config.user_preferences.update_check_frequency not in valid_frequencies:
-            raise ConfigError(f"Invalid update_check_frequency. Must be one of: {valid_frequencies}")
+            raise ConfigError(f"{INVALID_UPDATE_CHECK_FREQUENCY}. Must be one of: {valid_frequencies}")
 
         # Validate theme
         valid_themes = ["light", "dark", "auto"]
         if config.user_preferences.theme not in valid_themes:
-            raise ConfigError(f"Invalid theme. Must be one of: {valid_themes}")
+            raise ConfigError(f"{INVALID_THEME}. Must be one of: {valid_themes}")
 
         # Validate agent selection algorithm
         valid_algorithms = ["intelligent", "strict", "permissive"]
         if config.agents.agent_selection_algorithm not in valid_algorithms:
-            raise ConfigError(f"Invalid agent_selection_algorithm. Must be one of: {valid_algorithms}")
+            raise ConfigError(f"{INVALID_AGENT_SELECTION_ALGORITHM}. Must be one of: {valid_algorithms}")
 
 
 def load_config_from_args(args: Dict[str, Any]) -> Config:

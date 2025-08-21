@@ -9,6 +9,12 @@ from typing import Any, Dict, List, Optional
 
 from claude_builder.utils.exceptions import GitError
 
+FAILED_TO_ADD_EXCLUDES = "Failed to add excludes"
+FAILED_TO_CREATE_BACKUP = "Failed to create backup"
+BACKUP_NOT_FOUND = "Backup not found"
+BACKUP_METADATA_NOT_FOUND = "Backup metadata not found"
+FAILED_TO_RESTORE_BACKUP = "Failed to restore backup"
+
 
 @dataclass
 class GitIntegrationResult:
@@ -39,8 +45,7 @@ class GitIntegrationManager:
         if not config.enabled:
             return GitIntegrationResult(
                 success=True,
-                operations_performed=["Git integration disabled"]
-            )
+                operations_performed=["Git integration disabled"])
 
         try:
             operations = []
@@ -51,8 +56,7 @@ class GitIntegrationManager:
                 return GitIntegrationResult(
                     success=False,
                     operations_performed=[],
-                    errors=["Not a git repository"]
-                )
+                    errors=["Not a git repository"])
 
             # Create backup if requested
             if config.backup_before_changes:
@@ -63,26 +67,23 @@ class GitIntegrationManager:
             if hasattr(config, "mode"):
                 if config.mode.value == "exclude_generated":
                     result = self.exclude_manager.add_excludes(
-                        project_path, config.files_to_exclude
-                    )
+                        project_path, config.files_to_exclude)
                     if result.success:
                         operations.append("Added files to .git/info/exclude")
                     else:
-                        raise GitError(f"Failed to add excludes: {result.error}")
+                        raise GitError(f"{FAILED_TO_ADD_EXCLUDES}: {result.error}")
 
                 elif config.mode.value == "track_generated":
                     # Remove from excludes if present
                     result = self.exclude_manager.remove_excludes(
-                        project_path, config.files_to_exclude
-                    )
+                        project_path, config.files_to_exclude)
                     if result.success:
                         operations.append("Removed files from .git/info/exclude")
 
             # Install git hooks for Claude mention control
             if hasattr(config, "claude_mention_policy") and config.claude_mention_policy.value != "allowed":
                 hook_result = self.hook_manager.install_commit_msg_hook(
-                    project_path, config.claude_mention_policy
-                )
+                    project_path, config.claude_mention_policy)
                 if hook_result.success:
                     operations.extend(hook_result.operations_performed)
                 else:
@@ -92,8 +93,7 @@ class GitIntegrationManager:
             return GitIntegrationResult(
                 success=True,
                 operations_performed=operations,
-                backup_id=backup_id
-            )
+                backup_id=backup_id)
 
         except Exception as e:
             # Rollback if backup was created
@@ -104,14 +104,12 @@ class GitIntegrationManager:
                     return GitIntegrationResult(
                         success=False,
                         operations_performed=[],
-                        errors=[f"Integration failed: {e}", f"Rollback failed: {rollback_error}"]
-                    )
+                        errors=[f"Integration failed: {e}", f"Rollback failed: {rollback_error}"])
 
             return GitIntegrationResult(
                 success=False,
                 operations_performed=[],
-                errors=[str(e)]
-            )
+                errors=[str(e)])
 
     def _is_git_repository(self, project_path: Path) -> bool:
         """Check if directory is a git repository."""
@@ -146,27 +144,24 @@ class GitExcludeManager:
                 return GitIntegrationResult(
                     success=False,
                     operations_performed=[],
-                    errors=["Claude Builder section already exists in .git/info/exclude"]
-                )
+                    errors=["Claude Builder section already exists in .git/info/exclude"])
 
             # Add Claude section
             new_content = existing_content + self._create_claude_section(files_to_exclude)
 
             # Write back
             with open(exclude_file, "w", encoding="utf-8") as f:
-                f.write("\\n".join(new_content) + "\\n")
+                f.write("\n".join(new_content) + "\n")
 
             return GitIntegrationResult(
                 success=True,
-                operations_performed=[f"Added {len(files_to_exclude)} patterns to .git/info/exclude"]
-            )
+                operations_performed=[f"Added {len(files_to_exclude)} patterns to .git/info/exclude"])
 
         except Exception as e:
             return GitIntegrationResult(
                 success=False,
                 operations_performed=[],
-                errors=[f"Failed to add excludes: {e}"]
-            )
+                errors=[f"{FAILED_TO_ADD_EXCLUDES}: {e}"])
 
     def remove_excludes(self, project_path: Path, files_to_exclude: List[str]) -> GitIntegrationResult:
         """Remove Claude Builder section from .git/info/exclude."""
@@ -176,8 +171,7 @@ class GitExcludeManager:
             if not exclude_file.exists():
                 return GitIntegrationResult(
                     success=True,
-                    operations_performed=["No .git/info/exclude file found"]
-                )
+                    operations_performed=["No .git/info/exclude file found"])
 
             # Read existing content
             with open(exclude_file, encoding="utf-8") as f:
@@ -189,24 +183,21 @@ class GitExcludeManager:
             if len(new_lines) == len(lines):
                 return GitIntegrationResult(
                     success=True,
-                    operations_performed=["No Claude Builder section found"]
-                )
+                    operations_performed=["No Claude Builder section found"])
 
             # Write back
             with open(exclude_file, "w", encoding="utf-8") as f:
-                f.write("\\n".join(new_lines) + "\\n")
+                f.write("\n".join(new_lines) + "\n")
 
             return GitIntegrationResult(
                 success=True,
-                operations_performed=["Removed Claude Builder section from .git/info/exclude"]
-            )
+                operations_performed=["Removed Claude Builder section from .git/info/exclude"])
 
         except Exception as e:
             return GitIntegrationResult(
                 success=False,
                 operations_performed=[],
-                errors=[f"Failed to remove excludes: {e}"]
-            )
+                errors=[f"Failed to remove excludes: {e}"])
 
     def _has_claude_section(self, lines: List[str]) -> bool:
         """Check if Claude Builder section exists."""
@@ -300,20 +291,20 @@ class GitBackupManager:
             return backup_id
 
         except Exception as e:
-            raise GitError(f"Failed to create backup: {e}")
+            raise GitError(f"{FAILED_TO_CREATE_BACKUP}: {e}")
 
     def restore_backup(self, project_path: Path, backup_id: str) -> bool:
         """Restore from a backup."""
         backup_dir = project_path / ".git" / "claude-builder-backups" / backup_id
 
         if not backup_dir.exists():
-            raise GitError(f"Backup not found: {backup_id}")
+            raise GitError(f"{BACKUP_NOT_FOUND}: {backup_id}")
 
         try:
             # Load metadata
             metadata_file = backup_dir / "metadata.json"
             if not metadata_file.exists():
-                raise GitError(f"Backup metadata not found: {backup_id}")
+                raise GitError(f"{BACKUP_METADATA_NOT_FOUND}: {backup_id}")
 
             import json
             with open(metadata_file) as f:
@@ -331,7 +322,7 @@ class GitBackupManager:
             return True
 
         except Exception as e:
-            raise GitError(f"Failed to restore backup {backup_id}: {e}")
+            raise GitError(f"{FAILED_TO_RESTORE_BACKUP} {backup_id}: {e}")
 
     def list_backups(self, project_path: Path) -> List[Dict[str, Any]]:
         """List available backups."""
@@ -403,16 +394,14 @@ class GitHookManager:
                 if "Claude Builder" in content:
                     return GitIntegrationResult(
                         success=True,
-                        operations_performed=["Commit-msg hook already installed"]
-                    )
+                        operations_performed=["Commit-msg hook already installed"])
                 # Backup existing hook
                 backup_hook = commit_msg_hook.with_suffix(".pre-claude-builder")
                 shutil.copy2(commit_msg_hook, backup_hook)
 
                 # Chain with existing hook
                 hook_content = self._generate_chained_commit_msg_hook(
-                    claude_mention_policy, str(backup_hook)
-                )
+                    claude_mention_policy, str(backup_hook))
             else:
                 # Create new hook
                 hook_content = self._generate_commit_msg_hook(claude_mention_policy)
@@ -426,15 +415,13 @@ class GitHookManager:
 
             return GitIntegrationResult(
                 success=True,
-                operations_performed=["Installed commit-msg hook for Claude mention filtering"]
-            )
+                operations_performed=["Installed commit-msg hook for Claude mention filtering"])
 
         except Exception as e:
             return GitIntegrationResult(
                 success=False,
                 operations_performed=[],
-                errors=[f"Failed to install commit-msg hook: {e}"]
-            )
+                errors=[f"Failed to install commit-msg hook: {e}"])
 
     def install_pre_commit_hook(self, project_path: Path, claude_mention_policy) -> GitIntegrationResult:
         """Install pre-commit hook for additional Claude mention filtering."""
@@ -453,16 +440,14 @@ class GitHookManager:
                 if "Claude Builder" in content:
                     return GitIntegrationResult(
                         success=True,
-                        operations_performed=["Pre-commit hook already installed"]
-                    )
+                        operations_performed=["Pre-commit hook already installed"])
                 # Backup existing hook
                 backup_hook = pre_commit_hook.with_suffix(".pre-claude-builder")
                 shutil.copy2(pre_commit_hook, backup_hook)
 
                 # Chain with existing hook
                 hook_content = self._generate_chained_pre_commit_hook(
-                    claude_mention_policy, str(backup_hook)
-                )
+                    claude_mention_policy, str(backup_hook))
             else:
                 # Create new hook
                 hook_content = self._generate_pre_commit_hook(claude_mention_policy)
@@ -476,15 +461,13 @@ class GitHookManager:
 
             return GitIntegrationResult(
                 success=True,
-                operations_performed=["Installed pre-commit hook for Claude mention filtering"]
-            )
+                operations_performed=["Installed pre-commit hook for Claude mention filtering"])
 
         except Exception as e:
             return GitIntegrationResult(
                 success=False,
                 operations_performed=[],
-                errors=[f"Failed to install pre-commit hook: {e}"]
-            )
+                errors=[f"Failed to install pre-commit hook: {e}"])
 
     def uninstall_hooks(self, project_path: Path) -> GitIntegrationResult:
         """Uninstall Claude Builder git hooks."""
@@ -533,15 +516,13 @@ class GitHookManager:
 
             return GitIntegrationResult(
                 success=True,
-                operations_performed=operations
-            )
+                operations_performed=operations)
 
         except Exception as e:
             return GitIntegrationResult(
                 success=False,
                 operations_performed=[],
-                errors=[f"Failed to uninstall hooks: {e}"]
-            )
+                errors=[f"Failed to uninstall hooks: {e}"])
 
     def _generate_commit_msg_hook(self, claude_mention_policy) -> str:
         """Generate commit-msg hook script."""
@@ -561,19 +542,19 @@ commit_msg=$(cat "$COMMIT_FILE")
 # Apply filtering based on policy
 if [ "{policy_value}" = "forbidden" ]; then
     # Remove all Claude/AI mentions
-    echo "$commit_msg" | \\
-        sed 's/\\bClaude\\b/AI assistant/gi' | \\
-        sed 's/\\bAI generated\\?\\b/Auto-generated/gi' | \\
-        sed 's/Generated with Claude Code/Auto-generated/gi' | \\
-        sed 's/\\bAI\\b/automated/gi' | \\
-        sed 's/claude-builder/code generator/gi' \\
+    echo "$commit_msg" | \
+        sed 's/\bClaude\b/AI assistant/gi' | \
+        sed 's/\bAI generated\?\b/Auto-generated/gi' | \
+        sed 's/Generated with Claude Code/Auto-generated/gi' | \
+        sed 's/\bAI\b/automated/gi' | \
+        sed 's/claude-builder/code generator/gi' \
         > "$TEMP_FILE"
 elif [ "{policy_value}" = "minimal" ]; then
     # Remove Claude mentions but keep general AI terms
-    echo "$commit_msg" | \\
-        sed 's/\\bClaude\\b/AI assistant/gi' | \\
-        sed 's/Generated with Claude Code/Auto-generated/gi' | \\
-        sed 's/claude-builder/code generator/gi' \\
+    echo "$commit_msg" | \
+        sed 's/\bClaude\b/AI assistant/gi' | \
+        sed 's/Generated with Claude Code/Auto-generated/gi' | \
+        sed 's/claude-builder/code generator/gi' \
         > "$TEMP_FILE"
 else
     # Policy is 'allowed' - no filtering
@@ -757,13 +738,13 @@ for file in $staged_files; do
         case "$file" in
             *.py|*.js|*.ts|*.jsx|*.tsx|*.rs|*.go|*.java|*.cpp|*.c|*.h)
                 if [ "{policy_value}" = "forbidden" ]; then
-                    if grep -i "claude\\|claude code\\|claude builder" "$file" >/dev/null 2>&1; then
+                    if grep -i "claude\|claude code\|claude builder" "$file" >/dev/null 2>&1; then
                         echo "Error: Found Claude mention in $file (policy: forbidden)"
                         echo "Please remove Claude references from source code files."
                         exit 1
                     fi
                 fi
-                ;;
+                ;; 
         esac
     fi
 done

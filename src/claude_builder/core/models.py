@@ -7,6 +7,15 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
+DEPENDENCY_NAME_CANNOT_BE_EMPTY = "Dependency name cannot be empty"
+INVALID_DEPENDENCY_TYPE = "Invalid dependency type"
+PATH_CANNOT_BE_EMPTY = "Path cannot be empty"
+INVALID_FILE_TYPE = "Invalid file type"
+INVALID_OUTPUT_FORMAT = "Invalid output format"
+INVALID_TEMPLATE_VARIANT = "Invalid template variant"
+PROJECT_NAME_CANNOT_BE_EMPTY = "Project name cannot be empty"
+INVALID_PROJECT_TYPE = "Invalid project type"
+
 
 class ProjectType(Enum):
     """Detected project types."""
@@ -346,10 +355,10 @@ class DependencyInfo:
     def __post_init__(self):
         """Validate fields after initialization."""
         if not self.name or not self.name.strip():
-            raise ValueError("Dependency name cannot be empty")
+            raise ValueError(DEPENDENCY_NAME_CANNOT_BE_EMPTY)
 
         if self.dependency_type not in self.VALID_DEPENDENCY_TYPES:
-            raise ValueError(f"Invalid dependency type: {self.dependency_type}. Valid types: {', '.join(self.VALID_DEPENDENCY_TYPES)}")
+            raise ValueError(f"{INVALID_DEPENDENCY_TYPE}: {self.dependency_type}. Valid types: {', '.join(self.VALID_DEPENDENCY_TYPES)}")
 
     def is_dev_dependency(self) -> bool:
         """Check if this is a development dependency."""
@@ -386,10 +395,10 @@ class FileStructure:
     def __post_init__(self):
         """Validate fields after initialization."""
         if not self.path:
-            raise ValueError("Path cannot be empty")
+            raise ValueError(PATH_CANNOT_BE_EMPTY)
 
         if self.file_type not in self.VALID_FILE_TYPES:
-            raise ValueError(f"Invalid file type: {self.file_type}. Valid types: {', '.join(self.VALID_FILE_TYPES)}")
+            raise ValueError(f"{INVALID_FILE_TYPE}: {self.file_type}. Valid types: {', '.join(self.VALID_FILE_TYPES)}")
 
     def is_directory(self) -> bool:
         """Check if this represents a directory."""
@@ -434,10 +443,10 @@ class GenerationConfig:
     def validate(self):
         """Validate the configuration."""
         if self.output_format not in self.VALID_OUTPUT_FORMATS:
-            raise ValueError(f"Invalid output format: {self.output_format}. Valid formats: {', '.join(self.VALID_OUTPUT_FORMATS)}")
+            raise ValueError(f"{INVALID_OUTPUT_FORMAT}: {self.output_format}. Valid formats: {', '.join(self.VALID_OUTPUT_FORMATS)}")
 
         if self.template_variant not in self.VALID_TEMPLATE_VARIANTS:
-            raise ValueError(f"Invalid template variant: {self.template_variant}. Valid variants: {', '.join(self.VALID_TEMPLATE_VARIANTS)}")
+            raise ValueError(f"{INVALID_TEMPLATE_VARIANT}: {self.template_variant}. Valid variants: {', '.join(self.VALID_TEMPLATE_VARIANTS)}")
 
     def dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
@@ -474,10 +483,10 @@ class ProjectInfo:
     def __post_init__(self):
         """Validate fields after initialization."""
         if not self.name or not self.name.strip():
-            raise ValueError("Project name cannot be empty")
+            raise ValueError(PROJECT_NAME_CANNOT_BE_EMPTY)
 
         if self.project_type and self.project_type not in self.VALID_PROJECT_TYPES:
-            raise ValueError(f"Invalid project type: {self.project_type}. Valid types: {', '.join(self.VALID_PROJECT_TYPES)}")
+            raise ValueError(f"{INVALID_PROJECT_TYPE}: {self.project_type}. Valid types: {', '.join(self.VALID_PROJECT_TYPES)}")
 
     def dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""

@@ -101,7 +101,6 @@ jobs:
         project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
         coverage-reports: coverage.xml
         force-coverage-parser: cobertura
-        fail-if-incomplete: false
         
     - name: Upload test results
       if: always()
@@ -128,13 +127,41 @@ jobs:
         python -m pip install --upgrade pip
         pip install -e ".[dev,test]"
         
-    - name: Run Codacy Analysis CLI
+    - name: Codacy Analysis (ruff)
       uses: codacy/codacy-analysis-cli-action@master
       with:
         project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
         upload: true
         max-allowed-issues: 2147483647
-        # Run default set of tools; selection controlled by .codacy.yml
+        tool: "ruff"
+        directory: "src"
+
+    - name: Codacy Analysis (pylint)
+      uses: codacy/codacy-analysis-cli-action@master
+      with:
+        project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+        upload: true
+        max-allowed-issues: 2147483647
+        tool: "pylint"
+        directory: "src"
+
+    - name: Codacy Analysis (bandit)
+      uses: codacy/codacy-analysis-cli-action@master
+      with:
+        project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+        upload: true
+        max-allowed-issues: 2147483647
+        tool: "bandit"
+        directory: "src"
+
+    - name: Codacy Analysis (semgrep)
+      uses: codacy/codacy-analysis-cli-action@master
+      with:
+        project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+        upload: true
+        max-allowed-issues: 2147483647
+        tool: "semgrep"
+        directory: "src"
         
     - name: Generate code complexity report
       run: |

@@ -16,6 +16,9 @@ from claude_builder.utils.exceptions import ClaudeBuilderError
 from claude_builder.utils.git import GitIntegrationManager
 from claude_builder.utils.validation import validate_project_path
 
+INVALID_PROJECT_PATH = "Invalid project path"
+PROJECT_PATH_IS_NONE = "project_path is None!"
+
 console = Console()
 
 
@@ -83,7 +86,7 @@ def cli(ctx, project_path, **kwargs):
         try:
             _execute_main(project_path, **kwargs)
         except KeyboardInterrupt:
-            console.print("\\n[yellow]Operation cancelled by user[/yellow]")
+            console.print("\n[yellow]Operation cancelled by user[/yellow]")
             sys.exit(ExitCodes.INTERRUPTED)
         except ClaudeBuilderError as e:
             console.print(f"[red]Error: {e}[/red]")
@@ -103,7 +106,7 @@ def _execute_main(project_path: str, **kwargs) -> None:
     validation_result = validate_project_path(project_path)
     if not validation_result.is_valid:
         raise ClaudeBuilderError(
-            f"Invalid project path: {validation_result.error}",
+            f"{INVALID_PROJECT_PATH}: {validation_result.error}",
             ExitCodes.PROJECT_NOT_FOUND
         )
 
@@ -117,9 +120,9 @@ def _execute_main(project_path: str, **kwargs) -> None:
 
     if not kwargs["quiet"]:
         console.print(Panel(
-            f"[bold blue]Claude Builder[/bold blue]\\n"
-            f"Analyzing project at: [cyan]{project_path}[/cyan]\\n"
-            f"Template: [green]{kwargs.get('template', 'auto-detect')}[/green]\\n"
+            f"[bold blue]Claude Builder[/bold blue]\n"
+            f"Analyzing project at: [cyan]{project_path}[/cyan]\n"
+            f"Template: [green]{kwargs.get('template', 'auto-detect')}[/green]\n"
             f"Git integration: [yellow]{_get_git_mode(kwargs)}[/yellow]",
             title="Starting Analysis"
         ))
@@ -240,7 +243,7 @@ def _list_templates() -> None:
 
 def _display_analysis_results(analysis) -> None:
     """Display project analysis results."""
-    console.print("\\n[bold]Analysis Results:[/bold]")
+    console.print("\n[bold]Analysis Results:[/bold]")
     console.print(f"Language: [green]{analysis.language_info.primary or 'Unknown'}[/green] ({analysis.language_info.confidence:.1f}% confidence)")
     if analysis.language_info.secondary:
         console.print(f"Secondary languages: [dim]{', '.join(analysis.language_info.secondary)}[/dim]")
@@ -257,7 +260,7 @@ def _write_generated_files(generated_content, project_path: Path, kwargs: dict) 
     """Write generated files to disk."""
     # Debug: Check what's None
     if project_path is None:
-        raise ValueError(f"project_path is None! kwargs: {kwargs}")
+        raise ValueError(f"{PROJECT_PATH_IS_NONE} kwargs: {kwargs}")
     if kwargs.get("output_dir") is None:
         output_dir = project_path
     else:
@@ -282,17 +285,17 @@ def _write_generated_files(generated_content, project_path: Path, kwargs: dict) 
         files_written += 1
 
     if not kwargs["quiet"]:
-        console.print(f"\\n[green]✓ Wrote {files_written} files to {output_dir}[/green]")
+        console.print(f"\n[green]✓ Wrote {files_written} files to {output_dir}[/green]")
 
 
 def _display_summary(project_path: Path, dry_run: bool) -> None:
     """Display operation summary."""
     action = "Would generate" if dry_run else "Generated"
-    console.print("\\n[bold green]✓ Complete![/bold green]")
+    console.print("\n[bold green]✓ Complete![/bold green]")
     console.print(f"{action} Claude Code environment for [cyan]{project_path}[/cyan]")
 
     if not dry_run:
-        console.print("\\nNext steps:")
+        console.print("\nNext steps:")
         console.print("1. Review generated CLAUDE.md file")
         console.print("2. Configure agents using the generated AGENTS.md")
         console.print("3. Start using Claude Code with your optimized environment!")

@@ -13,6 +13,12 @@ from claude_builder.core.generator import DocumentGenerator
 from claude_builder.core.models import ProjectAnalysis
 from claude_builder.utils.exceptions import ClaudeBuilderError
 
+FAILED_TO_GENERATE_DOCUMENTATION = "Failed to generate documentation"
+FAILED_TO_GENERATE_AGENTS = "Failed to generate agents"
+FAILED_TO_LOAD_ANALYSIS = "Failed to load analysis from"
+FAILED_TO_GENERATE_CLAUDE_MD = "Failed to generate CLAUDE.md"
+FAILED_TO_GENERATE_AGENTS_MD = "Failed to generate AGENTS.md"
+
 console = Console()
 
 
@@ -109,7 +115,7 @@ def docs(project_path: str, from_analysis: Optional[str], template: Optional[str
 
     except Exception as e:
         console.print(f"[red]Error generating documentation: {e}[/red]")
-        raise click.ClickException(f"Failed to generate documentation: {e}")
+        raise click.ClickException(f"{FAILED_TO_GENERATE_DOCUMENTATION}: {e}")
 
 
 @generate.command()
@@ -158,11 +164,11 @@ def agents(project_path: str, from_analysis: Optional[str], agents_dir: Optional
 
         if dry_run or verbose > 0:
             console.print(Panel(
-                f"**Agent Configuration Preview**\\n\\n"
-                f"Core agents: {len(agent_config.core_agents)}\\n"
-                f"Domain agents: {len(agent_config.domain_agents)}\\n"
-                f"Workflow agents: {len(agent_config.workflow_agents)}\\n"
-                f"Custom agents: {len(agent_config.custom_agents)}\\n\\n"
+                f"**Agent Configuration Preview**\n\n"
+                f"Core agents: {len(agent_config.core_agents)}\n"
+                f"Domain agents: {len(agent_config.domain_agents)}\n"
+                f"Workflow agents: {len(agent_config.workflow_agents)}\n"
+                f"Custom agents: {len(agent_config.custom_agents)}\n\n"
                 f"Files to generate: {list(agent_files.keys())}",
                 title="Agent Generation Preview"
             ))
@@ -190,7 +196,7 @@ def agents(project_path: str, from_analysis: Optional[str], agents_dir: Optional
 
     except Exception as e:
         console.print(f"[red]Error generating agents: {e}[/red]")
-        raise click.ClickException(f"Failed to generate agents: {e}")
+        raise click.ClickException(f"{FAILED_TO_GENERATE_AGENTS}: {e}")
 
 
 def _load_analysis_from_file(analysis_file: Path) -> ProjectAnalysis:
@@ -204,7 +210,7 @@ def _load_analysis_from_file(analysis_file: Path) -> ProjectAnalysis:
                 data = json.load(f)
 
         # Reconstruct ProjectAnalysis object from dictionary
-        # This is a simplified version - in production this would be more robust
+        # This is a simplified version - in a production this would be more robust
         analysis = ProjectAnalysis(project_path=Path(data["project_path"]))
 
         # Populate basic fields
@@ -285,7 +291,7 @@ def _load_analysis_from_file(analysis_file: Path) -> ProjectAnalysis:
         return analysis
 
     except Exception as e:
-        raise ClaudeBuilderError(f"Failed to load analysis from {analysis_file}: {e}")
+        raise ClaudeBuilderError(f"{FAILED_TO_LOAD_ANALYSIS} {analysis_file}: {e}")
 
 
 def _display_generation_preview(generated_content, analysis):
@@ -298,10 +304,10 @@ def _display_generation_preview(generated_content, analysis):
         total_size += size
         files_info.append(f"  • {filename} ({size:,} bytes)")
 
-    preview_text = f"**Files to generate ({len(generated_content.files)} total):**\\n\\n"
-    preview_text += "\\n".join(files_info)
-    preview_text += f"\\n\\n**Total size:** {total_size:,} bytes"
-    preview_text += f"\\n**Template info:** {len(generated_content.template_info)} templates used"
+    preview_text = f"**Files to generate ({len(generated_content.files)} total):**\n\n"
+    preview_text += "\n".join(files_info)
+    preview_text += f"\n\n**Total size:** {total_size:,} bytes"
+    preview_text += f"\n**Template info:** {len(generated_content.template_info)} templates used"
 
     console.print(Panel(preview_text, title="Generation Preview"))
 
@@ -381,8 +387,8 @@ def claude_md(project_path: str, from_analysis: Optional[str], template: Optiona
 
         if dry_run or verbose > 0:
             console.print(Panel(
-                f"**CLAUDE.md Preview** ({len(claude_content)} characters)\\n\\n"
-                f"First 200 characters:\\n{claude_content[:200]}...",
+                f"**CLAUDE.md Preview** ({len(claude_content)} characters)\n\n"
+                f"First 200 characters:\n{claude_content[:200]}...",
                 title="CLAUDE.md Generation Preview"
             ))
 
@@ -401,7 +407,7 @@ def claude_md(project_path: str, from_analysis: Optional[str], template: Optiona
 
     except Exception as e:
         console.print(f"[red]Error generating CLAUDE.md: {e}[/red]")
-        raise click.ClickException(f"Failed to generate CLAUDE.md: {e}")
+        raise click.ClickException(f"{FAILED_TO_GENERATE_CLAUDE_MD}: {e}")
 
 
 @generate.command()
@@ -452,11 +458,11 @@ def agents_md(project_path: str, from_analysis: Optional[str], agents_dir: Optio
 
         if dry_run or verbose > 0:
             console.print(Panel(
-                f"**AGENTS.md Preview**\\n\\n"
-                f"Core agents: {len(agent_config.core_agents)}\\n"
-                f"Domain agents: {len(agent_config.domain_agents)}\\n"
-                f"Workflow agents: {len(agent_config.workflow_agents)}\\n"
-                f"Custom agents: {len(agent_config.custom_agents)}\\n\\n"
+                f"**AGENTS.md Preview**\n\n"
+                f"Core agents: {len(agent_config.core_agents)}\n"
+                f"Domain agents: {len(agent_config.domain_agents)}\n"
+                f"Workflow agents: {len(agent_config.workflow_agents)}\n"
+                f"Custom agents: {len(agent_config.custom_agents)}\n\n"
                 f"Content size: {len(agents_content)} characters",
                 title="AGENTS.md Generation Preview"
             ))
@@ -476,4 +482,4 @@ def agents_md(project_path: str, from_analysis: Optional[str], agents_dir: Optio
 
     except Exception as e:
         console.print(f"[red]Error generating AGENTS.md: {e}[/red]")
-        raise click.ClickException(f"Failed to generate AGENTS.md: {e}")
+        raise click.ClickException(f"{FAILED_TO_GENERATE_AGENTS_MD}: {e}")

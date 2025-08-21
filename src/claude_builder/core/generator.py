@@ -14,6 +14,9 @@ from claude_builder.core.models import (
 from claude_builder.core.template_manager import CoreTemplateManager
 from claude_builder.utils.exceptions import GenerationError
 
+FAILED_TO_GENERATE_DOCUMENTATION = "Failed to generate documentation"
+FAILED_TO_LOAD_TEMPLATE = "Failed to load template"
+
 
 class DocumentGenerator:
     """Generates documentation and configuration files based on analysis."""
@@ -60,7 +63,7 @@ class DocumentGenerator:
             )
 
         except Exception as e:
-            raise GenerationError(f"Failed to generate documentation: {e}")
+            raise GenerationError(f"{FAILED_TO_GENERATE_DOCUMENTATION}: {e}")
 
     def _generate_core_docs(self, analysis: ProjectAnalysis) -> Dict[str, str]:
         """Generate core documentation files using new template system."""
@@ -145,7 +148,7 @@ class DocumentGenerator:
             analysis.filesystem_info.test_files > 0
         ):
             testing_workflow = self._get_testing_workflow_template()
-            files[".claude/workflows/TESTING.md"] = self.template_manager.render_template(
+            files[”.claude/workflows/TESTING.md"] = self.template_manager.render_template(
                 testing_workflow, context
             )
 
@@ -895,7 +898,7 @@ class TemplateLoader:
         try:
             return self.template_manager.get_template(template_name)
         except Exception as e:
-            raise GenerationError(f"Failed to load template '{template_name}': {e}")
+            raise GenerationError(f"{FAILED_TO_LOAD_TEMPLATE} '{template_name}': {e}")
 
     def load_templates(self, template_names: List[str]) -> Dict[str, str]:
         """Load multiple templates."""
