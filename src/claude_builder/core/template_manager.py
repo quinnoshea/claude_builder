@@ -364,7 +364,7 @@ class TemplateManager:
 
         for template in all_templates:
             # Check name, description, tags, languages, frameworks
-            search_text = f"{template.metadata.name} {template.metadata.description} {' '.join(template.metadata.tags)} {' '.join(template.metadata.languages)} {' '.join(template.metadata.frameworks)}".lower())
+            search_text = f"{template.metadata.name} {template.metadata.description} {' '.join(template.metadata.tags)} {' '.join(template.metadata.languages)} {' '.join(template.metadata.frameworks)}".lower()
 
             if query_lower in search_text:
                 matching_templates.append(template)
@@ -1048,7 +1048,7 @@ class TemplateRenderer:
                 item_context["item"] = item
 
                 # Simple substitution for {{item}}
-                item_content = re.sub(r"\{\{item\}"", str(item), item_template)
+                item_content = re.sub(r"\{\{item\}\}", str(item), item_template)
                 rendered_items.append(item_content)
 
             return "".join(rendered_items)
