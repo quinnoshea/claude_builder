@@ -148,7 +148,7 @@ class DocumentGenerator:
             analysis.filesystem_info.test_files > 0
         ):
             testing_workflow = self._get_testing_workflow_template()
-            files[”.claude/workflows/TESTING.md"] = self.template_manager.render_template(
+            files[".claude/workflows/TESTING.md"] = self.template_manager.render_template(
                 testing_workflow, context
             )
 
