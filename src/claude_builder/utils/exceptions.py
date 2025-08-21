@@ -4,9 +4,10 @@
 class ClaudeBuilderError(Exception):
     """Base exception for Claude Builder."""
 
-    def __init__(self, message: str, exit_code: int = 1):
+    def __init__(self, message: str, exit_code: int = 1, context=None):
         super().__init__(message)
         self.exit_code = exit_code
+        self.context = context
 
 
 class AnalysisError(ClaudeBuilderError):
@@ -63,10 +64,14 @@ class TemplateError(ClaudeBuilderError):
 class ErrorContext:
     """Placeholder ErrorContext class for test compatibility."""
 
-    def __init__(self, operation: str, details: dict = None):
+    def __init__(self, operation: str, details: dict = None, file_path: str = None, **kwargs):
         self.operation = operation
         self.details = details or {}
+        self.file_path = file_path
         self.timestamp = "2024-01-01T00:00:00Z"
+        # Accept any additional kwargs for flexibility
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
     def to_dict(self) -> dict:
         """Convert to dictionary."""

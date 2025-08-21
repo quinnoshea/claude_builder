@@ -408,7 +408,6 @@ class TestCLIPerformance:
             start_time = time.time()
 
             result = runner.invoke(cli, [
-                str(temp_dir),
                 "analyze", "project",
                 str(temp_dir),
                 "--output", "large_analysis.json"
