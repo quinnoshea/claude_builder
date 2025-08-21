@@ -305,14 +305,14 @@ class FilePatterns:
 # Placeholder classes for test compatibility
 class ConfigFileDetector:
     """Placeholder ConfigFileDetector class for test compatibility."""
-    
+
     def __init__(self, project_path):
         self.project_path = project_path
-        
+
     def detect_config_files(self) -> list:
         """Detect configuration files."""
         return ["config.yaml", "settings.json", ".env"]
-        
+
     def analyze_config_patterns(self) -> dict:
         """Analyze configuration patterns."""
         return {
@@ -324,64 +324,63 @@ class ConfigFileDetector:
 
 class FilePatternMatcher:
     """Placeholder FilePatternMatcher class for test compatibility."""
-    
+
     def __init__(self, patterns: List[str] = None):
         self.patterns = patterns or []
-        
+
     def match(self, filepath: str) -> bool:
         return any(pattern in filepath for pattern in self.patterns)
 
 
 class LanguageDetector:
     """Placeholder LanguageDetector class for test compatibility."""
-    
+
     def __init__(self):
         self.language_patterns = {}
-        
+
     def detect_language(self, file_path: str) -> str:
-        if file_path.endswith('.py'):
-            return 'python'
-        elif file_path.endswith('.js'):
-            return 'javascript'
-        else:
-            return 'unknown'
-            
+        if file_path.endswith(".py"):
+            return "python"
+        if file_path.endswith(".js"):
+            return "javascript"
+        return "unknown"
+
     def detect_primary_language(self, project_path: str) -> str:
-        return 'python'
-        
+        return "python"
+
     def get_language_stats(self, project_path: str) -> Dict[str, int]:
-        return {'python': 80, 'javascript': 15, 'css': 5}
+        return {"python": 80, "javascript": 15, "css": 5}
 
 
 class PatternRule:
     """Placeholder PatternRule class for test compatibility."""
-    
+
     def __init__(self, pattern: str, action: str = "include"):
         self.pattern = pattern
         self.action = action
-        
+
     def matches(self, file_path: str) -> bool:
         return self.pattern in file_path
-        
+
     def apply(self, file_path: str) -> bool:
         return self.action == "include"
 
 
 class ProjectTypeDetector:
     """Placeholder ProjectTypeDetector class for test compatibility."""
-    
+
     def __init__(self):
         self.detection_rules = []
-        
+
     def detect_project_type(self, project_path: str) -> str:
         return "python-package"
-        
+
     def get_project_metadata(self, project_path: str) -> Dict[str, Any]:
         return {
             "type": "python-package",
             "framework": "none",
             "build_system": "setuptools"
         }
-        
+
     def add_detection_rule(self, rule):
         self.detection_rules.append(rule)

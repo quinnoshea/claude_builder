@@ -1,0 +1,46 @@
+[MASTER]
+ignore=tests,docs,htmlcov,build,dist,.venv,.ruff_cache,.mypy_cache,claude_builder.egg-info
+init-hook=import sys; sys.path.append('src')
+extension-pkg-whitelist=
+py-version=3.11
+
+[MESSAGES CONTROL]
+disable=
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring,
+    too-few-public-methods,
+    too-many-arguments,
+    too-many-locals,
+    too-many-branches,
+    too-many-statements,
+    too-many-instance-attributes,
+    consider-using-with
+
+[REPORTS]
+output-format=colorized
+score=no
+
+[BASIC]
+good-names=i,j,k,ex,Run,_,fp
+argument-naming-style=any
+variable-naming-style=any
+attr-naming-style=any
+method-naming-style=any
+function-naming-style=any
+
+[TYPECHECK]
+ignored-modules=click,pydantic,rich,git,git.repo,git.exc
+
+[FORMAT]
+max-line-length=100
+
+[DESIGN]
+max-args=10
+max-attributes=15
+max-branches=20
+max-statements=100
+
+[SIMILARITIES]
+min-similarity-lines=8
+

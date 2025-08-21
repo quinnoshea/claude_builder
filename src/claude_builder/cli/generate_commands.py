@@ -236,7 +236,11 @@ def _load_analysis_from_file(analysis_file: Path) -> ProjectAnalysis:
         analysis.domain_info.specialized_patterns = domain_data.get("specialized_patterns", [])
 
         # Enum fields
-        from claude_builder.core.models import ArchitecturePattern, ComplexityLevel, ProjectType
+        from claude_builder.core.models import (
+            ArchitecturePattern,
+            ComplexityLevel,
+            ProjectType,
+        )
         try:
             analysis.project_type = ProjectType(data.get("project_type", "unknown"))
         except ValueError:
@@ -345,7 +349,7 @@ def claude_md(project_path: str, from_analysis: Optional[str], template: Optiona
     """Generate CLAUDE.md file."""
     try:
         path = Path(project_path).resolve()
-        
+
         if verbose > 0:
             console.print(f"[cyan]Generating CLAUDE.md for: {path}[/cyan]")
 
@@ -368,7 +372,7 @@ def claude_md(project_path: str, from_analysis: Optional[str], template: Optiona
         # Generate CLAUDE.md content
         generator = DocumentGenerator(config)
         generated_content = generator.generate(analysis, path)
-        
+
         # Extract only CLAUDE.md content
         claude_content = generated_content.files.get("CLAUDE.md")
         if not claude_content:
@@ -388,11 +392,11 @@ def claude_md(project_path: str, from_analysis: Optional[str], template: Optiona
 
         # Write CLAUDE.md file
         output_path = Path(output_file) if output_file else path / "CLAUDE.md"
-        
+
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(claude_content)
-            
-        console.print(f"[green]✓ CLAUDE.md generated successfully[/green]")
+
+        console.print("[green]✓ CLAUDE.md generated successfully[/green]")
         console.print(f"Output location: {output_path}")
 
     except Exception as e:
@@ -413,7 +417,7 @@ def agents_md(project_path: str, from_analysis: Optional[str], agents_dir: Optio
     """Generate AGENTS.md file."""
     try:
         path = Path(project_path).resolve()
-        
+
         if verbose > 0:
             console.print(f"[cyan]Generating AGENTS.md for: {path}[/cyan]")
 
@@ -439,7 +443,7 @@ def agents_md(project_path: str, from_analysis: Optional[str], agents_dir: Optio
         # Generate AGENTS.md content
         generator = DocumentGenerator({"agents_only": True})
         generated_content = generator.generate(analysis, path)
-        
+
         # Extract only AGENTS.md content
         agents_content = generated_content.files.get("AGENTS.md")
         if not agents_content:
@@ -463,11 +467,11 @@ def agents_md(project_path: str, from_analysis: Optional[str], agents_dir: Optio
 
         # Write AGENTS.md file
         output_path = Path(output_file) if output_file else path / "AGENTS.md"
-        
+
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(agents_content)
-            
-        console.print(f"[green]✓ AGENTS.md generated successfully[/green]")
+
+        console.print("[green]✓ AGENTS.md generated successfully[/green]")
         console.print(f"Output location: {output_path}")
 
     except Exception as e:

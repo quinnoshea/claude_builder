@@ -62,12 +62,12 @@ class TemplateError(ClaudeBuilderError):
 # Placeholder classes for test compatibility
 class ErrorContext:
     """Placeholder ErrorContext class for test compatibility."""
-    
+
     def __init__(self, operation: str, details: dict = None):
         self.operation = operation
         self.details = details or {}
         self.timestamp = "2024-01-01T00:00:00Z"
-        
+
     def to_dict(self) -> dict:
         """Convert to dictionary."""
         return {
@@ -79,10 +79,10 @@ class ErrorContext:
 
 class ErrorHandler:
     """Placeholder ErrorHandler class for test compatibility."""
-    
+
     def __init__(self):
         self.error_count = 0
-        
+
     def handle_error(self, error: Exception) -> ErrorContext:
         self.error_count += 1
         return ErrorContext("error_handled", {"count": self.error_count})

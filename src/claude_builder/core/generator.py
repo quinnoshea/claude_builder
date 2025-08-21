@@ -5,10 +5,14 @@ from pathlib import Path
 from string import Template
 from typing import Any, Dict, List, Optional
 
-from claude_builder.utils.exceptions import GenerationError
 from claude_builder.core.agents import UniversalAgentSystem
-from claude_builder.core.models import GeneratedContent, ProjectAnalysis, TemplateRequest
+from claude_builder.core.models import (
+    GeneratedContent,
+    ProjectAnalysis,
+    TemplateRequest,
+)
 from claude_builder.core.template_manager import CoreTemplateManager
+from claude_builder.utils.exceptions import GenerationError
 
 
 class DocumentGenerator:
@@ -65,16 +69,16 @@ class DocumentGenerator:
         try:
             # Generate CLAUDE.md using hierarchical template system
             claude_content = self.template_manager.generate_from_analysis(
-                analysis, 
+                analysis,
                 template_name="base"
             )
             files["CLAUDE.md"] = claude_content
-            
-        except Exception as e:
+
+        except Exception:
             # Fallback to default template if template system fails
             default_context = self.template_manager._create_context_from_analysis(analysis)
             files["CLAUDE.md"] = self.template_manager.render_template(
-                self._get_default_claude_template(), 
+                self._get_default_claude_template(),
                 default_context
             )
 
@@ -87,33 +91,33 @@ class DocumentGenerator:
         try:
             # Generate intelligent agent configuration using Universal Agent System
             agent_config = self.agent_system.select_agents(analysis)
-            
+
             # Add agent configuration to analysis for template rendering
             analysis.agent_configuration = agent_config
-            
+
             # Create context with agent information
             context = self.template_manager._create_context_from_analysis(analysis)
-            
+
             # Add agent-specific variables to context
-            if hasattr(agent_config, 'core_agents'):
-                context['core_agents'] = ", ".join([a.name for a in agent_config.core_agents])
-                context['primary_agent'] = agent_config.core_agents[0].name if agent_config.core_agents else "rapid-prototyper"
+            if hasattr(agent_config, "core_agents"):
+                context["core_agents"] = ", ".join([a.name for a in agent_config.core_agents])
+                context["primary_agent"] = agent_config.core_agents[0].name if agent_config.core_agents else "rapid-prototyper"
             else:
-                context['core_agents'] = "rapid-prototyper, backend-architect, test-writer-fixer"
-                context['primary_agent'] = "rapid-prototyper"
-            
+                context["core_agents"] = "rapid-prototyper, backend-architect, test-writer-fixer"
+                context["primary_agent"] = "rapid-prototyper"
+
             # Use intelligent agents template
             agent_content = self.template_manager.render_template(
                 self._get_intelligent_agents_template(),
                 context
             )
             files["AGENTS.md"] = agent_content
-            
-        except Exception as e:
+
+        except Exception:
             # Fallback to basic agents template
             context = self.template_manager._create_context_from_analysis(analysis)
-            context['core_agents'] = "rapid-prototyper, backend-architect, test-writer-fixer"
-            context['primary_agent'] = "rapid-prototyper"
+            context["core_agents"] = "rapid-prototyper, backend-architect, test-writer-fixer"
+            context["primary_agent"] = "rapid-prototyper"
             files["AGENTS.md"] = self.template_manager.render_template(
                 self._get_default_agents_template(),
                 context
@@ -124,10 +128,10 @@ class DocumentGenerator:
     def _generate_workflows(self, analysis: ProjectAnalysis) -> Dict[str, str]:
         """Generate development workflow files using new template system."""
         files = {}
-        
+
         # Create basic workflow documentation
         context = self.template_manager._create_context_from_analysis(analysis)
-        
+
         # Feature development workflow
         feature_workflow = self._get_feature_workflow_template()
         files[".claude/workflows/FEATURE_DEVELOPMENT.md"] = self.template_manager.render_template(
@@ -135,9 +139,9 @@ class DocumentGenerator:
         )
 
         # Testing workflow (if project has tests)
-        if getattr(analysis, 'has_tests', False) or (
-            hasattr(analysis, 'filesystem_info') and 
-            analysis.filesystem_info and 
+        if getattr(analysis, "has_tests", False) or (
+            hasattr(analysis, "filesystem_info") and
+            analysis.filesystem_info and
             analysis.filesystem_info.test_files > 0
         ):
             testing_workflow = self._get_testing_workflow_template()
@@ -153,13 +157,13 @@ class DocumentGenerator:
         context = self.template_manager._create_context_from_analysis(analysis)
 
         # Architecture documentation for complex projects
-        complexity = getattr(analysis, 'complexity_level', None)
+        complexity = getattr(analysis, "complexity_level", None)
         if complexity and complexity.value in ["complex", "enterprise"]:
             arch_template = self._get_default_architecture_template()
             files[".claude/ARCHITECTURE.md"] = self.template_manager.render_template(arch_template, context)
 
         # API documentation for web projects
-        is_web = getattr(analysis, 'is_web_project', False)
+        is_web = getattr(analysis, "is_web_project", False)
         if is_web:
             api_template = self._get_api_documentation_template()
             files[".claude/API_DESIGN.md"] = self.template_manager.render_template(api_template, context)
@@ -882,28 +886,28 @@ ${uses_database == 'Yes' and '''
 
 class TemplateLoader:
     """Template loading and processing."""
-    
+
     def __init__(self):
         self.template_manager = CoreTemplateManager()
-    
+
     def load_template(self, template_name: str) -> str:
         """Load a template by name."""
         try:
             return self.template_manager.get_template(template_name)
         except Exception as e:
             raise GenerationError(f"Failed to load template '{template_name}': {e}")
-    
+
     def load_templates(self, template_names: List[str]) -> Dict[str, str]:
         """Load multiple templates."""
         templates = {}
         for name in template_names:
             templates[name] = self.load_template(name)
         return templates
-    
+
     def list_available_templates(self) -> List[str]:
         """List all available templates."""
         return self.template_manager.list_available_templates()
-    
+
     def validate_template(self, template_content: str) -> bool:
         """Validate template syntax."""
         try:

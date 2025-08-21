@@ -37,7 +37,7 @@ def templates():
     """Manage templates and template sources."""
 
 
-# Alias for backward compatibility  
+# Alias for backward compatibility
 template = templates
 
 
@@ -461,5 +461,5 @@ def _display_templates_json(templates: List[CommunityTemplate]):
 
 # Function aliases for backward compatibility with tests
 list_templates = templates.commands["list"]
-show_template = templates.commands["info"] 
+show_template = templates.commands["info"]
 validate_template = templates.commands["validate"]

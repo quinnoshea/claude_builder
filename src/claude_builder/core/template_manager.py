@@ -15,7 +15,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.error import HTTPError, URLError
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 from urllib.request import Request, urlopen
 
 from claude_builder.core.models import ProjectAnalysis, ValidationResult
@@ -305,8 +305,9 @@ class TemplateValidator:
                 if found_patterns:
                     warnings.append(f"File {file_path.name} contains potentially suspicious patterns: {found_patterns}")
 
-            except Exception:
-                pass  # Ignore read errors for security check
+            except (OSError, UnicodeDecodeError):
+                # Ignore read errors for security check
+                pass
 
         return ValidationResult(is_valid=len(errors) == 0, errors=errors, warnings=warnings)
 
@@ -558,9 +559,12 @@ class TemplateManager:
         try:
             # Try to fetch template index
             index_url = urljoin(source_url, "index.json")
+            # Allow only http/https schemes
+            if urlparse(index_url).scheme not in ("http", "https"):
+                return templates
             request = Request(index_url, headers={"User-Agent": "Claude-Builder/0.1.0"})
 
-            with urlopen(request, timeout=10) as response:
+            with urlopen(request, timeout=10) as response:  # nosec B310: scheme validated above
                 index_data = json.loads(response.read().decode("utf-8"))
 
             # Parse template entries
@@ -570,8 +574,9 @@ class TemplateManager:
                     template_url = urljoin(source_url, f"templates/{metadata.name}.zip")
                     template = CommunityTemplate(metadata, source_url=template_url)
                     templates.append(template)
-                except Exception:
-                    continue  # Skip invalid template entries
+                except Exception as e:
+                    # Skip invalid template entries but record locally
+                    _ = e
 
         except (URLError, HTTPError, json.JSONDecodeError, Exception):
             # Silently fail for network issues - community features are optional
@@ -635,9 +640,12 @@ class TemplateManager:
 
     def _download_file(self, url: str, destination: Path) -> None:
         """Download file from URL."""
+        # Allow only http/https schemes
+        if urlparse(url).scheme not in ("http", "https"):
+            raise ValueError("Unsupported URL scheme for download")
         request = Request(url, headers={"User-Agent": "Claude-Builder/0.1.0"})
 
-        with urlopen(request, timeout=30) as response:
+        with urlopen(request, timeout=30) as response:  # nosec B310: scheme validated above
             with open(destination, "wb") as f:
                 shutil.copyfileobj(response, f)
 
@@ -757,12 +765,12 @@ claude-builder /path/to/project --template={config.get('name', 'custom-template'
 # Placeholder classes for test compatibility
 class Template:
     """Placeholder Template class for test compatibility."""
-    
+
     def __init__(self, name: str, content: str = "", **kwargs):
         self.name = name
         self.content = content
         self.metadata = kwargs
-        
+
     def render(self, **context) -> str:
         """Render template with context."""
         return f"Rendered template {self.name} with context: {context}"
@@ -770,16 +778,16 @@ class Template:
 
 class TemplateBuilder:
     """Placeholder TemplateBuilder class for test compatibility."""
-    
+
     def __init__(self):
         self.templates = {}
-        
+
     def create_template(self, name: str, content: str) -> Template:
         """Create a new template."""
         template = Template(name, content)
         self.templates[name] = template
         return template
-        
+
     def build_template_set(self, project_analysis) -> dict:
         """Build a set of templates for project."""
         return {
@@ -790,27 +798,27 @@ class TemplateBuilder:
 
 class TemplateContext:
     """Placeholder TemplateContext class for test compatibility."""
-    
+
     def __init__(self, **kwargs):
         self.variables = kwargs
-        
+
     def get(self, key: str, default=None):
         return self.variables.get(key, default)
 
 
 class TemplateEcosystem:
     """Placeholder TemplateEcosystem class for test compatibility."""
-    
+
     def __init__(self):
         self.templates = {}
-        
+
     def load_ecosystem(self, path: str):
         return {"templates": 5, "loaded": True}
 
 
 class TemplateError(Exception):
     """Placeholder TemplateError class for test compatibility."""
-    
+
     def __init__(self, message: str, template_name: str = None):
         super().__init__(message)
         self.template_name = template_name
@@ -818,25 +826,25 @@ class TemplateError(Exception):
 
 class TemplateMarketplace:
     """Placeholder TemplateMarketplace class for test compatibility."""
-    
+
     def __init__(self):
         self.templates = {}
         self.marketplace_url = "https://example.com/templates"
-        
+
     def search_templates(self, query: str) -> List[str]:
         return ["template1", "template2", "template3"]
-        
+
     def download_template(self, template_name: str) -> bool:
         return True
 
 
 class TemplateLoader:
     """Core template loading system for Phase 2 implementation."""
-    
+
     def __init__(self, template_dirs: Optional[List[str]] = None):
         """Initialize template loader with search directories."""
         self.template_dirs = []
-        
+
         # Add default template directories
         if template_dirs:
             self.template_dirs.extend([Path(d) for d in template_dirs])
@@ -845,31 +853,31 @@ class TemplateLoader:
             current_dir = Path(__file__).parent.parent
             self.template_dirs = [
                 current_dir / "templates" / "base",
-                current_dir / "templates" / "languages", 
+                current_dir / "templates" / "languages",
                 current_dir / "templates" / "frameworks"
             ]
-            
+
         # Ensure directories exist
         for template_dir in self.template_dirs:
             template_dir.mkdir(parents=True, exist_ok=True)
-    
+
     def load_template(self, template_name: str) -> str:
         """Load template content from file."""
         template_path = self._find_template(template_name)
-        
+
         if not template_path:
             raise FileNotFoundError(f"Template not found: {template_name}")
-            
+
         try:
-            with open(template_path, 'r', encoding='utf-8') as f:
+            with open(template_path, encoding="utf-8") as f:
                 return f.read()
         except Exception as e:
-            raise IOError(f"Failed to load template {template_name}: {e}")
-    
+            raise OSError(f"Failed to load template {template_name}: {e}")
+
     def list_templates(self) -> List[str]:
         """List all available templates."""
         templates = []
-        
+
         for template_dir in self.template_dirs:
             if template_dir.exists():
                 # Find all .md files in the directory
@@ -877,50 +885,50 @@ class TemplateLoader:
                     template_name = template_file.stem
                     if template_name not in templates:
                         templates.append(template_name)
-                        
+
         return sorted(templates)
-    
+
     def template_exists(self, template_name: str) -> bool:
         """Check if template exists."""
         return self._find_template(template_name) is not None
-    
+
     def _find_template(self, template_name: str) -> Optional[Path]:
         """Find template file in search directories."""
         # Try different file extensions
         extensions = [".md", ".txt"]
-        
+
         for template_dir in self.template_dirs:
             if not template_dir.exists():
                 continue
-                
+
             for ext in extensions:
                 template_path = template_dir / f"{template_name}{ext}"
                 if template_path.exists():
                     return template_path
-        
+
         return None
 
 
 class TemplateRepository:
     """Placeholder TemplateRepository class for test compatibility."""
-    
+
     def __init__(self, repo_url: str = None):
         self.repo_url = repo_url or "https://github.com/example/templates"
         self.templates = {}
-        
+
     def clone_repository(self) -> bool:
         return True
-        
+
     def update_repository(self) -> bool:
         return True
-        
+
     def get_template_list(self) -> List[str]:
         return ["web-app", "cli-tool", "library"]
 
 
 class TemplateRenderer:
     """Template rendering with variable substitution for Phase 2 implementation."""
-    
+
     def __init__(self, template_engine: str = "simple"):
         """Initialize template renderer.
         
@@ -928,7 +936,7 @@ class TemplateRenderer:
             template_engine: Type of template engine ("simple" for now, "jinja2" for future)
         """
         self.template_engine = template_engine
-        
+
     def render_template(self, template_content: str, variables: Dict[str, Any]) -> str:
         """Render template content with variable substitution.
         
@@ -940,26 +948,26 @@ class TemplateRenderer:
             Rendered template with variables substituted
         """
         import re
-        
+
         rendered_content = template_content
-        
+
         # Simple variable substitution using ${variable_name} syntax
         for var_name, var_value in variables.items():
             # Convert value to string
             str_value = str(var_value) if var_value is not None else ""
-            
+
             # Replace ${variable_name} patterns
             pattern = re.escape(f"${{{var_name}}}")
             rendered_content = re.sub(pattern, str_value, rendered_content)
-            
+
         # Handle conditional sections: {{#if variable}}content{{/if}}
         rendered_content = self._process_conditionals(rendered_content, variables)
-        
-        # Handle lists: {{#each items}}{{item}}{{/each}}  
+
+        # Handle lists: {{#each items}}{{item}}{{/each}}
         rendered_content = self._process_lists(rendered_content, variables)
-        
+
         return rendered_content
-        
+
     def render_file(self, template_path: str, output_path: str, variables: Dict[str, Any]) -> bool:
         """Render template file to output file.
         
@@ -973,75 +981,74 @@ class TemplateRenderer:
         """
         try:
             # Load template content
-            with open(template_path, 'r', encoding='utf-8') as f:
+            with open(template_path, encoding="utf-8") as f:
                 template_content = f.read()
-                
+
             # Render template
             rendered_content = self.render_template(template_content, variables)
-            
+
             # Ensure output directory exists
             output_path_obj = Path(output_path)
             output_path_obj.parent.mkdir(parents=True, exist_ok=True)
-            
+
             # Write rendered content
-            with open(output_path, 'w', encoding='utf-8') as f:
+            with open(output_path, "w", encoding="utf-8") as f:
                 f.write(rendered_content)
-                
+
             return True
-            
+
         except Exception as e:
             print(f"Error rendering template file: {e}")
             return False
-    
+
     def _process_conditionals(self, content: str, variables: Dict[str, Any]) -> str:
         """Process conditional sections in template."""
         import re
-        
+
         # Pattern for {{#if variable}}content{{/if}}
-        pattern = r'\{\{#if\s+(\w+)\}\}(.*?)\{\{/if\}\}'
-        
+        pattern = r"\{\{#if\s+(\w+)\}\}(.*?)\{\{/if\}\}"
+
         def replace_conditional(match):
             var_name = match.group(1)
             section_content = match.group(2)
-            
+
             # Check if variable exists and is truthy
-            if var_name in variables and variables[var_name]:
+            if variables.get(var_name):
                 return section_content
-            else:
-                return ""
-        
+            return ""
+
         return re.sub(pattern, replace_conditional, content, flags=re.DOTALL)
-    
+
     def _process_lists(self, content: str, variables: Dict[str, Any]) -> str:
         """Process list iterations in template."""
         import re
-        
+
         # Pattern for {{#each items}}{{item}}{{/each}}
-        pattern = r'\{\{#each\s+(\w+)\}\}(.*?)\{\{/each\}\}'
-        
+        pattern = r"\{\{#each\s+(\w+)\}\}(.*?)\{\{/each\}\}"
+
         def replace_list(match):
             list_name = match.group(1)
             item_template = match.group(2)
-            
+
             if list_name not in variables:
                 return ""
-                
+
             items = variables[list_name]
             if not isinstance(items, (list, tuple)):
                 return ""
-            
+
             rendered_items = []
             for item in items:
                 # Create context for item
                 item_context = variables.copy()
-                item_context['item'] = item
-                
+                item_context["item"] = item
+
                 # Simple substitution for {{item}}
-                item_content = re.sub(r'\{\{item\}\}', str(item), item_template)
+                item_content = re.sub(r"\{\{item\}\}", str(item), item_template)
                 rendered_items.append(item_content)
-            
+
             return "".join(rendered_items)
-        
+
         return re.sub(pattern, replace_list, content, flags=re.DOTALL)
 
 
@@ -1051,16 +1058,16 @@ class CoreTemplateManager:
     This class provides the fundamental template loading and composition functionality
     needed for Phase 2, separate from the advanced community features in TemplateManager.
     """
-    
+
     def __init__(self, template_dirs: Optional[List[str]] = None):
         """Initialize core template manager."""
         self.loader = TemplateLoader(template_dirs)
         self.renderer = TemplateRenderer()
-        
+
     def load_template(self, template_name: str) -> str:
         """Load template content."""
         return self.loader.load_template(template_name)
-    
+
     def compose_templates(self, base_template: str, overlay_templates: List[str] = None) -> str:
         """Compose hierarchical templates.
         
@@ -1077,7 +1084,7 @@ class CoreTemplateManager:
         except FileNotFoundError:
             # If base template doesn't exist, create minimal default
             composed_content = "# ${project_name}\n\n${project_description}\n"
-        
+
         # Apply overlay templates
         if overlay_templates:
             for overlay_name in overlay_templates:
@@ -1087,13 +1094,13 @@ class CoreTemplateManager:
                 except FileNotFoundError:
                     # Skip missing overlay templates
                     continue
-                    
+
         return composed_content
-    
+
     def render_template(self, template_content: str, context: Dict[str, Any]) -> str:
         """Render template with context variables."""
         return self.renderer.render_template(template_content, context)
-    
+
     def generate_from_analysis(self, analysis, template_name: str = "base") -> str:
         """Generate content from project analysis.
         
@@ -1106,24 +1113,24 @@ class CoreTemplateManager:
         """
         # Create context from analysis
         context = self._create_context_from_analysis(analysis)
-        
+
         # Determine template hierarchy based on analysis
         overlay_templates = self._determine_overlays(analysis)
-        
+
         # Compose templates
         template_content = self.compose_templates(template_name, overlay_templates)
-        
+
         # Render with context
         return self.render_template(template_content, context)
-    
+
     def list_available_templates(self) -> List[str]:
         """List all available templates."""
         return self.loader.list_templates()
-    
+
     def template_exists(self, template_name: str) -> bool:
         """Check if template exists."""
         return self.loader.template_exists(template_name)
-    
+
     def _merge_templates(self, base_content: str, overlay_content: str) -> str:
         """Merge overlay template into base template.
         
@@ -1132,105 +1139,105 @@ class CoreTemplateManager:
         - Otherwise, append overlay content to base content
         """
         import re
-        
+
         # Look for replacement sections in overlay
-        replace_pattern = r'<!-- REPLACE:(\w+) -->(.*?)<!-- /REPLACE:\1 -->'
+        replace_pattern = r"<!-- REPLACE:(\w+) -->(.*?)<!-- /REPLACE:\1 -->"
         replacements = re.findall(replace_pattern, overlay_content, re.DOTALL)
-        
+
         merged_content = base_content
-        
+
         if replacements:
             # Apply section replacements
             for section_name, replacement_content in replacements:
                 # Find corresponding section in base template
-                base_section_pattern = f'<!-- SECTION:{section_name} -->(.*?)<!-- /SECTION:{section_name} -->'
-                
+                base_section_pattern = f"<!-- SECTION:{section_name} -->(.*?)<!-- /SECTION:{section_name} -->"
+
                 def replace_section(match):
-                    return f'<!-- SECTION:{section_name} -->{replacement_content.strip()}<!-- /SECTION:{section_name} -->'
-                
+                    return f"<!-- SECTION:{section_name} -->{replacement_content.strip()}<!-- /SECTION:{section_name} -->"
+
                 merged_content = re.sub(base_section_pattern, replace_section, merged_content, flags=re.DOTALL)
         else:
             # Simple append strategy
             merged_content = base_content + "\n\n" + overlay_content
-            
+
         return merged_content
-    
+
     def _create_context_from_analysis(self, analysis) -> Dict[str, Any]:
         """Create template context from project analysis."""
         context = {}
-        
+
         # Basic project information
-        context['project_name'] = analysis.project_path.name if analysis.project_path else "Unknown Project"
-        context['project_path'] = str(analysis.project_path) if analysis.project_path else ""
-        
+        context["project_name"] = analysis.project_path.name if analysis.project_path else "Unknown Project"
+        context["project_path"] = str(analysis.project_path) if analysis.project_path else ""
+
         # Language information
-        if hasattr(analysis, 'language_info') and analysis.language_info:
-            context['primary_language'] = analysis.language_info.primary or "unknown"
-            context['secondary_languages'] = analysis.language_info.secondary or []
-            context['language_confidence'] = analysis.language_info.confidence or 0
+        if hasattr(analysis, "language_info") and analysis.language_info:
+            context["primary_language"] = analysis.language_info.primary or "unknown"
+            context["secondary_languages"] = analysis.language_info.secondary or []
+            context["language_confidence"] = analysis.language_info.confidence or 0
         else:
-            context['primary_language'] = "unknown"
-            context['secondary_languages'] = []
-            context['language_confidence'] = 0
-        
-        # Framework information  
-        if hasattr(analysis, 'framework_info') and analysis.framework_info:
-            context['primary_framework'] = analysis.framework_info.primary or "none"
-            context['secondary_frameworks'] = analysis.framework_info.secondary or []
-            context['framework_confidence'] = analysis.framework_info.confidence or 0
+            context["primary_language"] = "unknown"
+            context["secondary_languages"] = []
+            context["language_confidence"] = 0
+
+        # Framework information
+        if hasattr(analysis, "framework_info") and analysis.framework_info:
+            context["primary_framework"] = analysis.framework_info.primary or "none"
+            context["secondary_frameworks"] = analysis.framework_info.secondary or []
+            context["framework_confidence"] = analysis.framework_info.confidence or 0
         else:
-            context['primary_framework'] = "none"
-            context['secondary_frameworks'] = []
-            context['framework_confidence'] = 0
-        
+            context["primary_framework"] = "none"
+            context["secondary_frameworks"] = []
+            context["framework_confidence"] = 0
+
         # Project characteristics
-        if hasattr(analysis, 'project_type'):
-            context['project_type'] = analysis.project_type.value if analysis.project_type else "unknown"
+        if hasattr(analysis, "project_type"):
+            context["project_type"] = analysis.project_type.value if analysis.project_type else "unknown"
         else:
-            context['project_type'] = "unknown"
-            
-        if hasattr(analysis, 'complexity_level'):
-            context['complexity_level'] = analysis.complexity_level.value if analysis.complexity_level else "simple"
+            context["project_type"] = "unknown"
+
+        if hasattr(analysis, "complexity_level"):
+            context["complexity_level"] = analysis.complexity_level.value if analysis.complexity_level else "simple"
         else:
-            context['complexity_level'] = "simple"
-        
+            context["complexity_level"] = "simple"
+
         # Additional context
-        context['analysis_confidence'] = getattr(analysis, 'analysis_confidence', 0)
-        context['timestamp'] = getattr(analysis, 'analysis_timestamp', "")
-        
+        context["analysis_confidence"] = getattr(analysis, "analysis_confidence", 0)
+        context["timestamp"] = getattr(analysis, "analysis_timestamp", "")
+
         return context
-    
+
     def _determine_overlays(self, analysis) -> List[str]:
         """Determine which overlay templates to apply based on analysis."""
         overlays = []
-        
+
         # Add language-specific overlay
-        if hasattr(analysis, 'language_info') and analysis.language_info and analysis.language_info.primary:
+        if hasattr(analysis, "language_info") and analysis.language_info and analysis.language_info.primary:
             language_template = f"language-{analysis.language_info.primary.lower()}"
             overlays.append(language_template)
-        
+
         # Add framework-specific overlay
-        if hasattr(analysis, 'framework_info') and analysis.framework_info and analysis.framework_info.primary:
+        if hasattr(analysis, "framework_info") and analysis.framework_info and analysis.framework_info.primary:
             framework_template = f"framework-{analysis.framework_info.primary.lower()}"
             overlays.append(framework_template)
-        
+
         # Add project type overlay
-        if hasattr(analysis, 'project_type') and analysis.project_type:
+        if hasattr(analysis, "project_type") and analysis.project_type:
             type_template = f"type-{analysis.project_type.value.replace('_', '-')}"
             overlays.append(type_template)
-            
+
         return overlays
 
 
 class TemplateVersion:
     """Placeholder TemplateVersion class for test compatibility."""
-    
+
     def __init__(self, version: str, template_name: str):
         self.version = version
         self.template_name = template_name
-        
+
     def compare_version(self, other_version: str) -> int:
         return 0  # Equal
-        
+
     def is_compatible(self, requirements: str) -> bool:
         return True

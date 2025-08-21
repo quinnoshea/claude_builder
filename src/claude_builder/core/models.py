@@ -5,7 +5,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ProjectType(Enum):
@@ -224,7 +224,7 @@ class ValidationResult:
 class TemplateRequest(BaseModel):
     """Request for template generation."""
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    
+
     analysis: ProjectAnalysis
     template_name: Optional[str] = None
     output_format: str = "files"
@@ -234,7 +234,7 @@ class TemplateRequest(BaseModel):
 class ExecutionResult(BaseModel):
     """Result of main execution."""
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    
+
     success: bool
     analysis: Optional[ProjectAnalysis] = None
     generated_content: Optional[GeneratedContent] = None
@@ -252,7 +252,7 @@ class TestFrameworkInfo:
     version: Optional[str] = None
     category: Optional[str] = None
     description: Optional[str] = None
-    
+
     def dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
@@ -266,13 +266,13 @@ class TestFrameworkInfo:
 # CLI tests should use the real FrameworkInfo from this module
 
 # Placeholder classes for test compatibility
-@dataclass 
+@dataclass
 class AnalysisResult:
     """Analysis result model for test compatibility."""
-    project_info: Optional['ProjectInfo'] = None
-    frameworks: List['TestFrameworkInfo'] = field(default_factory=list)
-    dependencies: List['DependencyInfo'] = field(default_factory=list)
-    file_structure: Optional['FileStructure'] = None
+    project_info: Optional["ProjectInfo"] = None
+    frameworks: List["TestFrameworkInfo"] = field(default_factory=list)
+    dependencies: List["DependencyInfo"] = field(default_factory=list)
+    file_structure: Optional["FileStructure"] = None
     analysis_timestamp: Optional[Any] = None
     success: bool = True
     confidence: float = 0.8
@@ -282,31 +282,31 @@ class AnalysisResult:
     complexity: Optional[ComplexityLevel] = None
     errors: List[str] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     def __post_init__(self):
         """Process nested dictionaries into proper objects."""
         from datetime import datetime
-        
+
         # Auto-generate timestamp if not provided
         if self.analysis_timestamp is None:
             self.analysis_timestamp = datetime.now()
-        
+
         # Handle project_info dictionary
         if isinstance(self.project_info, dict):
             self.project_info = ProjectInfo(**self.project_info)
-        
+
         # Handle frameworks list of dictionaries
         if self.frameworks and isinstance(self.frameworks[0], dict):
             self.frameworks = [TestFrameworkInfo(**f) for f in self.frameworks]
-        
-        # Handle dependencies list of dictionaries  
+
+        # Handle dependencies list of dictionaries
         if self.dependencies and isinstance(self.dependencies[0], dict):
             self.dependencies = [DependencyInfo(**d) for d in self.dependencies]
-        
+
         # Handle file_structure dictionary
         if isinstance(self.file_structure, dict):
             self.file_structure = FileStructure(**self.file_structure)
-    
+
     def dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
@@ -324,8 +324,8 @@ class AnalysisResult:
             "errors": self.errors,
             "metadata": self.metadata
         }
-    
-    def filter_dependencies(self, dependency_type: str) -> List['DependencyInfo']:
+
+    def filter_dependencies(self, dependency_type: str) -> List["DependencyInfo"]:
         """Filter dependencies by type."""
         return [d for d in self.dependencies if d.dependency_type == dependency_type]
 
@@ -340,21 +340,21 @@ class DependencyInfo:
     package_managers: List[str] = field(default_factory=list)
     dependencies: Dict[str, str] = field(default_factory=dict)
     dev_dependencies: Dict[str, str] = field(default_factory=dict)
-    
+
     VALID_DEPENDENCY_TYPES = {"runtime", "development", "test", "build", "optional"}
-    
+
     def __post_init__(self):
         """Validate fields after initialization."""
         if not self.name or not self.name.strip():
             raise ValueError("Dependency name cannot be empty")
-        
+
         if self.dependency_type not in self.VALID_DEPENDENCY_TYPES:
             raise ValueError(f"Invalid dependency type: {self.dependency_type}. Valid types: {', '.join(self.VALID_DEPENDENCY_TYPES)}")
-    
+
     def is_dev_dependency(self) -> bool:
         """Check if this is a development dependency."""
         return self.dependency_type in {"development", "test"}
-    
+
     def dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
@@ -380,25 +380,25 @@ class FileStructure:
     test_files: List[str] = field(default_factory=list)
     config_files: List[str] = field(default_factory=list)
     documentation_files: List[str] = field(default_factory=list)
-    
+
     VALID_FILE_TYPES = {"file", "directory", "symlink"}
-    
+
     def __post_init__(self):
         """Validate fields after initialization."""
         if not self.path:
             raise ValueError("Path cannot be empty")
-        
+
         if self.file_type not in self.VALID_FILE_TYPES:
             raise ValueError(f"Invalid file type: {self.file_type}. Valid types: {', '.join(self.VALID_FILE_TYPES)}")
-    
+
     def is_directory(self) -> bool:
         """Check if this represents a directory."""
         return self.file_type == "directory"
-    
+
     def is_file(self) -> bool:
         """Check if this represents a file."""
         return self.file_type == "file"
-    
+
     def dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
@@ -427,18 +427,18 @@ class GenerationConfig:
     output_path: str = "."
     variables: Dict[str, str] = field(default_factory=dict)
     overwrite_existing: bool = False
-    
+
     VALID_OUTPUT_FORMATS = {"markdown", "html", "json", "yaml"}
     VALID_TEMPLATE_VARIANTS = {"comprehensive", "minimal", "basic", "advanced"}
-    
+
     def validate(self):
         """Validate the configuration."""
         if self.output_format not in self.VALID_OUTPUT_FORMATS:
             raise ValueError(f"Invalid output format: {self.output_format}. Valid formats: {', '.join(self.VALID_OUTPUT_FORMATS)}")
-        
+
         if self.template_variant not in self.VALID_TEMPLATE_VARIANTS:
             raise ValueError(f"Invalid template variant: {self.template_variant}. Valid variants: {', '.join(self.VALID_TEMPLATE_VARIANTS)}")
-    
+
     def dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
@@ -468,17 +468,17 @@ class ProjectInfo:
     path: str = "."
     language: Optional[str] = None
     dependencies: List[str] = field(default_factory=list)
-    
+
     VALID_PROJECT_TYPES = {"python", "rust", "javascript", "java", "go", "cpp", "csharp", "php", "unknown"}
-    
+
     def __post_init__(self):
         """Validate fields after initialization."""
         if not self.name or not self.name.strip():
             raise ValueError("Project name cannot be empty")
-        
+
         if self.project_type and self.project_type not in self.VALID_PROJECT_TYPES:
             raise ValueError(f"Invalid project type: {self.project_type}. Valid types: {', '.join(self.VALID_PROJECT_TYPES)}")
-    
+
     def dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {

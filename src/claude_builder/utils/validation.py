@@ -240,10 +240,10 @@ def validate_directory_structure(directory: Path, expected_structure: dict) -> V
 # Placeholder classes for test compatibility
 class ConfigValidator:
     """Placeholder ConfigValidator class for test compatibility."""
-    
+
     def __init__(self):
         self.rules = []
-        
+
     def validate_project_config(self, config: dict) -> dict:
         """Validate project configuration."""
         return {
@@ -251,7 +251,7 @@ class ConfigValidator:
             "errors": [],
             "warnings": []
         }
-        
+
     def add_validation_rule(self, rule):
         """Add validation rule."""
         self.rules.append(rule)
@@ -259,72 +259,72 @@ class ConfigValidator:
 
 class DataValidator:
     """Placeholder DataValidator class for test compatibility."""
-    
+
     def validate_version(self, version: str) -> bool:
         """Validate version string."""
         import re
-        pattern = r'^\d+\.\d+\.\d+.*$'
+        pattern = r"^\d+\.\d+\.\d+.*$"
         return bool(re.match(pattern, version))
-        
+
     def validate_email(self, email: str) -> bool:
         """Validate email address."""
         import re
-        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
         return bool(re.match(pattern, email))
 
 
 class ValidationResult:
     """Placeholder ValidationResult class for test compatibility."""
-    
+
     def __init__(self, is_valid: bool, errors: list = None, warnings: list = None):
         self.is_valid = is_valid
         self.errors = errors or []
         self.warnings = warnings or []
-        
+
     def has_errors(self) -> bool:
         return len(self.errors) > 0
-        
+
     def has_warnings(self) -> bool:
         return len(self.warnings) > 0
 
 
 class ValidationError:
     """Placeholder ValidationError class for test compatibility."""
-    
+
     def __init__(self, message: str, field: str = None, code: str = None, context: dict = None):
         self.message = message
         self.field = field
         self.code = code
         self.context = context or {}
-        
+
     def __str__(self):
         return self.message
 
 
 class PathValidator:
     """Placeholder PathValidator class for test compatibility."""
-    
+
     def __init__(self):
         self.valid_paths = []
-        
+
     def validate_path(self, path: str) -> bool:
         return Path(path).exists()
-        
+
     def validate_project_structure(self, project_path: str) -> ValidationResult:
         return ValidationResult(is_valid=True)
 
 
 class ProjectValidator:
     """Placeholder ProjectValidator class for test compatibility."""
-    
+
     def __init__(self):
         self.validation_rules = []
-        
+
     def validate_project(self, project_path: str) -> ValidationResult:
         return ValidationResult(is_valid=True, warnings=["Mock validation"])
-        
+
     def add_validation_rule(self, rule):
         self.validation_rules.append(rule)
-        
+
     def check_project_structure(self, project_path: str) -> bool:
         return True

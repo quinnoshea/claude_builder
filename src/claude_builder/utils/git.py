@@ -1,5 +1,6 @@
 """Git integration utilities for Claude Builder."""
 
+import json
 import shutil
 from dataclasses import dataclass
 from datetime import datetime
@@ -346,11 +347,10 @@ class GitBackupManager:
                 metadata_file = backup_dir / "metadata.json"
                 if metadata_file.exists():
                     try:
-                        import json
                         with open(metadata_file) as f:
                             metadata = json.load(f)
                         backups.append(metadata)
-                    except:
+                    except (OSError, json.JSONDecodeError):
                         # Skip corrupted metadata files
                         pass
 
@@ -372,7 +372,7 @@ class GitBackupManager:
                 try:
                     shutil.rmtree(backup_dir)
                     removed_count += 1
-                except:
+                except OSError:
                     # Skip if can't remove
                     pass
 
@@ -590,13 +590,13 @@ exit 0
 # Placeholder classes for test compatibility
 class AdvancedGitAnalyzer:
     """Placeholder AdvancedGitAnalyzer class for test compatibility."""
-    
+
     def __init__(self, project_path: Path):
         self.project_path = project_path
         self.history_analyzer = GitHistoryAnalyzer()
         self.branch_analyzer = GitBranchAnalyzer()
         self.contributor_analyzer = GitContributorAnalyzer()
-        
+
     def analyze_repository(self) -> Dict[str, Any]:
         """Analyze git repository comprehensively."""
         return {
@@ -613,11 +613,11 @@ class AdvancedGitAnalyzer:
 
 class GitHistoryAnalyzer:
     """Placeholder GitHistoryAnalyzer class for test compatibility."""
-    
+
     def get_commit_frequency(self) -> Dict[str, int]:
         """Get commit frequency data."""
         return {"daily": 5, "weekly": 35, "monthly": 150}
-        
+
     def detect_commit_patterns(self) -> Dict[str, Any]:
         """Detect commit patterns."""
         return {"pattern": "regular", "peak_hours": [9, 14, 16]}
@@ -625,11 +625,11 @@ class GitHistoryAnalyzer:
 
 class GitBranchAnalyzer:
     """Placeholder GitBranchAnalyzer class for test compatibility."""
-    
+
     def analyze_branch_health(self) -> Dict[str, Any]:
         """Analyze branch health."""
         return {"status": "healthy", "stale_branches": 0, "merge_conflicts": 0}
-        
+
     def detect_branching_strategy(self) -> Dict[str, str]:
         """Detect branching strategy."""
         return {"strategy": "git-flow", "confidence": "high"}
@@ -637,7 +637,7 @@ class GitBranchAnalyzer:
 
 class GitContributorAnalyzer:
     """Placeholder GitContributorAnalyzer class for test compatibility."""
-    
+
     def get_contributor_distribution(self) -> Dict[str, Any]:
         """Get contributor distribution."""
         return {
@@ -668,13 +668,13 @@ exit 0
 # Placeholder classes for test compatibility
 class AdvancedGitAnalyzer:
     """Placeholder AdvancedGitAnalyzer class for test compatibility."""
-    
+
     def __init__(self, project_path: Path):
         self.project_path = project_path
         self.history_analyzer = GitHistoryAnalyzer()
         self.branch_analyzer = GitBranchAnalyzer()
         self.contributor_analyzer = GitContributorAnalyzer()
-        
+
     def analyze_repository(self) -> Dict[str, Any]:
         """Analyze git repository comprehensively."""
         return {
@@ -691,11 +691,11 @@ class AdvancedGitAnalyzer:
 
 class GitHistoryAnalyzer:
     """Placeholder GitHistoryAnalyzer class for test compatibility."""
-    
+
     def get_commit_frequency(self) -> Dict[str, int]:
         """Get commit frequency data."""
         return {"daily": 5, "weekly": 35, "monthly": 150}
-        
+
     def detect_commit_patterns(self) -> Dict[str, Any]:
         """Detect commit patterns."""
         return {"pattern": "regular", "peak_hours": [9, 14, 16]}
@@ -703,11 +703,11 @@ class GitHistoryAnalyzer:
 
 class GitBranchAnalyzer:
     """Placeholder GitBranchAnalyzer class for test compatibility."""
-    
+
     def analyze_branch_health(self) -> Dict[str, Any]:
         """Analyze branch health."""
         return {"status": "healthy", "stale_branches": 0, "merge_conflicts": 0}
-        
+
     def detect_branching_strategy(self) -> Dict[str, str]:
         """Detect branching strategy."""
         return {"strategy": "git-flow", "confidence": "high"}
@@ -715,7 +715,7 @@ class GitBranchAnalyzer:
 
 class GitContributorAnalyzer:
     """Placeholder GitContributorAnalyzer class for test compatibility."""
-    
+
     def get_contributor_distribution(self) -> Dict[str, Any]:
         """Get contributor distribution."""
         return {
@@ -775,13 +775,13 @@ exit 0
 # Placeholder classes for test compatibility
 class AdvancedGitAnalyzer:
     """Placeholder AdvancedGitAnalyzer class for test compatibility."""
-    
+
     def __init__(self, project_path: Path):
         self.project_path = project_path
         self.history_analyzer = GitHistoryAnalyzer()
         self.branch_analyzer = GitBranchAnalyzer()
         self.contributor_analyzer = GitContributorAnalyzer()
-        
+
     def analyze_repository(self) -> Dict[str, Any]:
         """Analyze git repository comprehensively."""
         return {
@@ -798,11 +798,11 @@ class AdvancedGitAnalyzer:
 
 class GitHistoryAnalyzer:
     """Placeholder GitHistoryAnalyzer class for test compatibility."""
-    
+
     def get_commit_frequency(self) -> Dict[str, int]:
         """Get commit frequency data."""
         return {"daily": 5, "weekly": 35, "monthly": 150}
-        
+
     def detect_commit_patterns(self) -> Dict[str, Any]:
         """Detect commit patterns."""
         return {"pattern": "regular", "peak_hours": [9, 14, 16]}
@@ -810,11 +810,11 @@ class GitHistoryAnalyzer:
 
 class GitBranchAnalyzer:
     """Placeholder GitBranchAnalyzer class for test compatibility."""
-    
+
     def analyze_branch_health(self) -> Dict[str, Any]:
         """Analyze branch health."""
         return {"status": "healthy", "stale_branches": 0, "merge_conflicts": 0}
-        
+
     def detect_branching_strategy(self) -> Dict[str, str]:
         """Detect branching strategy."""
         return {"strategy": "git-flow", "confidence": "high"}
@@ -822,7 +822,7 @@ class GitBranchAnalyzer:
 
 class GitContributorAnalyzer:
     """Placeholder GitContributorAnalyzer class for test compatibility."""
-    
+
     def get_contributor_distribution(self) -> Dict[str, Any]:
         """Get contributor distribution."""
         return {
@@ -853,13 +853,13 @@ exit 0
 # Placeholder classes for test compatibility
 class AdvancedGitAnalyzer:
     """Placeholder AdvancedGitAnalyzer class for test compatibility."""
-    
+
     def __init__(self, project_path: Path):
         self.project_path = project_path
         self.history_analyzer = GitHistoryAnalyzer()
         self.branch_analyzer = GitBranchAnalyzer()
         self.contributor_analyzer = GitContributorAnalyzer()
-        
+
     def analyze_repository(self) -> Dict[str, Any]:
         """Analyze git repository comprehensively."""
         return {
@@ -876,11 +876,11 @@ class AdvancedGitAnalyzer:
 
 class GitHistoryAnalyzer:
     """Placeholder GitHistoryAnalyzer class for test compatibility."""
-    
+
     def get_commit_frequency(self) -> Dict[str, int]:
         """Get commit frequency data."""
         return {"daily": 5, "weekly": 35, "monthly": 150}
-        
+
     def detect_commit_patterns(self) -> Dict[str, Any]:
         """Detect commit patterns."""
         return {"pattern": "regular", "peak_hours": [9, 14, 16]}
@@ -888,11 +888,11 @@ class GitHistoryAnalyzer:
 
 class GitBranchAnalyzer:
     """Placeholder GitBranchAnalyzer class for test compatibility."""
-    
+
     def analyze_branch_health(self) -> Dict[str, Any]:
         """Analyze branch health."""
         return {"status": "healthy", "stale_branches": 0, "merge_conflicts": 0}
-        
+
     def detect_branching_strategy(self) -> Dict[str, str]:
         """Detect branching strategy."""
         return {"strategy": "git-flow", "confidence": "high"}
@@ -900,7 +900,7 @@ class GitBranchAnalyzer:
 
 class GitContributorAnalyzer:
     """Placeholder GitContributorAnalyzer class for test compatibility."""
-    
+
     def get_contributor_distribution(self) -> Dict[str, Any]:
         """Get contributor distribution."""
         return {
@@ -912,61 +912,61 @@ class GitContributorAnalyzer:
 
 class BranchAnalyzer:
     """Placeholder BranchAnalyzer class for test compatibility."""
-    
+
     def __init__(self, repo_path: Path):
         self.repo_path = repo_path
-        
+
     def analyze_branches(self) -> Dict[str, Any]:
         return {"active_branches": 3, "stale_branches": 1}
 
 
 class CodeEvolutionTracker:
     """Placeholder CodeEvolutionTracker class for test compatibility."""
-    
+
     def __init__(self, repo_path: Path):
         self.repo_path = repo_path
         self.commit_history = []
-        
+
     def track_evolution(self, file_path: str) -> Dict[str, Any]:
         return {
             "changes_count": 5,
             "authors": ["dev1", "dev2"],
             "last_modified": "2024-01-01"
         }
-        
+
     def get_code_metrics(self) -> Dict[str, int]:
         return {"lines_added": 100, "lines_removed": 50, "commits": 10}
 
 
 class ContributorAnalyzer:
     """Placeholder ContributorAnalyzer class for test compatibility."""
-    
+
     def __init__(self, repo_path: Path):
         self.repo_path = repo_path
-        
+
     def analyze_contributors(self) -> Dict[str, Any]:
         return {
             "total_contributors": 5,
             "active_contributors": 3,
             "top_contributors": ["alice", "bob", "charlie"]
         }
-        
+
     def get_contribution_stats(self) -> Dict[str, int]:
         return {"commits": 100, "files_changed": 50, "lines_added": 1000}
 
 
 class GitInsights:
     """Placeholder GitInsights class for test compatibility."""
-    
+
     def __init__(self, repo_path: Path):
         self.repo_path = repo_path
-        
+
     def generate_insights(self) -> Dict[str, Any]:
         return {
             "commit_frequency": "daily",
             "hotspots": ["src/main.py", "tests/test_main.py"],
             "complexity_trends": "stable"
         }
-        
+
     def get_repository_health(self) -> str:
         return "healthy"

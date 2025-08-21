@@ -8,8 +8,8 @@ from typing import Any, Dict, List, Optional
 
 import toml
 
-from claude_builder.utils.exceptions import ConfigError
 from claude_builder.core.models import ClaudeMentionPolicy, GitIntegrationMode
+from claude_builder.utils.exceptions import ConfigError
 
 
 @dataclass
@@ -377,8 +377,9 @@ class ConfigManager:
             if config_path.exists():
                 try:
                     return self._load_config_file(config_path)
-                except Exception:
-                    continue
+                except (ConfigError, OSError):
+                    # Skip unreadable or invalid config files
+                    pass
         return None
 
     def save_workspace_setting(self, project_path: Path, key: str, value: Any) -> None:
@@ -411,7 +412,7 @@ class ConfigManager:
                     workspace_settings = json.load(f)
                 self.workspace_cache[workspace_id] = workspace_settings
                 return workspace_settings.get(key, default)
-            except Exception:
+            except (OSError, json.JSONDecodeError):
                 pass
 
         return default
@@ -445,8 +446,9 @@ class ConfigManager:
                     profile_data = json.load(f)
                 profile_data["name"] = profile_file.stem
                 profiles.append(profile_data)
-            except Exception:
-                continue
+            except (OSError, json.JSONDecodeError):
+                # Skip unreadable or invalid profile files
+                pass
 
         return profiles
 
@@ -562,22 +564,22 @@ def load_config_from_args(args: Dict[str, Any]) -> Config:
 
 
 
-# Placeholder classes for test compatibility  
+# Placeholder classes for test compatibility
 class AdvancedConfigManager:
     """Placeholder AdvancedConfigManager class for test compatibility."""
-    
+
     def __init__(self, config_path: str = None):
         self.config_path = config_path
         self.config = {}
-        
+
     def load_advanced_config(self) -> dict:
         """Load advanced configuration."""
         return {"advanced": True, "settings": {}}
-        
+
     def validate_config(self) -> bool:
         """Validate configuration."""
         return True
-        
+
     def merge_configs(self, *configs) -> dict:
         """Merge multiple configurations."""
         result = {}
@@ -588,34 +590,34 @@ class AdvancedConfigManager:
 
 class ConfigEnvironment:
     """Placeholder ConfigEnvironment class for test compatibility."""
-    
+
     def __init__(self, env_name: str = "development"):
         self.env_name = env_name
         self.variables = {}
-        
+
     def get_environment_config(self) -> Dict[str, Any]:
         return {"environment": self.env_name, "debug": True}
 
 
 class ConfigSchema:
     """Placeholder ConfigSchema class for test compatibility."""
-    
+
     def __init__(self, schema_dict: Dict[str, Any] = None):
         self.schema = schema_dict or {}
-        
+
     def validate(self, config: Dict[str, Any]) -> bool:
         return True
-        
+
     def get_defaults(self) -> Dict[str, Any]:
         return {"version": "1.0", "debug": False}
 
 
 class ConfigValidator:
     """Placeholder ConfigValidator class for test compatibility."""
-    
+
     def __init__(self):
         self.rules = []
-        
+
     def validate_project_config(self, config: dict) -> dict:
         """Validate project configuration."""
         return {
@@ -623,7 +625,7 @@ class ConfigValidator:
             "errors": [],
             "warnings": []
         }
-        
+
     def add_validation_rule(self, rule):
         """Add validation rule."""
         self.rules.append(rule)
@@ -631,34 +633,34 @@ class ConfigValidator:
 
 class ConfigWatcher:
     """Placeholder ConfigWatcher class for test compatibility."""
-    
+
     def __init__(self, config_path: str):
         self.config_path = config_path
         self.is_watching = False
-        
+
     def start_watching(self) -> bool:
         self.is_watching = True
         return True
-        
+
     def stop_watching(self) -> bool:
         self.is_watching = False
         return True
-        
+
     def on_config_changed(self, callback):
         pass
 
 
 class SecureConfigHandler:
     """Placeholder SecureConfigHandler class for test compatibility."""
-    
+
     def __init__(self, encryption_key: str = None):
         self.encryption_key = encryption_key
-        
+
     def encrypt_config(self, config: Dict[str, Any]) -> str:
         return "encrypted_config_data"
-        
+
     def decrypt_config(self, encrypted_data: str) -> Dict[str, Any]:
         return {"decrypted": "config"}
-        
+
     def store_secure_config(self, config: Dict[str, Any], path: str) -> bool:
         return True

@@ -444,14 +444,14 @@ def set_value(key: str, value: str, project_path: str = "."):
     try:
         project_path_obj = Path(project_path).resolve()
         config_manager = ConfigManager()
-        
+
         # Load current config
         config = config_manager.load_config(project_path_obj)
-        
+
         # Set value using dot notation (e.g., "git_integration.mode")
         keys = key.split(".")
         current = config
-        
+
         # Navigate to parent object
         for k in keys[:-1]:
             if hasattr(current, k):
@@ -459,31 +459,31 @@ def set_value(key: str, value: str, project_path: str = "."):
             else:
                 console.print(f"[red]Invalid configuration path: {key}[/red]")
                 return
-        
+
         # Set the final value
         final_key = keys[-1]
         if hasattr(current, final_key):
             # Convert string value to appropriate type
             current_value = getattr(current, final_key)
             if isinstance(current_value, bool):
-                converted_value = value.lower() in ('true', '1', 'yes', 'on')
+                converted_value = value.lower() in ("true", "1", "yes", "on")
             elif isinstance(current_value, int):
                 converted_value = int(value)
             elif isinstance(current_value, list):
                 converted_value = [v.strip() for v in value.split(",")]
             else:
                 converted_value = value
-            
+
             setattr(current, final_key, converted_value)
-            
+
             # Save updated config
             config_path = project_path_obj / "claude-builder.json"
             config_manager.save_config(config, config_path)
-            
+
             console.print(f"[green]✓ Set {key} = {converted_value}[/green]")
         else:
             console.print(f"[red]Invalid configuration key: {final_key}[/red]")
-            
+
     except Exception as e:
         console.print(f"[red]Error setting configuration value: {e}[/red]")
         raise click.ClickException(f"Failed to set configuration value: {e}")
@@ -498,22 +498,22 @@ def reset(project_path: str, force: bool):
     try:
         project_path_obj = Path(project_path).resolve()
         config_manager = ConfigManager()
-        
+
         if not force:
             from rich.prompt import Confirm
             if not Confirm.ask("Reset configuration to defaults?"):
                 console.print("[yellow]Reset cancelled[/yellow]")
                 return
-        
+
         # Create default config
         config = config_manager.create_default_config(project_path_obj)
-        
+
         # Save config
         config_path = project_path_obj / "claude-builder.json"
         config_manager.save_config(config, config_path)
-        
+
         console.print("[green]✓ Configuration reset to defaults[/green]")
-        
+
     except Exception as e:
         console.print(f"[red]Error resetting configuration: {e}[/red]")
         raise click.ClickException(f"Failed to reset configuration: {e}")

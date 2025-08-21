@@ -8,7 +8,6 @@ from typing import Any, Dict, List, Optional
 
 import toml
 
-from claude_builder.utils.exceptions import AnalysisError
 from claude_builder.core.models import (
     ArchitecturePattern,
     ComplexityLevel,
@@ -20,6 +19,7 @@ from claude_builder.core.models import (
     ProjectAnalysis,
     ProjectType,
 )
+from claude_builder.utils.exceptions import AnalysisError
 
 
 class ProjectAnalyzer:
@@ -46,7 +46,7 @@ class ProjectAnalyzer:
             # Check if project path exists
             if not project_path.exists():
                 raise AnalysisError(f"Project path does not exist: {project_path}")
-                
+
             if not project_path.is_dir():
                 raise AnalysisError(f"Project path is not a directory: {project_path}")
 
@@ -421,14 +421,14 @@ class LanguageDetector:
 
                             language_lines[language] += lines
                             language_sizes[language] += size
-                        except:
+                        except (OSError, UnicodeDecodeError):
                             # Fallback estimates based on file size
                             try:
                                 size = item.stat().st_size
                                 estimated_lines = max(1, size // 50)  # Rough estimate
                                 language_lines[language] += estimated_lines
                                 language_sizes[language] += size
-                            except:
+                            except OSError:
                                 language_lines[language] += 50  # Minimal fallback
                                 language_sizes[language] += 2000
 
@@ -484,9 +484,9 @@ class LanguageDetector:
         # Create a minimal filesystem analysis for the test method
         filesystem_info = self._analyze_filesystem_for_language_detection(project_path)
         result = self.detect(project_path, filesystem_info)
-        
+
         # Add version_info field expected by tests
-        if hasattr(result, 'primary') and result.primary:
+        if hasattr(result, "primary") and result.primary:
             # Add version info based on detected language
             version_info = {result.primary: "detected"}
             # Create a new LanguageInfo with version_info
@@ -499,23 +499,23 @@ class LanguageDetector:
             )
             enhanced_result.version_info = version_info
             return enhanced_result
-        
+
         return result
 
     def _analyze_filesystem_for_language_detection(self, project_path: Path):
         """Minimal filesystem analysis for language detection."""
         from claude_builder.core.models import FileSystemInfo
-        
+
         info = FileSystemInfo()
         for item in project_path.rglob("*"):
             if item.is_file():
                 info.total_files += 1
                 if self._is_source_file(item):
                     info.source_files += 1
-                    
+
         # Get root files
         info.root_files = [f.name for f in project_path.iterdir() if f.is_file()]
-        
+
         return info
 
     def _is_source_file(self, path: Path) -> bool:
@@ -645,32 +645,32 @@ class FrameworkDetector:
     def detect_framework(self, project_path: Path, language: str) -> FrameworkInfo:
         """Test-compatible method for detecting frameworks."""
         # Create minimal filesystem analysis and language info
-        from claude_builder.core.models import FileSystemInfo, LanguageInfo
-        
+        from claude_builder.core.models import LanguageInfo
+
         filesystem_info = self._analyze_filesystem_for_framework_detection(project_path)
         language_info = LanguageInfo(primary=language, confidence=100.0)
-        
+
         result = self.detect(project_path, filesystem_info, language_info)
-        
+
         # Add details field expected by tests
-        if hasattr(result, 'primary') and result.primary:
+        if hasattr(result, "primary") and result.primary:
             details = {}
             # Classify framework type
             web_frameworks = ["django", "flask", "fastapi", "starlette", "react", "vue", "angular", "express", "nextjs", "nuxt", "svelte", "axum", "actix", "warp", "gin", "echo", "fiber", "spring", "springboot"]
             if result.primary in web_frameworks:
                 details["web_framework"] = True
-            
+
             result.details = details
-            
+
         return result
 
     def _analyze_filesystem_for_framework_detection(self, project_path: Path):
         """Minimal filesystem analysis for framework detection."""
         from claude_builder.core.models import FileSystemInfo
-        
+
         info = FileSystemInfo()
         info.root_files = [f.name for f in project_path.iterdir() if f.is_file()]
-        
+
         return info
 
     def _check_package_files(self, project_path: Path, primary_language: Optional[str]) -> Dict[str, float]:
@@ -710,7 +710,7 @@ class FrameworkDetector:
                     scores["cli_tool"] += 4
                 if "argparse" in content.lower():
                     scores["cli_tool"] += 2
-            except:
+            except (OSError, UnicodeDecodeError):
                 pass
 
         # Check pyproject.toml
@@ -744,7 +744,7 @@ class FrameworkDetector:
                 if "project" in pyproject_data and "scripts" in pyproject_data["project"]:
                     scores["cli_tool"] += 6
 
-            except:
+            except (OSError, toml.TomlDecodeError, ValueError):
                 # Fallback to text search
                 try:
                     content = pyproject_file.read_text()
@@ -756,7 +756,7 @@ class FrameworkDetector:
                         scores["fastapi"] += 5
                     if "click" in content.lower():
                         scores["cli_tool"] += 3
-                except:
+                except (OSError, UnicodeDecodeError):
                     pass
 
     def _check_npm_packages(self, project_path: Path, scores: Dict[str, float]) -> None:
@@ -786,7 +786,7 @@ class FrameworkDetector:
                         scores["nuxt"] += 5
                     elif "svelte" in dep:
                         scores["svelte"] += 5
-            except:
+            except (OSError, json.JSONDecodeError):
                 pass
 
     def _check_cargo_packages(self, project_path: Path, scores: Dict[str, float]) -> None:
@@ -808,7 +808,7 @@ class FrameworkDetector:
                         scores["warp"] += 5
                     elif "rocket" in dep:
                         scores["rocket"] += 5
-            except:
+            except (OSError, toml.TomlDecodeError, ValueError):
                 pass
 
     def _check_java_packages(self, project_path: Path, scores: Dict[str, float]) -> None:
@@ -822,7 +822,7 @@ class FrameworkDetector:
                     scores["spring"] += 5
                 if "spring-boot" in content.lower():
                     scores["springboot"] += 5
-            except:
+            except (OSError, UnicodeDecodeError):
                 pass
 
     def _check_source_patterns(self, project_path: Path) -> Dict[str, float]:
@@ -916,8 +916,8 @@ class DomainDetector:
                 content = source_file.read_text(encoding="utf-8", errors="ignore").lower()
                 self._check_indicators(content, scores, indicators)
                 checked_files += 1
-            except:
-                continue
+            except (OSError, UnicodeDecodeError):
+                pass
 
 
 class ComplexityAssessor:
@@ -1059,10 +1059,10 @@ class ArchitectureDetector:
 # Placeholder classes for test compatibility
 class AdvancedProjectDetector:
     """Placeholder AdvancedProjectDetector class for test compatibility."""
-    
+
     def __init__(self, project_path: Path):
         self.project_path = project_path
-        
+
     def detect_project_patterns(self) -> Dict[str, Any]:
         """Detect advanced project patterns."""
         return {
@@ -1071,7 +1071,7 @@ class AdvancedProjectDetector:
             "microservices": False,
             "domain_driven": False
         }
-        
+
     def analyze_architecture(self) -> Dict[str, str]:
         """Analyze project architecture."""
         return {
@@ -1083,39 +1083,39 @@ class AdvancedProjectDetector:
 
 class ArchitectureAnalyzer:
     """Placeholder ArchitectureAnalyzer class for test compatibility."""
-    
+
     def __init__(self, project_path: Path):
         self.project_path = project_path
-        
+
     def analyze_architecture(self) -> Dict[str, str]:
         return {"pattern": "layered", "confidence": "medium"}
 
 
 class PatternMatcher:
     """Placeholder PatternMatcher class for test compatibility."""
-    
+
     def __init__(self, patterns: List[str] = None):
         self.patterns = patterns or []
-        
+
     def match_files(self, file_paths: List[str]) -> List[str]:
         return [f for f in file_paths if any(p in f for p in self.patterns)]
-        
+
     def add_pattern(self, pattern: str):
         self.patterns.append(pattern)
 
 
 class TechnologyStackAnalyzer:
     """Placeholder TechnologyStackAnalyzer class for test compatibility."""
-    
+
     def __init__(self, project_path: Path):
         self.project_path = project_path
-        
+
     def analyze_stack(self) -> Dict[str, Any]:
         return {
             "languages": ["python", "javascript"],
             "frameworks": ["react", "flask"],
             "tools": ["webpack", "pytest"]
         }
-        
+
     def detect_language(self) -> str:
         return "python"

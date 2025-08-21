@@ -2,7 +2,6 @@
 engines:
   ruff:
     enabled: true
-    base_sub_dir: src/
   pylint:
     enabled: true
     python_version: 3

@@ -11,7 +11,11 @@ from rich.table import Table
 
 from claude_builder.core.config import ConfigManager
 from claude_builder.utils.exceptions import GitError
-from claude_builder.utils.git import GitBackupManager, GitHookManager, GitIntegrationManager
+from claude_builder.utils.git import (
+    GitBackupManager,
+    GitHookManager,
+    GitIntegrationManager,
+)
 
 console = Console()
 
@@ -542,11 +546,11 @@ def backup(project_path: str = "."):
 
         if not (project_path_obj / ".git").exists():
             console.print("[red]Not a git repository[/red]")
-            return
+            return None
 
         backup_manager = GitBackupManager()
         backup_id = backup_manager.create_backup(project_path_obj)
-        
+
         console.print(f"[green]✓ Backup created: {backup_id}[/green]")
         return backup_id
 
@@ -566,7 +570,7 @@ def restore(backup_id: str, project_path: str = "."):
 
         backup_manager = GitBackupManager()
         success = backup_manager.restore_backup(project_path_obj, backup_id)
-        
+
         if success:
             console.print(f"[green]✓ Restored from backup: {backup_id}[/green]")
         else:
