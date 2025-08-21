@@ -18,27 +18,56 @@ class TestGitCommands:
         assert result.exit_code == 0
         assert "Manage git integration features" in result.output
 
+    @patch('claude_builder.cli.git_commands.ConfigManager')
     @patch('claude_builder.cli.git_commands.GitIntegrationManager')
-    def test_setup_exclude_command(self, mock_git_manager_class, sample_python_project):
+    def test_setup_exclude_command(self, mock_git_manager_class, mock_config_manager_class, sample_python_project):
         """Test git exclude command."""
+        # Create actual .git directory structure for test
+        git_dir = sample_python_project / ".git"
+        git_info_dir = git_dir / "info"
+        git_info_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Mock config manager
+        mock_config_manager = Mock()
+        mock_config = Mock()
+        mock_config.git_integration.files_to_exclude = ['CLAUDE.md', 'AGENTS.md']
+        mock_config_manager.load_config.return_value = mock_config
+        mock_config_manager_class.return_value = mock_config_manager
+        
+        # Mock git manager
         mock_git_manager = Mock()
         mock_result = Mock()
         mock_result.success = True
-        mock_result.files_added = ['CLAUDE.md', 'AGENTS.md']
-        mock_result.exclude_file_path = '.git/info/exclude'
-        mock_git_manager.setup_git_exclude.return_value = mock_result
+        mock_result.operations_performed = ['Added CLAUDE.md to .git/info/exclude']
+        mock_git_manager.exclude_manager.add_excludes.return_value = mock_result
         mock_git_manager_class.return_value = mock_git_manager
         
         runner = CliRunner()
         result = runner.invoke(git, ['exclude', str(sample_python_project)])
         assert result.exit_code == 0
-        assert "Git exclude configured" in result.output or "configured" in result.output.lower()
+        assert "Files added to .git/info/exclude" in result.output
 
+    @patch('claude_builder.cli.git_commands.ConfigManager')
     @patch('claude_builder.cli.git_commands.GitIntegrationManager')
-    def test_setup_exclude_command_with_patterns(self, mock_git_manager_class, sample_python_project):
+    @patch('pathlib.Path.exists')
+    def test_setup_exclude_command_with_patterns(self, mock_path_exists, mock_git_manager_class, mock_config_manager_class, sample_python_project):
         """Test git setup-exclude command with custom patterns."""
+        # Mock .git directory exists
+        mock_path_exists.return_value = True
+        
+        # Mock config manager
+        mock_config_manager = Mock()
+        mock_config = Mock()
+        mock_config.git_integration.files_to_exclude = ['CLAUDE.md']
+        mock_config_manager.load_config.return_value = mock_config
+        mock_config_manager_class.return_value = mock_config_manager
+        
+        # Mock git manager
         mock_git_manager = Mock()
-        mock_git_manager.setup_git_exclude.return_value = Mock(success=True, files_added=['CLAUDE.md'])
+        mock_result = Mock()
+        mock_result.success = True
+        mock_result.operations_performed = ['Added CLAUDE.md to .git/info/exclude']
+        mock_git_manager.exclude_manager.add_excludes.return_value = mock_result
         mock_git_manager_class.return_value = mock_git_manager
         
         runner = CliRunner()
@@ -49,15 +78,28 @@ class TestGitCommands:
         ])
         assert result.exit_code == 0
 
+    @patch('claude_builder.cli.git_commands.ConfigManager')
     @patch('claude_builder.cli.git_commands.GitIntegrationManager')
-    def test_setup_exclude_command_dry_run(self, mock_git_manager_class, sample_python_project):
+    def test_setup_exclude_command_dry_run(self, mock_git_manager_class, mock_config_manager_class, sample_python_project):
         """Test git setup-exclude command with dry run."""
+        # Create actual .git directory structure for test
+        git_dir = sample_python_project / ".git"
+        git_info_dir = git_dir / "info"
+        git_info_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Mock config manager
+        mock_config_manager = Mock()
+        mock_config = Mock()
+        mock_config.git_integration.files_to_exclude = ['CLAUDE.md', 'AGENTS.md']
+        mock_config_manager.load_config.return_value = mock_config
+        mock_config_manager_class.return_value = mock_config_manager
+        
+        # Mock git manager
         mock_git_manager = Mock()
-        mock_git_manager.setup_git_exclude.return_value = Mock(
-            success=True,
-            dry_run=True,
-            files_would_add=['CLAUDE.md', 'AGENTS.md']
-        )
+        mock_result = Mock()
+        mock_result.success = True
+        mock_result.operations_performed = ['Would add CLAUDE.md to .git/info/exclude']
+        mock_git_manager.exclude_manager.add_excludes.return_value = mock_result
         mock_git_manager_class.return_value = mock_git_manager
         
         runner = CliRunner()
@@ -211,30 +253,44 @@ class TestGitCommands:
         result = runner.invoke(git, ['status', "/nonexistent/path"])
         assert result.exit_code != 0
 
+    @patch('claude_builder.cli.git_commands.ConfigManager')
     @patch('claude_builder.cli.git_commands.GitIntegrationManager')
-    def test_setup_exclude_command_failure(self, mock_git_manager_class, sample_python_project):
+    @patch('pathlib.Path.exists')
+    def test_setup_exclude_command_failure(self, mock_path_exists, mock_git_manager_class, mock_config_manager_class, sample_python_project):
         """Test git setup-exclude command when operation fails."""
+        # Mock .git directory exists
+        mock_path_exists.return_value = True
+        
+        # Mock config manager
+        mock_config_manager = Mock()
+        mock_config = Mock()
+        mock_config.git_integration.files_to_exclude = ['CLAUDE.md']
+        mock_config_manager.load_config.return_value = mock_config
+        mock_config_manager_class.return_value = mock_config_manager
+        
+        # Mock git manager with failure
         mock_git_manager = Mock()
-        mock_git_manager.setup_git_exclude.return_value = Mock(
-            success=False,
-            error_message="Permission denied accessing .git/info/exclude"
-        )
+        mock_result = Mock()
+        mock_result.success = False
+        mock_result.errors = ["Permission denied accessing .git/info/exclude"]
+        mock_git_manager.exclude_manager.add_excludes.return_value = mock_result
         mock_git_manager_class.return_value = mock_git_manager
         
         runner = CliRunner()
         result = runner.invoke(git, ['exclude', str(sample_python_project)])
         assert result.exit_code != 0
 
-    @patch('claude_builder.cli.git_commands.GitIntegrationManager')
-    def test_git_command_exception_handling(self, mock_git_manager_class, sample_python_project):
+    @patch('pathlib.Path.exists')
+    def test_git_command_exception_handling(self, mock_path_exists, sample_python_project):
         """Test git command exception handling."""
-        mock_git_manager = Mock()
-        mock_git_manager.get_git_status.side_effect = Exception("Git operation failed")
-        mock_git_manager_class.return_value = mock_git_manager
+        # Mock .git directory exists but then cause an exception
+        mock_path_exists.return_value = True
         
-        runner = CliRunner()
-        result = runner.invoke(git, ['status', str(sample_python_project)])
-        assert result.exit_code != 0
+        # Mock the file open to cause an exception
+        with patch('builtins.open', side_effect=Exception("File access failed")):
+            runner = CliRunner()
+            result = runner.invoke(git, ['status', str(sample_python_project)])
+            assert result.exit_code != 0
 
     @patch('claude_builder.cli.git_commands.GitIntegrationManager')
     def test_git_status_verbose(self, mock_git_manager_class, sample_python_project):
@@ -256,12 +312,23 @@ class TestGitCommands:
         ])
         assert result.exit_code == 0
 
-    def test_restore_command_missing_backup_file(self, sample_python_project):
+    @patch('claude_builder.cli.git_commands.GitBackupManager')
+    @patch('pathlib.Path.exists')
+    def test_restore_command_missing_backup_file(self, mock_path_exists, mock_backup_manager_class, sample_python_project):
         """Test git rollback command with missing backup ID."""
+        # Mock .git directory exists
+        mock_path_exists.return_value = True
+        
+        # Mock backup manager to fail restoration
+        mock_backup_manager = Mock()
+        mock_backup_manager.restore_backup.return_value = False
+        mock_backup_manager_class.return_value = mock_backup_manager
+        
         runner = CliRunner()
         result = runner.invoke(git, [
             'rollback',
             'nonexistent-backup',
-            str(sample_python_project)
+            str(sample_python_project),
+            '--force'
         ])
         assert result.exit_code != 0

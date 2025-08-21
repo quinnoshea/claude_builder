@@ -23,63 +23,120 @@ class TestTemplateCommands:
     def test_list_templates_command(self, mock_template_manager_class):
         """Test templates list command."""
         mock_template_manager = Mock()
+        
+        # Create mock templates with proper structure
+        mock_template1 = Mock()
+        mock_template1.metadata.name = "base"
+        mock_template1.metadata.version = "1.0"
+        mock_template1.metadata.author = "Claude Builder"
+        mock_template1.metadata.category = "Base"
+        mock_template1.metadata.languages = ["Any"]
+        mock_template1.metadata.description = "Base template"
+        mock_template1.installed = True
+        
+        mock_template2 = Mock()
+        mock_template2.metadata.name = "python"
+        mock_template2.metadata.version = "1.2"
+        mock_template2.metadata.author = "Claude Builder"
+        mock_template2.metadata.category = "Language"
+        mock_template2.metadata.languages = ["Python"]
+        mock_template2.metadata.description = "Python project template"
+        mock_template2.installed = False
+        
         mock_template_manager.list_available_templates.return_value = [
-            Mock(name="base", version="1.0", description="Base template"),
-            Mock(name="python", version="1.2", description="Python project template"),
-            Mock(name="react", version="2.0", description="React application template")
+            mock_template1,
+            mock_template2
         ]
         mock_template_manager_class.return_value = mock_template_manager
         
         runner = CliRunner()
         result = runner.invoke(templates, ['list'])
         assert result.exit_code == 0
+        assert "base" in result.output
+        assert "python" in result.output
 
     @patch('claude_builder.cli.template_commands.TemplateManager')
     def test_list_templates_command_json_format(self, mock_template_manager_class):
         """Test templates list command with JSON format."""
         mock_template_manager = Mock()
-        mock_template_manager.list_available_templates.return_value = [
-            Mock(name="base", version="1.0", description="Base template", 
-                 to_dict=lambda: {"name": "base", "version": "1.0", "description": "Base template"})
-        ]
+        
+        # Create mock template with proper structure for JSON
+        mock_template = Mock()
+        mock_template.id = "base-template"
+        mock_template.installed = True
+        mock_template.metadata.to_dict.return_value = {
+            "name": "base",
+            "version": "1.0",
+            "description": "Base template",
+            "author": "Claude Builder",
+            "category": "Base",
+            "languages": ["Any"]
+        }
+        
+        mock_template_manager.list_available_templates.return_value = [mock_template]
         mock_template_manager_class.return_value = mock_template_manager
         
         runner = CliRunner()
         result = runner.invoke(templates, ['list', "--format", "json"])
         assert result.exit_code == 0
+        assert "base" in result.output
+        assert "base-template" in result.output
 
     @patch('claude_builder.cli.template_commands.TemplateManager')
     def test_list_templates_command_filter_category(self, mock_template_manager_class):
         """Test templates list command with category filter."""
         mock_template_manager = Mock()
-        mock_template_manager.list_available_templates.return_value = [
-            Mock(name="python-web", version="1.0", category="language", description="Python web template")
-        ]
+        
+        # Create mock template with proper structure
+        mock_template = Mock()
+        mock_template.metadata.name = "python-web"
+        mock_template.metadata.version = "1.0"
+        mock_template.metadata.author = "Claude Builder"
+        mock_template.metadata.category = "language"  # This will be filtered
+        mock_template.metadata.languages = ["Python"]
+        mock_template.metadata.description = "Python web template"
+        mock_template.installed = False
+        
+        mock_template_manager.list_available_templates.return_value = [mock_template]
         mock_template_manager_class.return_value = mock_template_manager
         
         runner = CliRunner()
         result = runner.invoke(templates, ['list', "--category", "language"])
         assert result.exit_code == 0
+        assert "python-web" in result.output
 
     @patch('claude_builder.cli.template_commands.TemplateManager')
     def test_show_template_command(self, mock_template_manager_class):
         """Test templates show command."""
         mock_template_manager = Mock()
-        mock_template_manager.get_template_info.return_value = Mock(
-            name="python",
-            version="1.2",
-            description="Python project template",
-            category="language",
-            author="Claude Builder Team",
-            dependencies=["base"],
-            variables=["project_name", "python_version"],
-            files=["CLAUDE.md", "pyproject.toml"]
-        )
+        
+        # Create mock template with proper metadata structure
+        mock_template = Mock()
+        mock_template.installed = True
+        mock_template.id = "python-template"
+        mock_template.metadata.name = "python"
+        mock_template.metadata.version = "1.2"
+        mock_template.metadata.description = "Python project template"
+        mock_template.metadata.category = "language"
+        mock_template.metadata.author = "Claude Builder Team"
+        mock_template.metadata.license = "MIT"
+        mock_template.metadata.languages = ["Python"]
+        mock_template.metadata.frameworks = ["Django", "FastAPI"]
+        mock_template.metadata.project_types = ["Web", "API"]
+        mock_template.metadata.tags = ["python", "web"]
+        mock_template.metadata.homepage = None
+        mock_template.metadata.repository = None
+        mock_template.metadata.created = None
+        mock_template.metadata.updated = None
+        
+        mock_template_manager.get_template_info.return_value = mock_template
         mock_template_manager_class.return_value = mock_template_manager
         
         runner = CliRunner()
         result = runner.invoke(templates, ['info', "python"])
         assert result.exit_code == 0
+        assert "python" in result.output
+        assert "Python project template" in result.output
 
     @patch('claude_builder.cli.template_commands.TemplateManager')
     def test_show_template_command_with_content(self, mock_template_manager_class):
