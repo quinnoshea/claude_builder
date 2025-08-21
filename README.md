@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![CI](https://github.com/quinnoshea/claude_builder/workflows/CI/badge.svg)](https://github.com/quinnoshea/claude_builder/actions)
-[![Tests](https://img.shields.io/badge/tests-59%20passing-brightgreen.svg)](https://github.com/quinnoshea/claude_builder/tree/main/tests)
+[![Tests](https://img.shields.io/badge/tests-415%20passing-brightgreen.svg)](https://github.com/quinnoshea/claude_builder/tree/main/tests)
 [![Codacy Badge](https://app.codacy.com/project/badge/Coverage/c0920529ab54462387f217498a4e01db)](https://app.codacy.com/gh/quinnoshea/claude_builder/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_coverage)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/c0920529ab54462387f217498a4e01db)](https://app.codacy.com/gh/quinnoshea/claude_builder/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![Performance](https://img.shields.io/badge/analysis-%3C1s-brightgreen.svg)](https://github.com/quinnoshea/claude_builder)
@@ -25,7 +25,7 @@ Transform any codebase into an optimized development environment with intelligen
 **System Status**: ✅ **PRODUCTION-READY** with exceptional performance  
 **Performance**: <1 second analysis (30x faster than target)  
 **Accuracy**: 90%+ detection across 15+ languages and 25+ frameworks  
-**Testing**: 59 tests passing with comprehensive CI/CD pipeline  
+**Testing**: 415 tests passing with comprehensive CI/CD pipeline  
 
 ## 🌟 What Makes Claude Builder Special
 
@@ -324,7 +324,7 @@ claude_builder/                    # 📦 Production-ready system
 │       ├── git.py               # 🌿 Safe git operations
 │       ├── validation.py        # ✅ Input validation
 │       └── exceptions.py        # 🚨 Error handling
-├── tests/                        # 🧪 Comprehensive test suite (59 tests)
+├── tests/                        # 🧪 Comprehensive test suite (415 tests)
 │   ├── unit/phase1_core/        # 🔬 Core functionality tests
 │   ├── unit/phase2_intelligence/# 🧠 Intelligence layer tests  
 │   ├── unit/phase3_cli/         # 💻 CLI integration tests
@@ -386,7 +386,7 @@ your-project/                     # 🎯 Your analyzed project
 
 ### **🔬 Testing Infrastructure** (Production-Grade)
 ```bash
-# Complete test suite (59 tests passing)
+# Complete test suite (415 tests passing)
 pytest tests/ --cov=claude_builder --cov-report=term-missing
 # ✅ Coverage: 85%+ maintained across all modules
 
