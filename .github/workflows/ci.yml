@@ -124,7 +124,7 @@ jobs:
         project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
         upload: true
         max-allowed-issues: 2147483647
-        tool: "bandit,ruff,pylint,semgrep"
+        # Run default set of tools; selection controlled by .codacy.yml
         
     - name: Generate code complexity report
       run: |
