@@ -1,0 +1,15 @@
+configs:
+  - p/python
+
+# Limit the scan to Python source files under src/
+include:
+  - src/**/*.py
+
+exclude:
+  - tests/**
+  - docs/**
+  - scripts/**
+  - htmlcov/**
+  - .github/**
+  - src/claude_builder/templates/**
+  - **/*.md

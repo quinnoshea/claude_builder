@@ -12,7 +12,7 @@ engines:
   markdownlint:
     enabled: true
   semgrep:
-    enabled: false  # Disabled due to proprietary extension issues in CI
+    enabled: true
 
 exclude_paths:
   - "tests/**"
@@ -20,3 +20,5 @@ exclude_paths:
   - "htmlcov/**"
   - "*.egg-info/**"
   - "scripts/**"
+  - ".github/**"
+  - "src/claude_builder/templates/**"
