@@ -94,7 +94,7 @@ jobs:
         verbose: true
         
     - name: Upload coverage to Codacy
-      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11' && secrets.CODACY_PROJECT_TOKEN != ''
       continue-on-error: true
       uses: codacy/codacy-coverage-reporter-action@v1
       with:
@@ -127,8 +127,18 @@ jobs:
         python -m pip install --upgrade pip
         pip install -e ".[dev,test]"
         
+    - name: Check Codacy token availability
+      run: |
+        if [ -z "${{ secrets.CODACY_PROJECT_TOKEN }}" ]; then
+          echo "⚠️ CODACY_PROJECT_TOKEN is not set - Codacy analysis will be skipped"
+        else
+          echo "✅ CODACY_PROJECT_TOKEN is configured"
+        fi
+        
     - name: Codacy Analysis (ruff)
-      uses: codacy/codacy-analysis-cli-action@master
+      if: ${{ secrets.CODACY_PROJECT_TOKEN != '' }}
+      continue-on-error: true
+      uses: codacy/codacy-analysis-cli-action@v4
       with:
         project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
         upload: true
@@ -137,7 +147,9 @@ jobs:
         directory: "${{ github.workspace }}/src"
 
     - name: Codacy Analysis (pylint)
-      uses: codacy/codacy-analysis-cli-action@master
+      if: ${{ secrets.CODACY_PROJECT_TOKEN != '' }}
+      continue-on-error: true
+      uses: codacy/codacy-analysis-cli-action@v4
       with:
         project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
         upload: true
@@ -146,7 +158,9 @@ jobs:
         directory: "${{ github.workspace }}/src"
 
     - name: Codacy Analysis (bandit)
-      uses: codacy/codacy-analysis-cli-action@master
+      if: ${{ secrets.CODACY_PROJECT_TOKEN != '' }}
+      continue-on-error: true
+      uses: codacy/codacy-analysis-cli-action@v4
       with:
         project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
         upload: true
@@ -155,7 +169,9 @@ jobs:
         directory: "${{ github.workspace }}/src"
 
     - name: Codacy Analysis (semgrep)
-      uses: codacy/codacy-analysis-cli-action@master
+      if: ${{ secrets.CODACY_PROJECT_TOKEN != '' }}
+      continue-on-error: true
+      uses: codacy/codacy-analysis-cli-action@v4
       with:
         project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
         upload: true
