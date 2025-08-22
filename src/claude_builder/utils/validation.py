@@ -13,12 +13,24 @@ class ValidationResult:
     error: Optional[str] = None
     warnings: List[str] = None
     suggestions: List[str] = None
+    errors: List[str] = None
 
     def __post_init__(self):
         if self.warnings is None:
             self.warnings = []
         if self.suggestions is None:
             self.suggestions = []
+        if self.errors is None:
+            self.errors = []
+        # Support both error (singular) and errors (plural)
+        if self.error and self.error not in self.errors:
+            self.errors.append(self.error)
+            
+    def has_errors(self) -> bool:
+        return len(self.errors) > 0
+
+    def has_warnings(self) -> bool:
+        return len(self.warnings) > 0
 
 
 def validate_project_path(project_path: Path) -> ValidationResult:
@@ -239,18 +251,45 @@ def validate_directory_structure(directory: Path, expected_structure: dict) -> V
 
 # Placeholder classes for test compatibility
 class ConfigValidator:
-    """Placeholder ConfigValidator class for test compatibility."""
+    """Enhanced ConfigValidator class."""
 
     def __init__(self):
         self.rules = []
 
     def validate_project_config(self, config: dict) -> dict:
         """Validate project configuration."""
-        return {
-            "is_valid": True,
-            "errors": [],
-            "warnings": []
-        }
+        return self.validate_config(config)
+    
+    def validate_config(self, config: dict) -> ValidationResult:
+        """Validate configuration with detailed analysis."""
+        errors = []
+        warnings = []
+        
+        # Validate project section
+        if "project" in config:
+            project_config = config["project"]
+            
+            # Validate project name
+            if "name" not in project_config or not project_config["name"]:
+                errors.append("Project name is required and cannot be empty")
+            
+            # Validate project type
+            if "type" in project_config:
+                valid_types = {"python", "rust", "javascript", "java", "go", "multi_language"}
+                if project_config["type"] not in valid_types:
+                    errors.append(f"Invalid project type: {project_config['type']}")
+        
+        # Validate analysis section
+        if "analysis" in config:
+            analysis_config = config["analysis"]
+            
+            # Validate analysis depth
+            if "depth" in analysis_config:
+                valid_depths = {"shallow", "standard", "deep"}
+                if analysis_config["depth"] not in valid_depths:
+                    errors.append(f"Invalid analysis depth: {analysis_config['depth']}")
+        
+        return ValidationResult(is_valid=len(errors) == 0, errors=errors, warnings=warnings)
 
     def add_validation_rule(self, rule):
         """Add validation rule."""
@@ -258,7 +297,7 @@ class ConfigValidator:
 
 
 class DataValidator:
-    """Placeholder DataValidator class for test compatibility."""
+    """Enhanced DataValidator class."""
 
     def validate_version(self, version: str) -> bool:
         """Validate version string."""
@@ -271,21 +310,26 @@ class DataValidator:
         import re
         pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
         return bool(re.match(pattern, email))
+    
+    def validate_project_name(self, name: str) -> bool:
+        """Validate project name."""
+        if not name:
+            return False
+        
+        # Check for spaces
+        if " " in name:
+            return False
+            
+        # Check if starts with number
+        if name[0].isdigit():
+            return False
+            
+        # Check for valid characters (letters, numbers, hyphens, underscores)
+        import re
+        pattern = r"^[a-zA-Z][a-zA-Z0-9_-]*$"
+        return bool(re.match(pattern, name))
 
 
-class ValidationResult:
-    """Placeholder ValidationResult class for test compatibility."""
-
-    def __init__(self, is_valid: bool, errors: list = None, warnings: list = None):
-        self.is_valid = is_valid
-        self.errors = errors or []
-        self.warnings = warnings or []
-
-    def has_errors(self) -> bool:
-        return len(self.errors) > 0
-
-    def has_warnings(self) -> bool:
-        return len(self.warnings) > 0
 
 
 class ValidationError:
@@ -302,29 +346,128 @@ class ValidationError:
 
 
 class PathValidator:
-    """Placeholder PathValidator class for test compatibility."""
+    """Enhanced PathValidator class."""
 
     def __init__(self):
         self.valid_paths = []
 
     def validate_path(self, path: str) -> bool:
         return Path(path).exists()
+    
+    def is_valid_file(self, file_path) -> bool:
+        """Check if path is a valid file."""
+        if isinstance(file_path, str):
+            file_path = Path(file_path)
+        return file_path.exists() and file_path.is_file()
+    
+    def is_valid_directory(self, dir_path) -> bool:
+        """Check if path is a valid directory."""
+        if isinstance(dir_path, str):
+            dir_path = Path(dir_path)
+        return dir_path.exists() and dir_path.is_dir()
+    
+    def is_readable(self, path) -> bool:
+        """Check if path is readable."""
+        if isinstance(path, str):
+            path = Path(path)
+        return path.exists() and os.access(path, os.R_OK)
+    
+    def is_writable(self, path) -> bool:
+        """Check if path is writable."""
+        if isinstance(path, str):
+            path = Path(path)
+        return path.exists() and os.access(path, os.W_OK)
 
     def validate_project_structure(self, project_path: str) -> ValidationResult:
-        return ValidationResult(is_valid=True)
+        """Validate project structure."""
+        path = Path(project_path)
+        
+        if not self.is_valid_directory(path):
+            return ValidationResult(
+                is_valid=False, 
+                errors=[f"Invalid project directory: {project_path}"],
+                warnings=[]
+            )
+            
+        return ValidationResult(is_valid=True, errors=[], warnings=[])
 
 
 class ProjectValidator:
-    """Placeholder ProjectValidator class for test compatibility."""
+    """Enhanced ProjectValidator class."""
 
     def __init__(self):
         self.validation_rules = []
+        from .file_patterns import ProjectTypeDetector
+        self.type_detector = ProjectTypeDetector()
 
-    def validate_project(self, project_path: str) -> ValidationResult:
-        return ValidationResult(is_valid=True, warnings=["Mock validation"])
+    def validate_project(self, project_path) -> ValidationResult:
+        """Validate project with comprehensive analysis."""
+        if isinstance(project_path, str):
+            project_path = Path(project_path)
+            
+        errors = []
+        warnings = []
+        detected_files = []
+        
+        # Basic path validation
+        if not project_path.exists():
+            return ValidationResult(
+                is_valid=False, 
+                errors=[f"Project path does not exist: {project_path}"],
+                warnings=warnings
+            )
+        
+        # Detect project type
+        project_type = self.type_detector.detect_project_type(str(project_path))
+        
+        # Get project files for analysis
+        project_files = [f.name for f in project_path.rglob("*") if f.is_file()]
+        detected_files = project_files[:20]  # Limit for performance
+        
+        # Validate based on project type
+        if project_type == "unknown":
+            if not project_files:
+                errors.append("Empty project directory")
+            else:
+                # Check if it's really a software project
+                source_extensions = {".py", ".rs", ".js", ".ts", ".java", ".go", ".cpp", ".c", ".h"}
+                has_source_files = any(Path(f).suffix.lower() in source_extensions for f in project_files)
+                config_files = {"package.json", "Cargo.toml", "pyproject.toml", "requirements.txt", "pom.xml", "build.gradle", "go.mod"}
+                has_config_files = any(f in config_files for f in project_files)
+                
+                if not has_source_files and not has_config_files:
+                    errors.append("No recognizable project structure found")
+                else:
+                    warnings.append("Could not determine project type")
+        
+        # Check for specific project type indicators
+        project_indicators = {
+            "python": ["setup.py", "pyproject.toml", "requirements.txt"],
+            "rust": ["Cargo.toml"],
+            "javascript": ["package.json"],
+            "java": ["pom.xml", "build.gradle"]
+        }
+        
+        if project_type in project_indicators:
+            required_files = project_indicators[project_type]
+            found_indicators = [f for f in required_files if f in project_files]
+            if found_indicators:
+                detected_files.extend(found_indicators)
+            else:
+                warnings.append(f"No standard {project_type} project files found")
+        
+        is_valid = len(errors) == 0
+        
+        # Create enhanced ValidationResult
+        result = ValidationResult(is_valid=is_valid, errors=errors, warnings=warnings)
+        result.project_type = project_type
+        result.detected_files = detected_files
+        
+        return result
 
     def add_validation_rule(self, rule):
         self.validation_rules.append(rule)
 
     def check_project_structure(self, project_path: str) -> bool:
-        return True
+        result = self.validate_project(project_path)
+        return result.is_valid

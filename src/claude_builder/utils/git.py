@@ -542,19 +542,19 @@ commit_msg=$(cat "$COMMIT_FILE")
 # Apply filtering based on policy
 if [ "{policy_value}" = "forbidden" ]; then
     # Remove all Claude/AI mentions
-    echo "$commit_msg" | \
-        sed 's/\bClaude\b/AI assistant/gi' | \
-        sed 's/\bAI generated\?\b/Auto-generated/gi' | \
-        sed 's/Generated with Claude Code/Auto-generated/gi' | \
-        sed 's/\bAI\b/automated/gi' | \
-        sed 's/claude-builder/code generator/gi' \
+    echo "$commit_msg" | \\
+        sed 's/\\bClaude\\b/AI assistant/gi' | \\
+        sed 's/\\bAI generated\\?\\b/Auto-generated/gi' | \\
+        sed 's/Generated with Claude Code/Auto-generated/gi' | \\
+        sed 's/\\bAI\\b/automated/gi' | \\
+        sed 's/claude-builder/code generator/gi' \\
         > "$TEMP_FILE"
 elif [ "{policy_value}" = "minimal" ]; then
     # Remove Claude mentions but keep general AI terms
-    echo "$commit_msg" | \
-        sed 's/\bClaude\b/AI assistant/gi' | \
-        sed 's/Generated with Claude Code/Auto-generated/gi' | \
-        sed 's/claude-builder/code generator/gi' \
+    echo "$commit_msg" | \\
+        sed 's/\\bClaude\\b/AI assistant/gi' | \\
+        sed 's/Generated with Claude Code/Auto-generated/gi' | \\
+        sed 's/claude-builder/code generator/gi' \\
         > "$TEMP_FILE"
 else
     # Policy is 'allowed' - no filtering
@@ -738,7 +738,7 @@ for file in $staged_files; do
         case "$file" in
             *.py|*.js|*.ts|*.jsx|*.tsx|*.rs|*.go|*.java|*.cpp|*.c|*.h)
                 if [ "{policy_value}" = "forbidden" ]; then
-                    if grep -i "claude\|claude code\|claude builder" "$file" >/dev/null 2>&1; then
+                    if grep -i "claude\\|claude code\\|claude builder" "$file" >/dev/null 2>&1; then
                         echo "Error: Found Claude mention in $file (policy: forbidden)"
                         echo "Please remove Claude references from source code files."
                         exit 1
