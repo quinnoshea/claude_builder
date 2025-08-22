@@ -3,6 +3,10 @@ __pycache__/
 *.py[codz]
 *$py.class
 
+# Test and development files
+test_failures_report.txt
+*_failures_report.txt
+
 # C extensions
 *.so
 
