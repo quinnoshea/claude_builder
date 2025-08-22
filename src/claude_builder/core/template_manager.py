@@ -607,7 +607,7 @@ class TemplateManager:
         community_templates = self._discover_community_templates()
 
         for template in community_templates:
-            if template_id in (template.id, template.metadata.name):
+            if template.id == template_id or template.metadata.name == template_id:
                 return template
 
         return None
@@ -794,13 +794,14 @@ class Template:
         # Return specific content based on template name
         if "claude" in self.name.lower():
             return "# Claude Instructions\n\nThis project provides Claude Code instructions."
-        if "readme" in self.name.lower():
+        elif "readme" in self.name.lower():
             # Use context if provided for project name
-            project_name = context.get("project_name", "sample_python_project")
+            project_name = context.get('project_name', 'sample_python_project')
             return f"# README\n\nThis is the project README for {project_name}."
-        if "contributing" in self.name.lower():
+        elif "contributing" in self.name.lower():
             return "# Contributing to Project\n\nContribution guidelines."
-        return f"# {self.name.title()}\n\nGenerated content for {self.name}."
+        else:
+            return f"# {self.name.title()}\n\nGenerated content for {self.name}."
 
 
 class TemplateBuilder:
@@ -846,7 +847,7 @@ class TemplateEcosystem:
 class TemplateError(Exception):
     """Placeholder TemplateError class for test compatibility."""
 
-    def __init__(self, message: str, template_name: Optional[str] = None):
+    def __init__(self, message: str, template_name: str = None):
         super().__init__(message)
         self.template_name = template_name
 
@@ -893,15 +894,13 @@ class TemplateLoader:
         template_path = self._find_template(template_name)
 
         if not template_path:
-            msg = f"{TEMPLATE_NOT_FOUND}: {template_name}"
-            raise FileNotFoundError(msg)
+            raise FileNotFoundError(f"{TEMPLATE_NOT_FOUND}: {template_name}")
 
         try:
             with open(template_path, encoding="utf-8") as f:
                 return f.read()
         except Exception as e:
-            msg = f"{FAILED_TO_LOAD_TEMPLATE} {template_name}: {e}"
-            raise OSError(msg)
+            raise OSError(f"{FAILED_TO_LOAD_TEMPLATE} {template_name}: {e}")
 
     def list_templates(self) -> List[str]:
         """List all available templates."""
@@ -941,7 +940,7 @@ class TemplateLoader:
 class TemplateRepository:
     """Placeholder TemplateRepository class for test compatibility."""
 
-    def __init__(self, repo_url: Optional[str] = None):
+    def __init__(self, repo_url: str = None):
         self.repo_url = repo_url or "https://github.com/example/templates"
         self.templates = {}
 
@@ -993,8 +992,9 @@ class TemplateRenderer:
         rendered_content = self._process_conditionals(rendered_content, variables)
 
         # Handle lists: {{#each items}}{{item}}{{/each}}
-        return self._process_lists(rendered_content, variables)
+        rendered_content = self._process_lists(rendered_content, variables)
 
+        return rendered_content
 
     def render_file(self, template_path: str, output_path: str, variables: Dict[str, Any]) -> bool:
         """Render template file to output file.
@@ -1025,7 +1025,8 @@ class TemplateRenderer:
 
             return True
 
-        except Exception:
+        except Exception as e:
+            print(f"Error rendering template file: {e}")
             return False
 
     def _process_conditionals(self, content: str, variables: Dict[str, Any]) -> str:
@@ -1095,7 +1096,7 @@ class CoreTemplateManager:
         """Load template content."""
         return self.loader.load_template(template_name)
 
-    def compose_templates(self, base_template: str, overlay_templates: Optional[List[str]] = None) -> str:
+    def compose_templates(self, base_template: str, overlay_templates: List[str] = None) -> str:
         """Compose hierarchical templates.
 
         Args:

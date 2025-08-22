@@ -30,7 +30,7 @@ class DocumentGenerator:
         """Generate all documentation for the project."""
         try:
             # Create template request
-            TemplateRequest(
+            request = TemplateRequest(
                 analysis=analysis,
                 template_name=self.config.get("preferred_template"),
                 output_format=self.config.get("output_format", "files"),
@@ -63,8 +63,7 @@ class DocumentGenerator:
             )
 
         except Exception as e:
-            msg = f"{FAILED_TO_GENERATE_DOCUMENTATION}: {e}"
-            raise GenerationError(msg)
+            raise GenerationError(f"{FAILED_TO_GENERATE_DOCUMENTATION}: {e}")
 
     def _generate_core_docs(self, analysis: ProjectAnalysis) -> Dict[str, str]:
         """Generate core documentation files using new template system."""
@@ -884,31 +883,33 @@ ${uses_database == 'Yes' and '''
 *Generated: ${timestamp}*
 """
 
-    def render_template_with_manager(self, template, template_manager, context: Optional[Dict[str, Any]] = None) -> str:
+    def render_template_with_manager(self, template, template_manager, context: Dict[str, Any] = None) -> str:
         """Render template using provided template manager (for test compatibility)."""
         try:
             # Handle different template object types
-            if hasattr(template, "render"):
+            if hasattr(template, 'render'):
                 return template.render(**(context or {}))
-            if hasattr(template, "content"):
+            elif hasattr(template, 'content'):
                 # Simple string substitution for mock templates
                 content = template.content
                 if context:
                     for key, value in context.items():
                         content = content.replace(f"${{{key}}}", str(value))
                 return content
-            if hasattr(template, "name"):
+            elif hasattr(template, 'name'):
                 # Return mock content based on template name
                 template_name = template.name
                 if "claude" in template_name.lower():
                     return "# Claude Instructions\n\nThis project provides Claude Code instructions."
-                if "readme" in template_name.lower():
+                elif "readme" in template_name.lower():
                     return "# README\n\nThis is the project README."
-                if "contributing" in template_name.lower():
+                elif "contributing" in template_name.lower():
                     return "# Contributing\n\nContribution guidelines."
-                return f"# {template_name.title()}\n\nGenerated content for {template_name}."
-            # Return generic mock content
-            return "# Generated Template\n\nMock template content."
+                else:
+                    return f"# {template_name.title()}\n\nGenerated content for {template_name}."
+            else:
+                # Return generic mock content
+                return "# Generated Template\n\nMock template content."
         except Exception as e:
             return f"Error rendering template {template}: {e}"
 
@@ -927,8 +928,7 @@ class TemplateLoader:
         try:
             return self.template_manager.get_template(template_name)
         except Exception as e:
-            msg = f"{FAILED_TO_LOAD_TEMPLATE} '{template_name}': {e}"
-            raise GenerationError(msg)
+            raise GenerationError(f"{FAILED_TO_LOAD_TEMPLATE} '{template_name}': {e}")
 
     def load_templates(self, template_names: List[str]) -> Dict[str, str]:
         """Load multiple templates."""
@@ -949,21 +949,22 @@ class TemplateLoader:
         except Exception:
             return False
 
-    def render_template_with_manager(self, template_manager, template_name: str, context: Optional[Dict[str, Any]] = None) -> str:
+    def render_template_with_manager(self, template_manager, template_name: str, context: Dict[str, Any] = None) -> str:
         """Render template using provided template manager (for test compatibility)."""
         try:
             # Get template using the provided manager
             template = template_manager.get_template(template_name)
-            if template and hasattr(template, "render"):
+            if template and hasattr(template, 'render'):
                 return template.render(**(context or {}))
-            if template and hasattr(template, "content"):
+            elif template and hasattr(template, 'content'):
                 # Simple string substitution for mock templates
                 content = template.content
                 if context:
                     for key, value in context.items():
                         content = content.replace(f"${{{key}}}", str(value))
                 return content
-            # Return mock content
-            return f"Rendered template: {template_name}"
+            else:
+                # Return mock content
+                return f"Rendered template: {template_name}"
         except Exception as e:
             return f"Error rendering template {template_name}: {e}"

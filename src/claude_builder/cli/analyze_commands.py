@@ -65,8 +65,7 @@ def project(project_path: str, output: Optional[str], output_format: str,
 
     except Exception as e:
         console.print(f"[red]Error analyzing project: {e}[/red]")
-        msg = f"{FAILED_TO_ANALYZE_PROJECT}: {e}"
-        raise click.ClickException(msg)
+        raise click.ClickException(f"{FAILED_TO_ANALYZE_PROJECT}: {e}")
 
 
 def _display_analysis_table(analysis, include_suggestions: bool, verbose: int):

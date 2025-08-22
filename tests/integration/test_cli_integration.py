@@ -50,7 +50,7 @@ class TestAnalyzeCLI:
             # Use correct CLI structure: PROJECT_PATH analyze project TARGET_PATH
             result = runner.invoke(cli, [
                 str(sample_python_project),
-                "analyze",
+                "analyze", 
                 "project",
                 str(sample_python_project),
                 "--format", "json",
@@ -81,7 +81,7 @@ format = "json"
                 "--config", str(config_file),
                 str(sample_python_project),
                 "analyze",
-                "project",
+                "project", 
                 str(sample_python_project)
             ])
 
@@ -127,9 +127,9 @@ class TestGenerateCLI:
                 "claude-md",
                 str(sample_python_project)
             ])
-
+            
             assert result.exit_code == 0
-
+            
             # Check that CLAUDE.md was created in the project directory
             claude_md_path = Path(sample_python_project) / "CLAUDE.md"
             assert claude_md_path.exists(), f"CLAUDE.md not found in project directory: {sample_python_project}"
@@ -177,7 +177,7 @@ class TestConfigCLI:
         with runner.isolated_filesystem():
             # Create a minimal project structure
             Path("README.md").write_text("# Test Project")
-
+            
             result = runner.invoke(cli, [".", "config", "init", "."])
 
             assert result.exit_code == 0
@@ -187,7 +187,7 @@ class TestConfigCLI:
         """Test showing current configuration."""
         runner = CliRunner()
 
-        # Create a valid config file by first running config init in that directory
+        # Create a valid config file by first running config init in that directory  
         import os
         old_cwd = os.getcwd()
         try:
@@ -212,7 +212,7 @@ class TestConfigCLI:
         with runner.isolated_filesystem():
             # Create minimal project structure
             Path("README.md").write_text("# Test Project")
-
+            
             # Initialize config first
             init_result = runner.invoke(cli, [".", "config", "init", "."])
             assert init_result.exit_code == 0
@@ -240,7 +240,7 @@ class TestCLIWorkflow:
         with runner.isolated_filesystem():
             # Create minimal project structure in isolated filesystem
             Path("README.md").write_text("# Test Project")
-
+            
             # Step 1: Initialize configuration
             result = runner.invoke(cli, [".", "config", "init", "."])
             assert result.exit_code == 0
@@ -262,7 +262,7 @@ class TestCLIWorkflow:
                 str(sample_python_project)
             ])
             assert result.exit_code == 0
-
+            
             # Step 4: Verify generated files
             claude_md_path = Path(sample_python_project) / "CLAUDE.md"
             assert claude_md_path.exists()

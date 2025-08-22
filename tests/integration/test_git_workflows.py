@@ -12,10 +12,8 @@ Tests the complete git integration including:
 from unittest.mock import Mock, patch
 
 import pytest
-
 from claude_builder.core.analyzer import ProjectAnalyzer
 from claude_builder.core.generator import DocumentGenerator
-
 # from claude_builder.utils.git import AdvancedGitAnalyzer  # Not yet implemented
 
 
@@ -27,12 +25,12 @@ class TestGitAnalysisIntegration:
         # Create test files in the git repository
         (mock_git_repo / "main.py").write_text("print('Hello World')")
         (mock_git_repo / "requirements.txt").write_text("fastapi\nuvicorn")
-
+        
         # Use current ProjectAnalyzer API
         analyzer = ProjectAnalyzer()
         analysis_result = analyzer.analyze(mock_git_repo)
 
-        # Verify analysis worked on git repository
+        # Verify analysis worked on git repository  
         assert analysis_result.project_path == mock_git_repo
         assert analysis_result.language_info.primary == "python"
         # Note: Git integration features not yet implemented in current codebase

@@ -1,7 +1,9 @@
 """File pattern utilities for project analysis."""
 
+import fnmatch
+import re
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 
 class FilePatterns:
@@ -324,7 +326,7 @@ class ConfigFileDetector:
         }
 
         for file_path in target_path.rglob("*"):
-            if file_path.is_file() and (FilePatterns.is_config_file(file_path) or file_path.name.startswith(".docker")):
+            if file_path.is_file() and (FilePatterns.is_config_file(file_path) or file_path.name.startswith('.docker')):
                 filename = file_path.name
                 relative_path = str(file_path.relative_to(target_path))
 
@@ -339,7 +341,7 @@ class ConfigFileDetector:
                     config_files["typescript"].append(relative_path)
                 elif filename in {"Cargo.toml", "Cargo.lock", "rust-toolchain.toml"}:
                     config_files["rust"].append(relative_path)
-                elif filename in {"Dockerfile", "docker-compose.yml", "docker-compose.yaml"} or filename.startswith(".docker"):
+                elif filename in {"Dockerfile", "docker-compose.yml", "docker-compose.yaml"} or filename.startswith('.docker'):
                     config_files["docker"].append(relative_path)
                 else:
                     config_files["general"].append(relative_path)
@@ -379,7 +381,7 @@ class ConfigFileDetector:
 class FilePatternMatcher:
     """Advanced file pattern matching system."""
 
-    def __init__(self, patterns: Optional[List[str]] = None):
+    def __init__(self, patterns: List[str] = None):
         # Default patterns cover common file types
         self.patterns = patterns or [
             "*.py", "*.js", "*.ts", "*.rs", "*.go", "*.java", "*.cpp", "*.c", "*.h",
@@ -415,7 +417,7 @@ class FilePatternMatcher:
         """Check if file content matches regex pattern."""
         try:
             import re
-            content = file_path.read_text(encoding="utf-8", errors="ignore")
+            content = file_path.read_text(encoding='utf-8', errors='ignore')
             return bool(re.search(regex_pattern, content))
         except Exception:
             return False
@@ -448,15 +450,17 @@ class LanguageDetector:
         # Try shebang detection
         if file_path.exists():
             try:
-                content = file_path.read_text(encoding="utf-8", errors="ignore")
-                first_line = content.split("\n")[0] if content else ""
+                content = file_path.read_text(encoding='utf-8', errors='ignore')
+                first_line = content.split('\n')[0] if content else ""
 
-                if first_line.startswith("#!"):
-                    if "python" in first_line:
+                if first_line.startswith('#!'):
+                    if 'python' in first_line:
                         return "python"
-                    if "node" in first_line:
+                    elif 'node' in first_line:
                         return "javascript"
-                    if "bash" in first_line or "/bin/sh" in first_line or "/usr/bin/sh" in first_line:
+                    elif 'bash' in first_line:
+                        return "bash"
+                    elif '/bin/sh' in first_line or '/usr/bin/sh' in first_line:
                         return "bash"
 
                 # Try content pattern matching
@@ -497,7 +501,7 @@ class LanguageDetector:
             project_path = Path(project_path)
 
         stats = self.get_language_stats(str(project_path))
-        sum(stats.values())
+        total_files = sum(stats.values())
 
         # Return format expected by tests: language -> {"file_count": count}
         result = {}
@@ -510,9 +514,9 @@ class LanguageDetector:
 class PatternRule:
     """Advanced pattern rule for project detection."""
 
-    def __init__(self, name: Optional[str] = None, description: Optional[str] = None, patterns: Optional[List[str]] = None,
-                 priority: float = 1.0, required_patterns: Optional[List[str]] = None,
-                 weight_factors: Optional[Dict[str, float]] = None, pattern: Optional[str] = None, action: str = "include"):
+    def __init__(self, name: str = None, description: str = None, patterns: List[str] = None,
+                 priority: float = 1.0, required_patterns: List[str] = None,
+                 weight_factors: Dict[str, float] = None, pattern: str = None, action: str = "include"):
         # Support both new and legacy interfaces
         if pattern and not patterns:
             self.pattern = pattern
@@ -539,7 +543,7 @@ class PatternRule:
     def evaluate_match(self, project_path: Path):
         """Evaluate pattern rule against project."""
         from collections import namedtuple
-        MatchResult = namedtuple("MatchResult", ["matches", "confidence", "matched_patterns", "score"])
+        MatchResult = namedtuple('MatchResult', ['matches', 'confidence', 'matched_patterns', 'score'])
 
         matched_patterns = []
         total_score = 0.0
@@ -572,8 +576,9 @@ class PatternRule:
         if "*" in pattern:
             # Glob pattern
             return len(list(project_path.glob(pattern))) > 0
-        # Exact file/directory match
-        return (project_path / pattern).exists()
+        else:
+            # Exact file/directory match
+            return (project_path / pattern).exists()
 
 
 class ProjectTypeDetector:

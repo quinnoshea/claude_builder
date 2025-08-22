@@ -502,7 +502,7 @@ class TestConfigHelperFunctions:
         """Test _display_config_table with invalid section."""
         config = Config()
 
-        with patch("claude_builder.cli.config_commands.console"):
+        with patch("claude_builder.cli.config_commands.console") as mock_console:
             _display_config_table(config, "nonexistent")
             # Should print error message
 

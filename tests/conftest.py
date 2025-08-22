@@ -4,7 +4,7 @@ import json
 import sys
 import tempfile
 from pathlib import Path
-from typing import Any, Dict, Generator, Optional
+from typing import Any, Dict, Generator
 
 import pytest
 
@@ -38,19 +38,19 @@ def temp_project_dir(temp_dir: Path) -> Path:
     """Create a temporary directory with sample project structure - matches guide expectations."""
     project_path = temp_dir / "test_project"
     project_path.mkdir()
-
+    
     # Create basic Python project structure
     (project_path / "setup.py").write_text("""
 from setuptools import setup
 setup(name="test-project", version="0.1.0")
 """)
-
+    
     (project_path / "requirements.txt").write_text("requests>=2.25.0\n")
-
+    
     src_dir = project_path / "src" / "test_project"
     src_dir.mkdir(parents=True)
     (src_dir / "__init__.py").write_text('__version__ = "0.1.0"')
-
+    
     return str(project_path)
 
 
@@ -97,7 +97,7 @@ A comprehensive test project for integration testing.
 - Database integration
 - Testing with pytest
 """)
-
+    
     (project_dir / "pyproject.toml").write_text("""[build-system]
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
@@ -133,7 +133,7 @@ requests>=2.25.0
     src_dir = project_dir / "src" / "testproject"
     src_dir.mkdir(parents=True)
     (src_dir / "__init__.py").write_text('"""Test project package."""\n__version__ = "0.1.0"')
-
+    
     # CLI module
     (src_dir / "cli.py").write_text("""#!/usr/bin/env python3
 \"\"\"Command line interface for test project.\"\"\"
@@ -160,10 +160,10 @@ from typing import List, Dict, Any
 
 class ProjectManager:
     \"\"\"Manages project operations.\"\"\"
-
+    
     def __init__(self):
         self.projects: List[Dict[str, Any]] = []
-
+    
     def create_project(self, name: str, description: str = "") -> Dict[str, Any]:
         \"\"\"Create a new project.\"\"\"
         project = {
@@ -174,14 +174,14 @@ class ProjectManager:
         }
         self.projects.append(project)
         return project
-
+    
     def get_project(self, project_id: int) -> Dict[str, Any]:
         \"\"\"Get project by ID.\"\"\"
         for project in self.projects:
             if project["id"] == project_id:
                 return project
         raise ValueError(f"Project {project_id} not found")
-
+    
     def list_projects(self) -> List[Dict[str, Any]]:
         \"\"\"List all projects.\"\"\"
         return self.projects.copy()
@@ -235,17 +235,17 @@ from typing import Optional
 
 class Config:
     \"\"\"Application configuration.\"\"\"
-
+    
     def __init__(self):
         self.debug = os.getenv("DEBUG", "false").lower() == "true"
         self.database_url = os.getenv("DATABASE_URL", "sqlite:///./test.db")
         self.api_key = os.getenv("API_KEY")
         self.log_level = os.getenv("LOG_LEVEL", "INFO")
-
+    
     @property
     def is_development(self) -> bool:
         return self.debug
-
+    
     def get_data_dir(self) -> Path:
         return Path.home() / ".testproject"
 """)
@@ -254,7 +254,7 @@ class Config:
     tests_dir = project_dir / "tests"
     tests_dir.mkdir()
     (tests_dir / "__init__.py").write_text("")
-
+    
     (tests_dir / "conftest.py").write_text("""\"\"\"Test configuration.\"\"\"
 import pytest
 from pathlib import Path
@@ -369,7 +369,7 @@ def sample_rust_project(temp_dir: Path) -> Path:
     """Create a sample Rust project for testing."""
     project_dir = temp_dir / "rust_project"
     project_dir.mkdir()
-
+    
     # Create Cargo.toml
     (project_dir / "Cargo.toml").write_text("""[package]
 name = "test-rust-project"
@@ -380,7 +380,7 @@ edition = "2021"
 serde = { version = "1.0", features = ["derive"] }
 tokio = { version = "1.0", features = ["full"] }
 """)
-
+    
     # Create src directory and main.rs
     src_dir = project_dir / "src"
     src_dir.mkdir()
@@ -388,7 +388,7 @@ tokio = { version = "1.0", features = ["full"] }
     println!("Hello, world!");
 }
 """)
-
+    
     return project_dir
 
 
@@ -397,7 +397,7 @@ def sample_javascript_project(temp_dir: Path) -> Path:
     """Create a sample JavaScript project for testing."""
     project_dir = temp_dir / "javascript_project"
     project_dir.mkdir()
-
+    
     # Create package.json
     (project_dir / "package.json").write_text("""{
   "name": "test-javascript-project",
@@ -413,7 +413,7 @@ def sample_javascript_project(temp_dir: Path) -> Path:
     "eslint": "^8.0.0"
   }
 }""")
-
+    
     # Create src directory and index.js
     src_dir = project_dir / "src"
     src_dir.mkdir()
@@ -428,7 +428,7 @@ app.listen(3000, () => {
     console.log('Server running on port 3000');
 });
 """)
-
+    
     return project_dir
 
 
@@ -504,7 +504,7 @@ def git_repo(temp_dir: Path) -> Path:
     return repo_dir
 
 
-@pytest.fixture
+@pytest.fixture  
 def mock_git_repo(git_repo: Path) -> Path:
     """Alias for git_repo fixture for backward compatibility."""
     return git_repo
@@ -567,8 +567,7 @@ def mock_http_responses():
         url = request.get_full_url() if hasattr(request, "get_full_url") else str(request)
         if url in responses:
             return MockResponse(responses[url])
-        msg = f"Mock URL not found: {url}"
-        raise Exception(msg)
+        raise Exception(f"Mock URL not found: {url}")
 
     return mock_urlopen
 
@@ -621,7 +620,7 @@ edition = "2021"
     return project_path
 
 
-def assert_file_exists(file_path: Path, content_contains: Optional[str] = None):
+def assert_file_exists(file_path: Path, content_contains: str = None):
     """Assert that a file exists and optionally contains specific content."""
     assert file_path.exists(), f"File does not exist: {file_path}"
     if content_contains:

@@ -394,7 +394,7 @@ class TestOutputGeneration:
         result = generator.generate(sample_analysis, temp_dir)
 
         # Check that analysis metadata is reflected in output
-        result.metadata if hasattr(result, "metadata") else {}
+        metadata = result.metadata if hasattr(result, "metadata") else {}
 
         # Should preserve key analysis information
         content = result.files["CLAUDE.md"]

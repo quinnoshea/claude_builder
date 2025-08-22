@@ -533,8 +533,7 @@ class TestGenerateHelperFunctions:
 
             try:
                 _load_analysis_from_file(analysis_file)
-                msg = "Expected ClaudeBuilderError"
-                raise AssertionError(msg)
+                assert False, "Expected ClaudeBuilderError"
             except ClaudeBuilderError as e:
                 assert "Failed to load analysis" in str(e)
 
@@ -548,8 +547,7 @@ class TestGenerateHelperFunctions:
 
             try:
                 _load_analysis_from_file(analysis_file)
-                msg = "Expected ClaudeBuilderError"
-                raise AssertionError(msg)
+                assert False, "Expected ClaudeBuilderError"
             except ClaudeBuilderError as e:
                 assert "Failed to load analysis" in str(e)
 
@@ -720,7 +718,6 @@ class TestGenerateCommandsErrorHandling:
             # This should raise ClaudeBuilderError since yaml import fails in the function
             try:
                 _load_analysis_from_file(analysis_file)
-                msg = "Expected ClaudeBuilderError"
-                raise AssertionError(msg)
+                assert False, "Expected ClaudeBuilderError"
             except ClaudeBuilderError as e:
                 assert "Failed to load analysis" in str(e)

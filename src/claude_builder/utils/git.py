@@ -71,8 +71,7 @@ class GitIntegrationManager:
                     if result.success:
                         operations.append("Added files to .git/info/exclude")
                     else:
-                        msg = f"{FAILED_TO_ADD_EXCLUDES}: {result.error}"
-                        raise GitError(msg)
+                        raise GitError(f"{FAILED_TO_ADD_EXCLUDES}: {result.error}")
 
                 elif config.mode.value == "track_generated":
                     # Remove from excludes if present
@@ -292,23 +291,20 @@ class GitBackupManager:
             return backup_id
 
         except Exception as e:
-            msg = f"{FAILED_TO_CREATE_BACKUP}: {e}"
-            raise GitError(msg)
+            raise GitError(f"{FAILED_TO_CREATE_BACKUP}: {e}")
 
     def restore_backup(self, project_path: Path, backup_id: str) -> bool:
         """Restore from a backup."""
         backup_dir = project_path / ".git" / "claude-builder-backups" / backup_id
 
         if not backup_dir.exists():
-            msg = f"{BACKUP_NOT_FOUND}: {backup_id}"
-            raise GitError(msg)
+            raise GitError(f"{BACKUP_NOT_FOUND}: {backup_id}")
 
         try:
             # Load metadata
             metadata_file = backup_dir / "metadata.json"
             if not metadata_file.exists():
-                msg = f"{BACKUP_METADATA_NOT_FOUND}: {backup_id}"
-                raise GitError(msg)
+                raise GitError(f"{BACKUP_METADATA_NOT_FOUND}: {backup_id}")
 
             import json
             with open(metadata_file) as f:
@@ -326,8 +322,7 @@ class GitBackupManager:
             return True
 
         except Exception as e:
-            msg = f"{FAILED_TO_RESTORE_BACKUP} {backup_id}: {e}"
-            raise GitError(msg)
+            raise GitError(f"{FAILED_TO_RESTORE_BACKUP} {backup_id}: {e}")
 
     def list_backups(self, project_path: Path) -> List[Dict[str, Any]]:
         """List available backups."""

@@ -213,8 +213,7 @@ class ConfigManager:
             return config
 
         except Exception as e:
-            msg = f"{FAILED_TO_LOAD_CONFIGURATION}: {e}"
-            raise ConfigError(msg)
+            raise ConfigError(f"{FAILED_TO_LOAD_CONFIGURATION}: {e}")
 
     def save_config(self, config: Config, config_path: Path) -> None:
         """Save configuration to file."""
@@ -227,16 +226,16 @@ class ConfigManager:
                 self._save_json_config(config_dict, config_path)
 
         except Exception as e:
-            msg = f"{FAILED_TO_SAVE_CONFIGURATION}: {e}"
-            raise ConfigError(msg)
+            raise ConfigError(f"{FAILED_TO_SAVE_CONFIGURATION}: {e}")
 
     def create_default_config(self, project_path: Path) -> Config:
         """Create a default configuration for a project."""
-        return Config()
+        config = Config()
 
         # Customize based on project characteristics
         # This would be enhanced with project analysis results
 
+        return config
 
     def _find_config_file(self, project_path: Path) -> Optional[Path]:
         """Find configuration file in project directory."""
@@ -249,8 +248,7 @@ class ConfigManager:
     def _load_config_file(self, config_path: Path) -> Dict[str, Any]:
         """Load configuration from file."""
         if not config_path.exists():
-            msg = f"{CONFIGURATION_FILE_NOT_FOUND}: {config_path}"
-            raise ConfigError(msg)
+            raise ConfigError(f"{CONFIGURATION_FILE_NOT_FOUND}: {config_path}")
 
         try:
             if config_path.suffix.lower() == ".toml":
@@ -258,8 +256,7 @@ class ConfigManager:
             with open(config_path, encoding="utf-8") as f:
                 return json.load(f)
         except Exception as e:
-            msg = f"{FAILED_TO_PARSE_CONFIGURATION_FILE} {config_path}: {e}"
-            raise ConfigError(msg)
+            raise ConfigError(f"{FAILED_TO_PARSE_CONFIGURATION_FILE} {config_path}: {e}")
 
     def _merge_configs(self, base: Config, override: Dict[str, Any]) -> Config:
         """Merge configuration dictionaries."""
@@ -363,8 +360,7 @@ class ConfigManager:
                 project_profiles=config_dict.get("project_profiles", {})
             )
         except Exception as e:
-            msg = f"{FAILED_TO_CONVERT_DICTIONARY_TO_CONFIG}: {e}"
-            raise ConfigError(msg)
+            raise ConfigError(f"{FAILED_TO_CONVERT_DICTIONARY_TO_CONFIG}: {e}")
 
     def _save_json_config(self, config_dict: Dict[str, Any], config_path: Path) -> None:
         """Save configuration as JSON."""
@@ -480,8 +476,7 @@ class ConfigManager:
         profile_path = profiles_dir / f"{profile_name}.json"
 
         if not profile_path.exists():
-            msg = f"{PROJECT_PROFILE_NOT_FOUND}: {profile_name}"
-            raise ConfigError(msg)
+            raise ConfigError(f"{PROJECT_PROFILE_NOT_FOUND}: {profile_name}")
 
         try:
             with open(profile_path, encoding="utf-8") as f:
@@ -490,8 +485,7 @@ class ConfigManager:
             profile_config = profile_data["config"]
             return self._merge_configs(base_config, profile_config)
         except Exception as e:
-            msg = f"{FAILED_TO_APPLY_PROFILE} {profile_name}: {e}"
-            raise ConfigError(msg)
+            raise ConfigError(f"{FAILED_TO_APPLY_PROFILE} {profile_name}: {e}")
 
     def validate_config_compatibility(self, config: Config,
                                     project_analysis: Optional[Any] = None) -> List[str]:
@@ -511,7 +505,7 @@ class ConfigManager:
 
         # Check integration settings
         if config.integrations.package_managers:
-            for _pm, settings in config.integrations.package_managers.items():
+            for pm, settings in config.integrations.package_managers.items():
                 if settings.get("auto_install", False):
                     # Check if package manager is available
                     pass
@@ -522,8 +516,7 @@ class ConfigManager:
         """Validate configuration object."""
         # Validate version
         if config.version != self.schema_version:
-            msg = f"{UNSUPPORTED_CONFIG_VERSION}: {config.version}"
-            raise ConfigError(msg)
+            raise ConfigError(f"{UNSUPPORTED_CONFIG_VERSION}: {config.version}")
 
         # Validate confidence threshold
         if not 0 <= config.analysis.confidence_threshold <= 100:
@@ -556,26 +549,22 @@ class ConfigManager:
         try:
             int(config.output.file_permissions, 8)
         except ValueError:
-            msg = f"{INVALID_FILE_PERMISSIONS_FORMAT}: {config.output.file_permissions}"
-            raise ConfigError(msg)
+            raise ConfigError(f"{INVALID_FILE_PERMISSIONS_FORMAT}: {config.output.file_permissions}")
 
         # Validate update check frequency
         valid_frequencies = ["never", "daily", "weekly", "monthly"]
         if config.user_preferences.update_check_frequency not in valid_frequencies:
-            msg = f"{INVALID_UPDATE_CHECK_FREQUENCY}. Must be one of: {valid_frequencies}"
-            raise ConfigError(msg)
+            raise ConfigError(f"{INVALID_UPDATE_CHECK_FREQUENCY}. Must be one of: {valid_frequencies}")
 
         # Validate theme
         valid_themes = ["light", "dark", "auto"]
         if config.user_preferences.theme not in valid_themes:
-            msg = f"{INVALID_THEME}. Must be one of: {valid_themes}"
-            raise ConfigError(msg)
+            raise ConfigError(f"{INVALID_THEME}. Must be one of: {valid_themes}")
 
         # Validate agent selection algorithm
         valid_algorithms = ["intelligent", "strict", "permissive"]
         if config.agents.agent_selection_algorithm not in valid_algorithms:
-            msg = f"{INVALID_AGENT_SELECTION_ALGORITHM}. Must be one of: {valid_algorithms}"
-            raise ConfigError(msg)
+            raise ConfigError(f"{INVALID_AGENT_SELECTION_ALGORITHM}. Must be one of: {valid_algorithms}")
 
 
 def load_config_from_args(args: Dict[str, Any]) -> Config:
@@ -597,7 +586,7 @@ def load_config_from_args(args: Dict[str, Any]) -> Config:
 class AdvancedConfigManager:
     """Placeholder AdvancedConfigManager class for test compatibility."""
 
-    def __init__(self, config_path: Optional[str] = None):
+    def __init__(self, config_path: str = None):
         self.config_path = config_path
         self.config = {}
 
@@ -631,7 +620,7 @@ class ConfigEnvironment:
 class ConfigSchema:
     """Placeholder ConfigSchema class for test compatibility."""
 
-    def __init__(self, schema_dict: Optional[Dict[str, Any]] = None):
+    def __init__(self, schema_dict: Dict[str, Any] = None):
         self.schema = schema_dict or {}
 
     def validate(self, config: Dict[str, Any]) -> bool:
@@ -682,7 +671,7 @@ class ConfigWatcher:
 class SecureConfigHandler:
     """Placeholder SecureConfigHandler class for test compatibility."""
 
-    def __init__(self, encryption_key: Optional[str] = None):
+    def __init__(self, encryption_key: str = None):
         self.encryption_key = encryption_key
 
     def encrypt_config(self, config: Dict[str, Any]) -> str:

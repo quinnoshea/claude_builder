@@ -88,8 +88,7 @@ def init(project_path: str, output_format: str, interactive: bool, from_analysis
 
     except Exception as e:
         console.print(f"[red]Error creating configuration: {e}[/red]")
-        msg = f"{FAILED_TO_CREATE_CONFIGURATION}: {e}"
-        raise click.ClickException(msg)
+        raise click.ClickException(f"{FAILED_TO_CREATE_CONFIGURATION}: {e}")
 
 
 @config.command()
@@ -130,8 +129,7 @@ def validate(config_file: str, strict: bool, project_path: Optional[str]):
                 console.print(f"  • {warning}")
 
             if strict:
-                msg = f"{CONFIGURATION_VALIDATION_FAILED} (strict mode)"
-                raise click.ClickException(msg)
+                raise click.ClickException(f"{CONFIGURATION_VALIDATION_FAILED} (strict mode)")
 
         if not warnings:
             console.print("[green]No issues found[/green]")
@@ -141,8 +139,7 @@ def validate(config_file: str, strict: bool, project_path: Optional[str]):
         raise click.ClickException(CONFIGURATION_VALIDATION_FAILED)
     except Exception as e:
         console.print(f"[red]Error validating configuration: {e}[/red]")
-        msg = f"{FAILED_TO_VALIDATE_CONFIGURATION}: {e}"
-        raise click.ClickException(msg)
+        raise click.ClickException(f"{FAILED_TO_VALIDATE_CONFIGURATION}: {e}")
 
 
 @config.command()
@@ -172,8 +169,7 @@ def show(project_path: str, output_format: str, section: Optional[str]):
 
     except Exception as e:
         console.print(f"[red]Error showing configuration: {e}[/red]")
-        msg = f"{FAILED_TO_SHOW_CONFIGURATION}: {e}"
-        raise click.ClickException(msg)
+        raise click.ClickException(f"{FAILED_TO_SHOW_CONFIGURATION}: {e}")
 
 
 @config.command()
@@ -205,8 +201,7 @@ def migrate(old_config: str, output: Optional[str], output_format: str):
 
     except Exception as e:
         console.print(f"[red]Error migrating configuration: {e}[/red]")
-        msg = f"{FAILED_TO_MIGRATE_CONFIGURATION}: {e}"
-        raise click.ClickException(msg)
+        raise click.ClickException(f"{FAILED_TO_MIGRATE_CONFIGURATION}: {e}")
 
 
 @config.command()
@@ -252,8 +247,7 @@ def create_profile(profile_name: str, description: Optional[str],
 
     except Exception as e:
         console.print(f"[red]Error creating profile: {e}[/red]")
-        msg = f"{FAILED_TO_CREATE_PROFILE}: {e}"
-        raise click.ClickException(msg)
+        raise click.ClickException(f"{FAILED_TO_CREATE_PROFILE}: {e}")
 
 
 @config.command()
@@ -276,8 +270,7 @@ def list_profiles(output_format: str):
 
     except Exception as e:
         console.print(f"[red]Error listing profiles: {e}[/red]")
-        msg = f"{FAILED_TO_LIST_PROFILES}: {e}"
-        raise click.ClickException(msg)
+        raise click.ClickException(f"{FAILED_TO_LIST_PROFILES}: {e}")
 
 
 @config.command()
@@ -312,8 +305,7 @@ def show_profile(profile_name: str):
 
     except Exception as e:
         console.print(f"[red]Error showing profile: {e}[/red]")
-        msg = f"{FAILED_TO_SHOW_PROFILE}: {e}"
-        raise click.ClickException(msg)
+        raise click.ClickException(f"{FAILED_TO_SHOW_PROFILE}: {e}")
 
 
 def _customize_config_from_analysis(config: Config, analysis) -> Config:
@@ -499,8 +491,7 @@ def set_value(key: str, value: str, project_path: str = "."):
 
     except Exception as e:
         console.print(f"[red]Error setting configuration value: {e}[/red]")
-        msg = f"{FAILED_TO_SET_CONFIGURATION_VALUE}: {e}"
-        raise click.ClickException(msg)
+        raise click.ClickException(f"{FAILED_TO_SET_CONFIGURATION_VALUE}: {e}")
 
 
 @config.command()
@@ -530,5 +521,4 @@ def reset(project_path: str, force: bool):
 
     except Exception as e:
         console.print(f"[red]Error resetting configuration: {e}[/red]")
-        msg = f"{FAILED_TO_RESET_CONFIGURATION}: {e}"
-        raise click.ClickException(msg)
+        raise click.ClickException(f"{FAILED_TO_RESET_CONFIGURATION}: {e}")

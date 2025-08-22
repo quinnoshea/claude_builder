@@ -76,8 +76,8 @@ project_types: [python]
 
         # Test template discovery and rendering workflow
         # For now, use available templates or create mock template
-        template_manager.list_available_templates()
-        DocumentGenerator(analysis_result)
+        available_templates = template_manager.list_available_templates()
+        generator = DocumentGenerator(analysis_result)
 
         # Mock template rendering since the exact methods are not implemented
         rendered_content = "# Python Project Documentation\\n\\nProject: test-project"

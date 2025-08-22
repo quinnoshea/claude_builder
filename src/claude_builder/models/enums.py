@@ -8,17 +8,17 @@ preserve backward compatibility with older imports:
 """
 
 from claude_builder.core.models import (
+    ProjectType,
+    ComplexityLevel,
     ArchitecturePattern,
     ClaudeMentionPolicy,
-    ComplexityLevel,
     GitIntegrationMode,
-    ProjectType,
 )
 
 __all__ = [
+    "ProjectType",
+    "ComplexityLevel",
     "ArchitecturePattern",
     "ClaudeMentionPolicy",
-    "ComplexityLevel",
     "GitIntegrationMode",
-    "ProjectType",
 ]

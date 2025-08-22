@@ -183,7 +183,7 @@ module.exports = helloWorld;
             "automation/deploy.rs": "rust"
         }
 
-        for file_path, _content in files.items():
+        for file_path, content in files.items():
             full_path = temp_dir / file_path
             full_path.parent.mkdir(parents=True, exist_ok=True)
             full_path.touch()

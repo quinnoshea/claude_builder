@@ -374,18 +374,18 @@ class AgentSelector:
     def select_agents(self, analysis: ProjectAnalysis) -> List[AgentInfo]:
         """Select all appropriate agents for a project."""
         agents = []
-
+        
         # Core agents
         agents.extend(self.select_core_agents(analysis))
-
+        
         # Domain agents
         agents.extend(self.select_domain_agents(analysis))
-
+        
         # Workflow agents based on complexity
         if analysis.complexity_level == ComplexityLevel.COMPLEX:
             workflow_agents = self.select_workflow_agents(analysis)
             agents.extend(workflow_agents)
-
+        
         # Remove duplicates while preserving order
         seen = set()
         unique_agents = []
@@ -393,18 +393,18 @@ class AgentSelector:
             if agent.name not in seen:
                 seen.add(agent.name)
                 unique_agents.append(agent)
-
+        
         return unique_agents
 
     def select_workflow_agents(self, analysis: ProjectAnalysis) -> List[AgentInfo]:
         """Select workflow agents for complex projects."""
         agents = []
-
+        
         # Add studio-coach for complex coordination
         coach_agent = self.registry.get_agent("studio-coach")
         if coach_agent:
             agents.append(coach_agent)
-
+            
         return agents
 
     def generate_custom_agents(self, analysis: ProjectAnalysis) -> List[AgentInfo]:
@@ -524,7 +524,7 @@ class AgentConfigurator:
 
         all_agents = core_agents + domain_agents + workflow_agents + custom_agents
 
-        return {
+        patterns = {
             "feature_development_workflow": self._generate_feature_workflow(all_agents, analysis),
             "bug_fixing_workflow": self._generate_bug_workflow(all_agents, analysis),
             "deployment_workflow": self._generate_deployment_workflow(all_agents, analysis),
@@ -532,6 +532,7 @@ class AgentConfigurator:
             "parallel_workflows": self._generate_parallel_patterns(all_agents, analysis)
         }
 
+        return patterns
 
     def _generate_feature_workflow(self, agents: List[AgentInfo], analysis: ProjectAnalysis) -> List[str]:
         """Generate feature development workflow."""
@@ -557,12 +558,13 @@ class AgentConfigurator:
 
     def _generate_bug_workflow(self, agents: List[AgentInfo], analysis: ProjectAnalysis) -> List[str]:
         """Generate bug fixing workflow."""
-        return [
+        workflow = [
             "1. Investigation: Use debugging specialists to identify issues",
             "2. Fix: Use appropriate language/framework agents",
             "3. Testing: Use test-writer-fixer to prevent regressions",
             "4. Documentation: Update relevant documentation"
         ]
+        return workflow
 
     def _generate_deployment_workflow(self, agents: List[AgentInfo], analysis: ProjectAnalysis) -> List[str]:
         """Generate deployment workflow."""
@@ -635,7 +637,7 @@ class AgentTask:
 class Agent:
     """Placeholder Agent class for test compatibility."""
 
-    def __init__(self, name: str, role: Optional[str] = None, **kwargs):
+    def __init__(self, name: str, role: str = None, **kwargs):
         self.name = name
         self.role = role
         self.description = kwargs.get("description", "")
@@ -690,10 +692,10 @@ class AgentCoordinator:
 
         # Find agent with highest priority (lowest number)
         if self.agents:
-            selected_agent = min(self.agents, key=lambda a: getattr(a, "priority", 1))
+            selected_agent = min(self.agents, key=lambda a: getattr(a, 'priority', 1))
 
             # If agent has execute method, call it
-            if hasattr(selected_agent, "execute"):
+            if hasattr(selected_agent, 'execute'):
                 try:
                     return selected_agent.execute(task)
                 except Exception:
@@ -726,22 +728,23 @@ class AgentCoordinator:
 
         # Get agents with the required capability
         capable_agents = []
-        if self.registry and hasattr(self.registry, "_agents"):
+        if self.registry and hasattr(self.registry, '_agents'):
             capable_agents = [agent for agent in self.registry._agents.values()
-                             if task.task_type in getattr(agent, "capabilities", [])]
+                             if task.task_type in getattr(agent, 'capabilities', [])]
         else:
             capable_agents = [agent for agent in self.agents
-                             if task.task_type in getattr(agent, "capabilities", [])]
+                             if task.task_type in getattr(agent, 'capabilities', [])]
 
         # Try each agent until one succeeds
+        last_error = None
         for agent in capable_agents:
             try:
                 result = agent.execute(task)
-                if getattr(result, "success", True):
+                if getattr(result, 'success', True):
                     return result
-            except Exception:
+            except Exception as e:
                 # Record error and try next agent
-                pass
+                last_error = e
 
         # Return mock fallback result
         result = Mock()
@@ -768,19 +771,20 @@ class AgentCoordinator:
         for i, task in enumerate(tasks):
             # Find capable agent for this task
             capable_agent = None
-            if self.registry and hasattr(self.registry, "_agents"):
+            if self.registry and hasattr(self.registry, '_agents'):
                 for agent in self.registry._agents.values():
-                    if task.task_type in getattr(agent, "capabilities", []):
+                    if task.task_type in getattr(agent, 'capabilities', []):
                         capable_agent = agent
                         break
-            # Use agents in order if available
-            elif i < len(self.agents):
-                capable_agent = self.agents[i]
-            elif self.agents:
-                capable_agent = self.agents[0]
+            else:
+                # Use agents in order if available
+                if i < len(self.agents):
+                    capable_agent = self.agents[i]
+                elif self.agents:
+                    capable_agent = self.agents[0]
 
             # Execute with the capable agent
-            if capable_agent and hasattr(capable_agent, "execute"):
+            if capable_agent and hasattr(capable_agent, 'execute'):
                 try:
                     result = capable_agent.execute(task)
                     results.append(result)
@@ -812,7 +816,7 @@ class AgentCoordinator:
         results = []
         for i, task in enumerate(tasks):
             # Try to use an agent if available
-            if i < len(self.agents) and hasattr(self.agents[i], "execute"):
+            if i < len(self.agents) and hasattr(self.agents[i], 'execute'):
                 try:
                     result = self.agents[i].execute(task)
                     results.append(result)
@@ -937,7 +941,7 @@ class AgentManager:
         """Install an agent."""
         return self._download_agent(agent_name)
 
-    def create_workflow(self, agents: List[str]) -> "AgentWorkflow":
+    def create_workflow(self, agents: List[str]) -> 'AgentWorkflow':
         """Create a workflow for the given agents."""
         workflow = AgentWorkflow("project_workflow")
         for agent in agents:
@@ -945,7 +949,7 @@ class AgentManager:
             workflow.agents.append(agent)  # Track the agents
         return workflow
 
-    def create_workflow_for_project(self, project_analysis: Any) -> "AgentWorkflow":
+    def create_workflow_for_project(self, project_analysis: Any) -> 'AgentWorkflow':
         """Create workflow specifically for a project analysis."""
         selected_agents = self.select_agents_for_project(project_analysis)
         agent_names = [agent.name for agent in selected_agents]
