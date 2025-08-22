@@ -157,7 +157,24 @@ def _execute_main(project_path: str, **kwargs) -> None:
         # Step 3: Agent Configuration
         if not kwargs["no_agents"]:
             task3 = progress.add_task("Configuring agents...", total=None)
-            # TODO: Implement agent configuration
+            
+            # Initialize agent system
+            from claude_builder.core.agents import UniversalAgentSystem
+            from claude_builder.core.generator import DocumentGenerator
+            
+            agent_system = UniversalAgentSystem()
+            
+            # Configure agents for this project
+            agent_config = agent_system.select_agents(analysis)
+            
+            # Generate AGENTS.md file using DocumentGenerator
+            agent_generator = DocumentGenerator({"agents_only": True})
+            agent_content = agent_generator.generate(analysis, project_path)
+            
+            # Extract AGENTS.md content and add to generated files
+            if agent_content.files.get("AGENTS.md"):
+                generated_content.files["AGENTS.md"] = agent_content.files["AGENTS.md"]
+            
             progress.update(task3, completed=True, description="✓ Agents configured")
 
         # Step 4: Git Integration
