@@ -1,4 +1,5 @@
 """Exception classes for Claude Builder."""
+from typing import Optional
 
 
 class ClaudeBuilderError(Exception):
@@ -78,7 +79,7 @@ class TemplateError(ClaudeBuilderError):
 class ErrorContext:
     """Error context class for test compatibility."""
 
-    def __init__(self, operation: str, details: dict = None, file_path: str = None, metadata: dict = None, **kwargs):
+    def __init__(self, operation: str, details: Optional[dict] = None, file_path: Optional[str] = None, metadata: Optional[dict] = None, **kwargs):
         self.operation = operation
         self.details = details or {}
         self.file_path = file_path
@@ -97,7 +98,7 @@ class ErrorContext:
         }
         if self.metadata:
             result["metadata"] = self.metadata
-        if hasattr(self, 'file_path') and self.file_path:
+        if hasattr(self, "file_path") and self.file_path:
             result["file_path"] = self.file_path
         return result
 
@@ -166,7 +167,7 @@ class ErrorHandler:
             }
         }
 
-    def filter_errors(self, severity: str = None, error_type: type = None) -> list:
+    def filter_errors(self, severity: Optional[str] = None, error_type: Optional[type] = None) -> list:
         """Filter errors by severity and/or type."""
         filtered = self.logged_errors
 

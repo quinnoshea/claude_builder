@@ -335,7 +335,7 @@ class DataValidator:
 class ValidationError:
     """Placeholder ValidationError class for test compatibility."""
 
-    def __init__(self, message: str, field: str = None, code: str = None, context: dict = None):
+    def __init__(self, message: str, field: Optional[str] = None, code: Optional[str] = None, context: Optional[dict] = None):
         self.message = message
         self.field = field
         self.code = code

@@ -1,11 +1,16 @@
 """Simple tests to boost models.py coverage."""
 
 from pathlib import Path
-import pytest
 
 from claude_builder.core.models import (
-    ProjectAnalysis, LanguageInfo, FrameworkInfo, FileSystemInfo,
-    ProjectType, ComplexityLevel, ArchitecturePattern, DevelopmentEnvironment
+    ArchitecturePattern,
+    ComplexityLevel,
+    DevelopmentEnvironment,
+    FileSystemInfo,
+    FrameworkInfo,
+    LanguageInfo,
+    ProjectAnalysis,
+    ProjectType,
 )
 
 
@@ -15,18 +20,18 @@ def test_project_analysis_properties():
     analysis = ProjectAnalysis(
         project_path=Path("/test"),
         language_info=LanguageInfo(primary="python"),
-        framework_info=FrameworkInfo(primary="fastapi"), 
+        framework_info=FrameworkInfo(primary="fastapi"),
         filesystem_info=FileSystemInfo(test_files=5),
         project_type=ProjectType.API_SERVICE,
         complexity_level=ComplexityLevel.MEDIUM,
         architecture_pattern=ArchitecturePattern.MONOLITH
     )
-    
+
     # Test property getters
     assert analysis.language == "python"
     assert analysis.framework == "fastapi"
     assert analysis.has_tests is True
-    
+
     # Test with no tests
     analysis_no_tests = ProjectAnalysis(
         project_path=Path("/test"),
@@ -52,7 +57,7 @@ def test_framework_info_creation():
 def test_filesystem_info_creation():
     """Test FileSystemInfo creation for coverage."""
     fs_info = FileSystemInfo(total_files=100, test_files=20)
-    assert fs_info.total_files == 100 
+    assert fs_info.total_files == 100
     assert fs_info.test_files == 20
 
 
@@ -64,27 +69,27 @@ def test_project_analysis_additional_properties():
         dev_environment=DevelopmentEnvironment(ci_cd_systems=["github_actions"])
     )
     assert analysis_with_ci.has_ci_cd is True
-    
-    # Test is_containerized property  
+
+    # Test is_containerized property
     analysis_containerized = ProjectAnalysis(
         project_path=Path("/test"),
         dev_environment=DevelopmentEnvironment(containerization=["docker"])
     )
     assert analysis_containerized.is_containerized is True
-    
+
     # Test is_web_project property
     web_analysis = ProjectAnalysis(
         project_path=Path("/test"),
         project_type=ProjectType.WEB_APPLICATION
     )
     assert web_analysis.is_web_project is True
-    
+
     api_analysis = ProjectAnalysis(
-        project_path=Path("/test"), 
+        project_path=Path("/test"),
         project_type=ProjectType.API_SERVICE
     )
     assert api_analysis.is_web_project is True
-    
+
     cli_analysis = ProjectAnalysis(
         project_path=Path("/test"),
         project_type=ProjectType.CLI_TOOL

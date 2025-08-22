@@ -115,7 +115,8 @@ def docs(project_path: str, from_analysis: Optional[str], template: Optional[str
 
     except Exception as e:
         console.print(f"[red]Error generating documentation: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_GENERATE_DOCUMENTATION}: {e}")
+        msg = f"{FAILED_TO_GENERATE_DOCUMENTATION}: {e}"
+        raise click.ClickException(msg)
 
 
 @generate.command()
@@ -196,7 +197,8 @@ def agents(project_path: str, from_analysis: Optional[str], agents_dir: Optional
 
     except Exception as e:
         console.print(f"[red]Error generating agents: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_GENERATE_AGENTS}: {e}")
+        msg = f"{FAILED_TO_GENERATE_AGENTS}: {e}"
+        raise click.ClickException(msg)
 
 
 def _load_analysis_from_file(analysis_file: Path) -> ProjectAnalysis:
@@ -291,7 +293,8 @@ def _load_analysis_from_file(analysis_file: Path) -> ProjectAnalysis:
         return analysis
 
     except Exception as e:
-        raise ClaudeBuilderError(f"{FAILED_TO_LOAD_ANALYSIS} {analysis_file}: {e}")
+        msg = f"{FAILED_TO_LOAD_ANALYSIS} {analysis_file}: {e}"
+        raise ClaudeBuilderError(msg)
 
 
 def _display_generation_preview(generated_content, analysis):
@@ -407,7 +410,8 @@ def claude_md(project_path: str, from_analysis: Optional[str], template: Optiona
 
     except Exception as e:
         console.print(f"[red]Error generating CLAUDE.md: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_GENERATE_CLAUDE_MD}: {e}")
+        msg = f"{FAILED_TO_GENERATE_CLAUDE_MD}: {e}"
+        raise click.ClickException(msg)
 
 
 @generate.command()
@@ -482,4 +486,5 @@ def agents_md(project_path: str, from_analysis: Optional[str], agents_dir: Optio
 
     except Exception as e:
         console.print(f"[red]Error generating AGENTS.md: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_GENERATE_AGENTS_MD}: {e}")
+        msg = f"{FAILED_TO_GENERATE_AGENTS_MD}: {e}"
+        raise click.ClickException(msg)

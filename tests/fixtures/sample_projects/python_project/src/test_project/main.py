@@ -11,15 +11,14 @@ def fetch_data(url: str) -> dict:
 
 
 @click.command()
-@click.option('--url', required=True, help='URL to fetch data from')
+@click.option("--url", required=True, help="URL to fetch data from")
 def main(url: str) -> None:
     """Main CLI function."""
     try:
-        data = fetch_data(url)
-        print(f"Fetched {len(data)} items")
+        fetch_data(url)
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

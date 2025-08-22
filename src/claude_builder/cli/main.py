@@ -76,10 +76,9 @@ def cli(ctx, project_path, **kwargs):
         return
 
     # If no subcommand was called and no project path, show help
-    if ctx.invoked_subcommand is None:
-        if not project_path:
-            click.echo(ctx.get_help())
-            return
+    if ctx.invoked_subcommand is None and not project_path:
+        click.echo(ctx.get_help())
+        return
 
     # Main execution (only if no subcommand)
     if ctx.invoked_subcommand is None:
@@ -105,8 +104,9 @@ def _execute_main(project_path: str, **kwargs) -> None:
     # Validate project path
     validation_result = validate_project_path(project_path)
     if not validation_result.is_valid:
+        msg = f"{INVALID_PROJECT_PATH}: {validation_result.error}"
         raise ClaudeBuilderError(
-            f"{INVALID_PROJECT_PATH}: {validation_result.error}",
+            msg,
             ExitCodes.PROJECT_NOT_FOUND
         )
 
@@ -165,7 +165,7 @@ def _execute_main(project_path: str, **kwargs) -> None:
             agent_system = UniversalAgentSystem()
 
             # Configure agents for this project
-            agent_config = agent_system.select_agents(analysis)
+            agent_system.select_agents(analysis)
 
             # Generate AGENTS.md file using DocumentGenerator
             agent_generator = DocumentGenerator({"agents_only": True})
@@ -181,7 +181,7 @@ def _execute_main(project_path: str, **kwargs) -> None:
         if not kwargs["no_git"] and (kwargs["git_exclude"] or kwargs["git_track"]):
             task4 = progress.add_task("Setting up git integration...", total=None)
             git_manager = GitIntegrationManager()
-            git_result = git_manager.integrate(project_path, config.git_integration)
+            git_manager.integrate(project_path, config.git_integration)
             progress.update(task4, completed=True, description="✓ Git integration complete")
 
     # Summary
@@ -277,7 +277,8 @@ def _write_generated_files(generated_content, project_path: Path, kwargs: dict) 
     """Write generated files to disk."""
     # Debug: Check what's None
     if project_path is None:
-        raise ValueError(f"{PROJECT_PATH_IS_NONE} kwargs: {kwargs}")
+        msg = f"{PROJECT_PATH_IS_NONE} kwargs: {kwargs}"
+        raise ValueError(msg)
     if kwargs.get("output_dir") is None:
         output_dir = project_path
     else:

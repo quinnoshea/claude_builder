@@ -88,7 +88,8 @@ def list(installed_only: bool, community_only: bool, category: Optional[str],
 
     except Exception as e:
         console.print(f"[red]Error listing templates: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_LIST_TEMPLATES}: {e}")
+        msg = f"{FAILED_TO_LIST_TEMPLATES}: {e}"
+        raise click.ClickException(msg)
 
 
 @templates.command()
@@ -124,7 +125,8 @@ def search(query: str, project_path: Optional[str], limit: int):
 
     except Exception as e:
         console.print(f"[red]Error searching templates: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_SEARCH_TEMPLATES}: {e}")
+        msg = f"{FAILED_TO_SEARCH_TEMPLATES}: {e}"
+        raise click.ClickException(msg)
 
 
 @templates.command()
@@ -178,7 +180,8 @@ def install(template_id: str, force: bool, dry_run: bool):
 
     except Exception as e:
         console.print(f"[red]Error installing template: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_INSTALL_TEMPLATE}: {e}")
+        msg = f"{FAILED_TO_INSTALL_TEMPLATE}: {e}"
+        raise click.ClickException(msg)
 
 
 @templates.command()
@@ -217,7 +220,8 @@ def uninstall(template_name: str, force: bool):
 
     except Exception as e:
         console.print(f"[red]Error uninstalling template: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_UNINSTALL_TEMPLATE}: {e}")
+        msg = f"{FAILED_TO_UNINSTALL_TEMPLATE}: {e}"
+        raise click.ClickException(msg)
 
 
 @templates.command()
@@ -296,7 +300,8 @@ def create(name: str, project_path: Optional[str], description: Optional[str],
 
     except Exception as e:
         console.print(f"[red]Error creating template: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_CREATE_TEMPLATE}: {e}")
+        msg = f"{FAILED_TO_CREATE_TEMPLATE}: {e}"
+        raise click.ClickException(msg)
 
 
 @templates.command()
@@ -353,7 +358,8 @@ def validate(template_path: str, strict: bool, output_format: str):
 
     except Exception as e:
         console.print(f"[red]Error validating template: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_VALIDATE_TEMPLATE}: {e}")
+        msg = f"{FAILED_TO_VALIDATE_TEMPLATE}: {e}"
+        raise click.ClickException(msg)
 
 
 @templates.command()
@@ -406,7 +412,8 @@ def info(template_name: str):
 
     except Exception as e:
         console.print(f"[red]Error getting template info: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_GET_TEMPLATE_INFO}: {e}")
+        msg = f"{FAILED_TO_GET_TEMPLATE_INFO}: {e}"
+        raise click.ClickException(msg)
 
 
 def _display_templates_table(templates: List[CommunityTemplate], show_compatibility: bool = False):

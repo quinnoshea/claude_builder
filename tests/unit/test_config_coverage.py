@@ -1,9 +1,8 @@
 """Additional tests for core.config module to boost coverage."""
 
-import tempfile
 import json
+import tempfile
 from pathlib import Path
-from unittest.mock import patch, MagicMock
 
 import pytest
 import toml
@@ -33,7 +32,7 @@ def temp_dir():
 def test_config_creation_basic():
     """Test basic Config creation - covers Config.__init__."""
     config = Config()
-    
+
     assert config.version == "1.0"
     assert isinstance(config.analysis, AnalysisConfig)
     assert isinstance(config.templates, TemplateConfig)
@@ -46,7 +45,7 @@ def test_config_creation_basic():
 def test_analysis_config_creation():
     """Test AnalysisConfig creation and defaults - covers AnalysisConfig."""
     config = AnalysisConfig()
-    
+
     assert config.cache_enabled is True
     assert config.parallel_processing is True
     assert config.confidence_threshold == 80
@@ -59,7 +58,7 @@ def test_analysis_config_creation():
 def test_template_config_creation():
     """Test TemplateConfig creation and defaults - covers TemplateConfig."""
     config = TemplateConfig()
-    
+
     assert "./templates/" in config.search_paths
     assert "~/.claude-builder/templates/" in config.search_paths
     assert isinstance(config.preferred_templates, list)
@@ -72,7 +71,7 @@ def test_template_config_creation():
 def test_agent_config_creation():
     """Test AgentConfig creation and defaults - covers AgentConfig."""
     config = AgentConfig()
-    
+
     assert config.install_automatically is True
     assert isinstance(config.exclude_agents, list)
     assert config.exclude_agents == []
@@ -88,7 +87,7 @@ def test_agent_config_creation():
 def test_git_integration_config_creation():
     """Test GitIntegrationConfig creation and defaults - covers GitIntegrationConfig."""
     config = GitIntegrationConfig()
-    
+
     assert config.enabled is True
     assert config.mode == GitIntegrationMode.NO_INTEGRATION
     assert config.claude_mention_policy == ClaudeMentionPolicy.MINIMAL
@@ -101,7 +100,7 @@ def test_git_integration_config_creation():
 def test_output_config_creation():
     """Test OutputConfig creation and defaults - covers OutputConfig."""
     config = OutputConfig()
-    
+
     assert config.format == "files"
     assert config.backup_existing is True
     assert config.create_directories is True
@@ -112,7 +111,7 @@ def test_output_config_creation():
 def test_user_preferences_creation():
     """Test UserPreferences creation and defaults - covers UserPreferences."""
     config = UserPreferences()
-    
+
     assert config.default_editor == "code"
     assert config.prefer_verbose_output is False
     assert config.auto_open_generated_files is False
@@ -127,7 +126,7 @@ def test_user_preferences_creation():
 def test_config_manager_initialization():
     """Test ConfigManager initialization - covers ConfigManager.__init__."""
     manager = ConfigManager()
-    
+
     assert manager.schema_version == "1.0"
     assert isinstance(manager.DEFAULT_CONFIG_NAMES, list)
     assert "claude-builder.json" in manager.DEFAULT_CONFIG_NAMES
@@ -140,10 +139,10 @@ def test_config_manager_find_config_file_json(temp_dir):
     """Test finding JSON config file - covers find_config_file method."""
     config_file = temp_dir / "claude-builder.json"
     config_file.write_text('{"version": "1.0"}')
-    
+
     manager = ConfigManager()
     found_file = manager._find_config_file(temp_dir)
-    
+
     assert found_file == config_file
 
 
@@ -151,10 +150,10 @@ def test_config_manager_find_config_file_toml(temp_dir):
     """Test finding TOML config file - covers find_config_file method."""
     config_file = temp_dir / "claude-builder.toml"
     config_file.write_text('version = "1.0"')
-    
+
     manager = ConfigManager()
     found_file = manager._find_config_file(temp_dir)
-    
+
     assert found_file == config_file
 
 
@@ -162,16 +161,16 @@ def test_config_manager_find_config_file_none(temp_dir):
     """Test finding no config file - covers find_config_file method."""
     manager = ConfigManager()
     found_file = manager._find_config_file(temp_dir)
-    
+
     assert found_file is None
 
 
 def test_config_manager_load_default_config(temp_dir):
     """Test loading default configuration - covers load_config default path."""
     manager = ConfigManager()
-    
+
     config = manager.load_config(temp_dir)
-    
+
     assert isinstance(config, Config)
     assert config.version == "1.0"
     assert isinstance(config.analysis, AnalysisConfig)
@@ -192,14 +191,14 @@ def test_config_manager_load_json_config(temp_dir):
             "default_editor": "vim"
         }
     }
-    
+
     config_file = temp_dir / "claude-builder.json"
     with open(config_file, "w") as f:
         json.dump(config_data, f)
-    
+
     manager = ConfigManager()
     config = manager.load_config(temp_dir)
-    
+
     assert config.analysis.confidence_threshold == 85
     assert config.analysis.cache_enabled is False
     assert config.analysis.parallel_processing is False
@@ -220,14 +219,14 @@ def test_config_manager_load_toml_config(temp_dir):
             "claude_mention_policy": "forbidden"
         }
     }
-    
+
     config_file = temp_dir / "claude-builder.toml"
     with open(config_file, "w") as f:
         toml.dump(config_data, f)
-    
+
     manager = ConfigManager()
     config = manager.load_config(temp_dir)
-    
+
     assert "python-web" in config.templates.preferred_templates
     assert "rust-cli" in config.templates.preferred_templates
     assert config.templates.auto_update_templates is True
@@ -240,17 +239,17 @@ def test_config_manager_save_json_config(temp_dir):
     config = Config()
     config.analysis.confidence_threshold = 90
     config.user_preferences.prefer_verbose_output = True
-    
+
     config_file = temp_dir / "test-config.json"
     manager = ConfigManager()
     manager.save_config(config, config_file)
-    
+
     assert config_file.exists()
-    
+
     # Verify saved content
     with open(config_file) as f:
         saved_data = json.load(f)
-    
+
     assert saved_data["analysis"]["confidence_threshold"] == 90
     assert saved_data["user_preferences"]["prefer_verbose_output"] is True
 
@@ -260,17 +259,17 @@ def test_config_manager_save_toml_config(temp_dir):
     config = Config()
     config.templates.preferred_templates = ["custom-template"]
     config.agents.exclude_agents = ["deprecated-agent"]
-    
+
     config_file = temp_dir / "test-config.toml"
     manager = ConfigManager()
     manager.save_config(config, config_file)
-    
+
     assert config_file.exists()
-    
+
     # Verify saved content
     with open(config_file) as f:
         saved_data = toml.load(f)
-    
+
     assert "custom-template" in saved_data["templates"]["preferred_templates"]
     assert "deprecated-agent" in saved_data["agents"]["exclude_agents"]
 
@@ -285,10 +284,10 @@ def test_config_manager_cli_overrides(temp_dir):
         "backup_existing": False,
         "output_format": "json"
     }
-    
+
     manager = ConfigManager()
     config = manager.load_config(temp_dir, cli_overrides=cli_args)
-    
+
     assert config.user_preferences.prefer_verbose_output is True
     assert "override-template" in config.templates.preferred_templates
     assert config.git_integration.claude_mention_policy == ClaudeMentionPolicy.FORBIDDEN
@@ -301,7 +300,7 @@ def test_config_manager_validation_success():
     """Test successful configuration validation - covers _validate_config success path."""
     config = Config()
     manager = ConfigManager()
-    
+
     # Should not raise any exceptions
     manager._validate_config(config)
 
@@ -310,9 +309,9 @@ def test_config_manager_validation_invalid_confidence():
     """Test validation fails for invalid confidence - covers _validate_config error path."""
     config = Config()
     config.analysis.confidence_threshold = 150  # Invalid: > 100
-    
+
     manager = ConfigManager()
-    
+
     with pytest.raises(ConfigError, match="confidence_threshold must be between 0 and 100"):
         manager._validate_config(config)
 
@@ -321,9 +320,9 @@ def test_config_manager_validation_invalid_permissions():
     """Test validation fails for invalid permissions - covers _validate_config error path."""
     config = Config()
     config.output.file_permissions = "invalid"
-    
+
     manager = ConfigManager()
-    
+
     with pytest.raises(ConfigError, match="Invalid file permissions format"):
         manager._validate_config(config)
 
@@ -332,9 +331,9 @@ def test_config_manager_validation_unsupported_version():
     """Test validation fails for unsupported version - covers _validate_config error path."""
     config = Config()
     config.version = "2.0"  # Unsupported version
-    
+
     manager = ConfigManager()
-    
+
     with pytest.raises(ConfigError, match="Unsupported config version"):
         manager._validate_config(config)
 
@@ -342,7 +341,7 @@ def test_config_manager_validation_unsupported_version():
 def test_config_manager_deep_merge():
     """Test deep merging of configurations - covers _deep_merge method."""
     manager = ConfigManager()
-    
+
     base = {
         "analysis": {
             "confidence_threshold": 80,
@@ -353,7 +352,7 @@ def test_config_manager_deep_merge():
             "search_paths": ["./templates/"]
         }
     }
-    
+
     override = {
         "analysis": {
             "confidence_threshold": 90
@@ -363,9 +362,9 @@ def test_config_manager_deep_merge():
             "enabled": False
         }
     }
-    
+
     result = manager._deep_merge(base, override)
-    
+
     assert result["analysis"]["confidence_threshold"] == 90
     assert result["analysis"]["cache_enabled"] is True  # Preserved
     assert result["analysis"]["parallel_processing"] is True  # Preserved
@@ -378,15 +377,15 @@ def test_config_manager_enum_serialization(temp_dir):
     config = Config()
     config.git_integration.mode = GitIntegrationMode.EXCLUDE_GENERATED
     config.git_integration.claude_mention_policy = ClaudeMentionPolicy.FORBIDDEN
-    
+
     config_file = temp_dir / "enum-test.json"
     manager = ConfigManager()
     manager.save_config(config, config_file)
-    
+
     # Check raw JSON for enum values
     with open(config_file) as f:
         saved_data = json.load(f)
-    
+
     assert saved_data["git_integration"]["mode"] == "exclude_generated"
     assert saved_data["git_integration"]["claude_mention_policy"] == "forbidden"
 
@@ -399,14 +398,14 @@ def test_config_manager_enum_deserialization(temp_dir):
             "claude_mention_policy": "minimal"
         }
     }
-    
+
     config_file = temp_dir / "enum-test.json"
     with open(config_file, "w") as f:
         json.dump(config_data, f)
-    
+
     manager = ConfigManager()
     config = manager.load_config(temp_dir)
-    
+
     # Note: enum deserialization currently only works for claude_mention_policy
     assert config.git_integration.claude_mention_policy == ClaudeMentionPolicy.MINIMAL
     # mode remains at default due to enum deserialization issue
@@ -417,7 +416,7 @@ def test_config_manager_create_default_config(temp_dir):
     """Test creating default config for project - covers create_default_config."""
     manager = ConfigManager()
     config = manager.create_default_config(temp_dir)
-    
+
     assert isinstance(config, Config)
     assert config.version == "1.0"
     # Should have all required components
@@ -434,9 +433,9 @@ def test_load_config_from_args_helper():
         "template": "test-template",
         "output_format": "json"
     }
-    
+
     config = load_config_from_args(args)
-    
+
     assert isinstance(config, Config)
     assert config.user_preferences.prefer_verbose_output is True
     assert "test-template" in config.templates.preferred_templates
@@ -448,9 +447,9 @@ def test_config_manager_invalid_json_file(temp_dir):
     """Test handling of invalid JSON config file - covers error handling."""
     config_file = temp_dir / "claude-builder.json"
     config_file.write_text("{ invalid json content")
-    
+
     manager = ConfigManager()
-    
+
     with pytest.raises(ConfigError, match="Failed to parse configuration file"):
         manager.load_config(temp_dir)
 
@@ -459,9 +458,9 @@ def test_config_manager_invalid_toml_file(temp_dir):
     """Test handling of invalid TOML config file - covers error handling."""
     config_file = temp_dir / "claude-builder.toml"
     config_file.write_text("[ invalid toml")
-    
+
     manager = ConfigManager()
-    
+
     with pytest.raises(ConfigError, match="Failed to parse configuration file"):
         manager.load_config(temp_dir)
 
@@ -469,8 +468,8 @@ def test_config_manager_invalid_toml_file(temp_dir):
 def test_config_manager_nonexistent_explicit_file(temp_dir):
     """Test handling of explicit nonexistent config file - covers error handling."""
     nonexistent_file = temp_dir / "nonexistent.json"
-    
+
     manager = ConfigManager()
-    
+
     with pytest.raises(ConfigError, match="Configuration file not found"):
         manager.load_config(temp_dir, config_file=nonexistent_file)

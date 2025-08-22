@@ -7,6 +7,7 @@ Tests cover the agent management and coordination system including:
 - Multi-agent coordination
 """
 
+import contextlib
 from unittest.mock import Mock, patch
 
 import pytest
@@ -487,10 +488,8 @@ class TestAgent:
         with patch.object(agent, "execute") as mock_execute:
             mock_execute.side_effect = Exception("Execution failed")
 
-            try:
+            with contextlib.suppress(Exception):
                 agent.run()
-            except Exception:
-                pass
 
             assert agent.state == "failed"
             assert agent.last_error is not None
@@ -616,7 +615,7 @@ class TestAgentIntegration:
         with patch.object(manager, "_check_template_availability") as mock_check:
             mock_check.return_value = True
 
-            result = manager.execute_agent_with_templates(template_agent, sample_analysis)
+            manager.execute_agent_with_templates(template_agent, sample_analysis)
 
             mock_check.assert_called_once_with(template_agent.template_dependencies)
 
@@ -694,7 +693,7 @@ class TestAgentIntegration:
 
     def test_agent_performance_monitoring(self, sample_analysis):
         """Test agent performance monitoring."""
-        manager = AgentManager()
+        AgentManager()
 
         # Create agents with different performance characteristics
         fast_agent = Mock(name="fast-agent")
@@ -718,7 +717,7 @@ class TestAgentIntegration:
         workflow = AgentWorkflow([fast_agent, slow_agent], sample_analysis)
 
         start_time = time.time()
-        results = workflow.execute()
+        workflow.execute()
         total_time = time.time() - start_time
 
         # Should track execution times

@@ -145,7 +145,8 @@ def status(project_path: str):
 
     except Exception as e:
         console.print(f"[red]Error checking git status: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_CHECK_GIT_STATUS}: {e}")
+        msg = f"{FAILED_TO_CHECK_GIT_STATUS}: {e}"
+        raise click.ClickException(msg)
 
 
 @git.command()
@@ -202,7 +203,8 @@ def exclude(project_path: str, force: bool):
 
     except Exception as e:
         console.print(f"[red]Error setting up excludes: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_SETUP_EXCLUDES}: {e}")
+        msg = f"{FAILED_TO_SETUP_EXCLUDES}: {e}"
+        raise click.ClickException(msg)
 
 
 @git.command()
@@ -244,7 +246,8 @@ def unexclude(project_path: str):
 
     except Exception as e:
         console.print(f"[red]Error removing excludes: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_REMOVE_EXCLUDES}: {e}")
+        msg = f"{FAILED_TO_REMOVE_EXCLUDES}: {e}"
+        raise click.ClickException(msg)
 
 
 @git.command()
@@ -316,7 +319,8 @@ def install_hooks(project_path: str, policy: Optional[str], pre_commit: bool):
 
     except Exception as e:
         console.print(f"[red]Error installing hooks: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_INSTALL_HOOKS}: {e}")
+        msg = f"{FAILED_TO_INSTALL_HOOKS}: {e}"
+        raise click.ClickException(msg)
 
 
 @git.command()
@@ -332,10 +336,9 @@ def uninstall_hooks(project_path: str, force: bool):
             console.print("[red]Not a git repository[/red]")
             return
 
-        if not force:
-            if not Confirm.ask("Remove Claude Builder git hooks?"):
-                console.print("[yellow]Operation cancelled[/yellow]")
-                return
+        if not force and not Confirm.ask("Remove Claude Builder git hooks?"):
+            console.print("[yellow]Operation cancelled[/yellow]")
+            return
 
         console.print("[cyan]Removing git hooks...[/cyan]")
 
@@ -354,7 +357,8 @@ def uninstall_hooks(project_path: str, force: bool):
 
     except Exception as e:
         console.print(f"[red]Error removing hooks: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_REMOVE_HOOKS}: {e}")
+        msg = f"{FAILED_TO_REMOVE_HOOKS}: {e}"
+        raise click.ClickException(msg)
 
 
 @git.command()
@@ -398,7 +402,8 @@ def list_backups(project_path: str, output_format: str):
 
     except Exception as e:
         console.print(f"[red]Error listing backups: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_LIST_BACKUPS}: {e}")
+        msg = f"{FAILED_TO_LIST_BACKUPS}: {e}"
+        raise click.ClickException(msg)
 
 
 @git.command()
@@ -433,10 +438,12 @@ def rollback(backup_id: str, project_path: str, force: bool):
 
     except GitError as e:
         console.print(f"[red]Rollback error: {e}[/red]")
-        raise click.ClickException(f"{ROLLBACK_FAILED}: {e}")
+        msg = f"{ROLLBACK_FAILED}: {e}"
+        raise click.ClickException(msg)
     except Exception as e:
         console.print(f"[red]Error during rollback: {e}[/red]")
-        raise click.ClickException(f"{ROLLBACK_FAILED}: {e}")
+        msg = f"{ROLLBACK_FAILED}: {e}"
+        raise click.ClickException(msg)
 
 
 @git.command()
@@ -475,7 +482,8 @@ def cleanup_backups(project_path: str, keep: int, force: bool):
 
     except Exception as e:
         console.print(f"[red]Error cleaning up backups: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_CLEANUP_BACKUPS}: {e}")
+        msg = f"{FAILED_TO_CLEANUP_BACKUPS}: {e}"
+        raise click.ClickException(msg)
 
 
 def setup_exclude(project_path: str):
@@ -517,7 +525,8 @@ def setup_exclude(project_path: str):
 
     except Exception as e:
         console.print(f"[red]Error setting up excludes: {e}[/red]")
-        raise GitError(f"{FAILED_TO_SETUP_EXCLUDES}: {e}")
+        msg = f"{FAILED_TO_SETUP_EXCLUDES}: {e}"
+        raise GitError(msg)
 
 
 def remove_exclude(project_path: str):
@@ -552,7 +561,8 @@ def remove_exclude(project_path: str):
 
     except Exception as e:
         console.print(f"[red]Error removing excludes: {e}[/red]")
-        raise GitError(f"{FAILED_TO_REMOVE_EXCLUDES}: {e}")
+        msg = f"{FAILED_TO_REMOVE_EXCLUDES}: {e}"
+        raise GitError(msg)
 
 
 def backup(project_path: str = "."):
@@ -572,7 +582,8 @@ def backup(project_path: str = "."):
 
     except Exception as e:
         console.print(f"[red]Error creating backup: {e}[/red]")
-        raise GitError(f"{FAILED_TO_CREATE_BACKUP}: {e}")
+        msg = f"{FAILED_TO_CREATE_BACKUP}: {e}"
+        raise GitError(msg)
 
 
 def restore(backup_id: str, project_path: str = "."):
@@ -591,8 +602,10 @@ def restore(backup_id: str, project_path: str = "."):
             console.print(f"[green]✓ Restored from backup: {backup_id}[/green]")
         else:
             console.print(f"[red]Failed to restore backup: {backup_id}[/red]")
-            raise GitError(f"{FAILED_TO_RESTORE_BACKUP}: {backup_id}")
+            msg = f"{FAILED_TO_RESTORE_BACKUP}: {backup_id}"
+            raise GitError(msg)
 
     except Exception as e:
         console.print(f"[red]Error restoring backup: {e}[/red]")
-        raise GitError(f"{FAILED_TO_RESTORE_BACKUP}: {e}")
+        msg = f"{FAILED_TO_RESTORE_BACKUP}: {e}"
+        raise GitError(msg)

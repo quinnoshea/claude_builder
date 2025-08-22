@@ -45,10 +45,12 @@ class ProjectAnalyzer:
         try:
             # Check if project path exists
             if not project_path.exists():
-                raise AnalysisError(f"Project path does not exist: {project_path}")
+                msg = f"Project path does not exist: {project_path}"
+                raise AnalysisError(msg)
 
             if not project_path.is_dir():
-                raise AnalysisError(f"Project path is not a directory: {project_path}")
+                msg = f"Project path is not a directory: {project_path}"
+                raise AnalysisError(msg)
 
             # Initialize analysis
             analysis = ProjectAnalysis(
@@ -108,7 +110,8 @@ class ProjectAnalyzer:
             return analysis
 
         except Exception as e:
-            raise AnalysisError(f"Failed to analyze project: {e}")
+            msg = f"Failed to analyze project: {e}"
+            raise AnalysisError(msg)
 
     def _analyze_filesystem(self, project_path: Path) -> FileSystemInfo:
         """Analyze project file system structure."""
@@ -205,7 +208,7 @@ class ProjectAnalyzer:
             env.testing_frameworks.append("pytest")
         if "jest" in str(filesystem_info.root_files):
             env.testing_frameworks.append("jest")
-        if any("test" in d for d in filesystem_info.directory_structure.keys()):
+        if any("test" in d for d in filesystem_info.directory_structure):
             env.testing_frameworks.append("generic_testing")
 
         return env
@@ -275,7 +278,7 @@ class ProjectAnalyzer:
             return ProjectType.LIBRARY
 
         # Monorepo patterns - enhanced
-        package_dirs = [d for d in filesystem_info.directory_structure.keys()
+        package_dirs = [d for d in filesystem_info.directory_structure
                        if any(pkg in str(filesystem_info.directory_structure.get(d, {}))
                              for pkg in ["package.json", "Cargo.toml", "pyproject.toml"])]
 
@@ -834,16 +837,16 @@ class FrameworkDetector:
             scores["django"] += 8
 
         # Check for React patterns
-        for jsx_file in project_path.rglob("*.jsx"):
+        for _jsx_file in project_path.rglob("*.jsx"):
             scores["react"] += 2
             break
 
-        for tsx_file in project_path.rglob("*.tsx"):
+        for _tsx_file in project_path.rglob("*.tsx"):
             scores["react"] += 2
             break
 
         # Check for Vue patterns
-        for vue_file in project_path.rglob("*.vue"):
+        for _vue_file in project_path.rglob("*.vue"):
             scores["vue"] += 2
             break
 
@@ -852,11 +855,11 @@ class FrameworkDetector:
     def detect_frameworks(self, project_path: Path) -> List[Any]:
         """Detect frameworks in project - test compatibility method."""
         from claude_builder.core.models import FileSystemInfo, LanguageInfo
-        
+
         # Create mock objects for compatibility
         filesystem_info = FileSystemInfo()
         language_info = LanguageInfo()
-        
+
         # Detect primary language from project
         if (project_path / "package.json").exists():
             language_info.primary = "javascript"
@@ -866,33 +869,33 @@ class FrameworkDetector:
             language_info.primary = "python"
         else:
             language_info.primary = "python"  # Default assumption
-        
+
         # Use existing detect method
         framework_info = self.detect(project_path, filesystem_info, language_info)
-        
+
         # Convert to list format expected by tests
         frameworks = []
-        
+
         # Add primary framework if detected
         if framework_info.primary:
-            framework = type('Framework', (), {
-                'name': framework_info.primary,
-                'confidence': framework_info.confidence,
-                'version': framework_info.version or 'unknown',
-                'category': self._get_framework_category(framework_info.primary)
+            framework = type("Framework", (), {
+                "name": framework_info.primary,
+                "confidence": framework_info.confidence,
+                "version": framework_info.version or "unknown",
+                "category": self._get_framework_category(framework_info.primary)
             })()
             frameworks.append(framework)
-        
+
         # Add secondary frameworks
         for name in framework_info.secondary:
-            framework = type('Framework', (), {
-                'name': name,
-                'confidence': framework_info.confidence * 0.8,  # Slightly lower confidence for secondary
-                'version': 'unknown',
-                'category': self._get_framework_category(name)
+            framework = type("Framework", (), {
+                "name": name,
+                "confidence": framework_info.confidence * 0.8,  # Slightly lower confidence for secondary
+                "version": "unknown",
+                "category": self._get_framework_category(name)
             })()
             frameworks.append(framework)
-        
+
         return frameworks
 
     def _get_framework_category(self, framework_name: str) -> str:
@@ -904,13 +907,13 @@ class FrameworkDetector:
             "axum": "web", "actix": "web", "warp": "web", "rocket": "web",
             "spring": "web", "springboot": "web",
             "gin": "web", "echo": "web", "fiber": "web",
-            
+
             # Frontend frameworks
             "react": "frontend", "vue": "frontend", "angular": "frontend", "svelte": "frontend",
-            
+
             # CLI tools
             "cli_tool": "cli", "click": "cli", "typer": "cli",
-            
+
             # Build tools
             "webpack": "build", "vite": "build", "rollup": "build",
         }
@@ -939,7 +942,7 @@ class DomainDetector:
         found_indicators = defaultdict(list)
 
         # Check directory names
-        for dir_name in filesystem_info.directory_structure.keys():
+        for dir_name in filesystem_info.directory_structure:
             self._check_indicators(dir_name.lower(), domain_scores, found_indicators)
 
         # Check file names
@@ -1081,7 +1084,7 @@ class ArchitectureDetector:
     def _is_microservices(self, filesystem_info: FileSystemInfo) -> bool:
         """Check for microservices patterns."""
         service_indicators = ["services", "microservices", "service-"]
-        service_count = sum(1 for dir_name in filesystem_info.directory_structure.keys()
+        service_count = sum(1 for dir_name in filesystem_info.directory_structure
                           if any(indicator in dir_name.lower() for indicator in service_indicators))
 
         return service_count >= 2 or "docker-compose.yml" in filesystem_info.root_files
@@ -1090,7 +1093,7 @@ class ArchitectureDetector:
         """Check for MVC patterns."""
         mvc_dirs = ["models", "views", "controllers"]
         mvc_count = sum(1 for pattern in mvc_dirs
-                       if any(pattern in dir_name.lower() for dir_name in filesystem_info.directory_structure.keys()))
+                       if any(pattern in dir_name.lower() for dir_name in filesystem_info.directory_structure))
 
         return mvc_count >= 2 or framework_info.primary in ["django", "rails", "spring"]
 
@@ -1098,7 +1101,7 @@ class ArchitectureDetector:
         """Check for domain-driven design patterns."""
         ddd_indicators = ["domain", "aggregate", "entity", "repository", "service"]
         ddd_count = sum(1 for indicator in ddd_indicators
-                       if any(indicator in dir_name.lower() for dir_name in filesystem_info.directory_structure.keys()))
+                       if any(indicator in dir_name.lower() for dir_name in filesystem_info.directory_structure))
 
         return ddd_count >= 3
 
@@ -1106,7 +1109,7 @@ class ArchitectureDetector:
         """Check for event-driven patterns."""
         event_indicators = ["events", "handlers", "listeners", "subscribers", "publishers"]
         return any(indicator in dir_name.lower()
-                  for dir_name in filesystem_info.directory_structure.keys()
+                  for dir_name in filesystem_info.directory_structure
                   for indicator in event_indicators)
 
     def _is_serverless(self, filesystem_info: FileSystemInfo) -> bool:
@@ -1118,7 +1121,7 @@ class ArchitectureDetector:
         """Check for layered architecture."""
         layer_indicators = ["api", "business", "data", "presentation", "application"]
         layer_count = sum(1 for indicator in layer_indicators
-                         if any(indicator in dir_name.lower() for dir_name in filesystem_info.directory_structure.keys()))
+                         if any(indicator in dir_name.lower() for dir_name in filesystem_info.directory_structure))
 
         return layer_count >= 2
 
@@ -1149,18 +1152,16 @@ class AdvancedProjectDetector:
 
     def analyze_project(self, project_path: Optional[Path] = None) -> Dict[str, Any]:
         """Analyze project patterns and architecture."""
-        path = project_path or self.project_path
-        
+
         # Basic analysis - enhance as needed
-        analysis = {
+        return {
             "architecture": self.analyze_architecture(),
             "patterns": self.detect_project_patterns(),
             "confidence": 0.8,
             "project_type": "unknown",
             "complexity": "medium"
         }
-        
-        return analysis
+
 
 
 class ArchitectureAnalyzer:
@@ -1171,14 +1172,13 @@ class ArchitectureAnalyzer:
 
     def analyze_architecture(self, project_path: Optional[Path] = None) -> Dict[str, str]:
         # Use provided path or instance path
-        path = project_path or self.project_path
         return {"pattern": "layered", "confidence": "medium"}
 
 
 class PatternMatcher:
     """Pattern matching system for project detection."""
 
-    def __init__(self, patterns: List[str] = None):
+    def __init__(self, patterns: Optional[List[str]] = None):
         # For backwards compatibility, accept both dict and list patterns
         if patterns is None:
             self.patterns = {}
@@ -1186,7 +1186,7 @@ class PatternMatcher:
             self.patterns = {p: {"name": p} for p in patterns}
         else:
             self.patterns = patterns or {}
-        
+
         self._pattern_registry = {
             "nodejs_project": ["package.json"],
             "rust_project": ["Cargo.toml"],
@@ -1200,8 +1200,7 @@ class PatternMatcher:
         if isinstance(self.patterns, dict):
             pattern_names = list(self.patterns.keys())
             return [f for f in file_paths if any(p in f for p in pattern_names)]
-        else:
-            return [f for f in file_paths if any(p in f for p in self.patterns)]
+        return [f for f in file_paths if any(p in f for p in self.patterns)]
 
     def add_pattern(self, pattern: str):
         if isinstance(self.patterns, dict):
@@ -1213,10 +1212,10 @@ class PatternMatcher:
         """Check if a file matches a specific pattern."""
         if pattern_name not in self._pattern_registry:
             return False
-        
+
         patterns = self._pattern_registry[pattern_name]
         file_str = str(file_path)
-        
+
         for pattern in patterns:
             if pattern in file_str or file_path.name == pattern:
                 return True
@@ -1226,12 +1225,12 @@ class PatternMatcher:
         """Check if file content matches a specific pattern."""
         if not file_path.exists():
             return False
-            
+
         try:
             content = file_path.read_text()
             if pattern_name == "docker_python":
                 return "FROM python" in content
-            elif pattern_name == "docker_file":
+            if pattern_name == "docker_file":
                 return "FROM " in content and ("COPY" in content or "RUN" in content)
             # Add more content patterns as needed
             return False
@@ -1243,12 +1242,11 @@ class PatternMatcher:
         if pattern_name == "react_project":
             required_patterns = ["src/", "src/components/", "package.json"]
             for pattern in required_patterns:
-                if pattern.endswith('/'):
-                    if not (directory / pattern.rstrip('/')).is_dir():
+                if pattern.endswith("/"):
+                    if not (directory / pattern.rstrip("/")).is_dir():
                         return False
-                else:
-                    if not (directory / pattern).exists():
-                        return False
+                elif not (directory / pattern).exists():
+                    return False
             return True
         return False
 
@@ -1274,19 +1272,19 @@ class PatternMatcher:
     def get_all_matches(self, directory: Path) -> List[Dict[str, Any]]:
         """Get all pattern matches with confidence scores."""
         matches = []
-        
+
         for pattern_name, pattern_rules in self._pattern_registry.items():
             confidence = 0.0
-            
+
             # Check structure patterns
             if self.matches_structure_pattern(directory, pattern_name):
                 confidence += 0.6
-                
+
             # Check file patterns
             for rule in pattern_rules:
                 if (directory / rule).exists():
                     confidence += 0.3
-                    
+
             if confidence > 0:
                 matches.append({
                     "name": pattern_name,
@@ -1294,7 +1292,7 @@ class PatternMatcher:
                     "pattern": pattern_name,
                     "pattern_name": pattern_name  # Test compatibility
                 })
-                
+
         # Sort by confidence descending
         matches.sort(key=lambda x: x["confidence"], reverse=True)
         return matches
