@@ -15,7 +15,7 @@
   - Optimize for zero-cost abstractions and compile-time guarantees
   - Database integration with SQLx and connection pooling
 
-#### rapid-prototyper  
+#### rapid-prototyper
 
 **Primary Role**: Fast Rust prototyping and proof of concepts
 
@@ -247,38 +247,38 @@ impl ${service_name}Service {
             cache: Arc::new(RwLock::new(${cache_type}::new())),
         }
     }
-    
+
     #[tracing::instrument(skip(self), fields(request_id = %request.id))]
     pub async fn process_request(
-        &self, 
+        &self,
         request: ${request_type}
     ) -> Result<${response_type}> {
         // Input validation
         request.validate()
             .context("Invalid request parameters")?;
-        
+
         // Check cache first
         if let Some(cached) = self.check_cache(&request.key()).await {
             return Ok(cached);
         }
-        
+
         // Process with repository
         let result = self.repository
             .process(request)
             .await
             .context("Repository processing failed")?;
-        
+
         // Update cache
         self.update_cache(&result).await;
-        
+
         Ok(result)
     }
-    
+
     async fn check_cache(&self, key: &str) -> Option<${response_type}> {
         let cache = self.cache.read().await;
         cache.get(key).cloned()
     }
-    
+
     async fn update_cache(&self, result: &${response_type}) {
         let mut cache = self.cache.write().await;
         cache.insert(result.key(), result.clone());
@@ -312,57 +312,57 @@ mod tests {
         let mock_repo = Arc::new(MockRepository::new());
         let config = Arc::new(test_config());
         let service = ${service_name}Service::new(mock_repo.clone(), config);
-        
+
         let request = ${request_type} {
             id: "test-id".to_string(),
             data: "test-data".to_string(),
         };
-        
+
         let expected_response = ${response_type} {
             id: request.id.clone(),
             result: "processed".to_string(),
         };
-        
+
         mock_repo.expect_process()
             .with(eq(request.clone()))
             .return_once(move |_| Ok(expected_response.clone()));
-        
+
         // Act
         let result = service.process_request(request).await;
-        
+
         // Assert
         assert!(result.is_ok());
         let response = result.unwrap();
         assert_eq!(response.result, "processed");
     }
-    
+
     #[tokio::test]
     async fn test_process_request_with_cache() {
         // Test caching behavior
         let mock_repo = Arc::new(MockRepository::new());
         let config = Arc::new(test_config());
         let service = ${service_name}Service::new(mock_repo.clone(), config);
-        
+
         let request = ${request_type} {
             id: "cached-test".to_string(),
             data: "test-data".to_string(),
         };
-        
+
         // First call should hit repository
         mock_repo.expect_process()
             .times(1)
             .return_once(|_| Ok(${response_type}::default()));
-        
+
         // First call
         let _ = service.process_request(request.clone()).await.unwrap();
-        
+
         // Second call should hit cache (no additional repository calls)
         let _ = service.process_request(request).await.unwrap();
-        
+
         // Verify expectations
         mock_repo.checkpoint();
     }
-    
+
     // Property-based tests
     proptest! {
         #[test]
@@ -372,11 +372,11 @@ mod tests {
         ) {
             let request = ${request_type} { id, data };
             let result = request.validate();
-            
+
             // All valid inputs should pass validation
             prop_assert!(result.is_ok());
         }
-        
+
         #[test]
         fn test_cache_key_consistency(
             requests in prop::collection::vec(any::<${request_type}>(), 1..10)
@@ -384,43 +384,43 @@ mod tests {
             for request in requests {
                 let key1 = request.key();
                 let key2 = request.key();
-                
+
                 // Cache keys should be consistent
                 prop_assert_eq!(key1, key2);
-                
+
                 // Keys should not be empty
                 prop_assert!(!key1.is_empty());
             }
         }
     }
-    
+
     // Integration tests
     #[tokio::test]
     async fn test_full_service_integration() {
         // Setup test database/external services
         let mock_server = MockServer::start().await;
-        
+
         Mock::given(method("POST"))
             .and(path("/api/process"))
             .respond_with(ResponseTemplate::new(200)
                 .set_body_json(json!({"status": "success"})))
             .mount(&mock_server)
             .await;
-        
+
         // Test with real repository implementation
         let repository = Arc::new(HttpRepository::new(mock_server.uri()));
         let config = Arc::new(integration_test_config());
         let service = ${service_name}Service::new(repository, config);
-        
+
         let request = ${request_type} {
             id: "integration-test".to_string(),
             data: "integration-data".to_string(),
         };
-        
+
         let result = service.process_request(request).await;
         assert!(result.is_ok());
     }
-    
+
     // Helper functions
     fn test_config() -> ${config_name}Config {
         ${config_name}Config {
@@ -429,7 +429,7 @@ mod tests {
             max_retries: 3,
         }
     }
-    
+
     fn integration_test_config() -> ${config_name}Config {
         ${config_name}Config {
             timeout_seconds: 30,
@@ -444,11 +444,11 @@ mod tests {
 mod benchmarks {
     use super::*;
     use criterion::{black_box, Criterion};
-    
+
     pub fn bench_process_request(c: &mut Criterion) {
         let rt = tokio::runtime::Runtime::new().unwrap();
         let service = setup_benchmark_service();
-        
+
         c.bench_function("process_request", |b| {
             b.to_async(&rt).iter(|| async {
                 let request = create_benchmark_request();
@@ -456,13 +456,13 @@ mod benchmarks {
             });
         });
     }
-    
+
     pub fn bench_cache_operations(c: &mut Criterion) {
         let rt = tokio::runtime::Runtime::new().unwrap();
         let service = setup_benchmark_service();
-        
+
         let mut group = c.benchmark_group("cache_operations");
-        
+
         for size in [10, 100, 1000].iter() {
             group.bench_with_input(
                 criterion::BenchmarkId::from_parameter(size),
@@ -477,7 +477,7 @@ mod benchmarks {
                 },
             );
         }
-        
+
         group.finish();
     }
 }
@@ -515,27 +515,27 @@ where
     let processor = Arc::new(processor);
     let mut set = JoinSet::new();
     let semaphore = Arc::new(tokio::sync::Semaphore::new(concurrency_limit));
-    
+
     for item in items {
         let permit = semaphore.clone().acquire_owned().await.unwrap();
         let processor = processor.clone();
-        
+
         set.spawn(async move {
             let _permit = permit;  // Hold permit until task completes
             processor(item)
         });
     }
-    
+
     let mut results = Vec::new();
     while let Some(result) = set.join_next().await {
         results.push(result.unwrap());
     }
-    
+
     results
 }
 
 // Lock-free caching
-static GLOBAL_CACHE: Lazy<DashMap<String, Arc<CachedData>>> = 
+static GLOBAL_CACHE: Lazy<DashMap<String, Arc<CachedData>>> =
     Lazy::new(|| DashMap::new());
 
 pub fn get_or_compute<F>(key: &str, compute: F) -> Arc<CachedData>

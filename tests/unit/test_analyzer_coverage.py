@@ -2,7 +2,6 @@
 
 import tempfile
 from pathlib import Path
-from unittest.mock import patch, MagicMock
 
 import pytest
 
@@ -35,7 +34,7 @@ def test_project_analyzer_with_config():
     config = {
         "confidence_threshold": 70,
         "parallel_processing": False,
-        "cache_enabled": False
+        "cache_enabled": False,
     }
     analyzer = ProjectAnalyzer(config=config)
     assert analyzer.config["confidence_threshold"] == 70
@@ -133,12 +132,7 @@ def test_analyze_with_cache_enabled(temp_dir):
 def test_analyze_with_overrides(temp_dir):
     """Test analyzer with configuration overrides - covers config handling logic."""
     project_path = create_test_project(temp_dir, "python")
-    config = {
-        "overrides": {
-            "language": "typescript",
-            "framework": "react"
-        }
-    }
+    config = {"overrides": {"language": "typescript", "framework": "react"}}
     analyzer = ProjectAnalyzer(config=config)
 
     result = analyzer.analyze(project_path)
@@ -251,7 +245,8 @@ def test_framework_detector_fastapi(temp_dir):
     project_path = temp_dir / "fastapi_project"
     project_path.mkdir()
     (project_path / "requirements.txt").write_text("fastapi>=0.95.0\nuvicorn")
-    (project_path / "main.py").write_text("""
+    (project_path / "main.py").write_text(
+        """
 from fastapi import FastAPI
 
 app = FastAPI()
@@ -259,7 +254,8 @@ app = FastAPI()
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
-""")
+"""
+    )
 
     detector = FrameworkDetector()
     result = detector.detect_framework(project_path, "python")
@@ -274,8 +270,12 @@ def test_framework_detector_django(temp_dir):
     project_path = temp_dir / "django_project"
     project_path.mkdir()
     (project_path / "requirements.txt").write_text("Django>=4.0.0")
-    (project_path / "manage.py").write_text("#!/usr/bin/env python\nfrom django.core.management import execute_from_command_line")
-    (project_path / "settings.py").write_text("INSTALLED_APPS = ['django.contrib.admin']")
+    (project_path / "manage.py").write_text(
+        "#!/usr/bin/env python\nfrom django.core.management import execute_from_command_line"
+    )
+    (project_path / "settings.py").write_text(
+        "INSTALLED_APPS = ['django.contrib.admin']"
+    )
 
     detector = FrameworkDetector()
     result = detector.detect_framework(project_path, "python")
@@ -288,8 +288,11 @@ def test_framework_detector_react(temp_dir):
     """Test React framework detection - covers React detection."""
     project_path = temp_dir / "react_project"
     project_path.mkdir()
-    (project_path / "package.json").write_text('{"dependencies": {"react": "^18.0.0", "react-dom": "^18.0.0"}}')
-    (project_path / "App.jsx").write_text("""
+    (project_path / "package.json").write_text(
+        '{"dependencies": {"react": "^18.0.0", "react-dom": "^18.0.0"}}'
+    )
+    (project_path / "App.jsx").write_text(
+        """
 import React from 'react';
 
 function App() {
@@ -297,7 +300,8 @@ function App() {
 }
 
 export default App;
-""")
+"""
+    )
 
     detector = FrameworkDetector()
     result = detector.detect_framework(project_path, "javascript")

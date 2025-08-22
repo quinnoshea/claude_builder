@@ -169,7 +169,7 @@ SERVER_HOST=127.0.0.1
 SERVER_PORT=3000
 CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8080
 
-# .env.production  
+# .env.production
 
 DATABASE_URL=postgresql://prod_user:prod_pass@db_host:5432/prod_db
 REDIS_URL=redis://redis_host:6379
@@ -379,10 +379,10 @@ impl TestContext {
     pub async fn new() -> Result<Self> {
         let settings = Settings::test_config()?;
         let db = sqlx::PgPool::connect(&settings.database.url).await?;
-        
+
         // Run migrations
         sqlx::migrate!("./migrations").run(&db).await?;
-        
+
         Ok(Self { db, settings })
     }
 
@@ -498,7 +498,7 @@ mod tests {
             content: None,
             status: None,
         };
-        
+
         let ${model_name_lower} = service.create_${model_name_lower}(owner_id, create_request).await.unwrap();
 
         // Try to update with different user
@@ -511,7 +511,7 @@ mod tests {
 
         let result = service.update_${model_name_lower}(${model_name_lower}.id, other_user_id, update_request).await;
         assert!(result.is_err());
-        
+
         match result.unwrap_err() {
             AppError::Forbidden(_) => (),
             _ => panic!("Expected Forbidden error"),
@@ -538,7 +538,7 @@ mod common;
 async fn test_create_${model_name_lower}_success() -> anyhow::Result<()> {
     let ctx = common::TestContext::new().await?;
     let app = ${project_name}::app::create_app(&ctx.settings).await?;
-    
+
     let user_id = ctx.create_test_user().await?;
     let token = ctx.create_auth_token(user_id).await?;
 
@@ -561,7 +561,7 @@ async fn test_create_${model_name_lower}_success() -> anyhow::Result<()> {
 
     let body = hyper::body::to_bytes(response.into_body()).await?;
     let json: Value = serde_json::from_slice(&body)?;
-    
+
     assert_eq!(json["success"], true);
     assert_eq!(json["data"]["title"], "Test ${model_name}");
     assert_eq!(json["data"]["status"], "draft");
@@ -597,7 +597,7 @@ async fn test_create_${model_name_lower}_unauthorized() -> anyhow::Result<()> {
 async fn test_get_${model_name_lower}s_with_pagination() -> anyhow::Result<()> {
     let ctx = common::TestContext::new().await?;
     let app = ${project_name}::app::create_app(&ctx.settings).await?;
-    
+
     let user_id = ctx.create_test_user().await?;
     let token = ctx.create_auth_token(user_id).await?;
 
@@ -630,7 +630,7 @@ async fn test_get_${model_name_lower}s_with_pagination() -> anyhow::Result<()> {
 
     let body = hyper::body::to_bytes(response.into_body()).await?;
     let json: Value = serde_json::from_slice(&body)?;
-    
+
     assert_eq!(json["success"], true);
     assert_eq!(json["data"]["data"].as_array().unwrap().len(), 10);
     assert_eq!(json["data"]["pagination"]["total"], 25);
@@ -656,7 +656,7 @@ async fn test_health_check() -> anyhow::Result<()> {
 
     let body = hyper::body::to_bytes(response.into_body()).await?;
     let json: Value = serde_json::from_slice(&body)?;
-    
+
     assert_eq!(json["status"], "ok");
 
     ctx.cleanup().await?;
@@ -682,7 +682,7 @@ async fn setup_app() -> ${project_name}::app::Router {
 fn bench_health_check(c: &mut Criterion) {
     let rt = Runtime::new().unwrap();
     let app = rt.block_on(setup_app());
-    
+
     c.bench_function("health_check", |b| {
         b.to_async(&rt).iter(|| async {
             let request = Request::builder()
@@ -690,7 +690,7 @@ fn bench_health_check(c: &mut Criterion) {
                 .uri("/health")
                 .body(Body::empty())
                 .unwrap();
-            
+
             let response = app.clone().oneshot(black_box(request)).await.unwrap();
             black_box(response);
         });
@@ -700,9 +700,9 @@ fn bench_health_check(c: &mut Criterion) {
 fn bench_${model_name_lower}_creation(c: &mut Criterion) {
     let rt = Runtime::new().unwrap();
     let app = rt.block_on(setup_app());
-    
+
     let mut group = c.benchmark_group("${model_name_lower}_creation");
-    
+
     for size in [10, 100, 1000].iter() {
         group.bench_with_input(
             BenchmarkId::from_parameter(size),
@@ -714,7 +714,7 @@ fn bench_${model_name_lower}_creation(c: &mut Criterion) {
                             "title": format!("Benchmark ${model_name} {}", i),
                             "description": "Benchmark description"
                         });
-                        
+
                         let request = Request::builder()
                             .method(Method::POST)
                             .uri("/api/${model_name_lower}s")
@@ -722,7 +722,7 @@ fn bench_${model_name_lower}_creation(c: &mut Criterion) {
                             .header("authorization", "Bearer test-token")
                             .body(Body::from(payload.to_string()))
                             .unwrap();
-                        
+
                         let response = app.clone().oneshot(black_box(request)).await.unwrap();
                         black_box(response);
                     }
@@ -730,18 +730,18 @@ fn bench_${model_name_lower}_creation(c: &mut Criterion) {
             },
         );
     }
-    
+
     group.finish();
 }
 
 fn bench_concurrent_requests(c: &mut Criterion) {
     let rt = Runtime::new().unwrap();
     let app = rt.block_on(setup_app());
-    
+
     c.bench_function("concurrent_requests", |b| {
         b.to_async(&rt).iter(|| async {
             let mut handles = vec![];
-            
+
             for _ in 0..100 {
                 let app_clone = app.clone();
                 let handle = tokio::spawn(async move {
@@ -750,12 +750,12 @@ fn bench_concurrent_requests(c: &mut Criterion) {
                         .uri("/health")
                         .body(Body::empty())
                         .unwrap();
-                    
+
                     app_clone.oneshot(request).await.unwrap()
                 });
                 handles.push(handle);
             }
-            
+
             for handle in handles {
                 let response = handle.await.unwrap();
                 black_box(response);
@@ -950,7 +950,7 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
-    
+
     services:
       postgres:
         image: postgres:14
@@ -965,7 +965,7 @@ jobs:
         ports:
 
           - 5432:5432
-      
+
       redis:
         image: redis:7
         options: >-
@@ -976,11 +976,11 @@ jobs:
         ports:
 
           - 6379:6379
-    
+
     steps:
 
     - uses: actions/checkout@v4
-    
+
     - name: Install Rust
 
       uses: actions-rs/toolchain@v1
@@ -988,7 +988,7 @@ jobs:
         toolchain: stable
         components: rustfmt, clippy
         override: true
-    
+
     - name: Cache dependencies
 
       uses: actions/cache@v3
@@ -998,32 +998,32 @@ jobs:
           ~/.cargo/git
           target
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-    
+
     - name: Install SQLx CLI
 
       run: cargo install sqlx-cli --no-default-features --features postgres
-    
+
     - name: Run migrations
 
       run: |
         export DATABASE_URL=postgresql://postgres:postgres@localhost/test_db
         sqlx migrate run
-        
+
     - name: Check formatting
 
       run: cargo fmt -- --check
-    
+
     - name: Run clippy
 
       run: cargo clippy -- -D warnings
-    
+
     - name: Run tests
 
       run: cargo test
       env:
         DATABASE_URL: postgresql://postgres:postgres@localhost/test_db
         REDIS_URL: redis://localhost:6379
-    
+
     - name: Run integration tests
 
       run: cargo test --test '*'
@@ -1035,11 +1035,11 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     needs: test
-    
+
     steps:
 
     - uses: actions/checkout@v4
-    
+
     - name: Install Rust
 
       uses: actions-rs/toolchain@v1
@@ -1047,13 +1047,13 @@ jobs:
         toolchain: stable
         target: x86_64-unknown-linux-musl
         override: true
-    
+
     - name: Build binary
 
       run: |
         sudo apt-get update && sudo apt-get install -y musl-tools
         cargo build --release --target x86_64-unknown-linux-musl
-    
+
     - name: Upload binary
 
       uses: actions/upload-artifact@v3
@@ -1066,17 +1066,17 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     if: github.ref == 'refs/heads/main'
-    
+
     steps:
 
     - uses: actions/checkout@v4
-    
+
     - name: Download binary
 
       uses: actions/download-artifact@v3
       with:
         name: ${project_name}-binary
-    
+
     - name: Build and push Docker image
 
       env:
@@ -1106,12 +1106,12 @@ pub async fn metrics_middleware(request: Request, next: Next) -> Response {
     let start = Instant::now();
     let method = request.method().clone();
     let uri = request.uri().clone();
-    
+
     let response = next.run(request).await;
-    
+
     let latency = start.elapsed();
     let status = response.status();
-    
+
     tracing::info!(
         method = %method,
         uri = %uri,
@@ -1119,7 +1119,7 @@ pub async fn metrics_middleware(request: Request, next: Next) -> Response {
         latency_ms = %latency.as_millis(),
         "Request completed"
     );
-    
+
     response
 }
 

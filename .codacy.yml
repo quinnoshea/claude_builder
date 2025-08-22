@@ -17,10 +17,10 @@ engines:
 exclude_paths:
   # Test files - different patterns, not production code
   - "tests/**"
-  
+
   # Documentation - separate from code
   - "docs/**"
-  
+
   # Generated files and build artifacts
   - "htmlcov/**"
   - "*.egg-info/**"
@@ -28,13 +28,13 @@ exclude_paths:
   - "build/**"
   - ".pytest_cache/**"
   - "**/__pycache__/**"
-  
+
   # CI/CD configuration
   - ".github/**"
-  
+
   # Shell scripts only (Python scripts in scripts/ will be analyzed)
   - "scripts/*.sh"
-  
+
   # Legacy files if any
   - "**/*_old.py"
   - "**/*_backup.py"

@@ -126,13 +126,8 @@ class TestConfigManager:
         """Test loading configuration from JSON file."""
         config_data = {
             "version": "1.0",
-            "analysis": {
-                "confidence_threshold": 70,
-                "cache_enabled": False
-            },
-            "user_preferences": {
-                "prefer_verbose_output": True
-            }
+            "analysis": {"confidence_threshold": 70, "cache_enabled": False},
+            "user_preferences": {"prefer_verbose_output": True},
         }
 
         config_file = temp_dir / "claude-builder.json"
@@ -150,13 +145,8 @@ class TestConfigManager:
         """Test loading configuration from TOML file."""
         config_data = {
             "version": "1.0",
-            "analysis": {
-                "confidence_threshold": 90,
-                "parallel_processing": False
-            },
-            "templates": {
-                "preferred_templates": ["python-web", "fastapi"]
-            }
+            "analysis": {"confidence_threshold": 90, "parallel_processing": False},
+            "templates": {"preferred_templates": ["python-web", "fastapi"]},
         }
 
         config_file = temp_dir / "claude-builder.toml"
@@ -212,7 +202,7 @@ class TestConfigManager:
             "verbose": True,
             "template": "custom-template",
             "claude_mentions": "forbidden",
-            "no_git": True
+            "no_git": True,
         }
 
         manager = ConfigManager()
@@ -220,7 +210,10 @@ class TestConfigManager:
 
         assert config.user_preferences.prefer_verbose_output is True
         assert "custom-template" in config.templates.preferred_templates
-        assert config.git_integration.claude_mention_policy == ClaudeMentionPolicy.FORBIDDEN
+        assert (
+            config.git_integration.claude_mention_policy
+            == ClaudeMentionPolicy.FORBIDDEN
+        )
         assert config.git_integration.enabled is False
 
     def test_config_file_precedence(self, temp_dir):
@@ -268,7 +261,9 @@ class TestConfigManager:
 
         manager = ConfigManager()
 
-        with pytest.raises(ConfigError, match="confidence_threshold must be between 0 and 100"):
+        with pytest.raises(
+            ConfigError, match="confidence_threshold must be between 0 and 100"
+        ):
             manager._validate_config(config)
 
     def test_config_validation_invalid_file_permissions(self):
@@ -296,13 +291,8 @@ class TestConfigManager:
         manager = ConfigManager()
 
         base = {
-            "analysis": {
-                "confidence_threshold": 80,
-                "cache_enabled": True
-            },
-            "templates": {
-                "search_paths": ["./templates/"]
-            }
+            "analysis": {"confidence_threshold": 80, "cache_enabled": True},
+            "templates": {"search_paths": ["./templates/"]},
         }
 
         override = {
@@ -310,9 +300,7 @@ class TestConfigManager:
                 "confidence_threshold": 90
                 # cache_enabled not specified, should remain True
             },
-            "git_integration": {
-                "enabled": False
-            }
+            "git_integration": {"enabled": False},
         }
 
         result = manager._deep_merge(base, override)
@@ -345,8 +333,8 @@ class TestConfigManager:
             "version": "1.0",
             "git_integration": {
                 "mode": "track_generated",
-                "claude_mention_policy": "minimal"
-            }
+                "claude_mention_policy": "minimal",
+            },
         }
 
         config_file = temp_dir / "enum-test.json"
@@ -357,7 +345,9 @@ class TestConfigManager:
         config = manager.load_config(temp_dir)
 
         assert config.git_integration.mode == GitIntegrationMode.TRACK_GENERATED
-        assert config.git_integration.claude_mention_policy == ClaudeMentionPolicy.MINIMAL
+        assert (
+            config.git_integration.claude_mention_policy == ClaudeMentionPolicy.MINIMAL
+        )
 
     def test_invalid_config_file_handling(self, temp_dir):
         """Test handling of invalid configuration files."""
@@ -386,7 +376,7 @@ class TestConfigManager:
         args = {
             "project_path": str(temp_dir),
             "verbose": True,
-            "template": "test-template"
+            "template": "test-template",
         }
 
         config = load_config_from_args(args)
@@ -408,10 +398,7 @@ class TestConfigIntegration:
             "analysis": {
                 "confidence_threshold": 95,
                 "ignore_patterns": [".git/", "custom_ignore/"],
-                "overrides": {
-                    "language": "python",
-                    "framework": "django"
-                }
+                "overrides": {"language": "python", "framework": "django"},
             }
         }
 
@@ -431,7 +418,7 @@ class TestConfigIntegration:
         config_data = {
             "templates": {
                 "preferred_templates": ["custom-python", "web-api"],
-                "search_paths": ["./custom_templates/", "~/.claude-builder/templates/"]
+                "search_paths": ["./custom_templates/", "~/.claude-builder/templates/"],
             }
         }
 
@@ -453,7 +440,7 @@ class TestConfigIntegration:
                 "mode": "exclude_generated",
                 "claude_mention_policy": "forbidden",
                 "backup_before_changes": True,
-                "files_to_exclude": ["CLAUDE.md", "AGENTS.md", "custom_file.md"]
+                "files_to_exclude": ["CLAUDE.md", "AGENTS.md", "custom_file.md"],
             }
         }
 
@@ -466,7 +453,10 @@ class TestConfigIntegration:
 
         assert config.git_integration.enabled is True
         assert config.git_integration.mode == GitIntegrationMode.EXCLUDE_GENERATED
-        assert config.git_integration.claude_mention_policy == ClaudeMentionPolicy.FORBIDDEN
+        assert (
+            config.git_integration.claude_mention_policy
+            == ClaudeMentionPolicy.FORBIDDEN
+        )
         assert "custom_file.md" in config.git_integration.files_to_exclude
 
     def test_config_output_settings(self, temp_dir):
@@ -476,7 +466,7 @@ class TestConfigIntegration:
                 "format": "zip",
                 "backup_existing": False,
                 "file_permissions": "0755",
-                "validate_generated": True
+                "validate_generated": True,
             }
         }
 
@@ -498,7 +488,7 @@ class TestConfigIntegration:
                 "default_editor": "vim",
                 "prefer_verbose_output": True,
                 "auto_open_generated_files": True,
-                "confirmation_prompts": False
+                "confirmation_prompts": False,
             }
         }
 

@@ -15,10 +15,4 @@ from .core.analyzer import ProjectAnalyzer
 from .core.config import Config, ConfigManager
 from .core.generator import DocumentGenerator
 
-__all__ = [
-    "Config",
-    "ConfigManager",
-    "DocumentGenerator",
-    "ProjectAnalyzer",
-    "main"
-]
+__all__ = ["Config", "ConfigManager", "DocumentGenerator", "ProjectAnalyzer", "main"]

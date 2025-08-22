@@ -23,16 +23,37 @@ def analyze():
 
 
 @analyze.command()
-@click.argument("project_path", type=click.Path(exists=True, file_okay=False, dir_okay=True))
-@click.option("--output", "-o", type=click.Path(), help="Save analysis to file (JSON format)")
-@click.option("--format", "output_format", type=click.Choice(["json", "yaml", "table"]),
-              default="table", help="Output format")
-@click.option("--confidence-threshold", type=int, default=0,
-              help="Minimum confidence for reporting (0-100)")
-@click.option("--include-suggestions", is_flag=True, help="Include improvement suggestions")
+@click.argument(
+    "project_path", type=click.Path(exists=True, file_okay=False, dir_okay=True)
+)
+@click.option(
+    "--output", "-o", type=click.Path(), help="Save analysis to file (JSON format)"
+)
+@click.option(
+    "--format",
+    "output_format",
+    type=click.Choice(["json", "yaml", "table"]),
+    default="table",
+    help="Output format",
+)
+@click.option(
+    "--confidence-threshold",
+    type=int,
+    default=0,
+    help="Minimum confidence for reporting (0-100)",
+)
+@click.option(
+    "--include-suggestions", is_flag=True, help="Include improvement suggestions"
+)
 @click.option("--verbose", "-v", count=True, help="Verbose output")
-def project(project_path: str, output: Optional[str], output_format: str,
-           confidence_threshold: int, include_suggestions: bool, verbose: int):
+def project(
+    project_path: str,
+    output: Optional[str],
+    output_format: str,
+    confidence_threshold: int,
+    include_suggestions: bool,
+    verbose: int,
+):
     """Analyze a project directory."""
     try:
         path = Path(project_path).resolve()
@@ -46,7 +67,9 @@ def project(project_path: str, output: Optional[str], output_format: str,
 
         # Apply confidence threshold
         if analysis.analysis_confidence < confidence_threshold:
-            console.print(f"[yellow]Analysis confidence {analysis.analysis_confidence:.1f}% is below threshold {confidence_threshold}%[/yellow]")
+            console.print(
+                f"[yellow]Analysis confidence {analysis.analysis_confidence:.1f}% is below threshold {confidence_threshold}%[/yellow]"
+            )
             if not include_suggestions:
                 return
 
@@ -71,13 +94,15 @@ def project(project_path: str, output: Optional[str], output_format: str,
 def _display_analysis_table(analysis, include_suggestions: bool, verbose: int):
     """Display analysis in table format."""
     # Main analysis results
-    console.print(Panel(
-        f"[bold blue]Project Analysis Results[/bold blue]\n\n"
-        f"**Path**: {analysis.project_path}\n"
-        f"**Overall Confidence**: {analysis.analysis_confidence:.1f}%\n"
-        f"**Analysis Time**: {analysis.analysis_timestamp or 'Unknown'}",
-        title="Analysis Summary"
-    ))
+    console.print(
+        Panel(
+            f"[bold blue]Project Analysis Results[/bold blue]\n\n"
+            f"**Path**: {analysis.project_path}\n"
+            f"**Overall Confidence**: {analysis.analysis_confidence:.1f}%\n"
+            f"**Analysis Time**: {analysis.analysis_timestamp or 'Unknown'}",
+            title="Analysis Summary",
+        )
+    )
 
     # Language information
     lang_table = Table(title="Language Analysis")
@@ -88,14 +113,12 @@ def _display_analysis_table(analysis, include_suggestions: bool, verbose: int):
     lang_table.add_row(
         "Primary Language",
         analysis.language_info.primary or "Unknown",
-        f"{analysis.language_info.confidence:.1f}%"
+        f"{analysis.language_info.confidence:.1f}%",
     )
 
     if analysis.language_info.secondary:
         lang_table.add_row(
-            "Secondary Languages",
-            ", ".join(analysis.language_info.secondary),
-            "-"
+            "Secondary Languages", ", ".join(analysis.language_info.secondary), "-"
         )
 
     console.print(lang_table)
@@ -110,22 +133,18 @@ def _display_analysis_table(analysis, include_suggestions: bool, verbose: int):
         fw_table.add_row(
             "Primary Framework",
             analysis.framework_info.primary or "None detected",
-            f"{analysis.framework_info.confidence:.1f}%"
+            f"{analysis.framework_info.confidence:.1f}%",
         )
 
         if analysis.framework_info.secondary:
             fw_table.add_row(
                 "Secondary Frameworks",
                 ", ".join(analysis.framework_info.secondary),
-                "-"
+                "-",
             )
 
         if analysis.framework_info.version:
-            fw_table.add_row(
-                "Version",
-                analysis.framework_info.version,
-                "-"
-            )
+            fw_table.add_row("Version", analysis.framework_info.version, "-")
 
         console.print(fw_table)
 
@@ -134,9 +153,14 @@ def _display_analysis_table(analysis, include_suggestions: bool, verbose: int):
     char_table.add_column("Characteristic", style="cyan")
     char_table.add_column("Value", style="green")
 
-    char_table.add_row("Project Type", analysis.project_type.value.replace("_", " ").title())
+    char_table.add_row(
+        "Project Type", analysis.project_type.value.replace("_", " ").title()
+    )
     char_table.add_row("Complexity Level", analysis.complexity_level.value.title())
-    char_table.add_row("Architecture Pattern", analysis.architecture_pattern.value.replace("_", " ").title())
+    char_table.add_row(
+        "Architecture Pattern",
+        analysis.architecture_pattern.value.replace("_", " ").title(),
+    )
 
     console.print(char_table)
 
@@ -163,19 +187,30 @@ def _display_analysis_table(analysis, include_suggestions: bool, verbose: int):
         dev_table.add_column("Detected Tools", style="green")
 
         if analysis.dev_environment.package_managers:
-            dev_table.add_row("Package Managers", ", ".join(analysis.dev_environment.package_managers))
+            dev_table.add_row(
+                "Package Managers", ", ".join(analysis.dev_environment.package_managers)
+            )
 
         if analysis.dev_environment.testing_frameworks:
-            dev_table.add_row("Testing Frameworks", ", ".join(analysis.dev_environment.testing_frameworks))
+            dev_table.add_row(
+                "Testing Frameworks",
+                ", ".join(analysis.dev_environment.testing_frameworks),
+            )
 
         if analysis.dev_environment.ci_cd_systems:
-            dev_table.add_row("CI/CD Systems", ", ".join(analysis.dev_environment.ci_cd_systems))
+            dev_table.add_row(
+                "CI/CD Systems", ", ".join(analysis.dev_environment.ci_cd_systems)
+            )
 
         if analysis.dev_environment.containerization:
-            dev_table.add_row("Containerization", ", ".join(analysis.dev_environment.containerization))
+            dev_table.add_row(
+                "Containerization", ", ".join(analysis.dev_environment.containerization)
+            )
 
         if analysis.dev_environment.databases:
-            dev_table.add_row("Databases", ", ".join(analysis.dev_environment.databases))
+            dev_table.add_row(
+                "Databases", ", ".join(analysis.dev_environment.databases)
+            )
 
         console.print(dev_table)
 
@@ -189,14 +224,12 @@ def _display_analysis_table(analysis, include_suggestions: bool, verbose: int):
         domain_table.add_row(
             "Domain",
             analysis.domain_info.domain.replace("_", " ").title(),
-            f"{analysis.domain_info.confidence:.1f}%"
+            f"{analysis.domain_info.confidence:.1f}%",
         )
 
         if analysis.domain_info.indicators:
             domain_table.add_row(
-                "Indicators",
-                ", ".join(analysis.domain_info.indicators),
-                "-"
+                "Indicators", ", ".join(analysis.domain_info.indicators), "-"
             )
 
         console.print(domain_table)
@@ -223,6 +256,7 @@ def _display_analysis_yaml(analysis, include_suggestions: bool):
     """Display analysis in YAML format."""
     try:
         import yaml
+
         data = _analysis_to_dict(analysis, include_suggestions)
         console.print(yaml.dump(data, default_flow_style=False))
     except ImportError:
@@ -243,20 +277,20 @@ def _analysis_to_dict(analysis, include_suggestions: bool) -> dict:
             "secondary": analysis.language_info.secondary,
             "confidence": analysis.language_info.confidence,
             "file_counts": analysis.language_info.file_counts,
-            "total_lines": analysis.language_info.total_lines
+            "total_lines": analysis.language_info.total_lines,
         },
         "framework_info": {
             "primary": analysis.framework_info.primary,
             "secondary": analysis.framework_info.secondary,
             "confidence": analysis.framework_info.confidence,
             "version": analysis.framework_info.version,
-            "config_files": analysis.framework_info.config_files
+            "config_files": analysis.framework_info.config_files,
         },
         "domain_info": {
             "domain": analysis.domain_info.domain,
             "confidence": analysis.domain_info.confidence,
             "indicators": analysis.domain_info.indicators,
-            "specialized_patterns": analysis.domain_info.specialized_patterns
+            "specialized_patterns": analysis.domain_info.specialized_patterns,
         },
         "project_type": analysis.project_type.value,
         "complexity_level": analysis.complexity_level.value,
@@ -268,7 +302,7 @@ def _analysis_to_dict(analysis, include_suggestions: bool) -> dict:
             "ci_cd_systems": analysis.dev_environment.ci_cd_systems,
             "containerization": analysis.dev_environment.containerization,
             "databases": analysis.dev_environment.databases,
-            "documentation_tools": analysis.dev_environment.documentation_tools
+            "documentation_tools": analysis.dev_environment.documentation_tools,
         },
         "filesystem_info": {
             "total_files": analysis.filesystem_info.total_files,
@@ -279,9 +313,9 @@ def _analysis_to_dict(analysis, include_suggestions: bool) -> dict:
             "documentation_files": analysis.filesystem_info.documentation_files,
             "asset_files": analysis.filesystem_info.asset_files,
             "ignore_patterns": analysis.filesystem_info.ignore_patterns,
-            "root_files": analysis.filesystem_info.root_files
+            "root_files": analysis.filesystem_info.root_files,
         },
-        "warnings": analysis.warnings
+        "warnings": analysis.warnings,
     }
 
     if include_suggestions:
@@ -297,6 +331,7 @@ def _save_analysis_to_file(analysis, output_path: Path, include_suggestions: boo
     if output_path.suffix.lower() in [".yaml", ".yml"]:
         try:
             import yaml
+
             with open(output_path, "w", encoding="utf-8") as f:
                 yaml.dump(data, f, default_flow_style=False)
         except ImportError:

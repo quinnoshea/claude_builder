@@ -9,5 +9,5 @@ __all__ = [
     "ConfigManager",
     "DocumentGenerator",
     "ProjectAnalysis",
-    "ProjectAnalyzer"
+    "ProjectAnalyzer",
 ]

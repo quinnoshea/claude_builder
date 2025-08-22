@@ -31,8 +31,12 @@ class TestConfigSchema:
         # Define schema structure
         schema.define_field("project.name", str, required=True)
         schema.define_field("project.version", str, default="0.1.0")
-        schema.define_field("analysis.depth", str, choices=["basic", "standard", "detailed"])
-        schema.define_field("generation.output_format", str, choices=["markdown", "html", "json"])
+        schema.define_field(
+            "analysis.depth", str, choices=["basic", "standard", "detailed"]
+        )
+        schema.define_field(
+            "generation.output_format", str, choices=["markdown", "html", "json"]
+        )
         schema.define_field("performance.cache_size", int, min_value=1, max_value=1000)
 
         assert schema.has_field("project.name")
@@ -45,17 +49,14 @@ class TestConfigSchema:
         """Test successful schema validation."""
         schema = ConfigSchema()
         schema.define_field("project.name", str, required=True)
-        schema.define_field("project.type", str, choices=["python", "rust", "javascript"])
+        schema.define_field(
+            "project.type", str, choices=["python", "rust", "javascript"]
+        )
         schema.define_field("analysis.include_tests", bool, default=True)
 
         config_data = {
-            "project": {
-                "name": "test-project",
-                "type": "python"
-            },
-            "analysis": {
-                "include_tests": False
-            }
+            "project": {"name": "test-project", "type": "python"},
+            "analysis": {"include_tests": False},
         }
 
         validation_result = schema.validate(config_data)
@@ -66,16 +67,16 @@ class TestConfigSchema:
         """Test schema validation with errors."""
         schema = ConfigSchema()
         schema.define_field("project.name", str, required=True)
-        schema.define_field("project.type", str, choices=["python", "rust", "javascript"])
+        schema.define_field(
+            "project.type", str, choices=["python", "rust", "javascript"]
+        )
         schema.define_field("performance.threads", int, min_value=1, max_value=16)
 
         config_data = {
             "project": {
                 "type": "invalid_type"  # Missing required name, invalid choice
             },
-            "performance": {
-                "threads": 20  # Exceeds max_value
-            }
+            "performance": {"threads": 20},  # Exceeds max_value
         }
 
         validation_result = schema.validate(config_data)
@@ -83,9 +84,15 @@ class TestConfigSchema:
         assert len(validation_result.errors) >= 3
 
         error_messages = [error.message for error in validation_result.errors]
-        assert any("project.name" in msg and "required" in msg for msg in error_messages)
-        assert any("project.type" in msg and "invalid choice" in msg for msg in error_messages)
-        assert any("performance.threads" in msg and "maximum" in msg for msg in error_messages)
+        assert any(
+            "project.name" in msg and "required" in msg for msg in error_messages
+        )
+        assert any(
+            "project.type" in msg and "invalid choice" in msg for msg in error_messages
+        )
+        assert any(
+            "performance.threads" in msg and "maximum" in msg for msg in error_messages
+        )
 
     def test_schema_nested_validation(self):
         """Test validation of nested configuration structures."""
@@ -93,16 +100,15 @@ class TestConfigSchema:
         schema.define_field("database.host", str, required=True)
         schema.define_field("database.port", int, min_value=1, max_value=65535)
         schema.define_field("database.credentials.username", str, required=True)
-        schema.define_field("database.credentials.password", str, required=True, sensitive=True)
+        schema.define_field(
+            "database.credentials.password", str, required=True, sensitive=True
+        )
 
         config_data = {
             "database": {
                 "host": "localhost",
                 "port": 5432,
-                "credentials": {
-                    "username": "admin",
-                    "password": "secret123"
-                }
+                "credentials": {"username": "admin", "password": "secret123"},
             }
         }
 
@@ -117,7 +123,7 @@ class TestConfigSchema:
                 "credentials": {
                     "username": "admin"
                     # Missing password
-                }
+                },
             }
         }
 
@@ -134,7 +140,7 @@ class TestConfigEnvironment:
         env = ConfigEnvironment(
             name="development",
             description="Development environment configuration",
-            priority=1
+            priority=1,
         )
 
         assert env.name == "development"
@@ -148,27 +154,21 @@ class TestConfigEnvironment:
         prod_env = ConfigEnvironment("production")
 
         # Set environment-specific configurations
-        dev_env.set_config({
-            "debug": True,
-            "database": {
-                "host": "localhost",
-                "name": "dev_db"
-            },
-            "logging": {
-                "level": "DEBUG"
+        dev_env.set_config(
+            {
+                "debug": True,
+                "database": {"host": "localhost", "name": "dev_db"},
+                "logging": {"level": "DEBUG"},
             }
-        })
+        )
 
-        prod_env.set_config({
-            "debug": False,
-            "database": {
-                "host": "prod-db.example.com",
-                "name": "prod_db"
-            },
-            "logging": {
-                "level": "WARNING"
+        prod_env.set_config(
+            {
+                "debug": False,
+                "database": {"host": "prod-db.example.com", "name": "prod_db"},
+                "logging": {"level": "WARNING"},
             }
-        })
+        )
 
         assert dev_env.get_config("debug") is True
         assert prod_env.get_config("debug") is False
@@ -178,26 +178,20 @@ class TestConfigEnvironment:
     def test_environment_inheritance(self):
         """Test configuration inheritance between environments."""
         base_env = ConfigEnvironment("base")
-        base_env.set_config({
-            "app": {
-                "name": "claude-builder",
-                "version": "1.0.0"
-            },
-            "features": {
-                "analytics": True,
-                "caching": True
+        base_env.set_config(
+            {
+                "app": {"name": "claude-builder", "version": "1.0.0"},
+                "features": {"analytics": True, "caching": True},
             }
-        })
+        )
 
         dev_env = ConfigEnvironment("development", parent=base_env)
-        dev_env.set_config({
-            "app": {
-                "debug": True  # Additional field
-            },
-            "features": {
-                "analytics": False  # Override
+        dev_env.set_config(
+            {
+                "app": {"debug": True},  # Additional field
+                "features": {"analytics": False},  # Override
             }
-        })
+        )
 
         # Should inherit from base and override/add as needed
         merged_config = dev_env.get_merged_config()
@@ -212,27 +206,29 @@ class TestConfigEnvironment:
         import os
 
         # Set test environment variables
-        with patch.dict(os.environ, {
-            "DB_HOST": "test-db-host",
-            "DB_PORT": "5432",
-            "API_KEY": "secret-api-key"
-        }):
+        with patch.dict(
+            os.environ,
+            {"DB_HOST": "test-db-host", "DB_PORT": "5432", "API_KEY": "secret-api-key"},
+        ):
             env = ConfigEnvironment("test")
-            env.set_config({
-                "database": {
-                    "host": "${DB_HOST}",
-                    "port": "${DB_PORT}",
-                    "url": "postgresql://${DB_HOST}:${DB_PORT}/mydb"
-                },
-                "api": {
-                    "key": "${API_KEY}"
+            env.set_config(
+                {
+                    "database": {
+                        "host": "${DB_HOST}",
+                        "port": "${DB_PORT}",
+                        "url": "postgresql://${DB_HOST}:${DB_PORT}/mydb",
+                    },
+                    "api": {"key": "${API_KEY}"},
                 }
-            })
+            )
 
             resolved_config = env.resolve_variables()
             assert resolved_config["database"]["host"] == "test-db-host"
             assert resolved_config["database"]["port"] == "5432"
-            assert resolved_config["database"]["url"] == "postgresql://test-db-host:5432/mydb"
+            assert (
+                resolved_config["database"]["url"]
+                == "postgresql://test-db-host:5432/mydb"
+            )
             assert resolved_config["api"]["key"] == "secret-api-key"
 
 
@@ -264,11 +260,7 @@ class TestConfigValidator:
 
         # Test valid configuration
         valid_config = {
-            "database": {
-                "type": "postgresql",
-                "host": "localhost",
-                "port": 5432
-            }
+            "database": {"type": "postgresql", "host": "localhost", "port": 5432}
         }
 
         result = validator.validate(valid_config)
@@ -284,7 +276,10 @@ class TestConfigValidator:
 
         result = validator.validate(invalid_config)
         assert not result.is_valid
-        assert any("PostgreSQL requires host and port" in error.message for error in result.errors)
+        assert any(
+            "PostgreSQL requires host and port" in error.message
+            for error in result.errors
+        )
 
     def test_conditional_validation(self):
         """Test conditional validation based on other config values."""
@@ -304,20 +299,14 @@ class TestConfigValidator:
         # Test SSL enabled with proper config
         valid_ssl_config = {
             "server": {"use_ssl": True},
-            "ssl": {
-                "cert_file": "/path/to/cert.pem",
-                "key_file": "/path/to/key.pem"
-            }
+            "ssl": {"cert_file": "/path/to/cert.pem", "key_file": "/path/to/key.pem"},
         }
 
         result = validator.validate(valid_ssl_config)
         assert result.is_valid
 
         # Test SSL enabled without proper config
-        invalid_ssl_config = {
-            "server": {"use_ssl": True},
-            "ssl": {}
-        }
+        invalid_ssl_config = {"server": {"use_ssl": True}, "ssl": {}}
 
         result = validator.validate(invalid_ssl_config)
         assert not result.is_valid
@@ -337,30 +326,23 @@ class TestConfigValidator:
             if cache_size > 0 and max_workers > 1:
                 min_cache_per_worker = 10
                 if cache_size < (max_workers * min_cache_per_worker):
-                    return False, f"Cache size too small for {max_workers} workers. Minimum: {max_workers * min_cache_per_worker}"
+                    return (
+                        False,
+                        f"Cache size too small for {max_workers} workers. Minimum: {max_workers * min_cache_per_worker}",
+                    )
 
             return True, None
 
         validator.add_rule("performance_balance", validate_performance_settings)
 
         # Test balanced configuration
-        balanced_config = {
-            "performance": {
-                "cache_size": 100,
-                "max_workers": 4
-            }
-        }
+        balanced_config = {"performance": {"cache_size": 100, "max_workers": 4}}
 
         result = validator.validate(balanced_config)
         assert result.is_valid
 
         # Test unbalanced configuration
-        unbalanced_config = {
-            "performance": {
-                "cache_size": 20,
-                "max_workers": 8
-            }
-        }
+        unbalanced_config = {"performance": {"cache_size": 20, "max_workers": 8}}
 
         result = validator.validate(unbalanced_config)
         assert not result.is_valid
@@ -384,12 +366,9 @@ class TestSecureConfigHandler:
             "database": {
                 "host": "localhost",
                 "password": "secret123",
-                "api_key": "key-456"
+                "api_key": "key-456",
             },
-            "auth": {
-                "jwt_secret": "jwt-secret-789",
-                "username": "admin"
-            }
+            "auth": {"jwt_secret": "jwt-secret-789", "username": "admin"},
         }
 
         # Should identify sensitive fields
@@ -406,14 +385,8 @@ class TestSecureConfigHandler:
         handler = SecureConfigHandler(encryption_key="test-encryption-key")
 
         config = {
-            "database": {
-                "host": "localhost",
-                "password": "supersecret",
-                "port": 5432
-            },
-            "api": {
-                "key": "api-secret-key"
-            }
+            "database": {"host": "localhost", "password": "supersecret", "port": 5432},
+            "api": {"key": "api-secret-key"},
         }
 
         # Mark sensitive fields
@@ -469,12 +442,12 @@ class TestSecureConfigHandler:
                 "host": "localhost",
                 "username": "admin",
                 "password": "supersecret123",
-                "port": 5432
+                "port": 5432,
             },
             "api": {
                 "endpoint": "https://api.example.com",
-                "key": "very-secret-api-key"
-            }
+                "key": "very-secret-api-key",
+            },
         }
 
         # Mark sensitive fields
@@ -508,16 +481,19 @@ class TestConfigWatcher:
     def test_configuration_change_detection(self, temp_dir):
         """Test detection of configuration file changes."""
         config_file = temp_dir / "config.toml"
-        config_file.write_text("""
+        config_file.write_text(
+            """
 [project]
 name = "test"
 version = "1.0.0"
-""")
+"""
+        )
 
         watcher = ConfigWatcher(config_file)
 
         # Register callback
         callback_called = []
+
         def on_config_change(old_config, new_config):
             callback_called.append((old_config, new_config))
 
@@ -527,11 +503,13 @@ version = "1.0.0"
         watcher.start_watching()
 
         # Modify configuration
-        config_file.write_text("""
+        config_file.write_text(
+            """
 [project]
 name = "test"
 version = "2.0.0"
-""")
+"""
+        )
 
         # Simulate file change detection
         watcher._check_for_changes()
@@ -542,11 +520,13 @@ version = "2.0.0"
     def test_hot_reload_functionality(self, temp_dir):
         """Test hot reload functionality."""
         config_file = temp_dir / "config.toml"
-        config_file.write_text("""
+        config_file.write_text(
+            """
 [server]
 port = 8000
 debug = false
-""")
+"""
+        )
 
         watcher = ConfigWatcher(config_file)
 
@@ -560,11 +540,13 @@ debug = false
         watcher.start_watching()
 
         # Simulate configuration change
-        config_file.write_text("""
+        config_file.write_text(
+            """
 [server]
 port = 9000
 debug = true
-""")
+"""
+        )
 
         watcher._check_for_changes()
 
@@ -575,21 +557,26 @@ debug = true
     def test_validation_on_change(self, temp_dir):
         """Test configuration validation on file changes."""
         config_file = temp_dir / "config.toml"
-        config_file.write_text("""
+        config_file.write_text(
+            """
 [project]
 name = "test"
 type = "python"
-""")
+"""
+        )
 
         # Create schema for validation
         schema = ConfigSchema()
         schema.define_field("project.name", str, required=True)
-        schema.define_field("project.type", str, choices=["python", "rust", "javascript"])
+        schema.define_field(
+            "project.type", str, choices=["python", "rust", "javascript"]
+        )
 
         validator = ConfigValidator(schema)
         watcher = ConfigWatcher(config_file, validator=validator)
 
         validation_results = []
+
         def on_validation_result(is_valid, errors):
             validation_results.append((is_valid, errors))
 
@@ -597,11 +584,13 @@ type = "python"
         watcher.start_watching()
 
         # Make valid change
-        config_file.write_text("""
+        config_file.write_text(
+            """
 [project]
 name = "test"
 type = "rust"
-""")
+"""
+        )
 
         watcher._check_for_changes()
 
@@ -610,11 +599,13 @@ type = "rust"
         assert validation_results[-1][0] is True  # is_valid
 
         # Make invalid change
-        config_file.write_text("""
+        config_file.write_text(
+            """
 [project]
 name = "test"
 type = "invalid_type"
-""")
+"""
+        )
 
         watcher._check_for_changes()
 
@@ -640,7 +631,8 @@ class TestAdvancedConfigManager:
         manager = AdvancedConfigManager(config_directory=temp_dir)
 
         # Create environment configurations
-        (temp_dir / "development.toml").write_text("""
+        (temp_dir / "development.toml").write_text(
+            """
 [project]
 name = "test-project"
 debug = true
@@ -648,9 +640,11 @@ debug = true
 [database]
 host = "localhost"
 port = 5432
-""")
+"""
+        )
 
-        (temp_dir / "production.toml").write_text("""
+        (temp_dir / "production.toml").write_text(
+            """
 [project]
 name = "test-project"
 debug = false
@@ -658,7 +652,8 @@ debug = false
 [database]
 host = "prod-db.example.com"
 port = 5432
-""")
+"""
+        )
 
         # Load environments
         manager.load_environments()
@@ -680,7 +675,8 @@ port = 5432
         manager = AdvancedConfigManager(config_directory=temp_dir)
 
         # Base configuration
-        (temp_dir / "base.toml").write_text("""
+        (temp_dir / "base.toml").write_text(
+            """
 [app]
 name = "claude-builder"
 version = "1.0.0"
@@ -688,10 +684,12 @@ version = "1.0.0"
 [features]
 analytics = true
 caching = true
-""")
+"""
+        )
 
         # Environment-specific override
-        (temp_dir / "development.toml").write_text("""
+        (temp_dir / "development.toml").write_text(
+            """
 [app]
 debug = true
 
@@ -700,29 +698,36 @@ analytics = false
 
 [development]
 hot_reload = true
-""")
+"""
+        )
 
         # User-specific override
-        (temp_dir / "user.toml").write_text("""
+        (temp_dir / "user.toml").write_text(
+            """
 [features]
 experimental = true
 
 [user]
 preferences = "custom"
-""")
+"""
+        )
 
         # Compose configuration
-        composed_config = manager.compose_configuration([
-            temp_dir / "base.toml",
-            temp_dir / "development.toml",
-            temp_dir / "user.toml"
-        ])
+        composed_config = manager.compose_configuration(
+            [
+                temp_dir / "base.toml",
+                temp_dir / "development.toml",
+                temp_dir / "user.toml",
+            ]
+        )
 
         # Should merge all sources with proper precedence
         assert composed_config["app"]["name"] == "claude-builder"  # From base
         assert composed_config["app"]["version"] == "1.0.0"  # From base
         assert composed_config["app"]["debug"] is True  # From development
-        assert composed_config["features"]["analytics"] is False  # Overridden by development
+        assert (
+            composed_config["features"]["analytics"] is False
+        )  # Overridden by development
         assert composed_config["features"]["caching"] is True  # From base
         assert composed_config["features"]["experimental"] is True  # From user
         assert composed_config["development"]["hot_reload"] is True  # From development
@@ -734,11 +739,13 @@ preferences = "custom"
 
         # Initial configuration
         config_file = temp_dir / "runtime.toml"
-        config_file.write_text("""
+        config_file.write_text(
+            """
 [server]
 port = 8000
 workers = 4
-""")
+"""
+        )
 
         manager.load_configuration(config_file)
 
@@ -768,16 +775,19 @@ workers = 4
         profiles = {
             "minimal": {
                 "analysis": {"depth": "basic", "include_git": False},
-                "generation": {"template_variant": "minimal", "include_agents": False}
+                "generation": {"template_variant": "minimal", "include_agents": False},
             },
             "comprehensive": {
                 "analysis": {"depth": "detailed", "include_git": True},
-                "generation": {"template_variant": "comprehensive", "include_agents": True}
+                "generation": {
+                    "template_variant": "comprehensive",
+                    "include_agents": True,
+                },
             },
             "performance": {
                 "analysis": {"depth": "standard", "parallel": True},
-                "generation": {"template_variant": "optimized", "cache_enabled": True}
-            }
+                "generation": {"template_variant": "optimized", "cache_enabled": True},
+            },
         }
 
         for profile_name, config in profiles.items():
@@ -794,8 +804,12 @@ workers = 4
 
         # Test profile merging
         merged_config = manager.merge_profiles(["minimal", "performance"])
-        assert merged_config["analysis"]["depth"] == "standard"  # From performance (later)
-        assert merged_config["generation"]["template_variant"] == "optimized"  # From performance
+        assert (
+            merged_config["analysis"]["depth"] == "standard"
+        )  # From performance (later)
+        assert (
+            merged_config["generation"]["template_variant"] == "optimized"
+        )  # From performance
         assert merged_config["generation"]["include_agents"] is False  # From minimal
 
     def test_configuration_migration(self, temp_dir):
@@ -804,7 +818,8 @@ workers = 4
 
         # Old configuration format (v1.0)
         old_config = temp_dir / "old_config.toml"
-        old_config.write_text("""
+        old_config.write_text(
+            """
 version = "1.0"
 
 [project]
@@ -814,7 +829,8 @@ type = "python"
 [output]
 format = "md"
 location = "docs/"
-""")
+"""
+        )
 
         # Define migration rules
         migration_rules = {
@@ -822,14 +838,14 @@ location = "docs/"
                 "2.0": {
                     "rename": {
                         "output.format": "generation.output_format",
-                        "output.location": "generation.output_directory"
+                        "output.location": "generation.output_directory",
                     },
                     "transform": {
-                        "generation.output_format": lambda x: "markdown" if x == "md" else x
+                        "generation.output_format": lambda x: (
+                            "markdown" if x == "md" else x
+                        )
                     },
-                    "add": {
-                        "generation.template_variant": "comprehensive"
-                    }
+                    "add": {"generation.template_variant": "comprehensive"},
                 }
             }
         }
@@ -837,12 +853,18 @@ location = "docs/"
         manager.set_migration_rules(migration_rules)
 
         # Migrate configuration
-        migrated_config = manager.migrate_configuration(old_config, target_version="2.0")
+        migrated_config = manager.migrate_configuration(
+            old_config, target_version="2.0"
+        )
 
         # Should have migrated structure
         assert migrated_config["version"] == "2.0"
         assert migrated_config["project"]["name"] == "test"
-        assert migrated_config["generation"]["output_format"] == "markdown"  # Transformed
+        assert (
+            migrated_config["generation"]["output_format"] == "markdown"
+        )  # Transformed
         assert migrated_config["generation"]["output_directory"] == "docs/"  # Renamed
-        assert migrated_config["generation"]["template_variant"] == "comprehensive"  # Added
+        assert (
+            migrated_config["generation"]["template_variant"] == "comprehensive"
+        )  # Added
         assert "output" not in migrated_config  # Old section removed

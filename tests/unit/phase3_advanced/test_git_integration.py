@@ -47,13 +47,20 @@ class TestAdvancedGitAnalyzer:
             # Mock git log output
             mock_run.side_effect = [
                 # git log --oneline
-                MagicMock(returncode=0, stdout="abc123 Initial commit\ndef456 Add feature\n"),
+                MagicMock(
+                    returncode=0, stdout="abc123 Initial commit\ndef456 Add feature\n"
+                ),
                 # git branch -a
-                MagicMock(returncode=0, stdout="* main\n  feature/new-ui\n  origin/main\n"),
+                MagicMock(
+                    returncode=0, stdout="* main\n  feature/new-ui\n  origin/main\n"
+                ),
                 # git shortlog -sn
                 MagicMock(returncode=0, stdout="  10\tJohn Doe\n   5\tJane Smith\n"),
                 # git log --stat
-                MagicMock(returncode=0, stdout="commit abc123\nAuthor: John Doe\nDate: 2024-01-01\n\n 2 files changed, 10 insertions(+), 2 deletions(-)\n")
+                MagicMock(
+                    returncode=0,
+                    stdout="commit abc123\nAuthor: John Doe\nDate: 2024-01-01\n\n 2 files changed, 10 insertions(+), 2 deletions(-)\n",
+                ),
             ]
 
             analysis = analyzer.analyze_repository()
@@ -88,7 +95,7 @@ Subject: Fix bug in parser
 
  src/parser.py  |  3 +--
  1 file changed, 1 insertion(+), 2 deletions(-)
-"""
+""",
             )
 
             metadata = analyzer.extract_detailed_metadata()
@@ -105,13 +112,25 @@ Subject: Fix bug in parser
         analyzer = AdvancedGitAnalyzer(mock_git_repo)
 
         # Mock various git metrics
-        with patch.object(analyzer.history_analyzer, "get_commit_frequency") as mock_freq:
-            with patch.object(analyzer.branch_analyzer, "analyze_branch_health") as mock_health:
-                with patch.object(analyzer.contributor_analyzer, "get_contributor_distribution") as mock_contrib:
+        with patch.object(
+            analyzer.history_analyzer, "get_commit_frequency"
+        ) as mock_freq:
+            with patch.object(
+                analyzer.branch_analyzer, "analyze_branch_health"
+            ) as mock_health:
+                with patch.object(
+                    analyzer.contributor_analyzer, "get_contributor_distribution"
+                ) as mock_contrib:
 
                     mock_freq.return_value = 5.2  # commits per week
-                    mock_health.return_value = {"stale_branches": 2, "active_branches": 3}
-                    mock_contrib.return_value = {"bus_factor": 3, "distribution_score": 0.7}
+                    mock_health.return_value = {
+                        "stale_branches": 2,
+                        "active_branches": 3,
+                    }
+                    mock_contrib.return_value = {
+                        "bus_factor": 3,
+                        "distribution_score": 0.7,
+                    }
 
                     health = analyzer.assess_repository_health()
 
@@ -139,7 +158,7 @@ class TestGitHistoryAnalyzer:
 2024-01-10 jkl012 Commit 4
 2024-01-08 mno345 Commit 5
 2024-01-01 pqr678 Commit 6
-"""
+""",
             )
 
             frequency = analyzer.analyze_commit_frequency()
@@ -165,7 +184,7 @@ fix: correct typo in validation
 test: add unit tests for auth
 feat: add password reset
 refactor: clean up auth module
-"""
+""",
             )
 
             patterns = analyzer.detect_commit_patterns()
@@ -189,7 +208,7 @@ refactor: clean up auth module
 v1.1.0 2024-02-01
 v1.2.0 2024-03-01
 v2.0.0 2024-04-01
-"""
+""",
             )
 
             releases = analyzer.analyze_release_cycles()
@@ -211,7 +230,7 @@ def456 2024-01-14T14:30:00 feat: add new feature
 ghi789 2024-01-14T16:45:00 fix: urgent production fix
 jkl012 2024-01-13T09:15:00 docs: update docs
 mno345 2024-01-12T23:55:00 hotfix: fix payment processing
-"""
+""",
             )
 
             hotfix_analysis = analyzer.analyze_hotfixes()
@@ -240,7 +259,7 @@ Date: 2024-01-14
  src/main.py     | 5 +++--
  src/parser.py   | 20 --------------------
  2 files changed, 3 insertions(+), 22 deletions(-)
-"""
+""",
             )
 
             churn = analyzer.analyze_code_churn()
@@ -271,7 +290,7 @@ class TestBranchAnalyzer:
   release/v2.0.0
   origin/main
   origin/develop
-"""
+""",
             )
 
             strategy = analyzer.detect_branching_strategy()
@@ -296,7 +315,7 @@ def456 Regular commit
 ghi789 Merge branch 'hotfix/security-fix' into main
 jkl012 Another regular commit
 mno345 Merge pull request #46 from feature/dashboard
-"""
+""",
             )
 
             patterns = analyzer.analyze_merge_patterns()
@@ -314,9 +333,15 @@ mno345 Merge pull request #46 from feature/dashboard
             # Mock branch creation and merge data
             mock_run.side_effect = [
                 # Branch creation dates
-                MagicMock(returncode=0, stdout="feature/auth 2024-01-10\nfeature/dashboard 2024-01-15\n"),
+                MagicMock(
+                    returncode=0,
+                    stdout="feature/auth 2024-01-10\nfeature/dashboard 2024-01-15\n",
+                ),
                 # Branch merge dates
-                MagicMock(returncode=0, stdout="feature/auth 2024-01-20\nfeature/dashboard 2024-01-25\n")
+                MagicMock(
+                    returncode=0,
+                    stdout="feature/auth 2024-01-20\nfeature/dashboard 2024-01-25\n",
+                ),
             ]
 
             lifecycle = analyzer.analyze_branch_lifecycle()
@@ -341,7 +366,7 @@ mno345 Merge pull request #46 from feature/dashboard
                 stdout=f"""feature/old-feature {old_date.strftime('%Y-%m-%d')}
 feature/recent-feature {recent_date.strftime('%Y-%m-%d')}
 main {recent_date.strftime('%Y-%m-%d')}
-"""
+""",
             )
 
             stale_branches = analyzer.detect_stale_branches(threshold_days=30)
@@ -368,7 +393,7 @@ class TestContributorAnalyzer:
    30\tJane Smith <jane@example.com>
    15\tBob Johnson <bob@example.com>
     5\tAlice Brown <alice@example.com>
-"""
+""",
             )
 
             stats = analyzer.analyze_contributor_statistics()
@@ -389,9 +414,9 @@ class TestContributorAnalyzer:
                     "John Doe": 60,  # 60% of commits
                     "Jane Smith": 25,  # 25% of commits
                     "Bob Johnson": 10,  # 10% of commits
-                    "Alice Brown": 5   # 5% of commits
+                    "Alice Brown": 5,  # 5% of commits
                 },
-                total_commits=100
+                total_commits=100,
             )
 
             bus_factor = analyzer.calculate_bus_factor()
@@ -414,7 +439,7 @@ class TestContributorAnalyzer:
 2024-01-10 Bob Johnson
 2024-01-08 John Doe
 2024-01-05 Jane Smith
-"""
+""",
             )
 
             timeline = analyzer.analyze_activity_timeline()
@@ -447,7 +472,7 @@ Bob Johnson:
   deployment/docker/: 20 commits
   deployment/k8s/: 15 commits
   scripts/: 10 commits
-"""
+""",
             )
 
             expertise = analyzer.analyze_expertise_areas()
@@ -483,7 +508,7 @@ commit ghi789
 Date: 2024-01-05
 Author: John Doe
  50 insertions(+), 0 deletions(-)
-"""
+""",
             )
 
             evolution = tracker.track_file_evolution("src/main.py")
@@ -504,9 +529,15 @@ Author: John Doe
                 # Initial structure
                 MagicMock(returncode=0, stdout="src/\ntests/\nREADME.md\n"),
                 # After 6 months
-                MagicMock(returncode=0, stdout="src/\nsrc/models/\nsrc/views/\ntests/\ndocs/\nREADME.md\n"),
+                MagicMock(
+                    returncode=0,
+                    stdout="src/\nsrc/models/\nsrc/views/\ntests/\ndocs/\nREADME.md\n",
+                ),
                 # After 1 year
-                MagicMock(returncode=0, stdout="backend/\nfrontend/\nshared/\ntests/\ndocs/\ndeployment/\nREADME.md\n")
+                MagicMock(
+                    returncode=0,
+                    stdout="backend/\nfrontend/\nshared/\ntests/\ndocs/\ndeployment/\nREADME.md\n",
+                ),
             ]
 
             evolution = tracker.analyze_architecture_evolution()
@@ -533,14 +564,16 @@ commit def456 2024-01-10
 
 commit ghi789 2024-01-05
 +click==8.1.0
-"""
+""",
             )
 
             deps_evolution = tracker.track_dependency_evolution()
 
             assert len(deps_evolution.dependency_additions) == 5
             assert "fastapi" in deps_evolution.dependency_timeline
-            assert deps_evolution.dependency_timeline["fastapi"]["added"] == "2024-01-15"
+            assert (
+                deps_evolution.dependency_timeline["fastapi"]["added"] == "2024-01-15"
+            )
 
     def test_code_quality_trends(self, mock_git_repo):
         """Test tracking of code quality trends over time."""
@@ -549,9 +582,17 @@ commit ghi789 2024-01-05
         # Mock quality metrics over time
         with patch.object(tracker, "_extract_quality_metrics") as mock_metrics:
             mock_metrics.side_effect = [
-                {"complexity": 15, "test_coverage": 60, "documentation": 40},  # 3 months ago
-                {"complexity": 18, "test_coverage": 75, "documentation": 55},  # 2 months ago
-                {"complexity": 22, "test_coverage": 85, "documentation": 70}   # current
+                {
+                    "complexity": 15,
+                    "test_coverage": 60,
+                    "documentation": 40,
+                },  # 3 months ago
+                {
+                    "complexity": 18,
+                    "test_coverage": 75,
+                    "documentation": 55,
+                },  # 2 months ago
+                {"complexity": 22, "test_coverage": 85, "documentation": 70},  # current
             ]
 
             trends = tracker.analyze_quality_trends()
@@ -578,7 +619,7 @@ class TestGitInsights:
                 stale_branches=5,
                 bus_factor=2,
                 test_coverage_trend="declining",
-                hotfix_frequency=0.2  # per week
+                hotfix_frequency=0.2,  # per week
             )
 
             insights = GitInsights.generate_insights(analyzer)
@@ -598,17 +639,20 @@ class TestGitInsights:
 
         insights = GitInsights(analyzer)
 
-        with patch.object(analyzer.branch_analyzer, "detect_branching_strategy") as mock_strategy:
-            with patch.object(analyzer.history_analyzer, "detect_commit_patterns") as mock_patterns:
+        with patch.object(
+            analyzer.branch_analyzer, "detect_branching_strategy"
+        ) as mock_strategy:
+            with patch.object(
+                analyzer.history_analyzer, "detect_commit_patterns"
+            ) as mock_patterns:
 
                 mock_strategy.return_value = MagicMock(
-                    strategy_type="feature_branch",
-                    follows_convention=False
+                    strategy_type="feature_branch", follows_convention=False
                 )
 
                 mock_patterns.return_value = MagicMock(
                     follows_convention=False,
-                    conventional_commits={"feat": 5, "fix": 3, "random": 10}
+                    conventional_commits={"feat": 5, "fix": 3, "random": 10},
                 )
 
                 workflow_insights = insights.analyze_workflow_patterns()
@@ -623,11 +667,13 @@ class TestGitInsights:
         analyzer = AdvancedGitAnalyzer(mock_git_repo)
         insights = GitInsights(analyzer)
 
-        with patch.object(analyzer.evolution_tracker, "analyze_quality_trends") as mock_trends:
+        with patch.object(
+            analyzer.evolution_tracker, "analyze_quality_trends"
+        ) as mock_trends:
             mock_trends.return_value = MagicMock(
                 complexity_trend="increasing",
                 performance_trend="declining",
-                large_files=["data/large_dataset.csv", "assets/video.mp4"]
+                large_files=["data/large_dataset.csv", "assets/video.mp4"],
             )
 
             perf_insights = insights.analyze_performance_indicators()

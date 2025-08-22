@@ -4,10 +4,10 @@ This file provides guidance when working with code in this ${project_type} proje
 
 ## Project Overview
 
-**Primary Language**: ${primary_language}  
-**Framework**: ${primary_framework}  
-**Complexity Level**: ${complexity_level}  
-**Analysis Confidence**: ${analysis_confidence}%  
+**Primary Language**: ${primary_language}
+**Framework**: ${primary_framework}
+**Complexity Level**: ${complexity_level}
+**Analysis Confidence**: ${analysis_confidence}%
 
 <!-- SECTION:overview -->
 This is a ${primary_language} ${project_type} project with ${complexity_level} complexity.
@@ -17,7 +17,7 @@ This is a ${primary_language} ${project_type} project with ${complexity_level} c
 {{/if}}
 
 {{#if secondary_frameworks}}
-**Additional Frameworks**: {{#each secondary_frameworks}}${item}{{/each}}  
+**Additional Frameworks**: {{#each secondary_frameworks}}${item}{{/each}}
 {{/if}}
 <!-- /SECTION:overview -->
 
@@ -30,7 +30,7 @@ This is a ${primary_language} ${project_type} project with ${complexity_level} c
 - Maintain consistent code style throughout the project
 - Write clear, documented code with appropriate comments
 
-### Testing Requirements  
+### Testing Requirements
 
 - Write comprehensive tests for new functionality
 - Ensure tests pass before committing changes
@@ -46,7 +46,7 @@ This is a ${primary_language} ${project_type} project with ${complexity_level} c
 ## Architecture & Patterns
 
 <!-- SECTION:architecture -->
-**Project Type**: ${project_type}  
+**Project Type**: ${project_type}
 **Complexity**: ${complexity_level}
 
 This project follows standard ${primary_language} conventions and patterns appropriate for ${project_type} applications.
@@ -73,7 +73,7 @@ This project follows standard ${primary_language} conventions and patterns appro
 
 ```bash
 # Install dependencies
-# Run tests  
+# Run tests
 # Start development server
 # Build for production
 ```

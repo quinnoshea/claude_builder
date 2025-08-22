@@ -15,7 +15,7 @@
   - Database schema design and optimization
   - Service layer and business logic implementation
 
-#### rapid-prototyper  
+#### rapid-prototyper
 
 **Primary Role**: Quick MVP development and proof of concepts
 
@@ -183,7 +183,7 @@ markers = [
 
 class ${service_name}Service:
     """Service layer implementation following dependency injection."""
-    
+
     def __init__(
         self,
         repository: ${repository_interface},
@@ -193,9 +193,9 @@ class ${service_name}Service:
         self._repository = repository
         self._validator = validator
         self._logger = logger
-    
+
     async def process_request(
-        self, 
+        self,
         request: ${request_model}
     ) -> ${response_model}:
         """Process business logic with proper error handling."""
@@ -204,15 +204,15 @@ class ${service_name}Service:
             # Validation
 
             validated_data = await self._validator.validate(request)
-            
+
             # Business logic
 
             result = await self._repository.process(validated_data)
-            
+
             # Response formatting
 
             return ${response_model}.from_result(result)
-            
+
         except ValidationError as e:
             self._logger.error(f"Validation failed: {e}")
             raise ProcessingError(f"Invalid request: {e}") from e
@@ -229,15 +229,15 @@ class ${service_name}Service:
 
 class Test${service_name}Service:
     """Comprehensive test suite for ${service_name}Service."""
-    
+
     @pytest.fixture
     def mock_repository(self):
         return Mock(spec=${repository_interface})
-    
+
     @pytest.fixture
     def mock_validator(self):
         return Mock(spec=${validator_interface})
-    
+
     @pytest.fixture
     def service(self, mock_repository, mock_validator):
         return ${service_name}Service(
@@ -245,12 +245,12 @@ class Test${service_name}Service:
             validator=mock_validator,
             logger=Mock()
         )
-    
+
     @pytest.mark.asyncio
     async def test_process_request_success(
-        self, 
-        service, 
-        mock_repository, 
+        self,
+        service,
+        mock_repository,
         mock_validator
     ):
         """Test successful request processing."""
@@ -259,14 +259,14 @@ class Test${service_name}Service:
 
         request = ${request_model}(${test_data})
         expected_response = ${response_model}(${expected_data})
-        
+
         mock_validator.validate.return_value = request
         mock_repository.process.return_value = ${result_data}
-        
+
         # Act
 
         result = await service.process_request(request)
-        
+
         # Assert
 
         assert result == expected_response
@@ -282,28 +282,28 @@ class Test${service_name}Service:
 
 class TestPerformance:
     """Performance tests for critical operations."""
-    
+
     @pytest.mark.benchmark
     def test_data_processing_benchmark(self, benchmark, test_data):
         """Benchmark data processing operation."""
         processor = ${processor_class}()
         result = benchmark(processor.process_large_dataset, test_data)
-        
+
         # Assertions about result quality
 
         assert len(result) == len(test_data)
         assert all(item.is_processed for item in result)
-    
+
     @pytest.mark.slow
     def test_large_dataset_processing(self):
         """Test processing performance with large dataset."""
         large_data = self._generate_test_data(size=10000)
         processor = ${processor_class}()
-        
+
         start_time = time.time()
         result = processor.process_large_dataset(large_data)
         execution_time = time.time() - start_time
-        
+
         # Performance assertions
 
         assert execution_time < 30.0  # Should complete within 30 seconds
@@ -320,19 +320,19 @@ class TestPerformance:
 
 class DevelopmentSettings(BaseSettings):
     """Development environment configuration."""
-    
+
     debug: bool = True
     log_level: str = "DEBUG"
     database_url: str = "sqlite:///dev.db"
     redis_url: str = "redis://localhost:6379/0"
-    
+
     # Development-specific features
 
     enable_debug_toolbar: bool = True
     mock_external_services: bool = True
 ```
 
-### Testing Environment  
+### Testing Environment
 
 ```python
 
@@ -340,11 +340,11 @@ class DevelopmentSettings(BaseSettings):
 
 class TestingSettings(BaseSettings):
     """Testing environment configuration."""
-    
+
     debug: bool = True
     log_level: str = "DEBUG"
     database_url: str = "sqlite:///:memory:"
-    
+
     # Testing-specific features
 
     force_synchronous: bool = True  # Disable async for simpler testing
@@ -359,15 +359,15 @@ class TestingSettings(BaseSettings):
 
 class ProductionSettings(BaseSettings):
     """Production environment configuration."""
-    
+
     debug: bool = False
     log_level: str = "WARNING"
-    
+
     # Production database
 
     database_url: str = Field(..., env="DATABASE_URL")
     database_pool_size: int = Field(20, env="DATABASE_POOL_SIZE")
-    
+
     # Security settings
 
     secret_key: str = Field(..., env="SECRET_KEY")

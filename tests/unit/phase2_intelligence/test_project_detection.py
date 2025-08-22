@@ -42,20 +42,24 @@ class TestPatternMatcher:
         assert matcher.matches_pattern(temp_dir / "package.json", "nodejs_project")
         assert matcher.matches_pattern(temp_dir / "Cargo.toml", "rust_project")
         assert matcher.matches_pattern(temp_dir / "pyproject.toml", "python_project")
-        assert matcher.matches_pattern(temp_dir / "requirements.txt", "python_requirements")
+        assert matcher.matches_pattern(
+            temp_dir / "requirements.txt", "python_requirements"
+        )
 
     def test_content_pattern_matching(self, temp_dir):
         """Test content-based pattern matching."""
         # Create file with specific content patterns
         dockerfile = temp_dir / "Dockerfile"
-        dockerfile.write_text("""
+        dockerfile.write_text(
+            """
 FROM python:3.9
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 COPY . .
 CMD ["python", "app.py"]
-""")
+"""
+        )
 
         matcher = PatternMatcher()
 
@@ -73,7 +77,7 @@ CMD ["python", "app.py"]
             "src/components/Header.js",
             "public/",
             "public/index.html",
-            "package.json"
+            "package.json",
         ]
 
         for path in react_structure:
@@ -98,7 +102,7 @@ CMD ["python", "app.py"]
             "name": "custom_framework",
             "file_patterns": ["custom.config"],
             "content_patterns": ["custom_framework_marker"],
-            "structure_patterns": ["custom/", "custom/lib/"]
+            "structure_patterns": ["custom/", "custom/lib/"],
         }
 
         matcher.register_pattern(custom_pattern)
@@ -109,7 +113,9 @@ CMD ["python", "app.py"]
     def test_pattern_priority_and_scoring(self, temp_dir):
         """Test pattern matching with priority and confidence scoring."""
         # Create ambiguous project structure
-        (temp_dir / "package.json").write_text('{"name": "test", "dependencies": {"react": "^18.0.0"}}')
+        (temp_dir / "package.json").write_text(
+            '{"name": "test", "dependencies": {"react": "^18.0.0"}}'
+        )
         (temp_dir / "tsconfig.json").write_text('{"compilerOptions": {}}')
         (temp_dir / "src").mkdir()
         (temp_dir / "src" / "App.tsx").touch()
@@ -125,7 +131,9 @@ CMD ["python", "app.py"]
 
         # React+TypeScript should score higher than plain JavaScript
         react_match = next((m for m in matches if "react" in m["pattern_name"]), None)
-        js_match = next((m for m in matches if m["pattern_name"] == "javascript_project"), None)
+        js_match = next(
+            (m for m in matches if m["pattern_name"] == "javascript_project"), None
+        )
 
         if react_match and js_match:
             assert react_match["confidence"] > js_match["confidence"]
@@ -143,7 +151,8 @@ class TestFrameworkDetector:
         requirements.write_text("fastapi==0.100.0\nuvicorn==0.23.0")
 
         main_py = temp_dir / "main.py"
-        main_py.write_text("""
+        main_py.write_text(
+            """
 from fastapi import FastAPI
 
 app = FastAPI()
@@ -151,7 +160,8 @@ app = FastAPI()
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
-""")
+"""
+        )
 
         frameworks = detector.detect_frameworks(temp_dir)
 
@@ -166,7 +176,8 @@ def read_root():
 
         # Test React detection
         package_json = temp_dir / "package.json"
-        package_json.write_text("""
+        package_json.write_text(
+            """
 {
   "name": "react-app",
   "dependencies": {
@@ -177,11 +188,13 @@ def read_root():
     "start": "react-scripts start"
   }
 }
-""")
+"""
+        )
 
         app_js = temp_dir / "src" / "App.js"
         app_js.parent.mkdir()
-        app_js.write_text("""
+        app_js.write_text(
+            """
 import React from 'react';
 
 function App() {
@@ -189,7 +202,8 @@ function App() {
 }
 
 export default App;
-""")
+"""
+        )
 
         frameworks = detector.detect_frameworks(temp_dir)
 
@@ -204,7 +218,8 @@ export default App;
 
         # Test Axum detection
         cargo_toml = temp_dir / "Cargo.toml"
-        cargo_toml.write_text("""
+        cargo_toml.write_text(
+            """
 [package]
 name = "axum-app"
 version = "0.1.0"
@@ -214,11 +229,13 @@ edition = "2021"
 axum = "0.6"
 tokio = { version = "1", features = ["full"] }
 tower = "0.4"
-""")
+"""
+        )
 
         main_rs = temp_dir / "src" / "main.rs"
         main_rs.parent.mkdir()
-        main_rs.write_text("""
+        main_rs.write_text(
+            """
 use axum::{response::Html, routing::get, Router};
 
 #[tokio::main]
@@ -230,7 +247,8 @@ async fn main() {
 async fn handler() -> Html<&'static str> {
     Html("<h1>Hello, World!</h1>")
 }
-""")
+"""
+        )
 
         frameworks = detector.detect_frameworks(temp_dir)
 
@@ -251,9 +269,13 @@ async fn handler() -> Html<&'static str> {
 
         # Frontend: React
         (temp_dir / "frontend").mkdir()
-        (temp_dir / "frontend" / "package.json").write_text('{"dependencies": {"react": "^18.0.0"}}')
+        (temp_dir / "frontend" / "package.json").write_text(
+            '{"dependencies": {"react": "^18.0.0"}}'
+        )
         (temp_dir / "frontend" / "src").mkdir()
-        (temp_dir / "frontend" / "src" / "App.js").write_text("import React from 'react';")
+        (temp_dir / "frontend" / "src" / "App.js").write_text(
+            "import React from 'react';"
+        )
 
         frameworks = detector.detect_frameworks(temp_dir)
 
@@ -268,14 +290,16 @@ async fn handler() -> Html<&'static str> {
 
         # Create package.json with specific versions
         package_json = temp_dir / "package.json"
-        package_json.write_text("""
+        package_json.write_text(
+            """
 {
   "dependencies": {
     "express": "^4.18.2",
     "mongoose": "7.0.3"
   }
 }
-""")
+"""
+        )
 
         frameworks = detector.detect_frameworks(temp_dir)
 
@@ -297,7 +321,7 @@ class TestArchitectureAnalyzer:
             "src/models.py",
             "src/views.py",
             "src/utils.py",
-            "tests/test_main.py"
+            "tests/test_main.py",
         ]
 
         for path in structure:
@@ -325,14 +349,16 @@ class TestArchitectureAnalyzer:
             (service_dir / "requirements.txt").touch()
 
         # Add docker-compose.yml
-        (temp_dir / "docker-compose.yml").write_text("""
+        (temp_dir / "docker-compose.yml").write_text(
+            """
 version: '3'
 services:
   auth-service:
     build: ./auth-service
   user-service:
     build: ./user-service
-""")
+"""
+        )
 
         architecture = analyzer.analyze_architecture(temp_dir)
 
@@ -351,7 +377,7 @@ services:
             "src/business/services/",
             "src/business/models/",
             "src/data/repositories/",
-            "src/data/entities/"
+            "src/data/entities/",
         ]
 
         for layer in layers:
@@ -375,7 +401,7 @@ services:
             "views/user_view.py",
             "views/order_view.py",
             "controllers/user_controller.py",
-            "controllers/order_controller.py"
+            "controllers/order_controller.py",
         ]
 
         for path in mvc_structure:
@@ -404,7 +430,7 @@ class TestTechnologyStackAnalyzer:
             "frontend/src/App.js": "import React from 'react';",
             "docker-compose.yml": "version: '3'\nservices:\n  postgres:\n    image: postgres:15",
             "nginx.conf": "server { listen 80; }",
-            ".github/workflows/ci.yml": "name: CI\non: [push]"
+            ".github/workflows/ci.yml": "name: CI\non: [push]",
         }
 
         for file_path, content in files.items():
@@ -441,7 +467,7 @@ class TestTechnologyStackAnalyzer:
             "frontend/src/utils.ts": "export const helper = () => {};",
             "scripts/deploy.sh": "#!/bin/bash\necho 'Deployment script'",
             "automation/main.rs": "fn main() { println!('Rust automation'); }",
-            "config/settings.yaml": "database:\n  host: localhost"
+            "config/settings.yaml": "database:\n  host: localhost",
         }
 
         for file_path, content in files.items():
@@ -459,7 +485,9 @@ class TestTechnologyStackAnalyzer:
         assert "bash" in languages
 
         # Should provide language statistics
-        python_stats = next((lang for lang in stack.languages if lang.name == "python"), None)
+        python_stats = next(
+            (lang for lang in stack.languages if lang.name == "python"), None
+        )
         assert python_stats is not None
         assert python_stats.file_count == 2
         assert python_stats.line_count > 0
@@ -496,7 +524,7 @@ require (
     github.com/gin-gonic/gin v1.9.1
     github.com/go-redis/redis/v8 v8.11.5
 )
-"""
+""",
         }
 
         for filename, content in dependency_files.items():
@@ -512,8 +540,12 @@ require (
         assert "gin-gonic/gin" in dependencies
 
         # Should categorize dependencies
-        runtime_deps = [dep for dep in stack.dependencies if dep.dependency_type == "runtime"]
-        dev_deps = [dep for dep in stack.dependencies if dep.dependency_type == "development"]
+        runtime_deps = [
+            dep for dep in stack.dependencies if dep.dependency_type == "runtime"
+        ]
+        dev_deps = [
+            dep for dep in stack.dependencies if dep.dependency_type == "development"
+        ]
 
         assert len(runtime_deps) > 0
         assert len(dev_deps) > 0
@@ -561,7 +593,7 @@ resource "aws_instance" "app" {
   ami           = "ami-12345"
   instance_type = "t3.micro"
 }
-"""
+""",
         }
 
         for file_path, content in infra_files.items():
@@ -571,7 +603,11 @@ resource "aws_instance" "app" {
 
         stack = analyzer.analyze_stack(temp_dir)
 
-        infra_techs = [tech.name for tech in stack.technologies if tech.category == "infrastructure"]
+        infra_techs = [
+            tech.name
+            for tech in stack.technologies
+            if tech.category == "infrastructure"
+        ]
         assert "docker" in infra_techs
         assert "kubernetes" in infra_techs
         assert "github_actions" in infra_techs
@@ -592,20 +628,17 @@ class TestAdvancedProjectDetector:
             "backend/main.py": "from fastapi import FastAPI\napp = FastAPI()",
             "backend/models/user.py": "class User: pass",
             "backend/services/user_service.py": "class UserService: pass",
-
             # Frontend
             "frontend/package.json": '{"dependencies": {"react": "^18.0.0", "typescript": "^5.0.0"}}',
             "frontend/src/App.tsx": "import React from 'react';",
             "frontend/src/components/Header.tsx": "export const Header = () => <div>Header</div>;",
-
             # Infrastructure
             "docker-compose.yml": "version: '3'\nservices:\n  app:\n    build: .",
             "Dockerfile": "FROM python:3.9",
             ".github/workflows/ci.yml": "name: CI",
-
             # Documentation
             "README.md": "# My Project",
-            "docs/api.md": "# API Documentation"
+            "docs/api.md": "# API Documentation",
         }
 
         for file_path, content in project_files.items():
@@ -633,7 +666,7 @@ class TestAdvancedProjectDetector:
             "package.json": '{"dependencies": {"react": "^18.0.0", "react-dom": "^18.0.0"}}',
             "src/App.js": "import React from 'react'; export default function App() { return <div>App</div>; }",
             "src/index.js": "import React from 'react'; import ReactDOM from 'react-dom';",
-            "public/index.html": "<html><head><title>React App</title></head><body><div id='root'></div></body></html>"
+            "public/index.html": "<html><head><title>React App</title></head><body><div id='root'></div></body></html>",
         }
 
         for file_path, content in clear_indicators.items():
@@ -644,7 +677,9 @@ class TestAdvancedProjectDetector:
         analysis = detector.analyze_project(temp_dir)
 
         # Should have high confidence for React detection
-        react_framework = next((f for f in analysis.frameworks if f.name == "react"), None)
+        react_framework = next(
+            (f for f in analysis.frameworks if f.name == "react"), None
+        )
         assert react_framework is not None
         assert react_framework.confidence > 0.9
 
@@ -679,6 +714,7 @@ class TestAdvancedProjectDetector:
                 (dir_path / f"file_{j}.py").write_text(f"# Module {i} File {j}")
 
         import time
+
         start_time = time.time()
 
         analysis = detector.analyze_project(temp_dir)

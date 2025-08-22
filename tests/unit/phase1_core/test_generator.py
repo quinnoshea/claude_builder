@@ -31,7 +31,7 @@ class TestDocumentGenerator:
         config = {
             "template_paths": ["./custom_templates/"],
             "output_format": "markdown",
-            "validate_output": True
+            "validate_output": True,
         }
         generator = DocumentGenerator(config=config)
         assert generator.config["template_paths"] == ["./custom_templates/"]
@@ -92,13 +92,13 @@ class TestDocumentGenerator:
         # Create custom template directory
         custom_templates = temp_dir / "custom_templates"
         custom_templates.mkdir()
-        (custom_templates / "custom_claude.md").write_text("# Custom Claude Instructions\n${project_name}")
+        (custom_templates / "custom_claude.md").write_text(
+            "# Custom Claude Instructions\n${project_name}"
+        )
 
         config = {
             "template_paths": [str(custom_templates)],
-            "custom_template_mapping": {
-                "CLAUDE.md": "custom_claude.md"
-            }
+            "custom_template_mapping": {"CLAUDE.md": "custom_claude.md"},
         }
         generator = DocumentGenerator(config=config)
         result = generator.generate(sample_analysis, temp_dir)
@@ -136,7 +136,10 @@ class TestDocumentGenerator:
         assert "${framework}" not in claude_content
 
         # Check that actual values are present
-        assert str(sample_analysis.project_path.name) in claude_content or "test" in claude_content.lower()
+        assert (
+            str(sample_analysis.project_path.name) in claude_content
+            or "test" in claude_content.lower()
+        )
 
     def test_generate_without_framework(self, sample_analysis, temp_dir):
         """Test generation when no framework is detected."""
@@ -154,14 +157,20 @@ class TestDocumentGenerator:
         """Test generation includes domain-specific features."""
         # Add domain features
         sample_analysis.domain_info.domain = "e_commerce"
-        sample_analysis.domain_info.features = ["payment_processing", "inventory", "user_auth"]
+        sample_analysis.domain_info.features = [
+            "payment_processing",
+            "inventory",
+            "user_auth",
+        ]
 
         generator = DocumentGenerator()
         result = generator.generate(sample_analysis, temp_dir)
 
         content = result.files["CLAUDE.md"]
         # Should include domain-specific guidance
-        assert any(feature in content.lower() for feature in ["payment", "inventory", "auth"])
+        assert any(
+            feature in content.lower() for feature in ["payment", "inventory", "auth"]
+        )
 
     def test_output_validation(self, sample_analysis, temp_dir):
         """Test output validation functionality."""
@@ -221,7 +230,9 @@ class TestTemplateLoader:
         loader = TemplateLoader()
 
         # Test Python templates
-        python_template = loader.load_template("claude_instructions.md", "languages/python")
+        python_template = loader.load_template(
+            "claude_instructions.md", "languages/python"
+        )
         assert python_template is not None
         assert "python" in python_template.lower()
 
@@ -230,7 +241,9 @@ class TestTemplateLoader:
         loader = TemplateLoader()
 
         # Test FastAPI templates
-        fastapi_template = loader.load_template("claude_instructions.md", "frameworks/fastapi")
+        fastapi_template = loader.load_template(
+            "claude_instructions.md", "frameworks/fastapi"
+        )
         assert fastapi_template is not None
         assert "fastapi" in fastapi_template.lower()
 
@@ -240,7 +253,9 @@ class TestTemplateLoader:
 
         # Load base and specific templates
         base_template = loader.load_template("claude_instructions.md", "base")
-        python_template = loader.load_template("claude_instructions.md", "languages/python")
+        python_template = loader.load_template(
+            "claude_instructions.md", "languages/python"
+        )
 
         # Both should be different
         assert base_template != python_template
@@ -275,7 +290,9 @@ class TestTemplateLoader:
         """Test extraction of template variables."""
         loader = TemplateLoader()
 
-        template_content = "Hello ${name}, your ${project_type} project uses ${language}."
+        template_content = (
+            "Hello ${name}, your ${project_type} project uses ${language}."
+        )
         variables = loader.extract_variables(template_content)
 
         expected_vars = {"name", "project_type", "language"}
@@ -285,12 +302,14 @@ class TestTemplateLoader:
         """Test template variable substitution."""
         loader = TemplateLoader()
 
-        template_content = "Project: ${project_name}\nLanguage: ${language}\nType: ${project_type}"
+        template_content = (
+            "Project: ${project_name}\nLanguage: ${language}\nType: ${project_type}"
+        )
 
         variables = {
             "project_name": sample_analysis.project_path.name,
             "language": sample_analysis.language_info.primary,
-            "project_type": sample_analysis.project_type.value
+            "project_type": sample_analysis.project_type.value,
         }
 
         result = loader.substitute_variables(template_content, variables)
@@ -432,20 +451,18 @@ class TestOutputGeneration:
             project_path=temp_dir,
             language_info=LanguageInfo(primary="python", confidence=95.0),
             filesystem_info=FileSystemInfo(
-                total_files=1000,
-                source_files=800,
-                test_files=150,
-                config_files=50
+                total_files=1000, source_files=800, test_files=150, config_files=50
             ),
             project_type=ProjectType.API_SERVICE,
             complexity_level=ComplexityLevel.HIGH,
-            analysis_confidence=90.0
+            analysis_confidence=90.0,
         )
 
         generator = DocumentGenerator()
 
         # Should complete in reasonable time
         import time
+
         start_time = time.time()
         result = generator.generate(large_analysis, temp_dir)
         end_time = time.time()

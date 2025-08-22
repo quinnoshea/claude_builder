@@ -347,7 +347,7 @@ export function useApi<T>(
   options: UseApiOptions<T> = {}
 ): UseApiReturn<T> {
   const { initialData = null, immediate = true, deps = [] } = options;
-  
+
   const [data, setData] = useState<T | null>(initialData);
   const [error, setError] = useState<ApiError | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -356,7 +356,7 @@ export function useApi<T>(
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await apiCall();
       setData(response.data);
     } catch (err) {
@@ -396,7 +396,7 @@ export function useLocalStorage<T>(
     if (typeof window === 'undefined') {
       return initialValue;
     }
-    
+
     try {
       const item = window.localStorage.getItem(key);
       return item ? JSON.parse(item) : initialValue;
@@ -411,7 +411,7 @@ export function useLocalStorage<T>(
       try {
         const valueToStore = value instanceof Function ? value(storedValue) : value;
         setStoredValue(valueToStore);
-        
+
         if (typeof window !== 'undefined') {
           window.localStorage.setItem(key, JSON.stringify(valueToStore));
         }
@@ -462,7 +462,7 @@ export function useAuth(): UseAuthReturn {
   const login = useCallback(async (credentials: LoginCredentials) => {
     dispatch(authSlice.actions.setLoading(true));
     dispatch(authSlice.actions.clearError());
-    
+
     try {
       const response = await authService.login(credentials);
       dispatch(authSlice.actions.loginSuccess(response.user));
@@ -481,7 +481,7 @@ export function useAuth(): UseAuthReturn {
   const register = useCallback(async (userData: RegisterData) => {
     dispatch(authSlice.actions.setLoading(true));
     dispatch(authSlice.actions.clearError());
-    
+
     try {
       const response = await authService.register(userData);
       dispatch(authSlice.actions.loginSuccess(response.user));
@@ -494,10 +494,10 @@ export function useAuth(): UseAuthReturn {
 
   const updateProfile = useCallback(async (profileData: Partial<User>) => {
     if (!user) return;
-    
+
     dispatch(authSlice.actions.setLoading(true));
     dispatch(authSlice.actions.clearError());
-    
+
     try {
       const response = await authService.updateProfile(user.id, profileData);
       dispatch(authSlice.actions.updateUser(response.user));
@@ -848,10 +848,10 @@ export class ErrorBoundary extends React.Component<
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     this.setState({ errorInfo });
-    
+
     // Log error to monitoring service
     console.error('Error caught by boundary:', error, errorInfo);
-    
+
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
     }
@@ -933,7 +933,7 @@ import React, { Suspense, lazy } from 'react';
 import { Spinner } from '@/components/ui/Spinner';
 
 // Lazy load components for code splitting
-const Heavy${model_name}Component = lazy(() => 
+const Heavy${model_name}Component = lazy(() =>
   import('./Heavy${model_name}Component').then(module => ({
     default: module.Heavy${model_name}Component
   }))
@@ -965,7 +965,7 @@ const ListItem = memo<{
   data: { items: ${model_name}[]; onItemClick: (item: ${model_name}) => void };
 }>(({ index, style, data }) => {
   const item = data.items[index];
-  
+
   return (
     <div style={style}>
       <div
@@ -1029,7 +1029,7 @@ export function useDebounce<T>(value: T, delay: number): T {
 export const SearchComponent: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
-  
+
   const { data: searchResults } = useGet${model_name}sQuery({
     search: debouncedSearchTerm,
   }, {

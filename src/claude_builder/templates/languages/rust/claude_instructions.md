@@ -54,13 +54,13 @@ use thiserror::Error;
 pub enum ${project_name}Error {
     #[error("Configuration error: {message}")]
     Configuration { message: String },
-    
+
     #[error("Processing failed: {source}")]
     Processing {
         #[from]
         source: ProcessingError,
     },
-    
+
     #[error("IO operation failed")]
     Io(#[from] std::io::Error),
 }
@@ -69,10 +69,10 @@ pub enum ${project_name}Error {
 pub fn process_data(input: &str) -> Result<ProcessedData> {
     let parsed = parse_input(input)
         .context("Failed to parse input data")?;
-    
+
     let processed = transform_data(parsed)
         .context("Failed to transform data")?;
-    
+
     Ok(processed)
 }
 
@@ -80,13 +80,13 @@ pub fn process_data(input: &str) -> Result<ProcessedData> {
 pub fn complex_operation() -> Result<()> {
     read_config()
         .context("Failed to read configuration")?;
-    
+
     process_files()
         .context("Failed to process files")?;
-    
+
     save_results()
         .context("Failed to save results")?;
-        
+
     Ok(())
 }
 ```
@@ -109,12 +109,12 @@ impl ${shared_state} {
             data: Arc::new(RwLock::new(HashMap::new())),
         }
     }
-    
+
     pub async fn get(&self, key: &str) -> Option<${data_type}> {
         let data = self.data.read().await;
         data.get(key).cloned()
     }
-    
+
     pub async fn insert(&self, key: String, value: ${data_type}) {
         let mut data = self.data.write().await;
         data.insert(key, value);
@@ -150,14 +150,14 @@ impl Drop for ${resource_manager} {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_${function_name}_success() {
         let input = ${test_input};
         let result = ${function_name}(input);
         assert_eq!(result, ${expected_output});
     }
-    
+
     #[test]
     fn test_${function_name}_error_case() {
         let invalid_input = ${invalid_input};
@@ -208,14 +208,14 @@ fn setup() {
 #[tokio::test]
 async fn test_full_workflow() {
     setup();
-    
+
     // Arrange
     let config = Config::test_config();
     let service = ${service_name}::new(config).await.unwrap();
-    
+
     // Act
     let result = service.execute_workflow(${test_workflow_data}).await;
-    
+
     // Assert
     assert!(result.is_ok());
     let response = result.unwrap();
@@ -232,7 +232,7 @@ use ${project_name}::${module_to_benchmark};
 
 fn benchmark_${operation}(c: &mut Criterion) {
     let input = ${benchmark_input};
-    
+
     c.bench_function("${operation}", |b| {
         b.iter(|| ${operation}(black_box(&input)))
     });
@@ -241,7 +241,7 @@ fn benchmark_${operation}(c: &mut Criterion) {
 fn benchmark_${async_operation}(c: &mut Criterion) {
     let rt = tokio::runtime::Runtime::new().unwrap();
     let input = ${benchmark_input};
-    
+
     c.bench_function("${async_operation}", |b| {
         b.iter(|| {
             rt.block_on(async {
@@ -276,10 +276,10 @@ impl ${async_service} {
     pub fn new() -> (Self, ${service_handle}) {
         let (tx, rx) = mpsc::channel(100);
         let handle = tokio::spawn(Self::run_service(rx));
-        
+
         (Self { tx }, ServiceHandle { handle })
     }
-    
+
     async fn run_service(mut rx: mpsc::Receiver<${command_type}>) {
         while let Some(command) = rx.recv().await {
             match command {
@@ -290,14 +290,14 @@ impl ${async_service} {
             }
         }
     }
-    
+
     pub async fn send_command(&self, data: ${data_type}) -> Result<${response_type}> {
         let (tx, rx) = oneshot::channel();
         let command = ${command_type}::${command_variant}(data, tx);
-        
+
         self.tx.send(command).await
             .map_err(|_| ${project_name}Error::ServiceUnavailable)?;
-            
+
         rx.await
             .map_err(|_| ${project_name}Error::ServiceTimeout)?
     }
@@ -309,7 +309,7 @@ pub async fn process_items_parallel(
     concurrency_limit: usize,
 ) -> Result<Vec<${result_type}>> {
     use futures_util::stream::{self, StreamExt};
-    
+
     stream::iter(items)
         .map(|item| async move { process_single_item(item).await })
         .buffer_unordered(concurrency_limit)
@@ -330,7 +330,7 @@ where
     Fut: std::future::Future<Output = Result<T>>,
 {
     let mut attempts = 0;
-    
+
     loop {
         match timeout(timeout_duration, operation()).await {
             Ok(Ok(result)) => return Ok(result),
@@ -385,12 +385,12 @@ impl ${config_name} {
     pub fn from_env() -> Result<Self, ConfigError> {
         let s = Config::builder()
             .add_source(File::with_name("config/default"))
-            .add_source(File::with_name(&format!("config/{}", 
+            .add_source(File::with_name(&format!("config/{}",
                 std::env::var("RUN_MODE").unwrap_or_else(|_| "development".into())
             )).required(false))
             .add_source(Environment::with_prefix("APP"))
             .build()?;
-            
+
         s.try_deserialize()
     }
 }
@@ -420,11 +420,11 @@ pub fn init_tracing() {
 pub async fn process_data(data: Vec<${data_type}>) -> Result<${result_type}> {
     let span = span!(Level::INFO, "processing_stage");
     let _enter = span.enter();
-    
+
     debug!("Starting data processing with {} items", data.len());
-    
+
     let result = expensive_operation(data).await?;
-    
+
     info!("Processing completed successfully");
     Ok(result)
 }
@@ -463,11 +463,11 @@ pub struct ${connection_manager};
 impl Manager for ${connection_manager} {
     type Type = ${connection_type};
     type Error = ${error_type};
-    
+
     async fn create(&self) -> Result<Self::Type, Self::Error> {
         ${connection_type}::connect(&self.config).await
     }
-    
+
     async fn recycle(&self, obj: &mut Self::Type) -> Result<(), Self::Error> {
         obj.reset().await
     }
@@ -520,13 +520,13 @@ use serde::{Deserialize, Serialize};
 pub struct ${input_type} {
     #[validate(length(min = 1, max = 100))]
     pub name: String,
-    
+
     #[validate(email)]
     pub email: String,
-    
+
     #[validate(range(min = 1, max = 1000))]
     pub age: u32,
-    
+
     #[validate(custom = "validate_custom_field")]
     pub custom_field: String,
 }
@@ -564,7 +564,7 @@ impl SecretData {
     pub fn new(data: Vec<u8>) -> Self {
         Self { value: data }
     }
-    
+
     pub fn expose(&self) -> &[u8] {
         &self.value
     }

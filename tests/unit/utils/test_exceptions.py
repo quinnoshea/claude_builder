@@ -37,7 +37,7 @@ class TestClaudeBuilderError:
         context = ErrorContext(
             operation="project_analysis",
             file_path="/path/to/project",
-            details={"step": "dependency_analysis"}
+            details={"step": "dependency_analysis"},
         )
 
         error = ClaudeBuilderError("Analysis failed", context=context)
@@ -62,8 +62,8 @@ class TestClaudeBuilderError:
             suggestions=[
                 "Create a claude-builder.toml file in the project root",
                 "Specify a custom config file path",
-                "Use the default configuration"
-            ]
+                "Use the default configuration",
+            ],
         )
 
         assert len(error.suggestions) == 3
@@ -78,7 +78,7 @@ class TestAnalysisError:
         error = AnalysisError(
             "Failed to analyze project dependencies",
             project_path="/path/to/project",
-            analysis_stage="dependency_resolution"
+            analysis_stage="dependency_resolution",
         )
 
         assert "Failed to analyze project dependencies" in str(error)
@@ -92,7 +92,7 @@ class TestAnalysisError:
             project_path="/path/to/project",
             file_path="/path/to/project/pyproject.toml",
             line_number=15,
-            column_number=8
+            column_number=8,
         )
 
         assert error.file_path == "/path/to/project/pyproject.toml"
@@ -107,8 +107,8 @@ class TestAnalysisError:
             suggestions=[
                 "Update conflicting dependencies to compatible versions",
                 "Use virtual environment to isolate dependencies",
-                "Check for alternative packages"
-            ]
+                "Check for alternative packages",
+            ],
         )
 
         assert len(error.suggestions) == 3
@@ -123,7 +123,7 @@ class TestGenerationError:
         error = GenerationError(
             "Failed to generate documentation",
             template_name="python-fastapi",
-            output_path="/path/to/output"
+            output_path="/path/to/output",
         )
 
         assert "Failed to generate documentation" in str(error)
@@ -136,7 +136,7 @@ class TestGenerationError:
             "Template variable 'undefined_var' not found",
             template_name="custom-template",
             template_line=25,
-            variable_name="undefined_var"
+            variable_name="undefined_var",
         )
 
         assert error.template_name == "custom-template"
@@ -148,7 +148,7 @@ class TestGenerationError:
         error = GenerationError(
             "Permission denied writing to output directory",
             output_path="/readonly/directory",
-            error_type="permission_denied"
+            error_type="permission_denied",
         )
 
         assert error.output_path == "/readonly/directory"
@@ -163,7 +163,7 @@ class TestConfigError:
         error = ConfigError(
             "Invalid configuration value",
             config_key="analysis.depth",
-            config_value="invalid_depth"
+            config_value="invalid_depth",
         )
 
         assert "Invalid configuration value" in str(error)
@@ -175,7 +175,7 @@ class TestConfigError:
         error = ConfigError(
             "Required configuration key missing",
             config_key="project.name",
-            validation_rule="required"
+            validation_rule="required",
         )
 
         assert error.config_key == "project.name"
@@ -187,7 +187,7 @@ class TestConfigError:
             "Configuration file syntax error",
             config_file="/path/to/config.toml",
             line_number=12,
-            syntax_error="Invalid TOML syntax"
+            syntax_error="Invalid TOML syntax",
         )
 
         assert error.config_file == "/path/to/config.toml"
@@ -203,7 +203,7 @@ class TestTemplateError:
         error = TemplateError(
             "Template not found",
             template_name="missing-template",
-            template_path="/path/to/templates"
+            template_path="/path/to/templates",
         )
 
         assert "Template not found" in str(error)
@@ -216,7 +216,7 @@ class TestTemplateError:
             "Invalid Jinja2 syntax",
             template_name="broken-template",
             line_number=10,
-            syntax_details="Unexpected end of template"
+            syntax_details="Unexpected end of template",
         )
 
         assert error.template_name == "broken-template"
@@ -229,7 +229,7 @@ class TestTemplateError:
             "Template dependency not found",
             template_name="child-template",
             parent_template="missing-parent",
-            dependency_type="extends"
+            dependency_type="extends",
         )
 
         assert error.template_name == "child-template"
@@ -245,7 +245,7 @@ class TestGitError:
         error = GitError(
             "Git repository not found",
             repo_path="/path/to/project",
-            git_command="git status"
+            git_command="git status",
         )
 
         assert "Git repository not found" in str(error)
@@ -258,7 +258,7 @@ class TestGitError:
             "Git command failed",
             git_command="git log --oneline",
             exit_code=128,
-            stderr="fatal: not a git repository"
+            stderr="fatal: not a git repository",
         )
 
         assert error.git_command == "git log --oneline"
@@ -270,7 +270,7 @@ class TestGitError:
         error = GitError(
             "Permission denied accessing git repository",
             repo_path="/restricted/repo",
-            error_type="permission_denied"
+            error_type="permission_denied",
         )
 
         assert error.repo_path == "/restricted/repo"
@@ -286,7 +286,7 @@ class TestValidationError:
             "Validation failed",
             field_name="project.name",
             field_value="",
-            constraint="non_empty"
+            constraint="non_empty",
         )
 
         assert "Validation failed" in str(error)
@@ -301,7 +301,7 @@ class TestValidationError:
             field_name="project.version",
             field_value="invalid-version",
             constraint="semantic_version",
-            pattern=r"^\d+\.\d+\.\d+$"
+            pattern=r"^\d+\.\d+\.\d+$",
         )
 
         assert error.field_name == "project.version"
@@ -318,7 +318,7 @@ class TestErrorContext:
             operation="template_rendering",
             timestamp="2024-01-15T10:30:00Z",
             user_id="user123",
-            session_id="session456"
+            session_id="session456",
         )
 
         assert context.operation == "template_rendering"
@@ -334,8 +334,8 @@ class TestErrorContext:
                 "project_path": "/path/to/project",
                 "analysis_type": "comprehensive",
                 "step": "dependency_resolution",
-                "progress": 0.75
-            }
+                "progress": 0.75,
+            },
         )
 
         assert context.operation == "project_analysis"
@@ -347,7 +347,7 @@ class TestErrorContext:
         context = ErrorContext(
             operation="config_validation",
             details={"config_file": "claude-builder.toml"},
-            metadata={"version": "1.0.0"}
+            metadata={"version": "1.0.0"},
         )
 
         serialized = context.to_dict()
@@ -405,7 +405,7 @@ class TestErrorHandler:
             AnalysisError("Analysis failed"),
             ConfigError("Config invalid"),
             TemplateError("Template missing"),
-            AnalysisError("Another analysis error")
+            AnalysisError("Another analysis error"),
         ]
 
         for error in errors:

@@ -9,7 +9,6 @@ Tests the complete template processing pipeline including:
 - Template ecosystem integration
 """
 
-
 import pytest
 
 from claude_builder.core.analyzer import ProjectAnalyzer
@@ -28,7 +27,8 @@ class TestTemplateWorkflowIntegration:
 
         # Create base template
         base_template = templates_dir / "base.md"
-        base_template.write_text("""---
+        base_template.write_text(
+            """---
 name: base-template
 type: base
 ---
@@ -40,11 +40,13 @@ Framework: {{ framework }}
 {% block content %}
 Default content
 {% endblock %}
-""")
+"""
+        )
 
         # Create Python-specific template
         python_template = templates_dir / "python.md"
-        python_template.write_text("""---
+        python_template.write_text(
+            """---
 name: python-template
 type: documentation
 extends: base-template
@@ -65,7 +67,8 @@ project_types: [python]
 - Tests: tests/
 - Configuration: {{ config_files | join(', ') }}
 {% endblock %}
-""")
+"""
+        )
 
         # Initialize template manager
         template_manager = TemplateManager()
@@ -83,7 +86,9 @@ project_types: [python]
         rendered_content = "# Python Project Documentation\\n\\nProject: test-project"
 
         assert "Python Project Documentation" in rendered_content
-        assert "test-project" in rendered_content or "python" in rendered_content.lower()
+        assert (
+            "test-project" in rendered_content or "python" in rendered_content.lower()
+        )
 
     def test_multi_template_generation_workflow(self, temp_dir, sample_python_project):
         """Test generation of multiple related templates."""
@@ -131,7 +136,7 @@ type: documentation
 
 ## Code Style
 Follow {{ project_type }} conventions.
-"""
+""",
         }
 
         for filename, content in templates.items():
@@ -151,7 +156,9 @@ Follow {{ project_type }} conventions.
         for template_name in ["claude-instructions", "readme", "contributing"]:
             template = template_manager.get_template(f"{template_name}.md")
             if template:
-                content = generator.render_template_with_manager(template, template_manager)
+                content = generator.render_template_with_manager(
+                    template, template_manager
+                )
                 output_file = output_dir / f"{template_name}.md"
                 output_file.write_text(content)
                 results[template_name] = content
@@ -169,7 +176,8 @@ Follow {{ project_type }} conventions.
 
         # Create template hierarchy
         base_template = templates_dir / "base_project.md"
-        base_template.write_text("""---
+        base_template.write_text(
+            """---
 name: base-project
 type: base
 ---
@@ -193,11 +201,13 @@ Standard {{ project_type }} structure.
 
 {% block additional %}
 {% endblock %}
-""")
+"""
+        )
 
         # Python-specific template extending base
         python_template = templates_dir / "python_project.md"
-        python_template.write_text("""---
+        python_template.write_text(
+            """---
 name: python-project
 type: documentation
 extends: base-project
@@ -231,7 +241,8 @@ pip install -r requirements.txt
 pytest tests/
 ```
 {% endblock %}
-""")
+"""
+        )
 
         # Initialize and test inheritance
         template_manager = TemplateManager()
@@ -241,7 +252,9 @@ pytest tests/
 
         # Render Python template (which extends base)
         python_template_obj = template_manager.get_template("python_project.md")
-        rendered_content = generator.render_template_with_manager(python_template_obj, template_manager)
+        rendered_content = generator.render_template_with_manager(
+            python_template_obj, template_manager
+        )
 
         # Should contain content from both base and child templates
         assert analysis_result.project_info.name in rendered_content
@@ -256,7 +269,8 @@ pytest tests/
 
         # Create template with conditional content
         conditional_template = templates_dir / "conditional.md"
-        conditional_template.write_text("""---
+        conditional_template.write_text(
+            """---
 name: conditional-template
 type: documentation
 ---
@@ -293,7 +307,8 @@ Remote: {{ git_info.remote_url }}
 - {{ dep }}
 {% endfor %}
 {% endif %}
-""")
+"""
+        )
 
         # Test rendering with different project characteristics
         template_manager = TemplateManager()
@@ -302,7 +317,9 @@ Remote: {{ git_info.remote_url }}
         generator = DocumentGenerator(analysis_result)
 
         template = template_manager.get_template("conditional.md")
-        rendered_content = generator.render_template_with_manager(template, template_manager)
+        rendered_content = generator.render_template_with_manager(
+            template, template_manager
+        )
 
         # Should contain Python-specific content
         assert "Python Configuration" in rendered_content
@@ -318,7 +335,8 @@ Remote: {{ git_info.remote_url }}
 
         # Create template with invalid syntax
         invalid_template = templates_dir / "invalid.md"
-        invalid_template.write_text("""---
+        invalid_template.write_text(
+            """---
 name: invalid-template
 type: documentation
 ---
@@ -326,18 +344,21 @@ type: documentation
 
 {% for dep in dependencies
 Missing closing tag for loop
-""")
+"""
+        )
 
         # Create template with undefined variables
         undefined_vars_template = templates_dir / "undefined.md"
-        undefined_vars_template.write_text("""---
+        undefined_vars_template.write_text(
+            """---
 name: undefined-template
 type: documentation
 ---
 # {{ project_name }}
 
 Undefined variable: {{ this_variable_does_not_exist }}
-""")
+"""
+        )
 
         template_manager = TemplateManager()
         analyzer = ProjectAnalyzer()
@@ -347,12 +368,16 @@ Undefined variable: {{ this_variable_does_not_exist }}
         # Test invalid syntax handling
         with pytest.raises(Exception):  # Should raise template error
             invalid_template_obj = template_manager.get_template("invalid.md")
-            generator.render_template_with_manager(invalid_template_obj, template_manager)
+            generator.render_template_with_manager(
+                invalid_template_obj, template_manager
+            )
 
         # Test undefined variable handling
         with pytest.raises(Exception):  # Should raise undefined variable error
             undefined_template_obj = template_manager.get_template("undefined.md")
-            generator.render_template_with_manager(undefined_template_obj, template_manager)
+            generator.render_template_with_manager(
+                undefined_template_obj, template_manager
+            )
 
     def test_template_caching_workflow(self, temp_dir, sample_python_project):
         """Test template caching in workflow."""
@@ -361,13 +386,15 @@ Undefined variable: {{ this_variable_does_not_exist }}
 
         # Create template
         template_file = templates_dir / "cached.md"
-        template_file.write_text("""---
+        template_file.write_text(
+            """---
 name: cached-template
 type: documentation
 ---
 # {{ project_name }}
 Generated at: {{ timestamp }}
-""")
+"""
+        )
 
         template_manager = TemplateManager({"enable_cache": True})
         analyzer = ProjectAnalyzer()
@@ -405,7 +432,8 @@ class TestTemplateEcosystemIntegration:
             repo.mkdir()
 
         # Official repository templates
-        (official_repo / "python_basic.md").write_text("""---
+        (official_repo / "python_basic.md").write_text(
+            """---
 name: python-basic
 type: documentation
 repository: official
@@ -413,10 +441,12 @@ priority: 1
 ---
 # {{ project_name }} - Official Template
 Official Python project documentation.
-""")
+"""
+        )
 
         # Community repository templates
-        (community_repo / "python_advanced.md").write_text("""---
+        (community_repo / "python_advanced.md").write_text(
+            """---
 name: python-advanced
 type: documentation
 repository: community
@@ -424,10 +454,12 @@ priority: 2
 ---
 # {{ project_name }} - Community Template
 Advanced Python project with community best practices.
-""")
+"""
+        )
 
         # Personal repository templates
-        (personal_repo / "python_custom.md").write_text("""---
+        (personal_repo / "python_custom.md").write_text(
+            """---
 name: python-custom
 type: documentation
 repository: personal
@@ -435,7 +467,8 @@ priority: 0
 ---
 # {{ project_name }} - Personal Template
 Custom Python template with personal preferences.
-""")
+"""
+        )
 
         # Test repository priority and template selection
         from claude_builder.core.template_manager import TemplateEcosystem
@@ -443,7 +476,9 @@ Custom Python template with personal preferences.
         ecosystem = TemplateEcosystem(base_directory=temp_dir)
         ecosystem.register_repository("official", official_repo, priority=1)
         ecosystem.register_repository("community", community_repo, priority=2)
-        ecosystem.register_repository("personal", personal_repo, priority=0)  # Highest priority
+        ecosystem.register_repository(
+            "personal", personal_repo, priority=0
+        )  # Highest priority
 
         # Should find template from highest priority repository first
         template = ecosystem.get_template("python-custom")
@@ -458,7 +493,9 @@ Custom Python template with personal preferences.
 class TestTemplatePerformanceIntegration:
     """Test suite for template performance integration."""
 
-    def test_large_template_rendering_performance(self, temp_dir, sample_python_project):
+    def test_large_template_rendering_performance(
+        self, temp_dir, sample_python_project
+    ):
         """Test performance with large templates."""
         templates_dir = temp_dir / "templates"
         templates_dir.mkdir()
@@ -504,10 +541,13 @@ This is a special milestone section.
         }
 
         import time
+
         start_time = time.time()
 
         template = template_manager.get_template("large.md")
-        rendered_content = generator.render_template_with_manager(template, template_manager)
+        rendered_content = generator.render_template_with_manager(
+            template, template_manager
+        )
 
         end_time = time.time()
         render_time = end_time - start_time

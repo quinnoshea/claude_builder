@@ -56,8 +56,12 @@ class TestFilePatternMatcher:
         (temp_dir / "Cargo.toml").touch()
 
         assert matcher.matches_filename(temp_dir / "Dockerfile", ["Dockerfile"])
-        assert matcher.matches_filename(temp_dir / "docker-compose.yml", ["docker-compose.*"])
-        assert matcher.matches_filename(temp_dir / "requirements.txt", ["requirements.txt"])
+        assert matcher.matches_filename(
+            temp_dir / "docker-compose.yml", ["docker-compose.*"]
+        )
+        assert matcher.matches_filename(
+            temp_dir / "requirements.txt", ["requirements.txt"]
+        )
         assert not matcher.matches_filename(temp_dir / "Dockerfile", ["package.json"])
 
     def test_glob_pattern_matching(self, temp_dir):
@@ -110,7 +114,7 @@ class TestLanguageDetector:
             "app.go": "go",
             "Main.java": "java",
             "script.rb": "ruby",
-            "app.php": "php"
+            "app.php": "php",
         }
 
         for filename, expected_lang in files.items():
@@ -146,25 +150,29 @@ class TestLanguageDetector:
 
         # Python-like content without extension
         python_file = temp_dir / "unknown_file"
-        python_file.write_text("""
+        python_file.write_text(
+            """
 def hello_world():
     print("Hello, World!")
     return True
 
 if __name__ == "__main__":
     hello_world()
-""")
+"""
+        )
 
         # JavaScript-like content
         js_file = temp_dir / "another_file"
-        js_file.write_text("""
+        js_file.write_text(
+            """
 function helloWorld() {
     console.log("Hello, World!");
     return true;
 }
 
 module.exports = helloWorld;
-""")
+"""
+        )
 
         assert detector.detect_language(python_file) == "python"
         assert detector.detect_language(js_file) == "javascript"
@@ -180,7 +188,7 @@ module.exports = helloWorld;
             "frontend/App.js": "javascript",
             "frontend/Component.tsx": "typescript",
             "scripts/build.sh": "bash",
-            "automation/deploy.rs": "rust"
+            "automation/deploy.rs": "rust",
         }
 
         for file_path, content in files.items():
@@ -350,7 +358,7 @@ class TestPatternRule:
             description="Detects Python projects",
             patterns=["*.py", "requirements.txt", "pyproject.toml"],
             priority=1.0,
-            required_patterns=["*.py"]
+            required_patterns=["*.py"],
         )
 
         assert rule.name == "python_project"
@@ -365,7 +373,7 @@ class TestPatternRule:
             name="web_project",
             patterns=["*.html", "*.css", "*.js"],
             required_patterns=["*.html"],
-            weight_factors={"*.html": 2.0, "*.css": 1.5, "*.js": 1.0}
+            weight_factors={"*.html": 2.0, "*.css": 1.5, "*.js": 1.0},
         )
 
         # Create matching files
@@ -384,7 +392,7 @@ class TestPatternRule:
         rule = PatternRule(
             name="scoring_test",
             patterns=["file1.txt", "file2.txt", "file3.txt"],
-            weight_factors={"file1.txt": 3.0, "file2.txt": 2.0, "file3.txt": 1.0}
+            weight_factors={"file1.txt": 3.0, "file2.txt": 2.0, "file3.txt": 1.0},
         )
 
         # Create subset of files

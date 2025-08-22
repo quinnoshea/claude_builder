@@ -273,7 +273,7 @@ def test_python_project_detection(sample_python_project):
     """Test detection of Python projects."""
     analyzer = ProjectAnalyzer()
     result = analyzer.analyze(sample_python_project)
-    
+
     assert result.language_info.primary == "python"
     assert result.language_info.confidence >= 90
 ```

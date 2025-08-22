@@ -196,20 +196,20 @@ async fn main() -> Result<()> {
 
     // Load configuration
     let settings = Settings::new()?;
-    
+
     tracing::info!("Starting ${project_name} server");
     tracing::info!("Database URL: {}", settings.database.url);
     tracing::info!("Server will listen on {}:{}", settings.server.host, settings.server.port);
 
     // Create and run the application
     let app = create_app(&settings).await?;
-    
+
     let listener = tokio::net::TcpListener::bind(
         format!("{}:{}", settings.server.host, settings.server.port)
     ).await?;
-    
+
     tracing::info!("Server listening on {}", listener.local_addr()?);
-    
+
     axum::serve(listener, app)
         .with_graceful_shutdown(shutdown_signal())
         .await?;
@@ -276,7 +276,7 @@ pub struct AppState {
 pub async fn create_app(settings: &Settings) -> anyhow::Result<Router> {
     // Create database connection pool
     let db_pool = create_pool(&settings.database).await?;
-    
+
     // Run migrations
     sqlx::migrate!("./migrations").run(&db_pool).await?;
 
@@ -435,16 +435,16 @@ pub struct User {
 pub struct CreateUserRequest {
     #[validate(email)]
     pub email: String,
-    
+
     #[validate(length(min = 3, max = 50))]
     pub username: String,
-    
+
     #[validate(length(min = 8))]
     pub password: String,
-    
+
     #[validate(length(max = 100))]
     pub first_name: Option<String>,
-    
+
     #[validate(length(max = 100))]
     pub last_name: Option<String>,
 }
@@ -453,16 +453,16 @@ pub struct CreateUserRequest {
 pub struct UpdateUserRequest {
     #[validate(email)]
     pub email: Option<String>,
-    
+
     #[validate(length(min = 3, max = 50))]
     pub username: Option<String>,
-    
+
     #[validate(length(max = 100))]
     pub first_name: Option<String>,
-    
+
     #[validate(length(max = 100))]
     pub last_name: Option<String>,
-    
+
     pub is_active: Option<bool>,
 }
 
@@ -526,12 +526,12 @@ pub enum ${model_name}Status {
 pub struct Create${model_name}Request {
     #[validate(length(min = 1, max = 200))]
     pub title: String,
-    
+
     #[validate(length(max = 500))]
     pub description: Option<String>,
-    
+
     pub content: Option<String>,
-    
+
     pub status: Option<${model_name}Status>,
 }
 
@@ -539,12 +539,12 @@ pub struct Create${model_name}Request {
 pub struct Update${model_name}Request {
     #[validate(length(min = 1, max = 200))]
     pub title: Option<String>,
-    
+
     #[validate(length(max = 500))]
     pub description: Option<String>,
-    
+
     pub content: Option<String>,
-    
+
     pub status: Option<${model_name}Status>,
 }
 
@@ -626,7 +626,7 @@ impl ${service_name}Service {
     ) -> AppResult<${model_name}> {
         let ${model_name_lower}_id = Uuid::new_v4();
         let now = Utc::now();
-        
+
         let ${model_name_lower} = sqlx::query_as!(
             ${model_name},
             r#"
@@ -750,7 +750,7 @@ impl ${service_name}Service {
             ${model_name},
             r#"
             UPDATE ${model_name_lower}s
-            SET 
+            SET
                 title = COALESCE($1, title),
                 description = COALESCE($2, description),
                 content = COALESCE($3, content),
@@ -914,10 +914,10 @@ pub async fn get_${model_name_lower}s(
     Query(query): Query<${model_name}Query>,
 ) -> AppResult<Json<ApiResponse<PaginatedResponse<${model_name}Response>>>> {
     let service = ${service_name}Service::new(state.db.clone());
-    
+
     // Non-admin users can only see their own ${model_name_lower}s
     let user_filter = if claims.is_admin { None } else { Some(claims.user_id) };
-    
+
     let ${model_name_lower}s = service.get_${model_name_lower}s(query.clone(), user_filter).await?;
     let total = service.get_${model_name_lower}s_count(query.status, user_filter).await?;
 
@@ -1009,7 +1009,7 @@ where
         state: &S,
     ) -> Result<Self, Self::Rejection> {
         let app_state = AppState::from_ref(state);
-        
+
         let authorization = parts
             .headers
             .get(AUTHORIZATION)
@@ -1074,25 +1074,25 @@ pub type AppResult<T> = Result<T, AppError>;
 pub enum AppError {
     #[error("Database error: {0}")]
     DatabaseError(String),
-    
+
     #[error("Validation error: {0}")]
     ValidationError(String),
-    
+
     #[error("Authentication error: {0}")]
     Unauthorized(String),
-    
+
     #[error("Authorization error: {0}")]
     Forbidden(String),
-    
+
     #[error("Not found: {0}")]
     NotFound(String),
-    
+
     #[error("Conflict: {0}")]
     Conflict(String),
-    
+
     #[error("Internal server error: {0}")]
     InternalServerError(String),
-    
+
     #[error("Bad request: {0}")]
     BadRequest(String),
 }

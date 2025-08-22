@@ -374,13 +374,13 @@ from django.db import migrations
 def populate_initial_data(apps, schema_editor):
     """Populate initial data for ${app_name}."""
     Tag = apps.get_model('${app_name}', 'Tag')
-    
+
     initial_tags = [
         {'name': 'Technology', 'color': '#007bff'},
         {'name': 'Business', 'color': '#28a745'},
         {'name': 'Design', 'color': '#dc3545'},
     ]
-    
+
     for tag_data in initial_tags:
         Tag.objects.get_or_create(**tag_data)
 
@@ -442,7 +442,7 @@ class OptimizedQuerySet(models.QuerySet):
 [tool:pytest]
 DJANGO_SETTINGS_MODULE = ${project_name}.settings.testing
 python_files = tests.py test_*.py *_tests.py
-addopts = 
+addopts =
     --strict-markers
     --strict-config
     --cov=${project_name}
@@ -527,7 +527,7 @@ class Test${model_name}Model:
             description='Test description',
             author=user
         )
-        
+
         assert ${model_name_lower}.title == 'Test ${model_name}'
         assert ${model_name_lower}.author == user
         assert ${model_name_lower}.status == ${model_name}.Status.DRAFT
@@ -556,7 +556,7 @@ class Test${model_name}Model:
             author=user
         )
         assert not ${model_name_lower}.is_published()
-        
+
         ${model_name_lower}.status = ${model_name}.Status.PUBLISHED
         ${model_name_lower}.save()
         assert ${model_name_lower}.is_published()
@@ -568,7 +568,7 @@ class Test${model_name}Model:
             author=user,
             priority=11  # Invalid
         )
-        
+
         with pytest.raises(ValidationError):
             ${model_name_lower}.full_clean()
 
@@ -582,7 +582,7 @@ class Test${model_name}Model:
             author=user,
             status=${model_name}.Status.PUBLISHED
         )
-        
+
         # Create draft item
 
         ${model_name}.objects.create(
@@ -590,7 +590,7 @@ class Test${model_name}Model:
             author=user,
             status=${model_name}.Status.DRAFT
         )
-        
+
         published_items = ${model_name}.objects.published()
         assert published_items.count() == 1
         assert published_items.first() == published
@@ -621,10 +621,10 @@ class Test${model_name}API:
             author=user,
             status=${model_name}.Status.PUBLISHED
         )
-        
+
         url = reverse('api:${app_name}:${model_name_lower}-list')
         response = api_client.get(url)
-        
+
         assert response.status_code == status.HTTP_200_OK
         assert response.data['count'] == 1
 
@@ -635,20 +635,20 @@ class Test${model_name}API:
             'description': 'New description',
             'status': 'draft'
         }
-        
+
         url = reverse('api:${app_name}:${model_name_lower}-list')
         response = authenticated_client.post(url, data)
-        
+
         assert response.status_code == status.HTTP_201_CREATED
         assert response.data['title'] == data['title']
 
     def test_create_${model_name_lower}_requires_auth(self, api_client):
         """Test that creating ${model_name_lower} requires authentication."""
         data = {'title': 'New ${model_name}'}
-        
+
         url = reverse('api:${app_name}:${model_name_lower}-list')
         response = api_client.post(url, data)
-        
+
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     def test_update_${model_name_lower}_own_item(self, authenticated_client, user):
@@ -657,11 +657,11 @@ class Test${model_name}API:
             title='Original Title',
             author=user
         )
-        
+
         data = {'title': 'Updated Title'}
         url = reverse('api:${app_name}:${model_name_lower}-detail', kwargs={'slug': ${model_name_lower}.slug})
         response = authenticated_client.patch(url, data)
-        
+
         assert response.status_code == status.HTTP_200_OK
         assert response.data['title'] == 'Updated Title'
 
@@ -669,22 +669,22 @@ class Test${model_name}API:
         """Test that users cannot update others' ${model_name_lower}s."""
         from django.contrib.auth import get_user_model
         User = get_user_model()
-        
+
         other_user = User.objects.create_user(
             username='otheruser',
             email='other@example.com',
             password='pass123'
         )
-        
+
         ${model_name_lower} = ${model_name}.objects.create(
             title='Other User Item',
             author=other_user
         )
-        
+
         data = {'title': 'Hacked Title'}
         url = reverse('api:${app_name}:${model_name_lower}-detail', kwargs={'slug': ${model_name_lower}.slug})
         response = authenticated_client.patch(url, data)
-        
+
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_featured_${model_name_lower}s_endpoint(self, api_client, user):
@@ -698,7 +698,7 @@ class Test${model_name}API:
             status=${model_name}.Status.PUBLISHED,
             is_featured=True
         )
-        
+
         # Create non-featured item
 
         ${model_name}.objects.create(
@@ -707,10 +707,10 @@ class Test${model_name}API:
             status=${model_name}.Status.PUBLISHED,
             is_featured=False
         )
-        
+
         url = reverse('api:${app_name}:${model_name_lower}-featured')
         response = api_client.get(url)
-        
+
         assert response.status_code == status.HTTP_200_OK
         assert response.data['count'] == 1
         assert response.data['results'][0]['title'] == 'Featured Item'
@@ -719,30 +719,30 @@ class Test${model_name}API:
         """Test my ${model_name_lower}s endpoint."""
         from django.contrib.auth import get_user_model
         User = get_user_model()
-        
+
         other_user = User.objects.create_user(
             username='other',
             email='other@example.com',
             password='pass123'
         )
-        
+
         # Create user's item
 
         my_item = ${model_name}.objects.create(
             title='My Item',
             author=user
         )
-        
+
         # Create other user's item
 
         ${model_name}.objects.create(
             title='Other Item',
             author=other_user
         )
-        
+
         url = reverse('api:${app_name}:${model_name_lower}-my-items')
         response = authenticated_client.get(url)
-        
+
         assert response.status_code == status.HTTP_200_OK
         assert response.data['count'] == 1
         assert response.data['results'][0]['title'] == 'My Item'
@@ -760,10 +760,10 @@ class Test${model_name}API:
             'priority': 5
         }
         data[field] = value
-        
+
         url = reverse('api:${app_name}:${model_name_lower}-list')
         response = authenticated_client.post(url, data)
-        
+
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert expected_error in str(response.data[field])
 ```
@@ -783,7 +783,7 @@ from django.views.decorators.vary import vary_on_headers
 
 class OptimizedViewSet(ModelViewSet):
     """Performance-optimized ViewSet."""
-    
+
     def get_queryset(self):
         """Optimize queryset with select_related and prefetch_related."""
         return super().get_queryset().select_related(
@@ -808,13 +808,13 @@ class OptimizedViewSet(ModelViewSet):
     def perform_create(self, serializer):
         """Optimized create with bulk operations."""
         instance = serializer.save(author=self.request.user)
-        
+
         # Bulk create related objects if needed
 
         if 'tag_ids' in serializer.validated_data:
             tag_ids = serializer.validated_data['tag_ids']
             instance.tags.set(tag_ids)
-        
+
         return instance
 ```
 
@@ -831,26 +831,26 @@ import json
 
 class CacheManager:
     """Centralized cache management."""
-    
+
     @staticmethod
     def get_cache_key(prefix, **kwargs):
         """Generate cache key from prefix and kwargs."""
         key_data = json.dumps(kwargs, sort_keys=True)
         key_hash = hashlib.md5(key_data.encode()).hexdigest()
         return f"${project_name}:{prefix}:{key_hash}"
-    
+
     @classmethod
     def cache_${model_name_lower}(cls, ${model_name_lower}, timeout=3600):
         """Cache ${model_name_lower} object."""
         cache_key = cls.get_cache_key('${model_name_lower}', id=${model_name_lower}.id)
         cache.set(cache_key, ${model_name_lower}, timeout)
-    
+
     @classmethod
     def get_cached_${model_name_lower}(cls, ${model_name_lower}_id):
         """Get cached ${model_name_lower} object."""
         cache_key = cls.get_cache_key('${model_name_lower}', id=${model_name_lower}_id)
         return cache.get(cache_key)
-    
+
     @classmethod
     def invalidate_${model_name_lower}_cache(cls, ${model_name_lower}_id):
         """Invalidate ${model_name_lower} cache."""
@@ -864,14 +864,14 @@ from .utils.cache import CacheManager
 class ${model_name}(TimeStampedModel):
 
     # ... model definition ...
-    
+
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
 
         # Update cache after save
 
         CacheManager.cache_${model_name_lower}(self)
-    
+
     def delete(self, *args, **kwargs):
 
         # Invalidate cache before delete
@@ -899,7 +899,7 @@ def send_${model_name_lower}_notification(self, ${model_name_lower}_id, user_id)
     try:
         ${model_name_lower} = ${model_name}.objects.get(id=${model_name_lower}_id)
         user = User.objects.get(id=user_id)
-        
+
         send_mail(
             subject=f'New ${model_name}: {${model_name_lower}.title}',
             message=f'A new ${model_name_lower} "{${model_name_lower}.title}" has been published.',
@@ -907,9 +907,9 @@ def send_${model_name_lower}_notification(self, ${model_name_lower}_id, user_id)
             recipient_list=[user.email],
             fail_silently=False,
         )
-        
+
         return f'Notification sent for ${model_name_lower} {${model_name_lower}_id}'
-        
+
     except ${model_name}.DoesNotExist:
         raise self.retry(countdown=60)
     except User.DoesNotExist:
@@ -920,13 +920,13 @@ def cleanup_old_${model_name_lower}s():
     """Clean up old draft ${model_name_lower}s."""
     from django.utils import timezone
     from datetime import timedelta
-    
+
     cutoff_date = timezone.now() - timedelta(days=30)
     deleted_count, _ = ${model_name}.objects.filter(
         status=${model_name}.Status.DRAFT,
         created_at__lt=cutoff_date
     ).delete()
-    
+
     return f'Deleted {deleted_count} old draft ${model_name_lower}s'
 
 @shared_task
@@ -935,7 +935,7 @@ def bulk_update_${model_name_lower}_status(${model_name_lower}_ids, new_status):
     updated_count = ${model_name}.objects.filter(
         id__in=${model_name_lower}_ids
     ).update(status=new_status)
-    
+
     return f'Updated {updated_count} ${model_name_lower}s to {new_status}'
 ```
 
@@ -981,7 +981,7 @@ def clean_html_content(content):
     """Clean HTML content to prevent XSS."""
     allowed_tags = ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'a', 'h1', 'h2', 'h3']
     allowed_attributes = {'a': ['href', 'title']}
-    
+
     return bleach.clean(content, tags=allowed_tags, attributes=allowed_attributes)
 
 # Rate limiting

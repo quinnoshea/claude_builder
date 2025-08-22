@@ -31,8 +31,8 @@ class TestAgentCoordinationIntegration:
             data={
                 "project_type": "python",
                 "dependencies": ["click", "pytest"],
-                "framework": "click"
-            }
+                "framework": "click",
+            },
         )
 
         framework_agent = Mock(name="framework-agent")
@@ -42,18 +42,21 @@ class TestAgentCoordinationIntegration:
             data={
                 "framework": "click",
                 "patterns": ["cli", "command_line"],
-                "confidence": 0.9
-            }
+                "confidence": 0.9,
+            },
         )
 
         generator_agent = Mock(name="generator-agent")
-        generator_agent.capabilities = ["documentation_generation", "template_processing"]
+        generator_agent.capabilities = [
+            "documentation_generation",
+            "template_processing",
+        ]
         generator_agent.execute.return_value = Mock(
             success=True,
             data={
                 "generated_docs": ["CLAUDE.md", "README.md", "AGENTS.md"],
-                "template_used": "python-cli"
-            }
+                "template_used": "python-cli",
+            },
         )
 
         # Register agents
@@ -67,27 +70,25 @@ class TestAgentCoordinationIntegration:
         analysis_task = AgentTask(
             task_type="project_analysis",
             data={"project_path": str(sample_python_project)},
-            context={"stage": "initial_analysis"}
+            context={"stage": "initial_analysis"},
         )
 
         framework_task = AgentTask(
             task_type="framework_detection",
             data={"project_path": str(sample_python_project)},
-            context={"stage": "framework_analysis"}
+            context={"stage": "framework_analysis"},
         )
 
         generation_task = AgentTask(
             task_type="documentation_generation",
             data={"project_path": str(sample_python_project)},
-            context={"stage": "doc_generation"}
+            context={"stage": "doc_generation"},
         )
 
         # Execute coordinated workflow
-        results = coordinator.execute_workflow([
-            analysis_task,
-            framework_task,
-            generation_task
-        ])
+        results = coordinator.execute_workflow(
+            [analysis_task, framework_task, generation_task]
+        )
 
         # Verify coordination
         assert len(results) == 3
@@ -105,16 +106,14 @@ class TestAgentCoordinationIntegration:
         primary_agent = Mock(name="primary-agent")
         primary_agent.capabilities = ["analysis"]
         primary_agent.execute.return_value = Mock(
-            success=False,
-            error_message="Primary agent failed"
+            success=False, error_message="Primary agent failed"
         )
 
         # Fallback agent that will succeed
         fallback_agent = Mock(name="fallback-agent")
         fallback_agent.capabilities = ["analysis"]
         fallback_agent.execute.return_value = Mock(
-            success=True,
-            data={"analysis": "fallback_result"}
+            success=True, data={"analysis": "fallback_result"}
         )
 
         registry.register(primary_agent)
@@ -125,7 +124,7 @@ class TestAgentCoordinationIntegration:
         task = AgentTask(
             task_type="analysis",
             data={"project_path": str(sample_python_project)},
-            context={"retry_enabled": True}
+            context={"retry_enabled": True},
         )
 
         # Execute with failure recovery
@@ -149,7 +148,7 @@ class TestAgentCoordinationIntegration:
             ("analyzer", ["project_analysis"], {"type": "python", "files": 10}),
             ("dependency", ["dependency_analysis"], {"deps": ["click", "pytest"]}),
             ("structure", ["structure_analysis"], {"dirs": ["src", "tests"]}),
-            ("git", ["git_analysis"], {"commits": 25, "branches": 3})
+            ("git", ["git_analysis"], {"commits": 25, "branches": 3}),
         ]
 
         agents = []
@@ -164,13 +163,30 @@ class TestAgentCoordinationIntegration:
 
         # Create parallel tasks
         tasks = [
-            AgentTask(task_type="project_analysis", data={"path": str(sample_python_project)}, context={}),
-            AgentTask(task_type="dependency_analysis", data={"path": str(sample_python_project)}, context={}),
-            AgentTask(task_type="structure_analysis", data={"path": str(sample_python_project)}, context={}),
-            AgentTask(task_type="git_analysis", data={"path": str(sample_python_project)}, context={})
+            AgentTask(
+                task_type="project_analysis",
+                data={"path": str(sample_python_project)},
+                context={},
+            ),
+            AgentTask(
+                task_type="dependency_analysis",
+                data={"path": str(sample_python_project)},
+                context={},
+            ),
+            AgentTask(
+                task_type="structure_analysis",
+                data={"path": str(sample_python_project)},
+                context={},
+            ),
+            AgentTask(
+                task_type="git_analysis",
+                data={"path": str(sample_python_project)},
+                context={},
+            ),
         ]
 
         import time
+
         start_time = time.time()
 
         # Execute tasks in parallel
@@ -184,7 +200,9 @@ class TestAgentCoordinationIntegration:
         assert all(result.success for result in results)
 
         # Should complete faster than sequential execution would
-        assert execution_time < 2.0  # Assuming each task takes < 0.5s, parallel should be much faster
+        assert (
+            execution_time < 2.0
+        )  # Assuming each task takes < 0.5s, parallel should be much faster
 
         # All agents should have been executed
         for agent in agents:
@@ -200,8 +218,7 @@ class TestAgentCoordinationIntegration:
         high_priority_agent.capabilities = ["analysis"]
         high_priority_agent.priority = 1
         high_priority_agent.execute.return_value = Mock(
-            success=True,
-            data={"source": "high_priority", "quality": "excellent"}
+            success=True, data={"source": "high_priority", "quality": "excellent"}
         )
 
         # Low priority agent
@@ -209,8 +226,7 @@ class TestAgentCoordinationIntegration:
         low_priority_agent.capabilities = ["analysis"]
         low_priority_agent.priority = 5
         low_priority_agent.execute.return_value = Mock(
-            success=True,
-            data={"source": "low_priority", "quality": "good"}
+            success=True, data={"source": "low_priority", "quality": "good"}
         )
 
         registry.register(high_priority_agent)
@@ -223,7 +239,7 @@ class TestAgentCoordinationIntegration:
             task_type="analysis",
             data={"project_path": str(sample_python_project)},
             context={},
-            priority=10
+            priority=10,
         )
 
         # Execute with priority coordination
@@ -249,8 +265,7 @@ class TestAgentCoordinationIntegration:
             agent.capabilities = ["analysis"]
             agent.resource_requirements = {"memory": 100, "cpu": 1}
             agent.execute.return_value = Mock(
-                success=True,
-                data={"agent_id": i, "resource_usage": "high"}
+                success=True, data={"agent_id": i, "resource_usage": "high"}
             )
             registry.register(agent)
             agents.append(agent)
@@ -289,16 +304,19 @@ class TestAgentCommunicationIntegration:
             success=True,
             data={"analysis_data": "processed_info"},
             messages=[
-                {"to": "consumer-agent", "type": "data_ready", "payload": {"data_id": "123"}}
-            ]
+                {
+                    "to": "consumer-agent",
+                    "type": "data_ready",
+                    "payload": {"data_id": "123"},
+                }
+            ],
         )
 
         # Consumer agent that receives messages
         consumer_agent = Mock(name="consumer-agent")
         consumer_agent.capabilities = ["data_consumption"]
         consumer_agent.execute.return_value = Mock(
-            success=True,
-            data={"processed": "final_result"}
+            success=True, data={"processed": "final_result"}
         )
 
         registry.register(producer_agent)
@@ -310,7 +328,7 @@ class TestAgentCommunicationIntegration:
         producer_task = AgentTask(
             task_type="data_production",
             data={"project_path": str(sample_python_project)},
-            context={"enable_messaging": True}
+            context={"enable_messaging": True},
         )
 
         # Execute with message coordination
@@ -341,7 +359,7 @@ class TestAgentCommunicationIntegration:
             shared_state["project_info"] = {
                 "name": "test-project",
                 "type": "python",
-                "analyzed": True
+                "analyzed": True,
             }
             return Mock(success=True, data={"state_updated": True})
 
@@ -355,7 +373,10 @@ class TestAgentCommunicationIntegration:
             project_info = shared_state.get("project_info", {})
             return Mock(
                 success=True,
-                data={"read_state": project_info, "can_proceed": project_info.get("analyzed", False)}
+                data={
+                    "read_state": project_info,
+                    "can_proceed": project_info.get("analyzed", False),
+                },
             )
 
         state_reader_agent.execute.side_effect = read_state_side_effect
@@ -369,13 +390,13 @@ class TestAgentCommunicationIntegration:
         write_task = AgentTask(
             task_type="state_writing",
             data={"project_path": str(sample_python_project)},
-            context={}
+            context={},
         )
 
         read_task = AgentTask(
             task_type="state_reading",
             data={"project_path": str(sample_python_project)},
-            context={}
+            context={},
         )
 
         # Execute in sequence
@@ -404,8 +425,7 @@ class TestAgentPerformanceIntegration:
             agent.capabilities = ["analysis"]
             agent.current_load = i * 20  # 0%, 20%, 40% load
             agent.execute.return_value = Mock(
-                success=True,
-                data={"agent_id": i, "load": agent.current_load}
+                success=True, data={"agent_id": i, "load": agent.current_load}
             )
             registry.register(agent)
             agents.append(agent)
@@ -439,12 +459,13 @@ class TestAgentPerformanceIntegration:
 
         def execute_with_metrics(task):
             import time
+
             time.sleep(0.1)  # Simulate work
             return Mock(
                 success=True,
                 data={"result": "completed"},
                 execution_time=0.1,
-                memory_usage=50
+                memory_usage=50,
             )
 
         monitored_agent.execute.side_effect = execute_with_metrics

@@ -32,7 +32,7 @@ class TestTemplateVersion:
             template_name="python-fastapi",
             changelog="Added async support",
             compatibility=["python>=3.8"],
-            author="Claude Builder Team"
+            author="Claude Builder Team",
         )
 
         assert version.version == "1.2.0"
@@ -68,10 +68,12 @@ class TestTemplateVersion:
         version = TemplateVersion(
             version="2.0.0",
             template_name="test",
-            compatibility=["python>=3.8", "claude-builder>=1.0.0"]
+            compatibility=["python>=3.8", "claude-builder>=1.0.0"],
         )
 
-        assert version.is_compatible_with_environment({"python": "3.9.0", "claude-builder": "1.1.0"})
+        assert version.is_compatible_with_environment(
+            {"python": "3.9.0", "claude-builder": "1.1.0"}
+        )
         assert not version.is_compatible_with_environment({"python": "3.7.0"})
 
 
@@ -156,7 +158,7 @@ version: 1.1.0
             ("python-web.md", "python", "web", "Python web application template"),
             ("python-cli.md", "python", "cli", "Python CLI application template"),
             ("rust-web.md", "rust", "web", "Rust web application template"),
-            ("js-react.md", "javascript", "frontend", "React frontend template")
+            ("js-react.md", "javascript", "frontend", "React frontend template"),
         ]
 
         for filename, language, category, description in templates:
@@ -229,10 +231,16 @@ dependencies:
         repo = TemplateRepository(repository_path=temp_dir)
 
         # Mock remote repository
-        with patch("claude_builder.core.template_manager.RemoteTemplateRepository") as mock_remote:
+        with patch(
+            "claude_builder.core.template_manager.RemoteTemplateRepository"
+        ) as mock_remote:
             mock_remote_instance = MagicMock()
             mock_remote_instance.list_templates.return_value = [
-                {"name": "remote-template", "version": "1.0.0", "url": "https://example.com/template"}
+                {
+                    "name": "remote-template",
+                    "version": "1.0.0",
+                    "url": "https://example.com/template",
+                }
             ]
             mock_remote.return_value = mock_remote_instance
 
@@ -306,7 +314,9 @@ class TestTemplateEcosystem:
         # Register repositories
         ecosystem.register_repository("official", official_repo, priority=1)
         ecosystem.register_repository("community", community_repo, priority=2)
-        ecosystem.register_repository("private", private_repo, priority=0)  # Highest priority
+        ecosystem.register_repository(
+            "private", private_repo, priority=0
+        )  # Highest priority
 
         assert len(ecosystem.repositories) == 3
 
@@ -327,20 +337,24 @@ class TestTemplateEcosystem:
         repo2_dir.mkdir()
 
         # Add templates to repo1
-        (repo1_dir / "python-basic.md").write_text("""---
+        (repo1_dir / "python-basic.md").write_text(
+            """---
 name: python-basic
 version: 1.0.0
 ---
 Basic Python template
-""")
+"""
+        )
 
         # Add templates to repo2
-        (repo2_dir / "python-advanced.md").write_text("""---
+        (repo2_dir / "python-advanced.md").write_text(
+            """---
 name: python-advanced
 version: 1.0.0
 ---
 Advanced Python template
-""")
+"""
+        )
 
         ecosystem.register_repository("repo1", repo1_dir)
         ecosystem.register_repository("repo2", repo2_dir)
@@ -364,19 +378,23 @@ Advanced Python template
         low_priority_repo.mkdir()
 
         # Same template name in both repositories
-        (high_priority_repo / "common-template.md").write_text("""---
+        (high_priority_repo / "common-template.md").write_text(
+            """---
 name: common-template
 version: 2.0.0
 ---
 High priority version
-""")
+"""
+        )
 
-        (low_priority_repo / "common-template.md").write_text("""---
+        (low_priority_repo / "common-template.md").write_text(
+            """---
 name: common-template
 version: 1.0.0
 ---
 Low priority version
-""")
+"""
+        )
 
         ecosystem.register_repository("high", high_priority_repo, priority=1)
         ecosystem.register_repository("low", low_priority_repo, priority=2)
@@ -394,7 +412,7 @@ Low priority version
         with patch.object(ecosystem, "_check_for_updates") as mock_check:
             mock_check.return_value = {
                 "repo1": ["template1", "template2"],
-                "repo2": ["template3"]
+                "repo2": ["template3"],
             }
 
             with patch.object(ecosystem, "_download_updates") as mock_download:
@@ -415,15 +433,23 @@ Low priority version
             "project_type": "python",
             "framework": "fastapi",
             "features": ["api", "database", "authentication"],
-            "complexity": "medium"
+            "complexity": "medium",
         }
 
         # Mock template metadata for recommendation
         with patch.object(ecosystem, "_analyze_template_suitability") as mock_analyze:
             mock_analyze.return_value = [
-                {"template": "python-fastapi-complete", "score": 0.95, "reasons": ["exact framework match", "includes auth"]},
-                {"template": "python-web-basic", "score": 0.75, "reasons": ["language match", "web framework"]},
-                {"template": "generic-api", "score": 0.60, "reasons": ["api support"]}
+                {
+                    "template": "python-fastapi-complete",
+                    "score": 0.95,
+                    "reasons": ["exact framework match", "includes auth"],
+                },
+                {
+                    "template": "python-web-basic",
+                    "score": 0.75,
+                    "reasons": ["language match", "web framework"],
+                },
+                {"template": "generic-api", "score": 0.60, "reasons": ["api support"]},
             ]
 
             recommendations = ecosystem.recommend_templates(project_context)
@@ -441,7 +467,7 @@ class TestTemplateMarketplace:
         """Test template marketplace initialization."""
         marketplace = TemplateMarketplace(
             marketplace_url="https://templates.claude-builder.com",
-            api_key="test-api-key"
+            api_key="test-api-key",
         )
 
         assert marketplace.marketplace_url == "https://templates.claude-builder.com"
@@ -462,7 +488,7 @@ class TestTemplateMarketplace:
                     "description": "Professional FastAPI template",
                     "downloads": 1500,
                     "rating": 4.8,
-                    "tags": ["python", "fastapi", "api", "professional"]
+                    "tags": ["python", "fastapi", "api", "professional"],
                 },
                 {
                     "name": "react-typescript-starter",
@@ -471,8 +497,8 @@ class TestTemplateMarketplace:
                     "description": "Modern React + TypeScript starter",
                     "downloads": 3200,
                     "rating": 4.9,
-                    "tags": ["react", "typescript", "frontend", "modern"]
-                }
+                    "tags": ["react", "typescript", "frontend", "modern"],
+                },
             ]
         }
 
@@ -494,13 +520,12 @@ class TestTemplateMarketplace:
             mock_request.return_value = {
                 "results": [
                     {"name": "python-cli-advanced", "score": 0.95},
-                    {"name": "python-web-basic", "score": 0.80}
+                    {"name": "python-web-basic", "score": 0.80},
                 ]
             }
 
             results = marketplace.search_templates(
-                query="python cli",
-                filters={"language": "python", "category": "cli"}
+                query="python cli", filters={"language": "python", "category": "cli"}
             )
 
             assert len(results) == 2
@@ -508,7 +533,7 @@ class TestTemplateMarketplace:
             mock_request.assert_called_with(
                 "GET",
                 "/search",
-                params={"q": "python cli", "language": "python", "category": "cli"}
+                params={"q": "python cli", "language": "python", "category": "cli"},
             )
 
     def test_download_template_from_marketplace(self, temp_dir):
@@ -529,8 +554,7 @@ Downloaded from marketplace
             mock_download.return_value = template_content
 
             template_path = marketplace.download_template(
-                "marketplace-template",
-                destination=temp_dir
+                "marketplace-template", destination=temp_dir
             )
 
             assert template_path.exists()
@@ -541,8 +565,7 @@ Downloaded from marketplace
     def test_publish_template_to_marketplace(self, temp_dir):
         """Test publishing template to marketplace."""
         marketplace = TemplateMarketplace(
-            "https://test-marketplace.com",
-            api_key="test-key"
+            "https://test-marketplace.com", api_key="test-key"
         )
 
         # Create template to publish
@@ -564,7 +587,7 @@ My custom template content
             mock_request.return_value = {
                 "success": True,
                 "template_id": "12345",
-                "url": "https://test-marketplace.com/templates/my-custom-template"
+                "url": "https://test-marketplace.com/templates/my-custom-template",
             }
 
             result = marketplace.publish_template(template_path)
@@ -572,10 +595,7 @@ My custom template content
             assert result["success"] is True
             assert result["template_id"] == "12345"
             mock_request.assert_called_with(
-                "POST",
-                "/templates",
-                data=mock.ANY,
-                files=mock.ANY
+                "POST", "/templates", data=mock.ANY, files=mock.ANY
             )
 
     def test_template_ratings_and_reviews(self):
@@ -591,15 +611,15 @@ My custom template content
                     "author": "developer1",
                     "rating": 5,
                     "comment": "Excellent template, saved me hours!",
-                    "date": "2024-01-15"
+                    "date": "2024-01-15",
                 },
                 {
                     "author": "developer2",
                     "rating": 4,
                     "comment": "Good template but could use more examples",
-                    "date": "2024-01-10"
-                }
-            ]
+                    "date": "2024-01-10",
+                },
+            ],
         }
 
         with patch.object(marketplace, "_make_api_request") as mock_request:
@@ -627,7 +647,7 @@ class TestTemplateBuilder:
             "version": "1.0.0",
             "language": "python",
             "framework": "fastapi",
-            "features": ["authentication", "database", "testing"]
+            "features": ["authentication", "database", "testing"],
         }
 
         # Mock template generation
@@ -647,8 +667,7 @@ author: {{ author }}
 """
 
             template_path = builder.create_template(
-                config=template_config,
-                output_directory=temp_dir
+                config=template_config, output_directory=temp_dir
             )
 
             assert template_path.exists()
@@ -691,19 +710,20 @@ Using PostgreSQL database
         customization_choices = {
             "database": "mysql",
             "authentication": False,
-            "testing": "unittest"
+            "testing": "unittest",
         }
 
         with patch.object(builder, "_apply_customizations") as mock_apply:
             mock_apply.return_value = "# Customized template content"
 
             customized_template = builder.customize_template(
-                base_template_content,
-                customization_choices
+                base_template_content, customization_choices
             )
 
             assert customized_template is not None
-            mock_apply.assert_called_once_with(base_template_content, customization_choices)
+            mock_apply.assert_called_once_with(
+                base_template_content, customization_choices
+            )
 
     def test_template_validation_and_testing(self, temp_dir):
         """Test template validation and testing capabilities."""
@@ -733,8 +753,12 @@ Files: main.py, requirements.txt
                 "passed": 1,
                 "failed": 0,
                 "results": [
-                    {"test": "basic_project", "status": "passed", "details": "All files generated correctly"}
-                ]
+                    {
+                        "test": "basic_project",
+                        "status": "passed",
+                        "details": "All files generated correctly",
+                    }
+                ],
             }
 
             validation_result = builder.validate_template(template_path)
@@ -751,13 +775,15 @@ Files: main.py, requirements.txt
         template_dir = temp_dir / "my-template"
         template_dir.mkdir()
 
-        (template_dir / "template.md").write_text("""---
+        (template_dir / "template.md").write_text(
+            """---
 name: packaged-template
 version: 1.0.0
 ---
 # {{ project_name }}
 Template content
-""")
+"""
+        )
 
         (template_dir / "assets").mkdir()
         (template_dir / "assets" / "logo.png").write_bytes(b"fake image data")
@@ -766,8 +792,7 @@ Template content
 
         # Package template
         package_path = builder.package_template(
-            template_directory=template_dir,
-            output_directory=temp_dir
+            template_directory=template_dir, output_directory=temp_dir
         )
 
         assert package_path.exists()
@@ -776,6 +801,7 @@ Template content
 
         # Verify package contents
         import zipfile
+
         with zipfile.ZipFile(package_path, "r") as zip_ref:
             file_list = zip_ref.namelist()
             assert "template.md" in file_list

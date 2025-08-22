@@ -28,20 +28,46 @@ def generate():
 
 
 @generate.command()
-@click.argument("project_path", type=click.Path(exists=True, file_okay=False, dir_okay=True))
-@click.option("--from-analysis", type=click.Path(exists=True, file_okay=True),
-              help="Use existing analysis file")
+@click.argument(
+    "project_path", type=click.Path(exists=True, file_okay=False, dir_okay=True)
+)
+@click.option(
+    "--from-analysis",
+    type=click.Path(exists=True, file_okay=True),
+    help="Use existing analysis file",
+)
 @click.option("--template", help="Override template selection")
 @click.option("--partial", help="Generate only specific sections (comma-separated)")
-@click.option("--output-dir", type=click.Path(), help="Output directory (default: PROJECT_PATH)")
-@click.option("--format", "output_format", type=click.Choice(["files", "zip", "tar"]),
-              default="files", help="Output format")
-@click.option("--backup-existing", is_flag=True, help="Backup existing files before overwriting")
-@click.option("--dry-run", is_flag=True, help="Show what would be generated without creating files")
+@click.option(
+    "--output-dir", type=click.Path(), help="Output directory (default: PROJECT_PATH)"
+)
+@click.option(
+    "--format",
+    "output_format",
+    type=click.Choice(["files", "zip", "tar"]),
+    default="files",
+    help="Output format",
+)
+@click.option(
+    "--backup-existing", is_flag=True, help="Backup existing files before overwriting"
+)
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    help="Show what would be generated without creating files",
+)
 @click.option("--verbose", "-v", count=True, help="Verbose output")
-def docs(project_path: str, from_analysis: Optional[str], template: Optional[str],
-         partial: Optional[str], output_dir: Optional[str], output_format: str,
-         backup_existing: bool, dry_run: bool, verbose: int):
+def docs(
+    project_path: str,
+    from_analysis: Optional[str],
+    template: Optional[str],
+    partial: Optional[str],
+    output_dir: Optional[str],
+    output_format: str,
+    backup_existing: bool,
+    dry_run: bool,
+    verbose: int,
+):
     """Generate documentation from project analysis."""
     try:
         path = Path(project_path).resolve()
@@ -71,7 +97,9 @@ def docs(project_path: str, from_analysis: Optional[str], template: Optional[str
         if partial:
             sections_filter = [s.strip() for s in partial.split(",")]
             if verbose > 0:
-                console.print(f"[yellow]Generating only sections: {sections_filter}[/yellow]")
+                console.print(
+                    f"[yellow]Generating only sections: {sections_filter}[/yellow]"
+                )
 
         # Generate content
         generator = DocumentGenerator(config)
@@ -83,18 +111,38 @@ def docs(project_path: str, from_analysis: Optional[str], template: Optional[str
             for section in sections_filter:
                 # Map section names to files
                 if section.lower() == "claude":
-                    filtered_files.update({k: v for k, v in generated_content.files.items()
-                                         if "claude" in k.lower()})
+                    filtered_files.update(
+                        {
+                            k: v
+                            for k, v in generated_content.files.items()
+                            if "claude" in k.lower()
+                        }
+                    )
                 elif section.lower() == "agents":
-                    filtered_files.update({k: v for k, v in generated_content.files.items()
-                                         if "agent" in k.lower()})
+                    filtered_files.update(
+                        {
+                            k: v
+                            for k, v in generated_content.files.items()
+                            if "agent" in k.lower()
+                        }
+                    )
                 elif section.lower() == "docs":
-                    filtered_files.update({k: v for k, v in generated_content.files.items()
-                                         if k.endswith(".md") and "agent" not in k.lower()})
+                    filtered_files.update(
+                        {
+                            k: v
+                            for k, v in generated_content.files.items()
+                            if k.endswith(".md") and "agent" not in k.lower()
+                        }
+                    )
                 else:
                     # Try to match by filename
-                    filtered_files.update({k: v for k, v in generated_content.files.items()
-                                         if section.lower() in k.lower()})
+                    filtered_files.update(
+                        {
+                            k: v
+                            for k, v in generated_content.files.items()
+                            if section.lower() in k.lower()
+                        }
+                    )
 
             generated_content.files = filtered_files
 
@@ -119,15 +167,32 @@ def docs(project_path: str, from_analysis: Optional[str], template: Optional[str
 
 
 @generate.command()
-@click.argument("project_path", type=click.Path(exists=True, file_okay=False, dir_okay=True))
-@click.option("--from-analysis", type=click.Path(exists=True, file_okay=True),
-              help="Use existing analysis file")
+@click.argument(
+    "project_path", type=click.Path(exists=True, file_okay=False, dir_okay=True)
+)
+@click.option(
+    "--from-analysis",
+    type=click.Path(exists=True, file_okay=True),
+    help="Use existing analysis file",
+)
 @click.option("--agents-dir", type=click.Path(), help="Custom agents directory")
-@click.option("--output-file", type=click.Path(), help="Output file (default: AGENTS.md)")
-@click.option("--dry-run", is_flag=True, help="Show what would be generated without creating files")
+@click.option(
+    "--output-file", type=click.Path(), help="Output file (default: AGENTS.md)"
+)
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    help="Show what would be generated without creating files",
+)
 @click.option("--verbose", "-v", count=True, help="Verbose output")
-def agents(project_path: str, from_analysis: Optional[str], agents_dir: Optional[str],
-           output_file: Optional[str], dry_run: bool, verbose: int):
+def agents(
+    project_path: str,
+    from_analysis: Optional[str],
+    agents_dir: Optional[str],
+    output_file: Optional[str],
+    dry_run: bool,
+    verbose: int,
+):
     """Generate agent configurations."""
     try:
         path = Path(project_path).resolve()
@@ -148,30 +213,38 @@ def agents(project_path: str, from_analysis: Optional[str], agents_dir: Optional
 
         # Generate agent configuration
         from claude_builder.core.agents import UniversalAgentSystem
+
         agent_system = UniversalAgentSystem()
         agent_config = agent_system.select_agents(analysis)
 
         if verbose > 0:
-            console.print(f"[green]Selected {len(agent_config.all_agents)} agents[/green]")
+            console.print(
+                f"[green]Selected {len(agent_config.all_agents)} agents[/green]"
+            )
 
         # Generate agent documentation
         generator = DocumentGenerator({"agents_only": True})
         generated_content = generator.generate(analysis, path)
 
         # Filter to just agent files
-        agent_files = {k: v for k, v in generated_content.files.items()
-                      if "agent" in k.lower() or k == "AGENTS.md"}
+        agent_files = {
+            k: v
+            for k, v in generated_content.files.items()
+            if "agent" in k.lower() or k == "AGENTS.md"
+        }
 
         if dry_run or verbose > 0:
-            console.print(Panel(
-                f"**Agent Configuration Preview**\n\n"
-                f"Core agents: {len(agent_config.core_agents)}\n"
-                f"Domain agents: {len(agent_config.domain_agents)}\n"
-                f"Workflow agents: {len(agent_config.workflow_agents)}\n"
-                f"Custom agents: {len(agent_config.custom_agents)}\n\n"
-                f"Files to generate: {list(agent_files.keys())}",
-                title="Agent Generation Preview"
-            ))
+            console.print(
+                Panel(
+                    f"**Agent Configuration Preview**\n\n"
+                    f"Core agents: {len(agent_config.core_agents)}\n"
+                    f"Domain agents: {len(agent_config.domain_agents)}\n"
+                    f"Workflow agents: {len(agent_config.workflow_agents)}\n"
+                    f"Custom agents: {len(agent_config.custom_agents)}\n\n"
+                    f"Files to generate: {list(agent_files.keys())}",
+                    title="Agent Generation Preview",
+                )
+            )
 
         if dry_run:
             console.print("[yellow]Dry run complete - no files were created[/yellow]")
@@ -184,15 +257,23 @@ def agents(project_path: str, from_analysis: Optional[str], agents_dir: Optional
             # Write single file
             with open(output_path, "w", encoding="utf-8") as f:
                 f.write(agent_files["AGENTS.md"])
-            console.print(f"[green]✓ Agent configuration written to: {output_path}[/green]")
+            console.print(
+                f"[green]✓ Agent configuration written to: {output_path}[/green]"
+            )
         else:
             # Write multiple files
             for filename, content in agent_files.items():
-                file_path = output_path.parent / filename if output_path.is_file() else output_path / filename
+                file_path = (
+                    output_path.parent / filename
+                    if output_path.is_file()
+                    else output_path / filename
+                )
                 file_path.parent.mkdir(parents=True, exist_ok=True)
                 with open(file_path, "w", encoding="utf-8") as f:
                     f.write(content)
-            console.print(f"[green]✓ Agent files written to: {output_path.parent if output_path.is_file() else output_path}[/green]")
+            console.print(
+                f"[green]✓ Agent files written to: {output_path.parent if output_path.is_file() else output_path}[/green]"
+            )
 
     except Exception as e:
         console.print(f"[red]Error generating agents: {e}[/red]")
@@ -205,6 +286,7 @@ def _load_analysis_from_file(analysis_file: Path) -> ProjectAnalysis:
         with open(analysis_file, encoding="utf-8") as f:
             if analysis_file.suffix.lower() in [".yaml", ".yml"]:
                 import yaml
+
                 data = yaml.safe_load(f)
             else:
                 data = json.load(f)
@@ -239,7 +321,9 @@ def _load_analysis_from_file(analysis_file: Path) -> ProjectAnalysis:
         analysis.domain_info.domain = domain_data.get("domain")
         analysis.domain_info.confidence = domain_data.get("confidence", 0.0)
         analysis.domain_info.indicators = domain_data.get("indicators", [])
-        analysis.domain_info.specialized_patterns = domain_data.get("specialized_patterns", [])
+        analysis.domain_info.specialized_patterns = domain_data.get(
+            "specialized_patterns", []
+        )
 
         # Enum fields
         from claude_builder.core.models import (
@@ -247,30 +331,39 @@ def _load_analysis_from_file(analysis_file: Path) -> ProjectAnalysis:
             ComplexityLevel,
             ProjectType,
         )
+
         try:
             analysis.project_type = ProjectType(data.get("project_type", "unknown"))
         except ValueError:
             analysis.project_type = ProjectType.UNKNOWN
 
         try:
-            analysis.complexity_level = ComplexityLevel(data.get("complexity_level", "simple"))
+            analysis.complexity_level = ComplexityLevel(
+                data.get("complexity_level", "simple")
+            )
         except ValueError:
             analysis.complexity_level = ComplexityLevel.SIMPLE
 
         try:
-            analysis.architecture_pattern = ArchitecturePattern(data.get("architecture_pattern", "unknown"))
+            analysis.architecture_pattern = ArchitecturePattern(
+                data.get("architecture_pattern", "unknown")
+            )
         except ValueError:
             analysis.architecture_pattern = ArchitecturePattern.UNKNOWN
 
         # Development environment
         dev_data = data.get("development_environment", {})
         analysis.dev_environment.package_managers = dev_data.get("package_managers", [])
-        analysis.dev_environment.testing_frameworks = dev_data.get("testing_frameworks", [])
+        analysis.dev_environment.testing_frameworks = dev_data.get(
+            "testing_frameworks", []
+        )
         analysis.dev_environment.linting_tools = dev_data.get("linting_tools", [])
         analysis.dev_environment.ci_cd_systems = dev_data.get("ci_cd_systems", [])
         analysis.dev_environment.containerization = dev_data.get("containerization", [])
         analysis.dev_environment.databases = dev_data.get("databases", [])
-        analysis.dev_environment.documentation_tools = dev_data.get("documentation_tools", [])
+        analysis.dev_environment.documentation_tools = dev_data.get(
+            "documentation_tools", []
+        )
 
         # Filesystem info
         fs_data = data.get("filesystem_info", {})
@@ -279,7 +372,9 @@ def _load_analysis_from_file(analysis_file: Path) -> ProjectAnalysis:
         analysis.filesystem_info.source_files = fs_data.get("source_files", 0)
         analysis.filesystem_info.test_files = fs_data.get("test_files", 0)
         analysis.filesystem_info.config_files = fs_data.get("config_files", 0)
-        analysis.filesystem_info.documentation_files = fs_data.get("documentation_files", 0)
+        analysis.filesystem_info.documentation_files = fs_data.get(
+            "documentation_files", 0
+        )
         analysis.filesystem_info.asset_files = fs_data.get("asset_files", 0)
         analysis.filesystem_info.ignore_patterns = fs_data.get("ignore_patterns", [])
         analysis.filesystem_info.root_files = fs_data.get("root_files", [])
@@ -307,12 +402,16 @@ def _display_generation_preview(generated_content, analysis):
     preview_text = f"**Files to generate ({len(generated_content.files)} total):**\n\n"
     preview_text += "\n".join(files_info)
     preview_text += f"\n\n**Total size:** {total_size:,} bytes"
-    preview_text += f"\n**Template info:** {len(generated_content.template_info)} templates used"
+    preview_text += (
+        f"\n**Template info:** {len(generated_content.template_info)} templates used"
+    )
 
     console.print(Panel(preview_text, title="Generation Preview"))
 
 
-def _write_generated_files(generated_content, output_path: Path, backup_existing: bool, verbose: int):
+def _write_generated_files(
+    generated_content, output_path: Path, backup_existing: bool, verbose: int
+):
     """Write generated files to disk."""
     files_written = 0
 
@@ -327,7 +426,9 @@ def _write_generated_files(generated_content, output_path: Path, backup_existing
             backup_path = file_path.with_suffix(file_path.suffix + ".bak")
             file_path.rename(backup_path)
             if verbose > 0:
-                console.print(f"[yellow]Backed up existing file: {backup_path}[/yellow]")
+                console.print(
+                    f"[yellow]Backed up existing file: {backup_path}[/yellow]"
+                )
 
         # Write file
         with open(file_path, "w", encoding="utf-8") as f:
@@ -343,15 +444,32 @@ def _write_generated_files(generated_content, output_path: Path, backup_existing
 
 
 @generate.command()
-@click.argument("project_path", type=click.Path(exists=True, file_okay=False, dir_okay=True))
-@click.option("--from-analysis", type=click.Path(exists=True, file_okay=True),
-              help="Use existing analysis file")
+@click.argument(
+    "project_path", type=click.Path(exists=True, file_okay=False, dir_okay=True)
+)
+@click.option(
+    "--from-analysis",
+    type=click.Path(exists=True, file_okay=True),
+    help="Use existing analysis file",
+)
 @click.option("--template", help="Override template selection")
-@click.option("--output-file", type=click.Path(), help="Output file (default: CLAUDE.md)")
-@click.option("--dry-run", is_flag=True, help="Show what would be generated without creating files")
+@click.option(
+    "--output-file", type=click.Path(), help="Output file (default: CLAUDE.md)"
+)
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    help="Show what would be generated without creating files",
+)
 @click.option("--verbose", "-v", count=True, help="Verbose output")
-def claude_md(project_path: str, from_analysis: Optional[str], template: Optional[str],
-             output_file: Optional[str], dry_run: bool, verbose: int):
+def claude_md(
+    project_path: str,
+    from_analysis: Optional[str],
+    template: Optional[str],
+    output_file: Optional[str],
+    dry_run: bool,
+    verbose: int,
+):
     """Generate CLAUDE.md file."""
     try:
         path = Path(project_path).resolve()
@@ -386,11 +504,13 @@ def claude_md(project_path: str, from_analysis: Optional[str], template: Optiona
             return
 
         if dry_run or verbose > 0:
-            console.print(Panel(
-                f"**CLAUDE.md Preview** ({len(claude_content)} characters)\n\n"
-                f"First 200 characters:\n{claude_content[:200]}...",
-                title="CLAUDE.md Generation Preview"
-            ))
+            console.print(
+                Panel(
+                    f"**CLAUDE.md Preview** ({len(claude_content)} characters)\n\n"
+                    f"First 200 characters:\n{claude_content[:200]}...",
+                    title="CLAUDE.md Generation Preview",
+                )
+            )
 
         if dry_run:
             console.print("[yellow]Dry run complete - no files were created[/yellow]")
@@ -411,15 +531,32 @@ def claude_md(project_path: str, from_analysis: Optional[str], template: Optiona
 
 
 @generate.command()
-@click.argument("project_path", type=click.Path(exists=True, file_okay=False, dir_okay=True))
-@click.option("--from-analysis", type=click.Path(exists=True, file_okay=True),
-              help="Use existing analysis file")
+@click.argument(
+    "project_path", type=click.Path(exists=True, file_okay=False, dir_okay=True)
+)
+@click.option(
+    "--from-analysis",
+    type=click.Path(exists=True, file_okay=True),
+    help="Use existing analysis file",
+)
 @click.option("--agents-dir", type=click.Path(), help="Custom agents directory")
-@click.option("--output-file", type=click.Path(), help="Output file (default: AGENTS.md)")
-@click.option("--dry-run", is_flag=True, help="Show what would be generated without creating files")
+@click.option(
+    "--output-file", type=click.Path(), help="Output file (default: AGENTS.md)"
+)
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    help="Show what would be generated without creating files",
+)
 @click.option("--verbose", "-v", count=True, help="Verbose output")
-def agents_md(project_path: str, from_analysis: Optional[str], agents_dir: Optional[str],
-             output_file: Optional[str], dry_run: bool, verbose: int):
+def agents_md(
+    project_path: str,
+    from_analysis: Optional[str],
+    agents_dir: Optional[str],
+    output_file: Optional[str],
+    dry_run: bool,
+    verbose: int,
+):
     """Generate AGENTS.md file."""
     try:
         path = Path(project_path).resolve()
@@ -440,11 +577,14 @@ def agents_md(project_path: str, from_analysis: Optional[str], agents_dir: Optio
 
         # Generate agent configuration
         from claude_builder.core.agents import UniversalAgentSystem
+
         agent_system = UniversalAgentSystem()
         agent_config = agent_system.select_agents(analysis)
 
         if verbose > 0:
-            console.print(f"[green]Selected {len(agent_config.all_agents)} agents[/green]")
+            console.print(
+                f"[green]Selected {len(agent_config.all_agents)} agents[/green]"
+            )
 
         # Generate AGENTS.md content
         generator = DocumentGenerator({"agents_only": True})
@@ -457,15 +597,17 @@ def agents_md(project_path: str, from_analysis: Optional[str], agents_dir: Optio
             return
 
         if dry_run or verbose > 0:
-            console.print(Panel(
-                f"**AGENTS.md Preview**\n\n"
-                f"Core agents: {len(agent_config.core_agents)}\n"
-                f"Domain agents: {len(agent_config.domain_agents)}\n"
-                f"Workflow agents: {len(agent_config.workflow_agents)}\n"
-                f"Custom agents: {len(agent_config.custom_agents)}\n\n"
-                f"Content size: {len(agents_content)} characters",
-                title="AGENTS.md Generation Preview"
-            ))
+            console.print(
+                Panel(
+                    f"**AGENTS.md Preview**\n\n"
+                    f"Core agents: {len(agent_config.core_agents)}\n"
+                    f"Domain agents: {len(agent_config.domain_agents)}\n"
+                    f"Workflow agents: {len(agent_config.workflow_agents)}\n"
+                    f"Custom agents: {len(agent_config.custom_agents)}\n\n"
+                    f"Content size: {len(agents_content)} characters",
+                    title="AGENTS.md Generation Preview",
+                )
+            )
 
         if dry_run:
             console.print("[yellow]Dry run complete - no files were created[/yellow]")

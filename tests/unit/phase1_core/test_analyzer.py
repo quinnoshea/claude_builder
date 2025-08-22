@@ -9,7 +9,6 @@ Tests cover the fundamental project analysis capabilities including:
 - Domain detection
 """
 
-
 import pytest
 
 from claude_builder.core.analyzer import (
@@ -38,7 +37,7 @@ class TestProjectAnalyzer:
         config = {
             "confidence_threshold": 70,
             "parallel_processing": False,
-            "cache_enabled": False
+            "cache_enabled": False,
         }
         analyzer = ProjectAnalyzer(config=config)
         assert analyzer.config["confidence_threshold"] == 70
@@ -55,7 +54,10 @@ class TestProjectAnalyzer:
         assert result.language_info.primary == "python"
         assert result.language_info.confidence >= 80
         assert result.project_type in [ProjectType.CLI_TOOL, ProjectType.LIBRARY]
-        assert result.complexity_level in [ComplexityLevel.SIMPLE, ComplexityLevel.MEDIUM]
+        assert result.complexity_level in [
+            ComplexityLevel.SIMPLE,
+            ComplexityLevel.MEDIUM,
+        ]
         assert result.analysis_confidence >= 70
 
     def test_analyze_rust_project(self, temp_dir):
@@ -163,12 +165,7 @@ class TestProjectAnalyzer:
     def test_analyze_with_overrides(self, temp_dir):
         """Test analyzer with language/framework overrides."""
         project_path = create_test_project(temp_dir, "python")
-        config = {
-            "overrides": {
-                "language": "typescript",
-                "framework": "react"
-            }
-        }
+        config = {"overrides": {"language": "typescript", "framework": "react"}}
         analyzer = ProjectAnalyzer(config=config)
 
         result = analyzer.analyze(project_path)
@@ -287,7 +284,8 @@ class TestFrameworkDetector:
         project_path = temp_dir / "fastapi_project"
         project_path.mkdir()
         (project_path / "requirements.txt").write_text("fastapi>=0.95.0\nuvicorn")
-        (project_path / "main.py").write_text("""
+        (project_path / "main.py").write_text(
+            """
 from fastapi import FastAPI
 
 app = FastAPI()
@@ -295,7 +293,8 @@ app = FastAPI()
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
-""")
+"""
+        )
 
         detector = FrameworkDetector()
         result = detector.detect_framework(project_path, "python")
@@ -309,8 +308,12 @@ def read_root():
         project_path = temp_dir / "django_project"
         project_path.mkdir()
         (project_path / "requirements.txt").write_text("Django>=4.0.0")
-        (project_path / "manage.py").write_text("#!/usr/bin/env python\nfrom django.core.management import execute_from_command_line")
-        (project_path / "settings.py").write_text("INSTALLED_APPS = ['django.contrib.admin']")
+        (project_path / "manage.py").write_text(
+            "#!/usr/bin/env python\nfrom django.core.management import execute_from_command_line"
+        )
+        (project_path / "settings.py").write_text(
+            "INSTALLED_APPS = ['django.contrib.admin']"
+        )
 
         detector = FrameworkDetector()
         result = detector.detect_framework(project_path, "python")
@@ -322,8 +325,11 @@ def read_root():
         """Test React framework detection."""
         project_path = temp_dir / "react_project"
         project_path.mkdir()
-        (project_path / "package.json").write_text('{"dependencies": {"react": "^18.0.0", "react-dom": "^18.0.0"}}')
-        (project_path / "App.jsx").write_text("""
+        (project_path / "package.json").write_text(
+            '{"dependencies": {"react": "^18.0.0", "react-dom": "^18.0.0"}}'
+        )
+        (project_path / "App.jsx").write_text(
+            """
 import React from 'react';
 
 function App() {
@@ -331,7 +337,8 @@ function App() {
 }
 
 export default App;
-""")
+"""
+        )
 
         detector = FrameworkDetector()
         result = detector.detect_framework(project_path, "javascript")
@@ -343,7 +350,8 @@ export default App;
         """Test Axum framework detection for Rust."""
         project_path = temp_dir / "axum_project"
         project_path.mkdir()
-        (project_path / "Cargo.toml").write_text("""
+        (project_path / "Cargo.toml").write_text(
+            """
 [package]
 name = "test-api"
 version = "0.1.0"
@@ -351,17 +359,20 @@ version = "0.1.0"
 [dependencies]
 axum = "0.6"
 tokio = { version = "1.0", features = ["full"] }
-""")
+"""
+        )
         src_dir = project_path / "src"
         src_dir.mkdir()
-        (src_dir / "main.rs").write_text("""
+        (src_dir / "main.rs").write_text(
+            """
 use axum::{routing::get, Router};
 
 #[tokio::main]
 async fn main() {
     let app = Router::new().route("/", get(|| async { "Hello, World!" }));
 }
-""")
+"""
+        )
 
         detector = FrameworkDetector()
         result = detector.detect_framework(project_path, "rust")
@@ -406,14 +417,16 @@ class TestProjectTypeClassification:
         project_path = temp_dir / "api_project"
         project_path.mkdir()
         (project_path / "requirements.txt").write_text("fastapi\nuvicorn\npydantic")
-        (project_path / "main.py").write_text("""
+        (project_path / "main.py").write_text(
+            """
 from fastapi import FastAPI
 app = FastAPI()
 
 @app.get("/api/users")
 def get_users():
     return []
-""")
+"""
+        )
 
         analyzer = ProjectAnalyzer()
         result = analyzer.analyze(project_path)
@@ -425,7 +438,8 @@ def get_users():
         project_path = temp_dir / "cli_project"
         project_path.mkdir()
         (project_path / "requirements.txt").write_text("click\nargparse")
-        (project_path / "cli.py").write_text("""
+        (project_path / "cli.py").write_text(
+            """
 import click
 
 @click.command()
@@ -435,7 +449,8 @@ def hello(count):
 
 if __name__ == '__main__':
     hello()
-""")
+"""
+        )
 
         analyzer = ProjectAnalyzer()
         result = analyzer.analyze(project_path)
@@ -446,14 +461,16 @@ if __name__ == '__main__':
         """Test classification of library project."""
         project_path = temp_dir / "lib_project"
         project_path.mkdir()
-        (project_path / "setup.py").write_text("""
+        (project_path / "setup.py").write_text(
+            """
 from setuptools import setup, find_packages
 
 setup(
     name="mylib",
     packages=find_packages(),
 )
-""")
+"""
+        )
         lib_dir = project_path / "mylib"
         lib_dir.mkdir()
         (lib_dir / "__init__.py").write_text("__version__ = '1.0.0'")
@@ -468,7 +485,8 @@ setup(
         """Test classification of web frontend project."""
         project_path = temp_dir / "frontend_project"
         project_path.mkdir()
-        (project_path / "package.json").write_text("""
+        (project_path / "package.json").write_text(
+            """
 {
   "name": "frontend-app",
   "dependencies": {
@@ -480,7 +498,8 @@ setup(
     "build": "react-scripts build"
   }
 }
-""")
+"""
+        )
         src_dir = project_path / "src"
         src_dir.mkdir()
         (src_dir / "App.js").write_text("import React from 'react';")
@@ -525,7 +544,10 @@ class TestComplexityAssessment:
         analyzer = ProjectAnalyzer()
         result = analyzer.analyze(project_path)
 
-        assert result.complexity_level in [ComplexityLevel.SIMPLE, ComplexityLevel.MEDIUM]
+        assert result.complexity_level in [
+            ComplexityLevel.SIMPLE,
+            ComplexityLevel.MEDIUM,
+        ]
 
     def test_high_complexity(self, temp_dir):
         """Test high complexity assessment."""
@@ -543,7 +565,9 @@ class TestComplexityAssessment:
                 (sub_path / f"file_{i}.py").write_text(f"# {subdir} file {i}")
 
         # Add configuration files
-        (project_path / "requirements.txt").write_text("django\ncelery\nredis\npostgresql")
+        (project_path / "requirements.txt").write_text(
+            "django\ncelery\nredis\npostgresql"
+        )
         (project_path / "docker-compose.yml").write_text("version: '3'")
         (project_path / "Dockerfile").write_text("FROM python:3.11")
 

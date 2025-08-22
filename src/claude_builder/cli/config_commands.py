@@ -34,12 +34,23 @@ def config():
 
 
 @config.command()
-@click.argument("project_path", type=click.Path(exists=True, file_okay=False),
-                default=".", required=False)
-@click.option("--format", "output_format", type=click.Choice(["json", "toml"]),
-              default="json", help="Configuration file format")
+@click.argument(
+    "project_path",
+    type=click.Path(exists=True, file_okay=False),
+    default=".",
+    required=False,
+)
+@click.option(
+    "--format",
+    "output_format",
+    type=click.Choice(["json", "toml"]),
+    default="json",
+    help="Configuration file format",
+)
 @click.option("--interactive", is_flag=True, help="Interactive configuration creation")
-@click.option("--from-analysis", is_flag=True, help="Generate config based on project analysis")
+@click.option(
+    "--from-analysis", is_flag=True, help="Generate config based on project analysis"
+)
 def init(project_path: str, output_format: str, interactive: bool, from_analysis: bool):
     """Create initial configuration file for a project."""
     try:
@@ -51,13 +62,17 @@ def init(project_path: str, output_format: str, interactive: bool, from_analysis
 
         # Enhance with project analysis if requested
         if from_analysis:
-            console.print("[cyan]Analyzing project to generate optimal configuration...[/cyan]")
+            console.print(
+                "[cyan]Analyzing project to generate optimal configuration...[/cyan]"
+            )
             analyzer = ProjectAnalyzer()
             analysis = analyzer.analyze(project_path_obj)
 
             # Customize config based on analysis
             config = _customize_config_from_analysis(config, analysis)
-            console.print(f"[green]✓ Configuration optimized for {analysis.language} {analysis.project_type.value}[/green]")
+            console.print(
+                f"[green]✓ Configuration optimized for {analysis.language} {analysis.project_type.value}[/green]"
+            )
 
         # Interactive configuration
         if interactive:
@@ -68,7 +83,9 @@ def init(project_path: str, output_format: str, interactive: bool, from_analysis
         config_path = project_path_obj / config_filename
 
         if config_path.exists():
-            if not Confirm.ask(f"Configuration file {config_filename} already exists. Overwrite?"):
+            if not Confirm.ask(
+                f"Configuration file {config_filename} already exists. Overwrite?"
+            ):
                 console.print("[yellow]Configuration creation cancelled[/yellow]")
                 return
 
@@ -76,15 +93,17 @@ def init(project_path: str, output_format: str, interactive: bool, from_analysis
         console.print(f"[green]✓ Configuration saved to {config_path}[/green]")
 
         # Show next steps
-        console.print(Panel(
-            f"Configuration created successfully!\n\n"
-            f"**Next steps:**\n"
-            f"• Review and customize the configuration: `{config_filename}`\n"
-            f"• Run claude-builder to use the new configuration\n"
-            f"• Use `claude-builder config validate` to check configuration\n"
-            f"• Create project profiles with `claude-builder config create-profile`",
-            title="Configuration Setup Complete"
-        ))
+        console.print(
+            Panel(
+                f"Configuration created successfully!\n\n"
+                f"**Next steps:**\n"
+                f"• Review and customize the configuration: `{config_filename}`\n"
+                f"• Run claude-builder to use the new configuration\n"
+                f"• Use `claude-builder config validate` to check configuration\n"
+                f"• Create project profiles with `claude-builder config create-profile`",
+                title="Configuration Setup Complete",
+            )
+        )
 
     except Exception as e:
         console.print(f"[red]Error creating configuration: {e}[/red]")
@@ -94,8 +113,11 @@ def init(project_path: str, output_format: str, interactive: bool, from_analysis
 @config.command()
 @click.argument("config_file", type=click.Path(exists=True), required=True)
 @click.option("--strict", is_flag=True, help="Treat warnings as errors")
-@click.option("--project-path", type=click.Path(exists=True, file_okay=False),
-              help="Validate against specific project")
+@click.option(
+    "--project-path",
+    type=click.Path(exists=True, file_okay=False),
+    help="Validate against specific project",
+)
 def validate(config_file: str, strict: bool, project_path: Optional[str]):
     """Validate a configuration file."""
     try:
@@ -129,7 +151,9 @@ def validate(config_file: str, strict: bool, project_path: Optional[str]):
                 console.print(f"  • {warning}")
 
             if strict:
-                raise click.ClickException(f"{CONFIGURATION_VALIDATION_FAILED} (strict mode)")
+                raise click.ClickException(
+                    f"{CONFIGURATION_VALIDATION_FAILED} (strict mode)"
+                )
 
         if not warnings:
             console.print("[green]No issues found[/green]")
@@ -143,10 +167,19 @@ def validate(config_file: str, strict: bool, project_path: Optional[str]):
 
 
 @config.command()
-@click.argument("project_path", type=click.Path(exists=True, file_okay=False),
-                default=".", required=False)
-@click.option("--format", "output_format", type=click.Choice(["table", "json", "yaml"]),
-              default="table", help="Output format")
+@click.argument(
+    "project_path",
+    type=click.Path(exists=True, file_okay=False),
+    default=".",
+    required=False,
+)
+@click.option(
+    "--format",
+    "output_format",
+    type=click.Choice(["table", "json", "yaml"]),
+    default="table",
+    help="Output format",
+)
 @click.option("--section", help="Show only specific configuration section")
 def show(project_path: str, output_format: str, section: Optional[str]):
     """Show effective configuration for a project."""
@@ -175,8 +208,13 @@ def show(project_path: str, output_format: str, section: Optional[str]):
 @config.command()
 @click.argument("old_config", type=click.Path(exists=True), required=True)
 @click.option("--output", type=click.Path(), help="Output path for migrated config")
-@click.option("--format", "output_format", type=click.Choice(["json", "toml"]),
-              default="json", help="Output format")
+@click.option(
+    "--format",
+    "output_format",
+    type=click.Choice(["json", "toml"]),
+    default="json",
+    help="Output format",
+)
 def migrate(old_config: str, output: Optional[str], output_format: str):
     """Migrate configuration from old format."""
     try:
@@ -194,7 +232,9 @@ def migrate(old_config: str, output: Optional[str], output_format: str):
         if output:
             output_path = Path(output)
         else:
-            output_path = old_config_path.parent / f"claude-builder-migrated.{output_format}"
+            output_path = (
+                old_config_path.parent / f"claude-builder-migrated.{output_format}"
+            )
 
         config_manager.save_config(config, output_path)
         console.print(f"[green]✓ Configuration migrated to: {output_path}[/green]")
@@ -207,11 +247,22 @@ def migrate(old_config: str, output: Optional[str], output_format: str):
 @config.command()
 @click.argument("profile_name", required=True)
 @click.option("--description", help="Profile description")
-@click.option("--config-file", type=click.Path(exists=True), help="Configuration file to use as base")
-@click.option("--project-path", type=click.Path(exists=True, file_okay=False),
-              help="Create profile from project configuration")
-def create_profile(profile_name: str, description: Optional[str],
-                  config_file: Optional[str], project_path: Optional[str]):
+@click.option(
+    "--config-file",
+    type=click.Path(exists=True),
+    help="Configuration file to use as base",
+)
+@click.option(
+    "--project-path",
+    type=click.Path(exists=True, file_okay=False),
+    help="Create profile from project configuration",
+)
+def create_profile(
+    profile_name: str,
+    description: Optional[str],
+    config_file: Optional[str],
+    project_path: Optional[str],
+):
     """Create a reusable project profile."""
     try:
         config_manager = ConfigManager()
@@ -230,20 +281,24 @@ def create_profile(profile_name: str, description: Optional[str],
             config = Config()
 
         if not description:
-            description = Prompt.ask("Profile description", default=f"Profile for {profile_name}")
+            description = Prompt.ask(
+                "Profile description", default=f"Profile for {profile_name}"
+            )
 
         config_manager.create_project_profile(profile_name, config, description)
         console.print(f"[green]✓ Project profile '{profile_name}' created[/green]")
 
         # Show usage instructions
-        console.print(Panel(
-            f"Profile created successfully!\n\n"
-            f"**Usage:**\n"
-            f"• Apply to new projects: `claude-builder --profile={profile_name} /path/to/project`\n"
-            f"• List all profiles: `claude-builder config list-profiles`\n"
-            f"• View profile details: `claude-builder config show-profile {profile_name}`",
-            title=f"Profile: {profile_name}"
-        ))
+        console.print(
+            Panel(
+                f"Profile created successfully!\n\n"
+                f"**Usage:**\n"
+                f"• Apply to new projects: `claude-builder --profile={profile_name} /path/to/project`\n"
+                f"• List all profiles: `claude-builder config list-profiles`\n"
+                f"• View profile details: `claude-builder config show-profile {profile_name}`",
+                title=f"Profile: {profile_name}",
+            )
+        )
 
     except Exception as e:
         console.print(f"[red]Error creating profile: {e}[/red]")
@@ -251,8 +306,13 @@ def create_profile(profile_name: str, description: Optional[str],
 
 
 @config.command()
-@click.option("--format", "output_format", type=click.Choice(["table", "json"]),
-              default="table", help="Output format")
+@click.option(
+    "--format",
+    "output_format",
+    type=click.Choice(["table", "json"]),
+    default="table",
+    help="Output format",
+)
 def list_profiles(output_format: str):
     """List available project profiles."""
     try:
@@ -295,8 +355,12 @@ def show_profile(profile_name: str):
             config_data = profile["config"]
             config_preview = {
                 "agents": config_data.get("agents", {}).get("priority_agents", []),
-                "templates": config_data.get("templates", {}).get("preferred_templates", []),
-                "git_integration": config_data.get("git_integration", {}).get("mode", "unknown")
+                "templates": config_data.get("templates", {}).get(
+                    "preferred_templates", []
+                ),
+                "git_integration": config_data.get("git_integration", {}).get(
+                    "mode", "unknown"
+                ),
             }
 
         info_panel += f"\n{json.dumps(config_preview, indent=2)}"
@@ -312,20 +376,36 @@ def _customize_config_from_analysis(config: Config, analysis) -> Config:
     """Customize configuration based on project analysis."""
     # Customize based on language
     if analysis.language == "python":
-        config.agents.priority_agents = ["python-pro", "backend-developer", "test-automator"]
-        config.templates.preferred_templates = ["python-web" if "web" in str(analysis.project_type) else "python-cli"]
+        config.agents.priority_agents = [
+            "python-pro",
+            "backend-developer",
+            "test-automator",
+        ]
+        config.templates.preferred_templates = [
+            "python-web" if "web" in str(analysis.project_type) else "python-cli"
+        ]
     elif analysis.language == "rust":
-        config.agents.priority_agents = ["rust-engineer", "performance-engineer", "cli-developer"]
+        config.agents.priority_agents = [
+            "rust-engineer",
+            "performance-engineer",
+            "cli-developer",
+        ]
         config.templates.preferred_templates = ["rust-cli"]
     elif analysis.language == "javascript":
-        config.agents.priority_agents = ["javascript-pro", "frontend-developer", "backend-developer"]
+        config.agents.priority_agents = [
+            "javascript-pro",
+            "frontend-developer",
+            "backend-developer",
+        ]
         config.templates.preferred_templates = ["javascript-react"]
 
     # Customize based on project type
     if "web" in str(analysis.project_type).lower():
         config.agents.priority_agents.extend(["ui-designer", "api-designer"])
     elif "cli" in str(analysis.project_type).lower():
-        config.agents.priority_agents.extend(["cli-developer", "documentation-engineer"])
+        config.agents.priority_agents.extend(
+            ["cli-developer", "documentation-engineer"]
+        )
 
     return config
 
@@ -338,8 +418,7 @@ def _interactive_config_setup(config: Config) -> Config:
     # Analysis settings
     console.print("[cyan]Analysis Settings[/cyan]")
     new_threshold = IntPrompt.ask(
-        "Confidence threshold (0-100)",
-        default=config.analysis.confidence_threshold
+        "Confidence threshold (0-100)", default=config.analysis.confidence_threshold
     )
     config.analysis.confidence_threshold = new_threshold
 
@@ -348,29 +427,27 @@ def _interactive_config_setup(config: Config) -> Config:
     git_modes = ["no_integration", "exclude_generated", "track_generated"]
     current_mode = config.git_integration.mode.value
     git_mode = Prompt.ask(
-        "Git integration mode",
-        choices=git_modes,
-        default=current_mode
+        "Git integration mode", choices=git_modes, default=current_mode
     )
     from claude_builder.core.models import GitIntegrationMode
+
     config.git_integration.mode = GitIntegrationMode(git_mode)
 
     # Claude mention policy
     mention_policies = ["forbidden", "minimal", "allowed"]
     current_policy = config.git_integration.claude_mention_policy.value
     mention_policy = Prompt.ask(
-        "Claude mention policy",
-        choices=mention_policies,
-        default=current_policy
+        "Claude mention policy", choices=mention_policies, default=current_policy
     )
     from claude_builder.core.models import ClaudeMentionPolicy
+
     config.git_integration.claude_mention_policy = ClaudeMentionPolicy(mention_policy)
 
     # User preferences
     console.print("\n[cyan]User Preferences[/cyan]")
     config.user_preferences.prefer_verbose_output = Confirm.ask(
         "Enable verbose output by default?",
-        default=config.user_preferences.prefer_verbose_output
+        default=config.user_preferences.prefer_verbose_output,
     )
 
     return config
@@ -400,23 +477,22 @@ def _display_config_table(config: Config, section: Optional[str] = None):
 
         table.add_row(
             "Analysis",
-            f"Threshold: {config.analysis.confidence_threshold}%, Cache: {config.analysis.cache_enabled}"
+            f"Threshold: {config.analysis.confidence_threshold}%, Cache: {config.analysis.cache_enabled}",
         )
         table.add_row(
             "Templates",
-            f"Preferred: {', '.join(config.templates.preferred_templates) or 'Auto'}"
+            f"Preferred: {', '.join(config.templates.preferred_templates) or 'Auto'}",
         )
         table.add_row(
-            "Agents",
-            f"Priority: {', '.join(config.agents.priority_agents) or 'Auto'}"
+            "Agents", f"Priority: {', '.join(config.agents.priority_agents) or 'Auto'}"
         )
         table.add_row(
             "Git Integration",
-            f"Mode: {config.git_integration.mode.value}, Mentions: {config.git_integration.claude_mention_policy.value}"
+            f"Mode: {config.git_integration.mode.value}, Mentions: {config.git_integration.claude_mention_policy.value}",
         )
         table.add_row(
             "Output",
-            f"Format: {config.output.format}, Backup: {config.output.backup_existing}"
+            f"Format: {config.output.format}, Backup: {config.output.backup_existing}",
         )
 
         console.print(table)
@@ -432,8 +508,9 @@ def _display_profiles_table(profiles: list):
     for profile in profiles:
         table.add_row(
             profile["name"],
-            profile.get("description", "No description")[:50] + ("..." if len(profile.get("description", "")) > 50 else ""),
-            profile.get("created", "Unknown")[:10]  # Show date only
+            profile.get("description", "No description")[:50]
+            + ("..." if len(profile.get("description", "")) > 50 else ""),
+            profile.get("created", "Unknown")[:10],  # Show date only
         )
 
     console.print(table)
@@ -442,8 +519,12 @@ def _display_profiles_table(profiles: list):
 @config.command()
 @click.argument("key", required=True)
 @click.argument("value", required=True)
-@click.argument("project_path", type=click.Path(exists=True, file_okay=False),
-                default=".", required=False)
+@click.argument(
+    "project_path",
+    type=click.Path(exists=True, file_okay=False),
+    default=".",
+    required=False,
+)
 def set_value(key: str, value: str, project_path: str = "."):
     """Set configuration value for project."""
     try:
@@ -495,8 +576,12 @@ def set_value(key: str, value: str, project_path: str = "."):
 
 
 @config.command()
-@click.argument("project_path", type=click.Path(exists=True, file_okay=False),
-                default=".", required=False)
+@click.argument(
+    "project_path",
+    type=click.Path(exists=True, file_okay=False),
+    default=".",
+    required=False,
+)
 @click.option("--force", is_flag=True, help="Force reset without confirmation")
 def reset(project_path: str, force: bool):
     """Reset configuration to defaults."""
@@ -506,6 +591,7 @@ def reset(project_path: str, force: bool):
 
         if not force:
             from rich.prompt import Confirm
+
             if not Confirm.ask("Reset configuration to defaults?"):
                 console.print("[yellow]Reset cancelled[/yellow]")
                 return

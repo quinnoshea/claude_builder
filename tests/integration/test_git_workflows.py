@@ -12,8 +12,10 @@ Tests the complete git integration including:
 from unittest.mock import Mock, patch
 
 import pytest
+
 from claude_builder.core.analyzer import ProjectAnalyzer
 from claude_builder.core.generator import DocumentGenerator
+
 # from claude_builder.utils.git import AdvancedGitAnalyzer  # Not yet implemented
 
 
@@ -25,12 +27,12 @@ class TestGitAnalysisIntegration:
         # Create test files in the git repository
         (mock_git_repo / "main.py").write_text("print('Hello World')")
         (mock_git_repo / "requirements.txt").write_text("fastapi\nuvicorn")
-        
+
         # Use current ProjectAnalyzer API
         analyzer = ProjectAnalyzer()
         analysis_result = analyzer.analyze(mock_git_repo)
 
-        # Verify analysis worked on git repository  
+        # Verify analysis worked on git repository
         assert analysis_result.project_path == mock_git_repo
         assert analysis_result.language_info.primary == "python"
         # Note: Git integration features not yet implemented in current codebase
@@ -43,7 +45,9 @@ class TestGitAnalysisIntegration:
             # Mock detailed git history
             mock_run.side_effect = [
                 # Git log with dates and authors
-                Mock(returncode=0, stdout="""commit abc123def456
+                Mock(
+                    returncode=0,
+                    stdout="""commit abc123def456
 Author: John Doe <john@example.com>
 Date: Mon Jan 15 12:00:00 2024 +0000
 Subject: Add new authentication system
@@ -62,7 +66,8 @@ Subject: Initial project setup
  requirements.txt  |  3 +++
  .gitignore       | 10 +++++++
  3 files changed, 38 insertions(+)
-"""),
+""",
+                ),
                 # Git shortlog for contributors
                 Mock(returncode=0, stdout="   2\tJohn Doe\n   1\tJane Smith"),
                 # Git tag list
@@ -104,11 +109,14 @@ Total Commits: {{ git_analysis.total_commits }}
 {% endfor %}
 """
 
-            rendered_content = generator.render_template(git_template, {
-                "project_name": analysis_result.project_info.name,
-                "project_type": analysis_result.project_info.project_type,
-                "git_analysis": git_analysis
-            })
+            rendered_content = generator.render_template(
+                git_template,
+                {
+                    "project_name": analysis_result.project_info.name,
+                    "project_type": analysis_result.project_info.project_type,
+                    "git_analysis": git_analysis,
+                },
+            )
 
             # Should include git-derived content
             assert "Development History" in rendered_content
@@ -123,7 +131,9 @@ Total Commits: {{ git_analysis.total_commits }}
             # Mock branch analysis commands
             mock_run.side_effect = [
                 # Git branch listing with remotes
-                Mock(returncode=0, stdout="""* main
+                Mock(
+                    returncode=0,
+                    stdout="""* main
   develop
   feature/user-authentication
   feature/api-improvements
@@ -131,17 +141,24 @@ Total Commits: {{ git_analysis.total_commits }}
   origin/main
   origin/develop
   origin/feature/user-authentication
-"""),
+""",
+                ),
                 # Git log for branch creation dates
-                Mock(returncode=0, stdout="""feature/user-authentication 2024-01-10
+                Mock(
+                    returncode=0,
+                    stdout="""feature/user-authentication 2024-01-10
 feature/api-improvements 2024-01-12
 hotfix/security-patch 2024-01-15
-"""),
+""",
+                ),
                 # Git merge information
-                Mock(returncode=0, stdout="""abc123 Merge pull request #45 from feature/user-authentication
+                Mock(
+                    returncode=0,
+                    stdout="""abc123 Merge pull request #45 from feature/user-authentication
 def456 Merge branch 'hotfix/security-patch' into main
 ghi789 Merge pull request #46 from feature/api-improvements
-"""),
+""",
+                ),
             ]
 
             git_analyzer = AdvancedGitAnalyzer(mock_git_repo)
@@ -163,13 +180,18 @@ ghi789 Merge pull request #46 from feature/api-improvements
             # Mock contributor analysis commands
             mock_run.side_effect = [
                 # Git shortlog for contributor stats
-                Mock(returncode=0, stdout="""  150\tJohn Doe <john@example.com>
+                Mock(
+                    returncode=0,
+                    stdout="""  150\tJohn Doe <john@example.com>
    75\tJane Smith <jane@example.com>
    25\tBob Johnson <bob@example.com>
    10\tAlice Brown <alice@example.com>
-"""),
+""",
+                ),
                 # Git log with file changes per author
-                Mock(returncode=0, stdout="""John Doe:
+                Mock(
+                    returncode=0,
+                    stdout="""John Doe:
   src/auth/: 45 commits
   src/api/: 30 commits
   tests/: 25 commits
@@ -186,19 +208,25 @@ Bob Johnson:
 Alice Brown:
   docs/: 8 commits
   README.md: 2 commits
-"""),
+""",
+                ),
                 # Git log for activity timeline
-                Mock(returncode=0, stdout="""2024-01-15 John Doe
+                Mock(
+                    returncode=0,
+                    stdout="""2024-01-15 John Doe
 2024-01-15 Jane Smith
 2024-01-14 John Doe
 2024-01-14 Bob Johnson
 2024-01-13 John Doe
 2024-01-12 Jane Smith
-"""),
+""",
+                ),
             ]
 
             git_analyzer = AdvancedGitAnalyzer(mock_git_repo)
-            contributor_analysis = git_analyzer.contributor_analyzer.analyze_contributors()
+            contributor_analysis = (
+                git_analyzer.contributor_analyzer.analyze_contributors()
+            )
 
             # Should analyze contributor statistics
             assert contributor_analysis.total_contributors == 4
@@ -217,7 +245,9 @@ Alice Brown:
             # Mock evolution tracking commands
             mock_run.side_effect = [
                 # File evolution for specific file
-                Mock(returncode=0, stdout="""commit abc123
+                Mock(
+                    returncode=0,
+                    stdout="""commit abc123
 Date: 2024-01-15
 Author: John Doe
  src/main.py | 25 ++++++++++++++++++++++++-
@@ -228,14 +258,20 @@ Date: 2024-01-10
 Author: Jane Smith
  src/main.py | 50 ++++++++++++++++++++++++++++++++++++++++++++++++++
  1 file changed, 50 insertions(+)
-"""),
+""",
+                ),
                 # Architecture evolution
-                Mock(returncode=0, stdout="""2024-01-01: src/ tests/ README.md
+                Mock(
+                    returncode=0,
+                    stdout="""2024-01-01: src/ tests/ README.md
 2024-01-08: src/ src/models/ src/views/ tests/ docs/ README.md
 2024-01-15: backend/ frontend/ shared/ tests/ docs/ deployment/ README.md
-"""),
+""",
+                ),
                 # Dependency changes
-                Mock(returncode=0, stdout="""commit abc123 2024-01-15
+                Mock(
+                    returncode=0,
+                    stdout="""commit abc123 2024-01-15
 +fastapi==0.100.0
 +uvicorn==0.23.0
 
@@ -245,7 +281,8 @@ commit def456 2024-01-10
 
 commit ghi789 2024-01-05
 +pytest==7.4.0
-"""),
+""",
+                ),
             ]
 
             git_analyzer = AdvancedGitAnalyzer(mock_git_repo)
@@ -271,18 +308,24 @@ commit ghi789 2024-01-05
                 # Repository overview
                 Mock(returncode=0, stdout="125 commits, 3 branches, 4 contributors"),
                 # Health indicators
-                Mock(returncode=0, stdout="""Stale branches: 2
+                Mock(
+                    returncode=0,
+                    stdout="""Stale branches: 2
 Average commit frequency: 5.2 per week
 Bus factor: 2
 Test coverage trend: improving
 Recent hotfixes: 1 in last month
-"""),
+""",
+                ),
                 # Workflow patterns
-                Mock(returncode=0, stdout="""Branching strategy: gitflow
+                Mock(
+                    returncode=0,
+                    stdout="""Branching strategy: gitflow
 Conventional commits: 65%
 Average PR merge time: 2.3 days
 Code review coverage: 85%
-"""),
+""",
+                ),
             ]
 
             git_analyzer = AdvancedGitAnalyzer(mock_git_repo)
@@ -296,10 +339,11 @@ Code review coverage: 85%
                     bus_factor=2,
                     commit_frequency=5.2,
                     follows_conventions=False,
-                    test_coverage_trend="improving"
+                    test_coverage_trend="improving",
                 )
 
                 from claude_builder.utils.git import GitInsights
+
                 insights = GitInsights.generate_insights(git_analyzer)
 
                 # Should provide actionable insights
@@ -322,7 +366,9 @@ class TestGitProjectIntegration:
         with patch("subprocess.run") as mock_run:
             # Mock git log showing project evolution
             mock_run.side_effect = [
-                Mock(returncode=0, stdout="""commit abc123
+                Mock(
+                    returncode=0,
+                    stdout="""commit abc123
 Date: 2024-01-15
 Files: package.json src/App.js src/components/
 
@@ -333,7 +379,8 @@ Files: requirements.txt src/main.py
 commit ghi789
 Date: 2024-01-05
 Files: Cargo.toml src/main.rs
-"""),
+""",
+                ),
                 # Current project state
                 Mock(returncode=0, stdout="On branch main"),
             ]
@@ -346,7 +393,10 @@ Files: Cargo.toml src/main.rs
                 mock_discover.return_value = {
                     "package.json": {"type": "config", "language": "javascript"},
                     "src/App.js": {"type": "source", "language": "javascript"},
-                    "src/components/Header.js": {"type": "source", "language": "javascript"}
+                    "src/components/Header.js": {
+                        "type": "source",
+                        "language": "javascript",
+                    },
                 }
 
                 analysis_result = analyzer.analyze()
@@ -365,12 +415,18 @@ Files: Cargo.toml src/main.rs
             # Mock git information for documentation context
             mock_run.side_effect = [
                 # Recent commits for changelog
-                Mock(returncode=0, stdout="""v2.0.0 abc123 2024-01-15 Add user authentication
+                Mock(
+                    returncode=0,
+                    stdout="""v2.0.0 abc123 2024-01-15 Add user authentication
 v1.1.0 def456 2024-01-10 Improve API performance
 v1.0.0 ghi789 2024-01-05 Initial release
-"""),
+""",
+                ),
                 # Contributors for acknowledgments
-                Mock(returncode=0, stdout="  50\tJohn Doe\n  25\tJane Smith\n  10\tBob Johnson"),
+                Mock(
+                    returncode=0,
+                    stdout="  50\tJohn Doe\n  25\tJane Smith\n  10\tBob Johnson",
+                ),
                 # Branch info for development status
                 Mock(returncode=0, stdout="* main\n  develop\n  feature/new-ui"),
             ]
@@ -382,16 +438,28 @@ v1.0.0 ghi789 2024-01-05 Initial release
             # Add mock git analysis
             analysis_result.git_analysis = Mock(
                 recent_releases=[
-                    {"tag": "v2.0.0", "date": "2024-01-15", "description": "Add user authentication"},
-                    {"tag": "v1.1.0", "date": "2024-01-10", "description": "Improve API performance"},
-                    {"tag": "v1.0.0", "date": "2024-01-05", "description": "Initial release"}
+                    {
+                        "tag": "v2.0.0",
+                        "date": "2024-01-15",
+                        "description": "Add user authentication",
+                    },
+                    {
+                        "tag": "v1.1.0",
+                        "date": "2024-01-10",
+                        "description": "Improve API performance",
+                    },
+                    {
+                        "tag": "v1.0.0",
+                        "date": "2024-01-05",
+                        "description": "Initial release",
+                    },
                 ],
                 contributors=[
                     {"name": "John Doe", "commits": 50},
                     {"name": "Jane Smith", "commits": 25},
-                    {"name": "Bob Johnson", "commits": 10}
+                    {"name": "Bob Johnson", "commits": 10},
                 ],
-                active_branches=["main", "develop", "feature/new-ui"]
+                active_branches=["main", "develop", "feature/new-ui"],
             )
 
             # Generate documentation with git context
@@ -417,11 +485,14 @@ Active branches: {{ git_analysis.active_branches | join(', ') }}
 This {{ project_type }} project can be set up by following these steps...
 """
 
-            rendered_content = generator.render_template(git_aware_template, {
-                "project_name": analysis_result.project_info.name,
-                "project_type": analysis_result.project_info.project_type,
-                "git_analysis": analysis_result.git_analysis
-            })
+            rendered_content = generator.render_template(
+                git_aware_template,
+                {
+                    "project_name": analysis_result.project_info.name,
+                    "project_type": analysis_result.project_info.project_type,
+                    "git_analysis": analysis_result.git_analysis,
+                },
+            )
 
             # Should include git-derived content
             assert "Recent Changes" in rendered_content
@@ -436,48 +507,62 @@ This {{ project_type }} project can be set up by following these steps...
             # Mock git workflow analysis
             mock_run.side_effect = [
                 # Branch patterns showing inconsistent workflow
-                Mock(returncode=0, stdout="""main
+                Mock(
+                    returncode=0,
+                    stdout="""main
 feature/new-ui
 feature-api-update
 fix-bug-123
 urgent-hotfix
 random-branch-name
-"""),
+""",
+                ),
                 # Commit message patterns
-                Mock(returncode=0, stdout="""feat: add user authentication
+                Mock(
+                    returncode=0,
+                    stdout="""feat: add user authentication
 fix: resolve login issue
 update readme
 random commit message
 WIP: working on feature
 Fix bug
-"""),
+""",
+                ),
                 # Merge patterns
-                Mock(returncode=0, stdout="""Merge pull request #45
+                Mock(
+                    returncode=0,
+                    stdout="""Merge pull request #45
 Merge branch 'feature/new-ui'
 Direct merge from fix-bug-123
-"""),
+""",
+                ),
             ]
 
             git_analyzer = AdvancedGitAnalyzer(mock_git_repo)
 
             # Mock workflow analysis results
-            with patch.object(git_analyzer.branch_analyzer, "detect_branching_strategy") as mock_strategy:
-                with patch.object(git_analyzer.history_analyzer, "detect_commit_patterns") as mock_patterns:
+            with patch.object(
+                git_analyzer.branch_analyzer, "detect_branching_strategy"
+            ) as mock_strategy:
+                with patch.object(
+                    git_analyzer.history_analyzer, "detect_commit_patterns"
+                ) as mock_patterns:
 
                     mock_strategy.return_value = Mock(
                         strategy_type="inconsistent",
                         follows_convention=False,
-                        recommended_strategy="gitflow"
+                        recommended_strategy="gitflow",
                     )
 
                     mock_patterns.return_value = Mock(
                         follows_convention=False,
                         conventional_commits={"feat": 1, "fix": 2, "random": 3},
-                        recommended_format="conventional_commits"
+                        recommended_format="conventional_commits",
                     )
 
                     # Generate workflow insights
                     from claude_builder.utils.git import GitInsights
+
                     insights = GitInsights(git_analyzer)
                     workflow_insights = insights.analyze_workflow_patterns()
 
@@ -498,20 +583,33 @@ class TestGitPerformanceIntegration:
         large_repo = temp_dir / "large_repo"
         large_repo.mkdir()
         (large_repo / ".git").mkdir()
-        (large_repo / ".git" / "config").write_text("[core]\nrepositoryformatversion = 0")
+        (large_repo / ".git" / "config").write_text(
+            "[core]\nrepositoryformatversion = 0"
+        )
 
         with patch("subprocess.run") as mock_run:
             # Mock large repository data
             mock_run.side_effect = [
                 # Large commit history
-                Mock(returncode=0, stdout="\n".join([f"commit{i} Author{i % 10} Message{i}" for i in range(1000)])),
+                Mock(
+                    returncode=0,
+                    stdout="\n".join(
+                        [f"commit{i} Author{i % 10} Message{i}" for i in range(1000)]
+                    ),
+                ),
                 # Many branches
-                Mock(returncode=0, stdout="\n".join([f"branch-{i}" for i in range(50)])),
+                Mock(
+                    returncode=0, stdout="\n".join([f"branch-{i}" for i in range(50)])
+                ),
                 # Many contributors
-                Mock(returncode=0, stdout="\n".join([f"  {100-i}\tContributor{i}" for i in range(20)])),
+                Mock(
+                    returncode=0,
+                    stdout="\n".join([f"  {100-i}\tContributor{i}" for i in range(20)]),
+                ),
             ]
 
             import time
+
             start_time = time.time()
 
             git_analyzer = AdvancedGitAnalyzer(large_repo)
@@ -529,8 +627,7 @@ class TestGitPerformanceIntegration:
         """Test git analysis caching for performance."""
         with patch("subprocess.run") as mock_run:
             mock_run.return_value = Mock(
-                returncode=0,
-                stdout="commit abc123\ncommit def456\ncommit ghi789"
+                returncode=0, stdout="commit abc123\ncommit def456\ncommit ghi789"
             )
 
             git_analyzer = AdvancedGitAnalyzer(mock_git_repo, enable_cache=True)

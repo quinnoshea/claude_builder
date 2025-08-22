@@ -26,7 +26,7 @@
   - Component-based architecture and reusable UI libraries
   - Frontend performance optimization and bundle management
 
-#### rapid-prototyper  
+#### rapid-prototyper
 
 **Primary Role**: Quick JavaScript prototyping and proof of concepts
 
@@ -260,22 +260,22 @@ class ${service_name}Service {
 
       // Start database transaction
       const session = await this.repository.startTransaction();
-      
+
       try {
         // Business logic
         const result = await this.processBusinessLogic(requestData, session);
-        
+
         // Commit transaction
         await session.commitTransaction();
-        
+
         // Update cache
         await this.cache.set(cacheKey, result, 300); // 5 minutes
-        
+
         this.logger.info('Request processed successfully', {
           requestId: requestData.id,
           resultId: result.id
         });
-        
+
         return result;
       } catch (error) {
         await session.abortTransaction();
@@ -295,7 +295,7 @@ class ${service_name}Service {
 
   async validateRequest(data) {
     const Joi = require('joi');
-    
+
     const schema = Joi.object({
       id: Joi.string().required(),
       type: Joi.string().valid('${valid_types}').required(),
@@ -307,7 +307,7 @@ class ${service_name}Service {
     if (error) {
       throw new ValidationError(error.details[0].message);
     }
-    
+
     return value;
   }
 
@@ -398,7 +398,7 @@ describe('${service_name} API Integration Tests', () => {
 
     describe('Performance Tests', () => {
       it('should handle concurrent requests', async () => {
-        const concurrentRequests = Array(10).fill().map((_, index) => 
+        const concurrentRequests = Array(10).fill().map((_, index) =>
           request(app)
             .post('/api/${resource_name}')
             .set('Authorization', `Bearer ${authToken}`)
@@ -409,7 +409,7 @@ describe('${service_name} API Integration Tests', () => {
         );
 
         const responses = await Promise.all(concurrentRequests);
-        
+
         responses.forEach(response => {
           expect(response.status).toBe(201);
           expect(response.body.success).toBe(true);
@@ -424,7 +424,7 @@ describe('${service_name} API Integration Tests', () => {
 
       it('should complete within acceptable time', async () => {
         const start = Date.now();
-        
+
         await request(app)
           .post('/api/${resource_name}')
           .set('Authorization', `Bearer ${authToken}`)
@@ -583,7 +583,7 @@ const { promisify } = require('util');
 // Cluster setup for production scaling
 if (cluster.isMaster && process.env.NODE_ENV === 'production') {
   const numCPUs = os.cpus().length;
-  
+
   console.log(`Master ${process.pid} is running`);
   console.log(`Forking ${numCPUs} workers`);
 
@@ -602,7 +602,7 @@ if (cluster.isMaster && process.env.NODE_ENV === 'production') {
   // Worker process - run the actual application
   const app = require('./app');
   const port = process.env.PORT || 3000;
-  
+
   app.listen(port, () => {
     console.log(`Worker ${process.pid} listening on port ${port}`);
   });
@@ -625,7 +625,7 @@ class DatabaseManager {
 
   createPool(database) {
     const mongoose = require('mongoose');
-    
+
     return mongoose.createConnection(process.env[`${database.toUpperCase()}_DB_URI`], {
       useNewUrlParser: true,
       useUnifiedTopology: true,
@@ -642,7 +642,7 @@ class DatabaseManager {
 async function processLargeDataset(query, processor) {
   const mongoose = require('mongoose');
   const Model = mongoose.model('${model_name}');
-  
+
   let processedCount = 0;
   const batchSize = 1000;
 
@@ -657,7 +657,7 @@ async function processLargeDataset(query, processor) {
       // Log progress and perform garbage collection periodically
       if (processedCount % batchSize === 0) {
         console.log(`Processed ${processedCount} documents`);
-        
+
         // Force garbage collection if --expose-gc flag is used
         if (global.gc) {
           global.gc();
@@ -689,9 +689,9 @@ class AsyncOperationManager {
   async processQueue() {
     while (this.queue.length > 0 && this.activeOperations < this.concurrencyLimit) {
       const { operation, resolve, reject } = this.queue.shift();
-      
+
       this.activeOperations++;
-      
+
       try {
         const result = await operation();
         resolve(result);
@@ -710,7 +710,7 @@ class AsyncOperationManager {
 const asyncManager = new AsyncOperationManager(5);
 
 async function processMultipleItems(items) {
-  const operations = items.map(item => 
+  const operations = items.map(item =>
     () => asyncManager.execute(() => processItem(item))
   );
 

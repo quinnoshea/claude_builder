@@ -50,7 +50,7 @@ ${coordination_patterns}
 ${primary_development_agent} completes feature
   ↓
 test-writer-fixer creates comprehensive tests
-  ↓  
+  ↓
 performance-benchmarker validates performance
   ↓
 security-specialist reviews security implications

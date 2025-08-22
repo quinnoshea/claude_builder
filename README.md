@@ -20,10 +20,10 @@ with intelligent analysis and adaptive templates.
 
 ## 🎯 Current Project Status
 
-**Development Phase**: Core infrastructure complete, stabilization in progress  
-**Core Functionality**: ✅ All major CLI commands operational  
-**Test Coverage**: 67% (511 passing tests, 220 requiring fixes)  
-**Next Milestone**: Test stabilization and agent integration completion  
+**Development Phase**: Core infrastructure complete, stabilization in progress
+**Core Functionality**: ✅ All major CLI commands operational
+**Test Coverage**: 67% (511 passing tests, 220 requiring fixes)
+**Next Milestone**: Test stabilization and agent integration completion
 
 ## 🌟 What Claude Builder Does
 
@@ -55,7 +55,7 @@ documentation, agent configurations, and development workflows.
 - **Multi-Language Detection**: Automatic recognition of primary and secondary
   languages
 - **Framework Recognition**: Detects popular frameworks through dependency and
-  pattern analysis  
+  pattern analysis
 - **Project Classification**: Web apps, CLI tools, libraries, data science projects
 - **Confidence Scoring**: Reliability metrics for all detection results
 
@@ -132,7 +132,7 @@ claude-builder ./fastapi-ecommerce
 # ✅ Creates: CLAUDE.md with FastAPI-specific patterns and best practices
 ```
 
-#### **Rust CLI Tool**  
+#### **Rust CLI Tool**
 
 ```bash
 claude-builder ./cli-performance-monitor
@@ -160,7 +160,7 @@ claude-builder ./project --git-exclude
 
 # Control Claude mentions in generated content
 claude-builder ./project --claude-mentions=forbidden  # No AI references
-claude-builder ./project --claude-mentions=minimal    # Minimal references  
+claude-builder ./project --claude-mentions=minimal    # Minimal references
 claude-builder ./project --claude-mentions=allowed    # Full attribution
 
 # Backup existing files before generation
@@ -205,7 +205,7 @@ claude-builder config show ./project
 
 ```text
 claude_builder/
-├── src/claude_builder/           # Core application  
+├── src/claude_builder/           # Core application
 │   ├── core/                     # Business logic
 │   │   ├── analyzer.py          # Project analysis engine
 │   │   ├── template_manager.py  # Template system
@@ -214,7 +214,7 @@ claude_builder/
 │   │   └── config.py            # Configuration management
 │   ├── cli/                      # Command-line interface
 │   │   ├── main.py              # Entry point and main workflow
-│   │   ├── analyze_commands.py  # Analysis operations  
+│   │   ├── analyze_commands.py  # Analysis operations
 │   │   ├── generate_commands.py # Generation workflows
 │   │   ├── template_commands.py # Template management
 │   │   ├── config_commands.py   # Configuration operations

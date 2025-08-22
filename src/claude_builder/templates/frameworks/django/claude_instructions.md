@@ -345,7 +345,7 @@ class TimeStampedModel(models.Model):
 
 class ${model_name}(TimeStampedModel):
     """${model_description}."""
-    
+
     class Status(models.TextChoices):
         DRAFT = 'draft', _('Draft')
         PUBLISHED = 'published', _('Published')
@@ -401,7 +401,7 @@ class ${model_name}(TimeStampedModel):
         null=True,
         blank=True
     )
-    
+
     # Use custom manager
 
     objects = ${model_name}Manager()
@@ -435,12 +435,12 @@ class ${model_name}(TimeStampedModel):
         if not self.slug:
             from django.utils.text import slugify
             self.slug = slugify(self.title)
-        
+
         # Set published_at when status changes to published
 
         if self.status == self.Status.PUBLISHED and not self.published_at:
             self.published_at = timezone.now()
-        
+
         super().save(*args, **kwargs)
 
     def is_published(self):
@@ -451,7 +451,7 @@ class ${model_name}(TimeStampedModel):
         """Get related items based on common tags."""
         if not self.pk:
             return self.__class__.objects.none()
-        
+
         return self.__class__.objects.filter(
             tags__in=self.tags.all(),
             status=self.Status.PUBLISHED
@@ -688,7 +688,7 @@ from .permissions import IsAuthorOrReadOnly
 
 class ${model_name}ViewSet(ModelViewSet):
     """ViewSet for ${model_name} CRUD operations."""
-    
+
     queryset = ${model_name}.objects.select_related('author').prefetch_related('tags')
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -709,18 +709,18 @@ class ${model_name}ViewSet(ModelViewSet):
     def get_queryset(self):
         """Filter queryset based on user permissions."""
         queryset = super().get_queryset()
-        
+
         if self.action == 'list':
 
             # Show published items to everyone, all items to authors
 
             if self.request.user.is_authenticated:
                 return queryset.filter(
-                    models.Q(status='published') | 
+                    models.Q(status='published') |
                     models.Q(author=self.request.user)
                 )
             return queryset.published()
-        
+
         return queryset
 
     @method_decorator(cache_page(60 * 15))  # Cache for 15 minutes
@@ -759,7 +759,7 @@ class ${model_name}ViewSet(ModelViewSet):
         item = self.get_object()
         item.is_featured = not item.is_featured
         item.save(update_fields=['is_featured'])
-        
+
         serializer = self.get_serializer(item)
         return Response(serializer.data)
 
@@ -770,13 +770,13 @@ class ${model_name}ViewSet(ModelViewSet):
         if item.status != 'published':
             item.status = 'published'
             item.save(update_fields=['status', 'published_at'])
-        
+
         serializer = self.get_serializer(item)
         return Response(serializer.data)
 
 class TagViewSet(ModelViewSet):
     """ViewSet for Tag CRUD operations."""
-    
+
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
@@ -820,7 +820,7 @@ class ${model_name}ModelTest(TestCase):
             description='Test description',
             author=self.user
         )
-        
+
         self.assertEqual(${model_name_lower}.title, 'Test ${model_name}')
         self.assertEqual(${model_name_lower}.author, self.user)
         self.assertEqual(${model_name_lower}.status, ${model_name}.Status.DRAFT)
@@ -842,10 +842,10 @@ class ${model_name}ModelTest(TestCase):
             author=self.user
         )
         self.assertIsNone(${model_name_lower}.published_at)
-        
+
         ${model_name_lower}.status = ${model_name}.Status.PUBLISHED
         ${model_name_lower}.save()
-        
+
         ${model_name_lower}.refresh_from_db()
         self.assertIsNotNone(${model_name_lower}.published_at)
 
@@ -873,7 +873,7 @@ class ${model_name}ModelTest(TestCase):
             author=self.user
         )
         self.assertFalse(${model_name_lower}.is_published())
-        
+
         ${model_name_lower}.status = ${model_name}.Status.PUBLISHED
         ${model_name_lower}.save()
         self.assertTrue(${model_name_lower}.is_published())
@@ -889,7 +889,7 @@ class ${model_name}ModelTest(TestCase):
             status=${model_name}.Status.PUBLISHED
         )
         main_item.tags.add(self.tag)
-        
+
         # Create related item with same tag
 
         related_item = ${model_name}.objects.create(
@@ -898,7 +898,7 @@ class ${model_name}ModelTest(TestCase):
             status=${model_name}.Status.PUBLISHED
         )
         related_item.tags.add(self.tag)
-        
+
         # Create unrelated item
 
         ${model_name}.objects.create(
@@ -906,7 +906,7 @@ class ${model_name}ModelTest(TestCase):
             author=self.user,
             status=${model_name}.Status.PUBLISHED
         )
-        
+
         related_items = main_item.get_related_items()
         self.assertEqual(related_items.count(), 1)
         self.assertEqual(related_items.first(), related_item)
@@ -921,7 +921,7 @@ class ${model_name}ModelTest(TestCase):
             author=self.user,
             status=${model_name}.Status.PUBLISHED
         )
-        
+
         # Create draft item
 
         ${model_name}.objects.create(
@@ -929,7 +929,7 @@ class ${model_name}ModelTest(TestCase):
             author=self.user,
             status=${model_name}.Status.DRAFT
         )
-        
+
         # Test published manager method
 
         published_items = ${model_name}.objects.published()
@@ -943,7 +943,7 @@ class ${model_name}ModelTest(TestCase):
             author=self.user,
             priority=11  # Invalid priority
         )
-        
+
         with self.assertRaises(ValidationError):
             ${model_name_lower}.full_clean()
 ```

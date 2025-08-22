@@ -17,9 +17,11 @@ from claude_builder.core.models import (
     AnalysisResult,
     DependencyInfo,
     FileStructure,
-    TestFrameworkInfo as FrameworkInfo,  # Use test-compatible version
     GenerationConfig,
     ProjectInfo,
+)
+from claude_builder.core.models import (
+    TestFrameworkInfo as FrameworkInfo,  # Use test-compatible version
 )
 
 
@@ -28,10 +30,7 @@ class TestProjectInfo:
 
     def test_project_info_minimal(self):
         """Test ProjectInfo creation with minimal required fields."""
-        project = ProjectInfo(
-            name="test-project",
-            project_type="python"
-        )
+        project = ProjectInfo(name="test-project", project_type="python")
 
         assert project.name == "test-project"
         assert project.project_type == "python"
@@ -48,7 +47,7 @@ class TestProjectInfo:
             description="A complete test project",
             version="1.0.0",
             language_version="1.70.0",
-            main_directory="src"
+            main_directory="src",
         )
 
         assert project.name == "complete-project"
@@ -75,7 +74,7 @@ class TestProjectInfo:
             name="serialize-test",
             project_type="javascript",
             framework="react",
-            description="Test serialization"
+            description="Test serialization",
         )
 
         data = project.dict()
@@ -92,7 +91,7 @@ class TestProjectInfo:
             "project_type": "python",
             "framework": "fastapi",
             "description": "Test deserialization",
-            "version": "0.1.0"
+            "version": "0.1.0",
         }
 
         project = ProjectInfo(**data)
@@ -114,11 +113,7 @@ class TestProjectInfo:
 
     def test_project_info_repr(self):
         """Test ProjectInfo string representation."""
-        project = ProjectInfo(
-            name="repr-test",
-            project_type="rust",
-            framework="clap"
-        )
+        project = ProjectInfo(name="repr-test", project_type="rust", framework="clap")
 
         repr_str = repr(project)
         assert "repr-test" in repr_str
@@ -135,7 +130,7 @@ class TestFrameworkInfo:
             name="fastapi",
             version="0.100.0",
             category="web",
-            description="Modern web framework"
+            description="Modern web framework",
         )
 
         assert framework.name == "fastapi"
@@ -159,10 +154,7 @@ class TestDependencyInfo:
     def test_dependency_info_creation(self):
         """Test DependencyInfo creation and properties."""
         dependency = DependencyInfo(
-            name="requests",
-            version="2.31.0",
-            dependency_type="runtime",
-            source="pypi"
+            name="requests", version="2.31.0", dependency_type="runtime", source="pypi"
         )
 
         assert dependency.name == "requests"
@@ -173,9 +165,7 @@ class TestDependencyInfo:
     def test_dependency_info_dev_dependency(self):
         """Test DependencyInfo for development dependency."""
         dependency = DependencyInfo(
-            name="pytest",
-            version="7.4.0",
-            dependency_type="development"
+            name="pytest", version="7.4.0", dependency_type="development"
         )
 
         assert dependency.name == "pytest"
@@ -193,10 +183,7 @@ class TestFileStructure:
     def test_file_structure_creation(self):
         """Test FileStructure creation and properties."""
         structure = FileStructure(
-            path="src/main.py",
-            file_type="file",
-            size=1024,
-            language="python"
+            path="src/main.py", file_type="file", size=1024, language="python"
         )
 
         assert structure.path == "src/main.py"
@@ -207,9 +194,7 @@ class TestFileStructure:
     def test_file_structure_directory(self):
         """Test FileStructure for directory."""
         structure = FileStructure(
-            path="src/",
-            file_type="directory",
-            children=["main.py", "utils.py"]
+            path="src/", file_type="directory", children=["main.py", "utils.py"]
         )
 
         assert structure.path == "src/"
@@ -224,8 +209,10 @@ class TestFileStructure:
             file_type="directory",
             children=[
                 FileStructure(path="src/main.py", file_type="file", language="python"),
-                FileStructure(path="tests/", file_type="directory", children=["test_main.py"])
-            ]
+                FileStructure(
+                    path="tests/", file_type="directory", children=["test_main.py"]
+                ),
+            ],
         )
 
         assert root.file_type == "directory"
@@ -239,15 +226,19 @@ class TestAnalysisResult:
 
     def test_analysis_result_creation(self):
         """Test AnalysisResult creation with all components."""
-        project_info = ProjectInfo(name="test", project_type="python", framework="fastapi")
+        project_info = ProjectInfo(
+            name="test", project_type="python", framework="fastapi"
+        )
 
-        frameworks = [
-            FrameworkInfo(name="fastapi", version="0.100.0", category="web")
-        ]
+        frameworks = [FrameworkInfo(name="fastapi", version="0.100.0", category="web")]
 
         dependencies = [
-            DependencyInfo(name="fastapi", version="0.100.0", dependency_type="runtime"),
-            DependencyInfo(name="pytest", version="7.4.0", dependency_type="development")
+            DependencyInfo(
+                name="fastapi", version="0.100.0", dependency_type="runtime"
+            ),
+            DependencyInfo(
+                name="pytest", version="7.4.0", dependency_type="development"
+            ),
         ]
 
         file_structure = FileStructure(
@@ -255,7 +246,7 @@ class TestAnalysisResult:
             file_type="directory",
             children=[
                 FileStructure(path="src/main.py", file_type="file", language="python")
-            ]
+            ],
         )
 
         result = AnalysisResult(
@@ -263,7 +254,7 @@ class TestAnalysisResult:
             frameworks=frameworks,
             dependencies=dependencies,
             file_structure=file_structure,
-            analysis_timestamp=datetime.now()
+            analysis_timestamp=datetime.now(),
         )
 
         assert result.project_info.name == "test"
@@ -280,7 +271,7 @@ class TestAnalysisResult:
             project_info=project_info,
             frameworks=[],
             dependencies=[],
-            file_structure=FileStructure(path=".", file_type="directory")
+            file_structure=FileStructure(path=".", file_type="directory"),
         )
 
         assert result.project_info.name == "minimal"
@@ -299,7 +290,7 @@ class TestAnalysisResult:
             project_info=project_info,
             frameworks=frameworks,
             dependencies=dependencies,
-            file_structure=file_structure
+            file_structure=file_structure,
         )
 
         data = result.dict()
@@ -317,20 +308,14 @@ class TestAnalysisResult:
             "project_info": {
                 "name": "deserialize",
                 "project_type": "rust",
-                "framework": "axum"
+                "framework": "axum",
             },
-            "frameworks": [
-                {"name": "axum", "version": "0.6.0", "category": "web"}
-            ],
+            "frameworks": [{"name": "axum", "version": "0.6.0", "category": "web"}],
             "dependencies": [
                 {"name": "axum", "version": "0.6.0", "dependency_type": "runtime"},
-                {"name": "tokio", "version": "1.29.0", "dependency_type": "runtime"}
+                {"name": "tokio", "version": "1.29.0", "dependency_type": "runtime"},
             ],
-            "file_structure": {
-                "path": ".",
-                "file_type": "directory",
-                "children": []
-            }
+            "file_structure": {"path": ".", "file_type": "directory", "children": []},
         }
 
         result = AnalysisResult(**data)
@@ -349,19 +334,23 @@ class TestAnalysisResult:
         dependencies = [
             DependencyInfo(name="fastapi", dependency_type="runtime"),
             DependencyInfo(name="pytest", dependency_type="development"),
-            DependencyInfo(name="black", dependency_type="development")
+            DependencyInfo(name="black", dependency_type="development"),
         ]
 
         result = AnalysisResult(
             project_info=project_info,
             frameworks=[],
             dependencies=dependencies,
-            file_structure=FileStructure(path=".", file_type="directory")
+            file_structure=FileStructure(path=".", file_type="directory"),
         )
 
         # Test filtering methods
-        runtime_deps = [d for d in result.dependencies if d.dependency_type == "runtime"]
-        dev_deps = [d for d in result.dependencies if d.dependency_type == "development"]
+        runtime_deps = [
+            d for d in result.dependencies if d.dependency_type == "runtime"
+        ]
+        dev_deps = [
+            d for d in result.dependencies if d.dependency_type == "development"
+        ]
 
         assert len(runtime_deps) == 1
         assert runtime_deps[0].name == "fastapi"
@@ -391,7 +380,7 @@ class TestGenerationConfig:
             include_workflow=False,
             template_variant="minimal",
             create_zip=True,
-            output_directory="custom-output"
+            output_directory="custom-output",
         )
 
         assert config.output_format == "html"
@@ -404,7 +393,9 @@ class TestGenerationConfig:
     def test_generation_config_validation(self):
         """Test GenerationConfig validation."""
         # Valid config should not raise
-        config = GenerationConfig(output_format="markdown", template_variant="comprehensive")
+        config = GenerationConfig(
+            output_format="markdown", template_variant="comprehensive"
+        )
         config.validate()
 
         # Invalid output format should raise
@@ -420,9 +411,7 @@ class TestGenerationConfig:
     def test_generation_config_serialization(self):
         """Test GenerationConfig serialization."""
         config = GenerationConfig(
-            output_format="html",
-            include_agents=False,
-            template_variant="minimal"
+            output_format="html", include_agents=False, template_variant="minimal"
         )
 
         data = config.dict()

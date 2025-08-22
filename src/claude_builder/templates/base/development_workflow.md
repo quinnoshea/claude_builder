@@ -55,7 +55,7 @@ test: add integration tests for payment flow
 ### Test Pyramid
 
 1. **Unit Tests (70%)**: Fast, isolated component tests
-2. **Integration Tests (20%)**: Component interaction tests  
+2. **Integration Tests (20%)**: Component interaction tests
 3. **E2E Tests (10%)**: Full user workflow tests
 
 ### Test Organization

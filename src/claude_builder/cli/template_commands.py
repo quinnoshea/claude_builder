@@ -41,6 +41,7 @@ class ExitCodes:
     CONFIG_ERROR = 10
     INTERRUPTED = 128
 
+
 console = Console()
 
 
@@ -58,10 +59,20 @@ template = templates
 @click.option("--community-only", is_flag=True, help="Show only community templates")
 @click.option("--category", help="Filter by category")
 @click.option("--language", help="Filter by primary language")
-@click.option("--format", "output_format", type=click.Choice(["table", "json", "list"]),
-              default="table", help="Output format")
-def list(installed_only: bool, community_only: bool, category: Optional[str],
-         language: Optional[str], output_format: str):
+@click.option(
+    "--format",
+    "output_format",
+    type=click.Choice(["table", "json", "list"]),
+    default="table",
+    help="Output format",
+)
+def list(
+    installed_only: bool,
+    community_only: bool,
+    category: Optional[str],
+    language: Optional[str],
+    output_format: str,
+):
     """List available templates."""
     try:
         manager = TemplateManager()
@@ -69,14 +80,22 @@ def list(installed_only: bool, community_only: bool, category: Optional[str],
         include_installed = not community_only
         include_community = not installed_only
 
-        templates = manager.list_available_templates(include_installed, include_community)
+        templates = manager.list_available_templates(
+            include_installed, include_community
+        )
 
         # Apply filters
         if category:
-            templates = [t for t in templates if t.metadata.category.lower() == category.lower()]
+            templates = [
+                t for t in templates if t.metadata.category.lower() == category.lower()
+            ]
 
         if language:
-            templates = [t for t in templates if language.lower() in [l.lower() for l in t.metadata.languages]]
+            templates = [
+                t
+                for t in templates
+                if language.lower() in [l.lower() for l in t.metadata.languages]
+            ]
 
         # Display results
         if output_format == "json":
@@ -93,8 +112,11 @@ def list(installed_only: bool, community_only: bool, category: Optional[str],
 
 @templates.command()
 @click.argument("query", required=True)
-@click.option("--project-path", type=click.Path(exists=True, file_okay=False),
-              help="Analyze project and rank templates by compatibility")
+@click.option(
+    "--project-path",
+    type=click.Path(exists=True, file_okay=False),
+    help="Analyze project and rank templates by compatibility",
+)
 @click.option("--limit", type=int, default=10, help="Maximum number of results")
 def search(query: str, project_path: Optional[str], limit: int):
     """Search for templates matching query."""
@@ -120,7 +142,9 @@ def search(query: str, project_path: Optional[str], limit: int):
             console.print(f"[dim]Ranked by compatibility with {project_path}[/dim]")
         console.print()
 
-        _display_templates_table(templates, show_compatibility=project_analysis is not None)
+        _display_templates_table(
+            templates, show_compatibility=project_analysis is not None
+        )
 
     except Exception as e:
         console.print(f"[red]Error searching templates: {e}[/red]")
@@ -130,7 +154,11 @@ def search(query: str, project_path: Optional[str], limit: int):
 @templates.command()
 @click.argument("template_id", required=True)
 @click.option("--force", is_flag=True, help="Force reinstallation if already installed")
-@click.option("--dry-run", is_flag=True, help="Show what would be installed without actually installing")
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    help="Show what would be installed without actually installing",
+)
 def install(template_id: str, force: bool, dry_run: bool):
     """Install a community template."""
     try:
@@ -143,22 +171,26 @@ def install(template_id: str, force: bool, dry_run: bool):
                 console.print(f"[red]Template not found: {template_id}[/red]")
                 return
 
-            console.print(Panel(
-                f"[bold]Would install template:[/bold]\n\n"
-                f"**Name**: {template.metadata.name}\n"
-                f"**Version**: {template.metadata.version}\n"
-                f"**Author**: {template.metadata.author}\n"
-                f"**Description**: {template.metadata.description}\n"
-                f"**Category**: {template.metadata.category}\n"
-                f"**Languages**: {', '.join(template.metadata.languages)}\n"
-                f"**Frameworks**: {', '.join(template.metadata.frameworks)}",
-                title="Dry Run - Template Installation"
-            ))
+            console.print(
+                Panel(
+                    f"[bold]Would install template:[/bold]\n\n"
+                    f"**Name**: {template.metadata.name}\n"
+                    f"**Version**: {template.metadata.version}\n"
+                    f"**Author**: {template.metadata.author}\n"
+                    f"**Description**: {template.metadata.description}\n"
+                    f"**Category**: {template.metadata.category}\n"
+                    f"**Languages**: {', '.join(template.metadata.languages)}\n"
+                    f"**Frameworks**: {', '.join(template.metadata.frameworks)}",
+                    title="Dry Run - Template Installation",
+                )
+            )
             return
 
         # Confirm installation for non-official templates
         if "/" not in template_id or not template_id.startswith("official/"):
-            if not Confirm.ask(f"Install template '{template_id}' from community source?"):
+            if not Confirm.ask(
+                f"Install template '{template_id}' from community source?"
+            ):
                 console.print("[yellow]Installation cancelled[/yellow]")
                 return
 
@@ -222,8 +254,11 @@ def uninstall(template_name: str, force: bool):
 
 @templates.command()
 @click.argument("name", required=True)
-@click.option("--project-path", type=click.Path(exists=True, file_okay=False),
-              help="Create template from existing project")
+@click.option(
+    "--project-path",
+    type=click.Path(exists=True, file_okay=False),
+    help="Create template from existing project",
+)
 @click.option("--description", help="Template description")
 @click.option("--author", help="Template author")
 @click.option("--category", help="Template category")
@@ -231,9 +266,17 @@ def uninstall(template_name: str, force: bool):
 @click.option("--frameworks", help="Comma-separated list of frameworks")
 @click.option("--project-types", help="Comma-separated list of project types")
 @click.option("--interactive", is_flag=True, help="Interactive template creation")
-def create(name: str, project_path: Optional[str], description: Optional[str],
-           author: Optional[str], category: Optional[str], languages: Optional[str],
-           frameworks: Optional[str], project_types: Optional[str], interactive: bool):
+def create(
+    name: str,
+    project_path: Optional[str],
+    description: Optional[str],
+    author: Optional[str],
+    category: Optional[str],
+    languages: Optional[str],
+    frameworks: Optional[str],
+    project_types: Optional[str],
+    interactive: bool,
+):
     """Create a custom template."""
     try:
         # Interactive mode
@@ -241,9 +284,15 @@ def create(name: str, project_path: Optional[str], description: Optional[str],
             description = description or Prompt.ask("Template description")
             author = author or Prompt.ask("Author name", default="local-user")
             category = category or Prompt.ask("Category", default="custom")
-            languages = languages or Prompt.ask("Languages (comma-separated)", default="")
-            frameworks = frameworks or Prompt.ask("Frameworks (comma-separated)", default="")
-            project_types = project_types or Prompt.ask("Project types (comma-separated)", default="")
+            languages = languages or Prompt.ask(
+                "Languages (comma-separated)", default=""
+            )
+            frameworks = frameworks or Prompt.ask(
+                "Frameworks (comma-separated)", default=""
+            )
+            project_types = project_types or Prompt.ask(
+                "Project types (comma-separated)", default=""
+            )
 
         # Set defaults
         description = description or f"Custom template for {name}"
@@ -252,8 +301,12 @@ def create(name: str, project_path: Optional[str], description: Optional[str],
 
         # Parse comma-separated values
         languages_list = [l.strip() for l in (languages or "").split(",") if l.strip()]
-        frameworks_list = [f.strip() for f in (frameworks or "").split(",") if f.strip()]
-        project_types_list = [p.strip() for p in (project_types or "").split(",") if p.strip()]
+        frameworks_list = [
+            f.strip() for f in (frameworks or "").split(",") if f.strip()
+        ]
+        project_types_list = [
+            p.strip() for p in (project_types or "").split(",") if p.strip()
+        ]
 
         # Template configuration
         template_config = {
@@ -262,20 +315,26 @@ def create(name: str, project_path: Optional[str], description: Optional[str],
             "category": category,
             "languages": languages_list,
             "frameworks": frameworks_list,
-            "project_types": project_types_list
+            "project_types": project_types_list,
         }
 
         manager = TemplateManager()
 
         if project_path:
             # Create from existing project
-            console.print(f"[cyan]Creating template '{name}' from project: {project_path}[/cyan]")
-            result = manager.create_custom_template(name, Path(project_path), template_config)
+            console.print(
+                f"[cyan]Creating template '{name}' from project: {project_path}[/cyan]"
+            )
+            result = manager.create_custom_template(
+                name, Path(project_path), template_config
+            )
         else:
             # Create empty template structure
             console.print(f"[cyan]Creating empty template: {name}[/cyan]")
             # TODO: Implement empty template creation
-            console.print("[yellow]Empty template creation not yet implemented[/yellow]")
+            console.print(
+                "[yellow]Empty template creation not yet implemented[/yellow]"
+            )
             console.print("Use --project-path to create template from existing project")
             return
 
@@ -300,10 +359,17 @@ def create(name: str, project_path: Optional[str], description: Optional[str],
 
 
 @templates.command()
-@click.argument("template_path", type=click.Path(exists=True, file_okay=False), required=True)
+@click.argument(
+    "template_path", type=click.Path(exists=True, file_okay=False), required=True
+)
 @click.option("--strict", is_flag=True, help="Treat warnings as errors")
-@click.option("--format", "output_format", type=click.Choice(["detailed", "summary", "json"]),
-              default="detailed", help="Output format")
+@click.option(
+    "--format",
+    "output_format",
+    type=click.Choice(["detailed", "summary", "json"]),
+    default="detailed",
+    help="Output format",
+)
 def validate(template_path: str, strict: bool, output_format: str):
     """Validate a template directory."""
     try:
@@ -319,7 +385,7 @@ def validate(template_path: str, strict: bool, output_format: str):
                 "is_valid": result.is_valid,
                 "errors": result.errors,
                 "warnings": result.warnings,
-                "suggestions": result.suggestions
+                "suggestions": result.suggestions,
             }
             console.print(json.dumps(validation_data, indent=2))
             return
@@ -369,7 +435,11 @@ def info(template_name: str):
             return
 
         # Display template information
-        status = "[green]Installed[/green]" if template.installed else "[yellow]Available[/yellow]"
+        status = (
+            "[green]Installed[/green]"
+            if template.installed
+            else "[yellow]Available[/yellow]"
+        )
 
         info_panel = f"""[bold]{template.metadata.name}[/bold] v{template.metadata.version} ({status})
 
@@ -402,14 +472,18 @@ def info(template_name: str):
 
         # Show installation command if not installed
         if not template.installed:
-            console.print(f"\n[blue]To install:[/blue] claude-builder templates install {template.id}")
+            console.print(
+                f"\n[blue]To install:[/blue] claude-builder templates install {template.id}"
+            )
 
     except Exception as e:
         console.print(f"[red]Error getting template info: {e}[/red]")
         raise click.ClickException(f"{FAILED_TO_GET_TEMPLATE_INFO}: {e}")
 
 
-def _display_templates_table(templates: List[CommunityTemplate], show_compatibility: bool = False):
+def _display_templates_table(
+    templates: List[CommunityTemplate], show_compatibility: bool = False
+):
     """Display templates in table format."""
     if not templates:
         console.print("[yellow]No templates found[/yellow]")
@@ -428,7 +502,11 @@ def _display_templates_table(templates: List[CommunityTemplate], show_compatibil
 
     for template in templates:
         status = "✓ Installed" if template.installed else "Available"
-        languages = ", ".join(template.metadata.languages) if template.metadata.languages else "Any"
+        languages = (
+            ", ".join(template.metadata.languages)
+            if template.metadata.languages
+            else "Any"
+        )
 
         row = [
             template.metadata.name,
@@ -436,7 +514,7 @@ def _display_templates_table(templates: List[CommunityTemplate], show_compatibil
             template.metadata.author,
             template.metadata.category,
             languages,
-            status
+            status,
         ]
 
         if show_compatibility:
@@ -456,7 +534,9 @@ def _display_templates_list(templates: List[CommunityTemplate]):
 
     for template in templates:
         status = "[green]✓[/green]" if template.installed else "[yellow]○[/yellow]"
-        console.print(f"{status} {template.metadata.name} - {template.metadata.description}")
+        console.print(
+            f"{status} {template.metadata.name} - {template.metadata.description}"
+        )
 
 
 def _display_templates_json(templates: List[CommunityTemplate]):

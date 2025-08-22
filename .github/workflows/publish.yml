@@ -16,55 +16,55 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: "3.11"
-        
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -e ".[dev,test]"
-        
+
     - name: Run full test suite
       run: |
         pytest --cov=claude_builder --cov-report=xml
-        
+
     - name: Validate version consistency
       run: |
         python -c "
         import claude_builder
         import toml
-        
+
         # Get version from __init__.py
         init_version = claude_builder.__version__
-        
+
         # Get version from pyproject.toml
         with open('pyproject.toml', 'r') as f:
             pyproject = toml.load(f)
         toml_version = pyproject['project']['version']
-        
+
         # Check if they match
         if init_version != toml_version:
             print(f'Version mismatch: __init__.py={init_version}, pyproject.toml={toml_version}')
             exit(1)
-        
+
         print(f'Version validation passed: {init_version}')
         "
-        
+
     - name: Check changelog entry
       if: github.event_name == 'release'
       run: |
         # Extract version from tag
         VERSION=${GITHUB_REF#refs/tags/v}
-        
+
         # Check if CHANGELOG.md contains this version
         if ! grep -q "## \[${VERSION}\]" CHANGELOG.md; then
           echo "❌ No changelog entry found for version ${VERSION}"
           exit 1
         fi
-        
+
         echo "✅ Changelog entry found for version ${VERSION}"
 
   build:
@@ -72,30 +72,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: "3.11"
-        
+
     - name: Install build dependencies
       run: |
         python -m pip install --upgrade pip
         pip install build twine
-        
+
     - name: Build package
       run: |
         python -m build
-        
+
     - name: Check package integrity
       run: |
         twine check dist/*
-        
+
     - name: List package contents
       run: |
         echo "📦 Package contents:"
         tar -tzvf dist/*.tar.gz
-        
+
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -116,30 +116,30 @@ jobs:
       with:
         name: dist
         path: dist/
-        
+
     - name: Publish to Test PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         password: ${{ secrets.TEST_PYPI_API_TOKEN }}
         repository-url: https://test.pypi.org/legacy/
         verbose: true
-        
+
     - name: Test installation from Test PyPI
       run: |
         # Wait a bit for Test PyPI to process the upload
         sleep 30
-        
+
         # Create fresh environment and test installation
         python -m venv test_env
         source test_env/bin/activate
-        
+
         # Install from Test PyPI
         pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ claude-builder
-        
+
         # Test basic functionality
         claude-builder --version
         claude-builder --help
-        
+
         echo "✅ Test PyPI installation successful"
 
   publish-pypi:
@@ -155,13 +155,13 @@ jobs:
       with:
         name: dist
         path: dist/
-        
+
     - name: Publish to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         password: ${{ secrets.PYPI_API_TOKEN }}
         verbose: true
-        
+
     - name: Create deployment summary
       run: |
         echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
@@ -186,21 +186,21 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
-        
+
     - name: Wait for PyPI propagation
       run: |
         echo "Waiting for PyPI to propagate the new package..."
         sleep 120  # Wait 2 minutes for PyPI to propagate
-        
+
     - name: Install from PyPI
       run: |
         pip install claude-builder
-        
+
     - name: Verify installation
       run: |
         claude-builder --version
         claude-builder --help
-        
+
     - name: Test basic functionality
       shell: bash
       run: |
@@ -209,10 +209,10 @@ jobs:
         cd test_project
         echo "print('Hello World')" > main.py
         echo "# Test Project" > README.md
-        
+
         # Test analysis (dry run)
         claude-builder . --dry-run --verbose
-        
+
         echo "✅ Installation verification successful on ${{ matrix.os }} with Python ${{ matrix.python-version }}"
 
   notify-success:

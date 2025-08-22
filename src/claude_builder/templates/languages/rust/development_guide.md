@@ -262,25 +262,25 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub enum Error {
     #[error("Configuration error: {0}")]
     Configuration(String),
-    
+
     #[error("Database error: {0}")]
     Database(#[from] sqlx::Error),
-    
+
     #[error("HTTP request failed: {0}")]
     Http(#[from] reqwest::Error),
-    
+
     #[error("Serialization error: {0}")]
     Serialization(#[from] serde_json::Error),
-    
+
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
-    
+
     #[error("Validation error: {message}")]
     Validation { message: String },
-    
+
     #[error("Not found: {resource}")]
     NotFound { resource: String },
-    
+
     #[error("Internal error: {message}")]
     Internal { message: String },
 }
@@ -291,13 +291,13 @@ impl Error {
             message: message.into(),
         }
     }
-    
+
     pub fn not_found(resource: impl Into<String>) -> Self {
         Self::NotFound {
             resource: resource.into(),
         }
     }
-    
+
     pub fn internal(message: impl Into<String>) -> Self {
         Self::Internal {
             message: message.into(),
@@ -353,14 +353,14 @@ pub struct LoggingConfig {
 impl Config {
     pub fn from_env() -> Result<Self, ConfigError> {
         let run_mode = std::env::var("RUN_MODE").unwrap_or_else(|_| "development".into());
-        
+
         let s = ConfigReader::builder()
             .add_source(File::with_name("config/default"))
             .add_source(File::with_name(&format!("config/{}", run_mode)).required(false))
             .add_source(File::with_name("config/local").required(false))
             .add_source(Environment::with_prefix("APP").separator("_"))
             .build()?;
-            
+
         s.try_deserialize()
     }
 }
@@ -393,23 +393,23 @@ mod tests {
         // Arrange
         let service = ${service}::new(test_config()).await.unwrap();
         let input = ${test_input};
-        
+
         // Act
         let result = service.process(input).await;
-        
+
         // Assert
         assert!(result.is_ok());
         let output = result.unwrap();
         assert_eq!(output.status, "completed");
     }
-    
+
     #[tokio::test]
     async fn test_${service}_error_handling() {
         let service = ${service}::new(test_config()).await.unwrap();
         let invalid_input = ${invalid_input};
-        
+
         let result = service.process(invalid_input).await;
-        
+
         assert!(result.is_err());
         match result.unwrap_err() {
             Error::Validation { message } => {
@@ -418,7 +418,7 @@ mod tests {
             _ => panic!("Expected validation error"),
         }
     }
-    
+
     fn test_config() -> Config {
         Config {
             // Test configuration
@@ -460,15 +460,15 @@ impl TestContext {
     async fn new() -> Self {
         let temp_dir = TempDir::new().unwrap();
         let mock_server = MockServer::start().await;
-        
+
         // Setup test database
         let db_url = std::env::var("TEST_DATABASE_URL")
             .unwrap_or_else(|_| "postgres://localhost/test_db".to_string());
         let db_pool = PgPool::connect(&db_url).await.unwrap();
-        
+
         // Run migrations
         sqlx::migrate!("./migrations").run(&db_pool).await.unwrap();
-        
+
         let config = Config {
             // Test configuration using mock server
             external_services: ExternalServicesConfig {
@@ -482,7 +482,7 @@ impl TestContext {
             },
             // ... other config
         };
-        
+
         Self {
             config,
             _temp_dir: temp_dir,
@@ -495,7 +495,7 @@ impl TestContext {
 #[tokio::test]
 async fn test_full_workflow() {
     let ctx = TestContext::new().await;
-    
+
     // Setup mock responses
     Mock::given(method("GET"))
         .and(path("/api/data"))
@@ -505,15 +505,15 @@ async fn test_full_workflow() {
         })))
         .mount(&ctx.mock_server)
         .await;
-    
+
     // Test the full workflow
     let service = ${main_service}::new(ctx.config).await.unwrap();
     let result = service.execute_workflow(${workflow_input}).await;
-    
+
     assert!(result.is_ok());
     let output = result.unwrap();
     assert_eq!(output.status, "completed");
-    
+
     // Verify database state
     let count: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM ${table_name}")
         .fetch_one(&ctx.db_pool)
@@ -536,21 +536,21 @@ proptest! {
         input in prop::collection::vec(any::<${input_type}>(), 0..100)
     ) {
         let result = ${function_name}(input.clone());
-        
+
         // Property 1: Result should not be empty if input isn't empty
         if !input.is_empty() {
             prop_assert!(!result.is_empty());
         }
-        
+
         // Property 2: Result length should be related to input length
         prop_assert!(result.len() <= input.len() * 2);
-        
+
         // Property 3: All elements should satisfy some property
         for item in result {
             prop_assert!(item.is_valid());
         }
     }
-    
+
     #[test]
     fn test_${serialization_function}_roundtrip(
         data in any::<${data_type}>()
@@ -573,10 +573,10 @@ use ${project_name}::*;
 
 fn bench_${operation}(c: &mut Criterion) {
     let mut group = c.benchmark_group("${operation}");
-    
+
     for size in [10, 100, 1000, 10000].iter() {
         let input = generate_test_data(*size);
-        
+
         group.bench_with_input(
             BenchmarkId::from_parameter(size),
             size,
@@ -585,14 +585,14 @@ fn bench_${operation}(c: &mut Criterion) {
             },
         );
     }
-    
+
     group.finish();
 }
 
 fn bench_async_${operation}(c: &mut Criterion) {
     let rt = tokio::runtime::Runtime::new().unwrap();
     let input = generate_async_test_data();
-    
+
     c.bench_function("async_${operation}", |b| {
         b.to_async(&rt).iter(|| async {
             ${async_operation}(black_box(&input)).await
@@ -672,16 +672,16 @@ pub struct UserInput {
     #[validate(length(min = 1, max = 100))]
     #[validate(regex = "USERNAME_REGEX")]
     pub username: String,
-    
+
     #[validate(email)]
     pub email: String,
-    
+
     #[validate(custom = "validate_password")]
     pub password: String,
 }
 
 lazy_static::lazy_static! {
-    static ref USERNAME_REGEX: regex::Regex = 
+    static ref USERNAME_REGEX: regex::Regex =
         regex::Regex::new(r"^[a-zA-Z0-9_-]+$").unwrap();
 }
 
@@ -752,7 +752,7 @@ env:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     services:
       postgres:
         image: postgres:14
@@ -764,32 +764,32 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-    
+
     steps:
 
     - uses: actions/checkout@v3
-    
+
     - name: Install Rust
 
       uses: actions-rs/toolchain@v1
       with:
         toolchain: stable
         components: rustfmt, clippy
-    
+
     - name: Check formatting
 
       run: cargo fmt -- --check
-    
+
     - name: Run clippy
 
       run: cargo clippy -- -D warnings
-    
+
     - name: Run tests
 
       run: cargo test
       env:
         TEST_DATABASE_URL: postgres://postgres:postgres@localhost/test_db
-    
+
     - name: Run benchmarks
 
       run: cargo bench

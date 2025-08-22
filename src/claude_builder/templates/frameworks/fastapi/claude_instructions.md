@@ -79,25 +79,25 @@ from pydantic import BaseSettings, AnyHttpUrl, EmailStr, validator
 
 class Settings(BaseSettings):
     """Application settings."""
-    
+
     # API Configuration
 
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str = "${project_name}"
     VERSION: str = "1.0.0"
     DESCRIPTION: str = "${project_description}"
-    
+
     # Security
 
     SECRET_KEY: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8  # 8 days
     ALGORITHM: str = "HS256"
-    
+
     # CORS
 
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
-    
+
     @validator("BACKEND_CORS_ORIGINS", pre=True)
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
         if isinstance(v, str) and not v.startswith("["):
@@ -105,22 +105,22 @@ class Settings(BaseSettings):
         elif isinstance(v, (list, str)):
             return v
         raise ValueError(v)
-    
+
     # Database
 
     DATABASE_URL: str
     ASYNC_DATABASE_URL: Optional[str] = None
-    
+
     @validator("ASYNC_DATABASE_URL", pre=True)
     def assemble_async_db_connection(cls, v: Optional[str], values: dict) -> str:
         if isinstance(v, str):
             return v
         return values.get("DATABASE_URL", "").replace("postgresql://", "postgresql+asyncpg://")
-    
+
     # Redis
 
     REDIS_URL: str = "redis://localhost:6379/0"
-    
+
     # Email
 
     SMTP_TLS: bool = True
@@ -130,25 +130,25 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: Optional[str] = None
     EMAILS_FROM_EMAIL: Optional[EmailStr] = None
     EMAILS_FROM_NAME: Optional[str] = None
-    
+
     # Superuser
 
     FIRST_SUPERUSER: EmailStr
     FIRST_SUPERUSER_PASSWORD: str
-    
+
     # Testing
 
     TEST_DATABASE_URL: Optional[str] = None
-    
+
     # Environment
 
     ENVIRONMENT: str = "development"
     DEBUG: bool = False
-    
+
     # Logging
 
     LOG_LEVEL: str = "INFO"
-    
+
     class Config:
         case_sensitive = True
         env_file = ".env"
@@ -171,7 +171,7 @@ from sqlalchemy.sql import func
 class Base:
     id: Any
     __name__: str
-    
+
     # Generate __tablename__ automatically
 
     @declared_attr
@@ -200,7 +200,7 @@ class ${model_name}Status(PyEnum):
 
 class ${model_name}(Base, TimestampMixin):
     """${model_name} model."""
-    
+
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     title = Column(String(200), nullable=False, index=True)
     slug = Column(String(200), unique=True, nullable=False, index=True)
@@ -208,12 +208,12 @@ class ${model_name}(Base, TimestampMixin):
     content = Column(Text)
     status = Column(Enum(${model_name}Status), default=${model_name}Status.DRAFT, nullable=False, index=True)
     is_featured = Column(Boolean, default=False, nullable=False, index=True)
-    
+
     # Relationships
 
     author_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False)
     author = relationship("User", back_populates="${model_name_lower}s")
-    
+
     def __repr__(self):
         return f"<${model_name}(id={self.id}, title='{self.title}')>"
 
@@ -228,7 +228,7 @@ from .base import Base, TimestampMixin
 
 class User(Base, TimestampMixin):
     """User model."""
-    
+
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     email = Column(String, unique=True, nullable=False, index=True)
     username = Column(String, unique=True, nullable=False, index=True)
@@ -237,11 +237,11 @@ class User(Base, TimestampMixin):
     hashed_password = Column(String, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
     is_superuser = Column(Boolean, default=False, nullable=False)
-    
+
     # Relationships
 
     ${model_name_lower}s = relationship("${model_name}", back_populates="author")
-    
+
     def __repr__(self):
         return f"<User(id={self.id}, email='{self.email}')>"
 ```
@@ -287,7 +287,7 @@ class ${model_name}InDBBase(${model_name}Base):
     author_id: UUID
     created_at: datetime
     updated_at: Optional[datetime] = None
-    
+
     class Config:
         orm_mode = True
 
@@ -313,7 +313,7 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     """Schema for creating user."""
     password: str = Field(..., min_length=8)
-    
+
     @validator('password')
     def validate_password(cls, v):
         if not any(c.isupper() for c in v):
@@ -338,7 +338,7 @@ class UserInDBBase(UserBase):
     id: UUID
     created_at: datetime
     updated_at: Optional[datetime] = None
-    
+
     class Config:
         orm_mode = True
 
@@ -411,7 +411,7 @@ async def read_${model_name_lower}s(
         filters['status'] = status
     if is_featured is not None:
         filters['is_featured'] = is_featured
-    
+
     ${model_name_lower}s = service.get_multi(
         skip=skip,
         limit=limit,
@@ -453,7 +453,7 @@ async def read_${model_name_lower}(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="${model_name} not found"
         )
-    
+
     # Check permissions
 
     if not current_user.is_superuser and ${model_name_lower}.author_id != current_user.id:
@@ -465,7 +465,7 @@ async def read_${model_name_lower}(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Not enough permissions"
             )
-    
+
     return ${model_name_lower}
 
 @router.put("/{id}", response_model=${model_name})
@@ -486,7 +486,7 @@ async def update_${model_name_lower}(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="${model_name} not found"
         )
-    
+
     # Check permissions
 
     if not current_user.is_superuser and ${model_name_lower}.author_id != current_user.id:
@@ -494,7 +494,7 @@ async def update_${model_name_lower}(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions"
         )
-    
+
     ${model_name_lower} = service.update(
         db_obj=${model_name_lower},
         obj_in=${model_name_lower}_in
@@ -518,7 +518,7 @@ async def delete_${model_name_lower}(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="${model_name} not found"
         )
-    
+
     # Check permissions
 
     if not current_user.is_superuser and ${model_name_lower}.author_id != current_user.id:
@@ -526,7 +526,7 @@ async def delete_${model_name_lower}(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions"
         )
-    
+
     service.remove(id)
 
 @router.get("/featured/", response_model=List[${model_name}])
@@ -558,7 +558,7 @@ async def toggle_featured_${model_name_lower}(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="${model_name} not found"
         )
-    
+
     ${model_name_lower} = service.toggle_featured(${model_name_lower})
     return ${model_name_lower}
 ```
@@ -586,16 +586,16 @@ class ${service_name}Service(CRUDBase[${model_name}, ${model_name}Create, ${mode
         super().__init__(${model_name}, db)
 
     def create_with_owner(
-        self, 
-        *, 
-        obj_in: ${model_name}Create, 
+        self,
+        *,
+        obj_in: ${model_name}Create,
         owner_id: UUID
     ) -> ${model_name}:
         """Create ${model_name_lower} with owner."""
         obj_in_data = obj_in.dict()
         obj_in_data["author_id"] = owner_id
         obj_in_data["slug"] = self._generate_unique_slug(obj_in.title)
-        
+
         db_obj = self.model(**obj_in_data)
         self.db.add(db_obj)
         self.db.commit()
@@ -603,10 +603,10 @@ class ${service_name}Service(CRUDBase[${model_name}, ${model_name}Create, ${mode
         return db_obj
 
     def get_multi_by_owner(
-        self, 
-        *, 
-        owner_id: UUID, 
-        skip: int = 0, 
+        self,
+        *,
+        owner_id: UUID,
+        skip: int = 0,
         limit: int = 100
     ) -> List[${model_name}]:
         """Get multiple ${model_name_lower}s by owner."""
@@ -619,9 +619,9 @@ class ${service_name}Service(CRUDBase[${model_name}, ${model_name}Create, ${mode
         )
 
     def get_published(
-        self, 
-        *, 
-        skip: int = 0, 
+        self,
+        *,
+        skip: int = 0,
         limit: int = 100
     ) -> List[${model_name}]:
         """Get published ${model_name_lower}s."""
@@ -634,8 +634,8 @@ class ${service_name}Service(CRUDBase[${model_name}, ${model_name}Create, ${mode
         )
 
     def get_featured(
-        self, 
-        *, 
+        self,
+        *,
         limit: int = 10
     ) -> List[${model_name}]:
         """Get featured ${model_name_lower}s."""
@@ -652,10 +652,10 @@ class ${service_name}Service(CRUDBase[${model_name}, ${model_name}Create, ${mode
         )
 
     def search(
-        self, 
-        *, 
-        query: str, 
-        skip: int = 0, 
+        self,
+        *,
+        query: str,
+        skip: int = 0,
         limit: int = 100
     ) -> List[${model_name}]:
         """Search ${model_name_lower}s by title and content."""
@@ -664,7 +664,7 @@ class ${service_name}Service(CRUDBase[${model_name}, ${model_name}Create, ${mode
             .filter(
                 and_(
                     ${model_name}.status == ${model_name}Status.PUBLISHED,
-                    ${model_name}.title.contains(query) | 
+                    ${model_name}.title.contains(query) |
                     ${model_name}.content.contains(query)
                 )
             )
@@ -707,12 +707,12 @@ class ${service_name}Service(CRUDBase[${model_name}, ${model_name}Create, ${mode
     ) -> List[${model_name}]:
         """Get multiple ${model_name_lower}s with filters."""
         query = self.db.query(self.model)
-        
+
         if filters:
             for field, value in filters.items():
                 if hasattr(self.model, field):
                     query = query.filter(getattr(self.model, field) == value)
-        
+
         return query.offset(skip).limit(limit).all()
 
     def _generate_unique_slug(self, title: str) -> str:
@@ -720,11 +720,11 @@ class ${service_name}Service(CRUDBase[${model_name}, ${model_name}Create, ${mode
         base_slug = slugify(title)
         slug = base_slug
         counter = 1
-        
+
         while self.db.query(self.model).filter(${model_name}.slug == slug).first():
             slug = f"{base_slug}-{counter}"
             counter += 1
-        
+
         return slug
 
 # Base CRUD service
@@ -771,11 +771,11 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             update_data = obj_in
         else:
             update_data = obj_in.dict(exclude_unset=True)
-        
+
         for field in update_data:
             if hasattr(db_obj, field):
                 setattr(db_obj, field, update_data[field])
-        
+
         self.db.add(db_obj)
         self.db.commit()
         self.db.refresh(db_obj)
@@ -890,7 +890,7 @@ def get_current_user(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Could not validate credentials",
         )
-    
+
     user_service = UserService(db)
     user = user_service.get(token_data.sub)
     if not user:

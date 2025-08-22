@@ -1,4 +1,5 @@
 """Main module for test project."""
+
 import click
 import requests
 
@@ -11,7 +12,7 @@ def fetch_data(url: str) -> dict:
 
 
 @click.command()
-@click.option('--url', required=True, help='URL to fetch data from')
+@click.option("--url", required=True, help="URL to fetch data from")
 def main(url: str) -> None:
     """Main CLI function."""
     try:
@@ -21,5 +22,5 @@ def main(url: str) -> None:
         click.echo(f"Error: {e}", err=True)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

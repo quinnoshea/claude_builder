@@ -62,13 +62,8 @@ class TestConfigValidator:
         """Test validation of valid configuration."""
         validator = ConfigValidator()
         config = {
-            "project": {
-                "name": "test-project",
-                "type": "python"
-            },
-            "analysis": {
-                "depth": "standard"
-            }
+            "project": {"name": "test-project", "type": "python"},
+            "analysis": {"depth": "standard"},
         }
 
         result = validator.validate_config(config)
@@ -81,11 +76,9 @@ class TestConfigValidator:
         config = {
             "project": {
                 "name": "",  # Invalid empty name
-                "type": "invalid_type"  # Invalid type
+                "type": "invalid_type",  # Invalid type
             },
-            "analysis": {
-                "depth": "invalid_depth"  # Invalid depth
-            }
+            "analysis": {"depth": "invalid_depth"},  # Invalid depth
         }
 
         result = validator.validate_config(config)
@@ -171,11 +164,7 @@ class TestValidationResult:
 
     def test_successful_validation(self):
         """Test successful validation result."""
-        result = ValidationResult(
-            is_valid=True,
-            errors=[],
-            warnings=["Minor warning"]
-        )
+        result = ValidationResult(is_valid=True, errors=[], warnings=["Minor warning"])
 
         assert result.is_valid
         assert len(result.errors) == 0
@@ -187,14 +176,10 @@ class TestValidationResult:
         """Test failed validation result."""
         errors = [
             ValidationError("Field 'name' is required"),
-            ValidationError("Invalid project type")
+            ValidationError("Invalid project type"),
         ]
 
-        result = ValidationResult(
-            is_valid=False,
-            errors=errors,
-            warnings=[]
-        )
+        result = ValidationResult(is_valid=False, errors=errors, warnings=[])
 
         assert not result.is_valid
         assert len(result.errors) == 2
@@ -210,7 +195,7 @@ class TestValidationError:
         error = ValidationError(
             message="Required field missing",
             field="project.name",
-            code="REQUIRED_FIELD"
+            code="REQUIRED_FIELD",
         )
 
         assert error.message == "Required field missing"
@@ -224,7 +209,10 @@ class TestValidationError:
             message="Invalid value",
             field="project.type",
             code="INVALID_VALUE",
-            context={"value": "invalid_type", "allowed": ["python", "rust", "javascript"]}
+            context={
+                "value": "invalid_type",
+                "allowed": ["python", "rust", "javascript"],
+            },
         )
 
         assert error.context["value"] == "invalid_type"

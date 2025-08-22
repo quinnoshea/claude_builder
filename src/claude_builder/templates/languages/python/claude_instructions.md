@@ -105,26 +105,26 @@ from ${package_name}.${module} import ${class_name}
 
 class Test${class_name}:
     """Test suite for ${class_name}."""
-    
+
     def setup_method(self):
         """Setup for each test method."""
         self.${instance} = ${class_name}(${test_config})
-    
+
     def test_${method_name}_success(self):
         """Test successful ${method_name} operation."""
 
         # Arrange
 
         expected_result = ${expected_value}
-        
+
         # Act
 
         result = self.${instance}.${method_name}(${test_input})
-        
+
         # Assert
 
         assert result == expected_result
-    
+
     def test_${method_name}_with_invalid_input(self):
         """Test ${method_name} with invalid input."""
         with pytest.raises(ValidationError):
@@ -194,22 +194,22 @@ from pydantic import BaseSettings, Field
 
 class Settings(BaseSettings):
     """Application settings with environment variable support."""
-    
+
     # Database configuration
 
     database_url: str = Field(..., env="DATABASE_URL")
     database_pool_size: int = Field(10, env="DATABASE_POOL_SIZE")
-    
+
     # API configuration
 
     api_key: Optional[str] = Field(None, env="API_KEY")
     api_timeout: int = Field(30, env="API_TIMEOUT")
-    
+
     # Application settings
 
     debug: bool = Field(False, env="DEBUG")
     log_level: str = Field("INFO", env="LOG_LEVEL")
-    
+
     class Config:
         env_file = ".env"
         case_sensitive = False
@@ -233,7 +233,7 @@ def configure_logging():
         stream=sys.stdout,
         level=getattr(logging, settings.log_level.upper()),
     )
-    
+
     structlog.configure(
         processors=[
             structlog.stdlib.filter_by_level,
@@ -367,19 +367,19 @@ def complex_function(
 ) -> Tuple[bool, str]:
     """
     Perform complex processing with multiple parameters.
-    
+
     Args:
         param1: Description of string parameter
         param2: Optional integer parameter for configuration
         param3: List of dictionaries containing processing data
-    
+
     Returns:
         Tuple containing success boolean and result message
-        
+
     Raises:
         ValidationError: When input parameters are invalid
         ProcessingError: When processing fails
-        
+
     Example:
         >>> result = complex_function("test", param2=42)
         >>> print(result)

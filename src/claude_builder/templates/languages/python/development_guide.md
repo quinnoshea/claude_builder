@@ -119,11 +119,11 @@ isort --check-only .
 
 [flake8]
 max-line-length = 88
-extend-ignore = 
+extend-ignore =
     E203,  # whitespace before ':'
     E501,  # line too long (handled by black)
     W503,  # line break before binary operator
-exclude = 
+exclude =
     .git,
     __pycache__,
     .venv,
@@ -287,7 +287,7 @@ class Test${class_name}:
         """Test that invalid input raises appropriate exception."""
         with pytest.raises(ValidationError) as exc_info:
             ${core_instance}.process_data(None)
-        
+
         assert "Invalid input data" in str(exc_info.value)
 
     @pytest.mark.parametrize("input_value,expected", [

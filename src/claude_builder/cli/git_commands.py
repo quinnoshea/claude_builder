@@ -42,8 +42,12 @@ def git():
 
 
 @git.command()
-@click.argument("project_path", type=click.Path(exists=True, file_okay=False),
-                default=".", required=False)
+@click.argument(
+    "project_path",
+    type=click.Path(exists=True, file_okay=False),
+    default=".",
+    required=False,
+)
 def status(project_path: str):
     """Show git integration status for a project."""
     try:
@@ -104,27 +108,39 @@ def status(project_path: str):
         table.add_row(
             ".git/info/exclude",
             "[green]✓[/green]" if exclude_file.exists() else "[red]✗[/red]",
-            exclude_status
+            exclude_status,
         )
         table.add_row(
             "Claude exclude section",
             "[green]✓[/green]" if claude_section else "[red]✗[/red]",
-            "Active" if claude_section else "Not found"
+            "Active" if claude_section else "Not found",
         )
         table.add_row(
             "commit-msg hook",
-            "[green]✓[/green]" if "Claude Builder" in commit_msg_status else "[yellow]○[/yellow]" if commit_msg_hook.exists() else "[red]✗[/red]",
-            commit_msg_status
+            (
+                "[green]✓[/green]"
+                if "Claude Builder" in commit_msg_status
+                else (
+                    "[yellow]○[/yellow]" if commit_msg_hook.exists() else "[red]✗[/red]"
+                )
+            ),
+            commit_msg_status,
         )
         table.add_row(
             "pre-commit hook",
-            "[green]✓[/green]" if "Claude Builder" in pre_commit_status else "[yellow]○[/yellow]" if pre_commit_hook.exists() else "[red]✗[/red]",
-            pre_commit_status
+            (
+                "[green]✓[/green]"
+                if "Claude Builder" in pre_commit_status
+                else (
+                    "[yellow]○[/yellow]" if pre_commit_hook.exists() else "[red]✗[/red]"
+                )
+            ),
+            pre_commit_status,
         )
         table.add_row(
             "Backups",
             "[green]✓[/green]" if backups else "[yellow]○[/yellow]",
-            f"{len(backups)} available" if backups else "None"
+            f"{len(backups)} available" if backups else "None",
         )
 
         console.print(table)
@@ -135,10 +151,16 @@ def status(project_path: str):
             config = config_manager.load_config(project_path_obj)
 
             console.print("\n[bold]Current Configuration:[/bold]")
-            console.print(f"Git integration: [cyan]{config.git_integration.enabled}[/cyan]")
+            console.print(
+                f"Git integration: [cyan]{config.git_integration.enabled}[/cyan]"
+            )
             console.print(f"Mode: [cyan]{config.git_integration.mode.value}[/cyan]")
-            console.print(f"Claude mention policy: [cyan]{config.git_integration.claude_mention_policy.value}[/cyan]")
-            console.print(f"Backup before changes: [cyan]{config.git_integration.backup_before_changes}[/cyan]")
+            console.print(
+                f"Claude mention policy: [cyan]{config.git_integration.claude_mention_policy.value}[/cyan]"
+            )
+            console.print(
+                f"Backup before changes: [cyan]{config.git_integration.backup_before_changes}[/cyan]"
+            )
 
         except Exception as e:
             console.print(f"\n[yellow]Could not load configuration: {e}[/yellow]")
@@ -149,9 +171,15 @@ def status(project_path: str):
 
 
 @git.command()
-@click.argument("project_path", type=click.Path(exists=True, file_okay=False),
-                default=".", required=False)
-@click.option("--force", is_flag=True, help="Force exclude setup even if already configured")
+@click.argument(
+    "project_path",
+    type=click.Path(exists=True, file_okay=False),
+    default=".",
+    required=False,
+)
+@click.option(
+    "--force", is_flag=True, help="Force exclude setup even if already configured"
+)
 def exclude(project_path: str, force: bool):
     """Add generated files to .git/info/exclude."""
     try:
@@ -173,7 +201,9 @@ def exclude(project_path: str, force: bool):
             with open(exclude_file, encoding="utf-8") as f:
                 content = f.read()
             if "Claude Builder" in content:
-                console.print("[yellow]Claude Builder exclude section already exists[/yellow]")
+                console.print(
+                    "[yellow]Claude Builder exclude section already exists[/yellow]"
+                )
                 if not Confirm.ask("Reconfigure exclude patterns?"):
                     return
                 force = True
@@ -206,8 +236,12 @@ def exclude(project_path: str, force: bool):
 
 
 @git.command()
-@click.argument("project_path", type=click.Path(exists=True, file_okay=False),
-                default=".", required=False)
+@click.argument(
+    "project_path",
+    type=click.Path(exists=True, file_okay=False),
+    default=".",
+    required=False,
+)
 def unexclude(project_path: str):
     """Remove files from .git/info/exclude."""
     try:
@@ -221,7 +255,9 @@ def unexclude(project_path: str):
         config_manager = ConfigManager()
         config = config_manager.load_config(project_path_obj)
 
-        if not Confirm.ask("Remove Claude Builder exclude patterns from .git/info/exclude?"):
+        if not Confirm.ask(
+            "Remove Claude Builder exclude patterns from .git/info/exclude?"
+        ):
             console.print("[yellow]Operation cancelled[/yellow]")
             return
 
@@ -233,7 +269,9 @@ def unexclude(project_path: str):
         )
 
         if result.success:
-            console.print("[green]✓ Claude Builder patterns removed from .git/info/exclude[/green]")
+            console.print(
+                "[green]✓ Claude Builder patterns removed from .git/info/exclude[/green]"
+            )
             for operation in result.operations_performed:
                 console.print(f"  {operation}")
         else:
@@ -248,10 +286,17 @@ def unexclude(project_path: str):
 
 
 @git.command()
-@click.argument("project_path", type=click.Path(exists=True, file_okay=False),
-                default=".", required=False)
-@click.option("--policy", type=click.Choice(["forbidden", "minimal", "allowed"]),
-              help="Claude mention policy for hooks")
+@click.argument(
+    "project_path",
+    type=click.Path(exists=True, file_okay=False),
+    default=".",
+    required=False,
+)
+@click.option(
+    "--policy",
+    type=click.Choice(["forbidden", "minimal", "allowed"]),
+    help="Claude mention policy for hooks",
+)
 @click.option("--pre-commit", is_flag=True, help="Also install pre-commit hook")
 def install_hooks(project_path: str, policy: Optional[str], pre_commit: bool):
     """Install git hooks for Claude mention control."""
@@ -269,11 +314,14 @@ def install_hooks(project_path: str, policy: Optional[str], pre_commit: bool):
         # Use provided policy or config policy
         if policy:
             from claude_builder.core.models import ClaudeMentionPolicy
+
             claude_policy = ClaudeMentionPolicy(policy)
         else:
             claude_policy = config.git_integration.claude_mention_policy
 
-        console.print(f"[cyan]Installing git hooks with policy: {claude_policy.value}[/cyan]")
+        console.print(
+            f"[cyan]Installing git hooks with policy: {claude_policy.value}[/cyan]"
+        )
 
         hook_manager = GitHookManager()
 
@@ -291,7 +339,9 @@ def install_hooks(project_path: str, policy: Optional[str], pre_commit: bool):
 
         # Install pre-commit hook if requested
         if pre_commit:
-            result = hook_manager.install_pre_commit_hook(project_path_obj, claude_policy)
+            result = hook_manager.install_pre_commit_hook(
+                project_path_obj, claude_policy
+            )
 
             if result.success:
                 console.print("[green]✓ pre-commit hook installed[/green]")
@@ -303,16 +353,18 @@ def install_hooks(project_path: str, policy: Optional[str], pre_commit: bool):
                     console.print(f"  • {error}")
 
         # Show what the hooks do
-        console.print(Panel(
-            f"**Git hooks installed with policy: {claude_policy.value}**\n\n"
-            f"**commit-msg hook:** Filters Claude mentions from commit messages\n"
-            f"**pre-commit hook:** {'Installed' if pre_commit else 'Not installed'} - Checks staged files for Claude mentions\n\n"
-            f"**Policy behavior:**\n"
-            f"• forbidden: Remove all Claude/AI mentions\n"
-            f"• minimal: Remove Claude-specific mentions, keep general AI terms\n"
-            f"• allowed: No filtering (hooks not needed)",
-            title="Git Hooks Configuration"
-        ))
+        console.print(
+            Panel(
+                f"**Git hooks installed with policy: {claude_policy.value}**\n\n"
+                f"**commit-msg hook:** Filters Claude mentions from commit messages\n"
+                f"**pre-commit hook:** {'Installed' if pre_commit else 'Not installed'} - Checks staged files for Claude mentions\n\n"
+                f"**Policy behavior:**\n"
+                f"• forbidden: Remove all Claude/AI mentions\n"
+                f"• minimal: Remove Claude-specific mentions, keep general AI terms\n"
+                f"• allowed: No filtering (hooks not needed)",
+                title="Git Hooks Configuration",
+            )
+        )
 
     except Exception as e:
         console.print(f"[red]Error installing hooks: {e}[/red]")
@@ -320,8 +372,12 @@ def install_hooks(project_path: str, policy: Optional[str], pre_commit: bool):
 
 
 @git.command()
-@click.argument("project_path", type=click.Path(exists=True, file_okay=False),
-                default=".", required=False)
+@click.argument(
+    "project_path",
+    type=click.Path(exists=True, file_okay=False),
+    default=".",
+    required=False,
+)
 @click.option("--force", is_flag=True, help="Force removal without confirmation")
 def uninstall_hooks(project_path: str, force: bool):
     """Remove git hooks installed by Claude Builder."""
@@ -358,10 +414,19 @@ def uninstall_hooks(project_path: str, force: bool):
 
 
 @git.command()
-@click.argument("project_path", type=click.Path(exists=True, file_okay=False),
-                default=".", required=False)
-@click.option("--format", "output_format", type=click.Choice(["table", "json"]),
-              default="table", help="Output format")
+@click.argument(
+    "project_path",
+    type=click.Path(exists=True, file_okay=False),
+    default=".",
+    required=False,
+)
+@click.option(
+    "--format",
+    "output_format",
+    type=click.Choice(["table", "json"]),
+    default="table",
+    help="Output format",
+)
 def list_backups(project_path: str, output_format: str):
     """List available git configuration backups."""
     try:
@@ -380,6 +445,7 @@ def list_backups(project_path: str, output_format: str):
 
         if output_format == "json":
             import json
+
             console.print(json.dumps(backups, indent=2, default=str))
         else:
             table = Table(title="Git Configuration Backups")
@@ -391,7 +457,7 @@ def list_backups(project_path: str, output_format: str):
                 table.add_row(
                     backup["backup_id"],
                     backup["timestamp"][:19].replace("T", " "),
-                    f"{len(backup.get('backed_up_files', []))} files"
+                    f"{len(backup.get('backed_up_files', []))} files",
                 )
 
             console.print(table)
@@ -403,8 +469,12 @@ def list_backups(project_path: str, output_format: str):
 
 @git.command()
 @click.argument("backup_id", required=True)
-@click.argument("project_path", type=click.Path(exists=True, file_okay=False),
-                default=".", required=False)
+@click.argument(
+    "project_path",
+    type=click.Path(exists=True, file_okay=False),
+    default=".",
+    required=False,
+)
 @click.option("--force", is_flag=True, help="Force rollback without confirmation")
 def rollback(backup_id: str, project_path: str, force: bool):
     """Rollback git configuration to a previous backup."""
@@ -426,7 +496,9 @@ def rollback(backup_id: str, project_path: str, force: bool):
         success = backup_manager.restore_backup(project_path_obj, backup_id)
 
         if success:
-            console.print(f"[green]✓ Successfully rolled back to backup {backup_id}[/green]")
+            console.print(
+                f"[green]✓ Successfully rolled back to backup {backup_id}[/green]"
+            )
         else:
             console.print(f"[red]Failed to rollback to backup {backup_id}[/red]")
             raise click.ClickException(ROLLBACK_FAILED)
@@ -440,8 +512,12 @@ def rollback(backup_id: str, project_path: str, force: bool):
 
 
 @git.command()
-@click.argument("project_path", type=click.Path(exists=True, file_okay=False),
-                default=".", required=False)
+@click.argument(
+    "project_path",
+    type=click.Path(exists=True, file_okay=False),
+    default=".",
+    required=False,
+)
 @click.option("--keep", type=int, default=5, help="Number of backups to keep")
 @click.option("--force", is_flag=True, help="Force cleanup without confirmation")
 def cleanup_backups(project_path: str, keep: int, force: bool):
@@ -457,17 +533,23 @@ def cleanup_backups(project_path: str, keep: int, force: bool):
         backups = backup_manager.list_backups(project_path_obj)
 
         if len(backups) <= keep:
-            console.print(f"[green]Only {len(backups)} backups found, nothing to clean up[/green]")
+            console.print(
+                f"[green]Only {len(backups)} backups found, nothing to clean up[/green]"
+            )
             return
 
         to_remove = len(backups) - keep
 
         if not force:
-            if not Confirm.ask(f"Remove {to_remove} old backups (keeping {keep} most recent)?"):
+            if not Confirm.ask(
+                f"Remove {to_remove} old backups (keeping {keep} most recent)?"
+            ):
                 console.print("[yellow]Cleanup cancelled[/yellow]")
                 return
 
-        console.print(f"[cyan]Cleaning up old backups (keeping {keep} most recent)...[/cyan]")
+        console.print(
+            f"[cyan]Cleaning up old backups (keeping {keep} most recent)...[/cyan]"
+        )
 
         removed_count = backup_manager.cleanup_old_backups(project_path_obj, keep)
 
@@ -541,7 +623,9 @@ def remove_exclude(project_path: str):
         )
 
         if result.success:
-            console.print("[green]✓ Claude Builder patterns removed from .git/info/exclude[/green]")
+            console.print(
+                "[green]✓ Claude Builder patterns removed from .git/info/exclude[/green]"
+            )
             for operation in result.operations_performed:
                 console.print(f"  {operation}")
         else:

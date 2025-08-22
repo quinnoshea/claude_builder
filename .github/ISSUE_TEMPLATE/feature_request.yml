@@ -83,12 +83,12 @@ body:
       description: Provide examples of how this feature would be used
       placeholder: |
         Show examples of commands, configurations, or workflows:
-        
+
         ```bash
         # Example command
         claude-builder --new-feature-flag /path/to/project
         ```
-        
+
         ```json
         {
           "new_feature": {

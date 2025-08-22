@@ -14,5 +14,5 @@ __all__ = [
     "ConfigError",
     "GenerationError",
     "ValidationResult",
-    "validate_project_path"
+    "validate_project_path",
 ]

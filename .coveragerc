@@ -1,7 +1,7 @@
 # Coverage configuration file (backup to pyproject.toml)
 [run]
 source = claude_builder
-omit = 
+omit =
     tests/*
     claude_builder/templates/*
     */__init__.py

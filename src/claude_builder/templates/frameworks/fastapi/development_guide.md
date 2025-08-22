@@ -168,7 +168,7 @@ if settings.ASYNC_DATABASE_URL:
         max_overflow=20,
         pool_recycle=3600,
     )
-    
+
     AsyncSessionLocal = sessionmaker(
         bind=async_engine,
         class_=AsyncSession,
@@ -387,7 +387,7 @@ async def create_superuser():
     db = SessionLocal()
     try:
         user_service = UserService(db)
-        
+
         # Check if superuser exists
 
         superuser = user_service.get_by_email(settings.FIRST_SUPERUSER)
@@ -438,12 +438,12 @@ from app.core.security import create_access_token
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, 
+    SQLALCHEMY_DATABASE_URL,
     connect_args={"check_same_thread": False}
 )
 TestingSessionLocal = sessionmaker(
-    autocommit=False, 
-    autoflush=False, 
+    autocommit=False,
+    autoflush=False,
     bind=engine
 )
 
@@ -470,9 +470,9 @@ def db_session(db_engine):
     connection = db_engine.connect()
     transaction = connection.begin()
     session = TestingSessionLocal(bind=connection)
-    
+
     yield session
-    
+
     session.close()
     transaction.rollback()
     connection.close()
@@ -552,12 +552,12 @@ def test_login_access_token(client: TestClient, test_user):
         "username": test_user.username,
         "password": "testpassword123"
     }
-    
+
     response = client.post(
         f"{settings.API_V1_STR}/auth/login",
         data=login_data
     )
-    
+
     assert response.status_code == 200
     tokens = response.json()
     assert "access_token" in tokens
@@ -570,12 +570,12 @@ def test_login_invalid_credentials(client: TestClient):
         "username": "invalid@example.com",
         "password": "invalidpassword"
     }
-    
+
     response = client.post(
         f"{settings.API_V1_STR}/auth/login",
         data=login_data
     )
-    
+
     assert response.status_code == 400
     assert "detail" in response.json()
 
@@ -585,7 +585,7 @@ def test_get_current_user(client: TestClient, test_user, user_token_headers):
         f"{settings.API_V1_STR}/users/me",
         headers=user_token_headers
     )
-    
+
     assert response.status_code == 200
     user_data = response.json()
     assert user_data["email"] == test_user.email
@@ -598,12 +598,12 @@ def test_create_user_existing_email(client: TestClient, test_user):
         "username": "newusername",
         "password": "newpassword123"
     }
-    
+
     response = client.post(
         f"{settings.API_V1_STR}/users/",
         json=user_data
     )
-    
+
     assert response.status_code == 400
 
 # app/tests/test_${feature}.py
@@ -619,9 +619,9 @@ class Test${model_name}API:
     """Test ${model_name} API endpoints."""
 
     def test_create_${model_name_lower}(
-        self, 
-        client: TestClient, 
-        db_session, 
+        self,
+        client: TestClient,
+        db_session,
         user_token_headers
     ):
         """Test creating ${model_name_lower}."""
@@ -630,13 +630,13 @@ class Test${model_name}API:
             "description": "Test description",
             "content": "Test content"
         }
-        
+
         response = client.post(
             f"{settings.API_V1_STR}/${model_name_lower}s/",
             headers=user_token_headers,
             json=${model_name_lower}_data
         )
-        
+
         assert response.status_code == 201
         data = response.json()
         assert data["title"] == ${model_name_lower}_data["title"]
@@ -645,10 +645,10 @@ class Test${model_name}API:
         assert "slug" in data
 
     def test_read_${model_name_lower}s(
-        self, 
-        client: TestClient, 
-        db_session, 
-        test_user, 
+        self,
+        client: TestClient,
+        db_session,
+        test_user,
         user_token_headers
     ):
         """Test reading ${model_name_lower}s."""
@@ -657,27 +657,27 @@ class Test${model_name}API:
 
         service = ${service_name}Service(db_session)
         from app.schemas.${schema} import ${model_name}Create
-        
+
         ${model_name_lower}_in = ${model_name}Create(
             title="Test ${model_name}",
             description="Test description"
         )
         service.create_with_owner(obj_in=${model_name_lower}_in, owner_id=test_user.id)
-        
+
         response = client.get(
             f"{settings.API_V1_STR}/${model_name_lower}s/",
             headers=user_token_headers
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert len(data) >= 1
 
     def test_read_${model_name_lower}(
-        self, 
-        client: TestClient, 
-        db_session, 
-        test_user, 
+        self,
+        client: TestClient,
+        db_session,
+        test_user,
         user_token_headers
     ):
         """Test reading single ${model_name_lower}."""
@@ -686,31 +686,31 @@ class Test${model_name}API:
 
         service = ${service_name}Service(db_session)
         from app.schemas.${schema} import ${model_name}Create
-        
+
         ${model_name_lower}_in = ${model_name}Create(
             title="Test ${model_name}",
             description="Test description"
         )
         ${model_name_lower} = service.create_with_owner(
-            obj_in=${model_name_lower}_in, 
+            obj_in=${model_name_lower}_in,
             owner_id=test_user.id
         )
-        
+
         response = client.get(
             f"{settings.API_V1_STR}/${model_name_lower}s/{${model_name_lower}.id}",
             headers=user_token_headers
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["id"] == str(${model_name_lower}.id)
         assert data["title"] == ${model_name_lower}.title
 
     def test_update_${model_name_lower}(
-        self, 
-        client: TestClient, 
-        db_session, 
-        test_user, 
+        self,
+        client: TestClient,
+        db_session,
+        test_user,
         user_token_headers
     ):
         """Test updating ${model_name_lower}."""
@@ -719,37 +719,37 @@ class Test${model_name}API:
 
         service = ${service_name}Service(db_session)
         from app.schemas.${schema} import ${model_name}Create
-        
+
         ${model_name_lower}_in = ${model_name}Create(
             title="Original Title",
             description="Original description"
         )
         ${model_name_lower} = service.create_with_owner(
-            obj_in=${model_name_lower}_in, 
+            obj_in=${model_name_lower}_in,
             owner_id=test_user.id
         )
-        
+
         update_data = {
             "title": "Updated Title",
             "description": "Updated description"
         }
-        
+
         response = client.put(
             f"{settings.API_V1_STR}/${model_name_lower}s/{${model_name_lower}.id}",
             headers=user_token_headers,
             json=update_data
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["title"] == update_data["title"]
         assert data["description"] == update_data["description"]
 
     def test_delete_${model_name_lower}(
-        self, 
-        client: TestClient, 
-        db_session, 
-        test_user, 
+        self,
+        client: TestClient,
+        db_session,
+        test_user,
         user_token_headers
     ):
         """Test deleting ${model_name_lower}."""
@@ -758,23 +758,23 @@ class Test${model_name}API:
 
         service = ${service_name}Service(db_session)
         from app.schemas.${schema} import ${model_name}Create
-        
+
         ${model_name_lower}_in = ${model_name}Create(
             title="To Delete",
             description="Will be deleted"
         )
         ${model_name_lower} = service.create_with_owner(
-            obj_in=${model_name_lower}_in, 
+            obj_in=${model_name_lower}_in,
             owner_id=test_user.id
         )
-        
+
         response = client.delete(
             f"{settings.API_V1_STR}/${model_name_lower}s/{${model_name_lower}.id}",
             headers=user_token_headers
         )
-        
+
         assert response.status_code == 204
-        
+
         # Verify deletion
 
         ${model_name_lower}_deleted = service.get(${model_name_lower}.id)
@@ -786,10 +786,10 @@ class Test${model_name}API:
         assert response.status_code == 403
 
     def test_access_others_${model_name_lower}(
-        self, 
-        client: TestClient, 
-        db_session, 
-        test_user, 
+        self,
+        client: TestClient,
+        db_session,
+        test_user,
         user_token_headers
     ):
         """Test accessing other user's ${model_name_lower}."""
@@ -798,7 +798,7 @@ class Test${model_name}API:
 
         from app.services.user import UserService
         from app.schemas.user import UserCreate
-        
+
         user_service = UserService(db_session)
         other_user_in = UserCreate(
             email="other@example.com",
@@ -806,19 +806,19 @@ class Test${model_name}API:
             password="otherpass123"
         )
         other_user = user_service.create(obj_in=other_user_in)
-        
+
         service = ${service_name}Service(db_session)
         from app.schemas.${schema} import ${model_name}Create
-        
+
         ${model_name_lower}_in = ${model_name}Create(
             title="Other User ${model_name}",
             description="Belongs to other user"
         )
         other_${model_name_lower} = service.create_with_owner(
-            obj_in=${model_name_lower}_in, 
+            obj_in=${model_name_lower}_in,
             owner_id=other_user.id
         )
-        
+
         # Try to update other user's ${model_name_lower}
 
         response = client.put(
@@ -826,7 +826,7 @@ class Test${model_name}API:
             headers=user_token_headers,
             json={"title": "Hacked Title"}
         )
-        
+
         assert response.status_code == 403
 
 @pytest.mark.asyncio
@@ -834,9 +834,9 @@ class TestAsync${model_name}API:
     """Test ${model_name} API with async client."""
 
     async def test_async_create_${model_name_lower}(
-        self, 
-        async_client, 
-        db_session, 
+        self,
+        async_client,
+        db_session,
         user_token_headers
     ):
         """Test creating ${model_name_lower} with async client."""
@@ -844,13 +844,13 @@ class TestAsync${model_name}API:
             "title": "Async Test ${model_name}",
             "description": "Async test description"
         }
-        
+
         response = await async_client.post(
             f"{settings.API_V1_STR}/${model_name_lower}s/",
             headers=user_token_headers,
             json=${model_name_lower}_data
         )
-        
+
         assert response.status_code == 201
         data = response.json()
         assert data["title"] == ${model_name_lower}_data["title"]
@@ -873,8 +873,8 @@ class TestPerformance:
     """Performance tests for API endpoints."""
 
     def test_concurrent_requests(
-        self, 
-        client: TestClient, 
+        self,
+        client: TestClient,
         user_token_headers
     ):
         """Test concurrent API requests."""
@@ -896,7 +896,7 @@ class TestPerformance:
         # All requests should succeed
 
         assert all(status == 200 for status in results)
-        
+
         # Should complete within reasonable time
 
         assert end_time - start_time < 5.0
@@ -909,14 +909,14 @@ class TestPerformance:
             headers=user_token_headers
         )
         end_time = time.time()
-        
+
         assert response.status_code == 200
         assert end_time - start_time < 1.0  # Should respond within 1 second
 
     @pytest.mark.asyncio
     async def test_async_performance(
-        self, 
-        async_client, 
+        self,
+        async_client,
         user_token_headers
     ):
         """Test async endpoint performance."""
@@ -1060,31 +1060,31 @@ volumes:
 
 class ProductionSettings(Settings):
     """Production-specific settings."""
-    
+
     DEBUG: bool = False
     ENVIRONMENT: str = "production"
-    
+
     # Security
 
     SECURE_COOKIES: bool = True
     COOKIE_DOMAIN: str = ".${project_name}.com"
-    
+
     # Database
 
     DATABASE_URL: str = Field(..., env="DATABASE_URL")
     ASYNC_DATABASE_URL: Optional[str] = Field(None, env="ASYNC_DATABASE_URL")
-    
+
     # Logging
 
     LOG_LEVEL: str = "INFO"
-    
+
     # CORS - restrict in production
 
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = [
         "https://${project_name}.com",
         "https://www.${project_name}.com"
     ]
-    
+
     class Config:
         env_file = ".env.production"
 
@@ -1123,7 +1123,7 @@ async def health_check():
 async def detailed_health_check(db: Session = Depends(deps.get_db)):
     """Detailed health check including dependencies."""
     health_status = {"status": "healthy", "checks": {}}
-    
+
     # Database check
 
     try:
@@ -1132,7 +1132,7 @@ async def detailed_health_check(db: Session = Depends(deps.get_db)):
     except Exception as e:
         health_status["checks"]["database"] = f"unhealthy: {str(e)}"
         health_status["status"] = "unhealthy"
-    
+
     # Redis check
 
     try:
@@ -1142,16 +1142,16 @@ async def detailed_health_check(db: Session = Depends(deps.get_db)):
     except Exception as e:
         health_status["checks"]["redis"] = f"unhealthy: {str(e)}"
         health_status["status"] = "unhealthy"
-    
+
     # System resources
 
     health_status["checks"]["memory"] = f"{psutil.virtual_memory().percent}%"
     health_status["checks"]["cpu"] = f"{psutil.cpu_percent()}%"
     health_status["checks"]["disk"] = f"{psutil.disk_usage('/').percent}%"
-    
+
     if health_status["status"] == "unhealthy":
         raise HTTPException(status_code=503, detail=health_status)
-    
+
     return health_status
 ```
 

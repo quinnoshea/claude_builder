@@ -91,15 +91,15 @@ uv run pytest \
 # Check if coverage file was generated
 if [[ -f "coverage.xml" ]]; then
     echo -e "${GREEN}✅ Coverage report generated successfully${NC}"
-    
+
     # Show coverage summary
     echo -e "${BLUE}📊 Coverage Summary:${NC}"
     uv run coverage report
-    
+
     # Fix coverage paths
     echo -e "${BLUE}🔧 Fixing coverage paths for external tools...${NC}"
     uv run python scripts/fix_coverage_paths.py coverage.xml
-    
+
     echo -e "${GREEN}✅ Coverage paths fixed for Codacy${NC}"
 else
     echo -e "${RED}❌ Coverage report not generated${NC}"

@@ -65,7 +65,7 @@ class AppError extends Error {
     this.statusCode = statusCode;
     this.isOperational = isOperational;
     this.name = this.constructor.name;
-    
+
     Error.captureStackTrace(this, this.constructor);
   }
 }
@@ -147,20 +147,20 @@ class ${service_name}Service {
 
       // Start transaction if needed
       const session = await this.repository.startTransaction();
-      
+
       try {
         // Business logic
         const processedData = await this.transformData(inputData);
         const result = await this.repository.save(processedData, { session });
-        
+
         // Commit transaction
         await session.commitTransaction();
-        
-        this.logger.info('Data processed successfully', { 
+
+        this.logger.info('Data processed successfully', {
           id: result.id,
-          inputSize: inputData.length 
+          inputSize: inputData.length
         });
-        
+
         return result;
       } catch (error) {
         // Rollback on error
@@ -170,9 +170,9 @@ class ${service_name}Service {
         session.endSession();
       }
     } catch (error) {
-      this.logger.error('Data processing failed', { 
+      this.logger.error('Data processing failed', {
         error: error.message,
-        stack: error.stack 
+        stack: error.stack
       });
       throw error;
     }
@@ -223,10 +223,10 @@ const ${controller_name}Controller = {
   async create(req, res, next) {
     try {
       const { body } = req;
-      
+
       // Service call
       const result = await ${service_name}Service.create(body);
-      
+
       res.status(201).json({
         success: true,
         data: result
@@ -239,13 +239,13 @@ const ${controller_name}Controller = {
   async getById(req, res, next) {
     try {
       const { id } = req.params;
-      
+
       const result = await ${service_name}Service.findById(id);
-      
+
       if (!result) {
         throw new NotFoundError('${resource_name}');
       }
-      
+
       res.json({
         success: true,
         data: result
@@ -259,9 +259,9 @@ const ${controller_name}Controller = {
     try {
       const { id } = req.params;
       const { body } = req;
-      
+
       const result = await ${service_name}Service.update(id, body);
-      
+
       res.json({
         success: true,
         data: result
@@ -274,9 +274,9 @@ const ${controller_name}Controller = {
   async delete(req, res, next) {
     try {
       const { id } = req.params;
-      
+
       await ${service_name}Service.delete(id);
-      
+
       res.status(204).send();
     } catch (error) {
       next(error);
@@ -364,7 +364,7 @@ describe('${service_name}Service', () => {
       error: jest.fn(),
       debug: jest.fn()
     };
-    
+
     mockRepository = {
       findById: jest.fn(),
       create: jest.fn(),
@@ -387,7 +387,7 @@ describe('${service_name}Service', () => {
         { id: 1, name: 'Test Item 1' },
         { id: 2, name: 'Test Item 2' }
       ];
-      
+
       const expectedResult = {
         id: 'processed-123',
         items: inputData.length,
@@ -430,7 +430,7 @@ describe('${service_name}Service', () => {
       await expect(service.processData(invalidInput))
         .rejects
         .toThrow(ValidationError);
-      
+
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Data processing failed',
         expect.objectContaining({
@@ -442,7 +442,7 @@ describe('${service_name}Service', () => {
     it('should rollback transaction on processing error', async () => {
       // Arrange
       const inputData = [{ id: 1, name: 'Test' }];
-      
+
       const mockSession = {
         commitTransaction: jest.fn(),
         abortTransaction: jest.fn(),
@@ -602,7 +602,7 @@ const config = {
     port: parseInt(process.env.PORT, 10) || ${default_port},
     environment: process.env.NODE_ENV || 'development'
   },
-  
+
   database: {
     uri: process.env.DATABASE_URI || 'mongodb://localhost:27017/${project_name}',
     options: {
@@ -612,23 +612,23 @@ const config = {
       serverSelectionTimeoutMS: parseInt(process.env.DB_TIMEOUT, 10) || 5000
     }
   },
-  
+
   jwt: {
     secret: process.env.JWT_SECRET || 'your-secret-key',
     expiresIn: process.env.JWT_EXPIRES_IN || '24h'
   },
-  
+
   logging: {
     level: process.env.LOG_LEVEL || 'info',
     format: process.env.LOG_FORMAT || 'json'
   },
-  
+
   redis: {
     host: process.env.REDIS_HOST || 'localhost',
     port: parseInt(process.env.REDIS_PORT, 10) || 6379,
     password: process.env.REDIS_PASSWORD || null
   },
-  
+
   email: {
     from: process.env.EMAIL_FROM || 'noreply@${project_name}.com',
     smtp: {
@@ -641,10 +641,10 @@ const config = {
       }
     }
   },
-  
+
   cors: {
-    origin: process.env.CORS_ORIGIN ? 
-      process.env.CORS_ORIGIN.split(',') : 
+    origin: process.env.CORS_ORIGIN ?
+      process.env.CORS_ORIGIN.split(',') :
       ['http://localhost:3000'],
     credentials: process.env.CORS_CREDENTIALS === 'true'
   }
@@ -690,21 +690,21 @@ const prodFormat = winston.format.combine(
 const logger = winston.createLogger({
   level: config.logging.level,
   format: config.app.environment === 'production' ? prodFormat : devFormat,
-  defaultMeta: { 
+  defaultMeta: {
     service: config.app.name,
     environment: config.app.environment
   },
   transports: [
     new winston.transports.Console(),
-    
+
     // File transports for production
     ...(config.app.environment === 'production' ? [
-      new winston.transports.File({ 
-        filename: 'logs/error.log', 
-        level: 'error' 
+      new winston.transports.File({
+        filename: 'logs/error.log',
+        level: 'error'
       }),
-      new winston.transports.File({ 
-        filename: 'logs/combined.log' 
+      new winston.transports.File({
+        filename: 'logs/combined.log'
       })
     ] : [])
   ]
@@ -713,7 +713,7 @@ const logger = winston.createLogger({
 // Request logging middleware
 const requestLogger = (req, res, next) => {
   const start = Date.now();
-  
+
   res.on('finish', () => {
     const duration = Date.now() - start;
     const logData = {
@@ -724,14 +724,14 @@ const requestLogger = (req, res, next) => {
       userAgent: req.get('User-Agent'),
       ip: req.ip
     };
-    
+
     if (res.statusCode >= 400) {
       logger.error('Request failed', logData);
     } else {
       logger.info('Request completed', logData);
     }
   });
-  
+
   next();
 };
 
@@ -787,7 +787,7 @@ class ${resource_name}Repository {
 
   async findByIdWithCache(id, ttl = 300) {
     const cacheKey = `${model_name}:${id}`;
-    
+
     // Try cache first
     const cached = await redis.get(cacheKey);
     if (cached) {

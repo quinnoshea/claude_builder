@@ -6,7 +6,7 @@
 - Write docstrings for all public functions, classes, and modules
 - Use descriptive variable and function names
 
-### Python Testing Requirements  
+### Python Testing Requirements
 
 - Use pytest for testing framework
 - Write unit tests for all functions and classes
@@ -43,7 +43,7 @@
 # Create virtual environment
 python -m venv venv  # or uv venv
 
-# Activate environment  
+# Activate environment
 source venv/bin/activate
 
 # Install dependencies
@@ -54,7 +54,7 @@ pytest --cov=src --cov-report=term-missing
 
 # Code quality checks
 black src tests
-ruff src tests  
+ruff src tests
 mypy src
 
 # Install in development mode

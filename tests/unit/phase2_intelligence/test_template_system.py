@@ -9,7 +9,6 @@ Tests the template management and processing including:
 - Template caching and performance
 """
 
-
 import pytest
 
 from claude_builder.core.template_manager import (
@@ -31,7 +30,7 @@ class TestTemplate:
             name="test-template",
             content="# {{ title }}\n{{ content }}",
             template_type="markdown",
-            variables=["title", "content"]
+            variables=["title", "content"],
         )
 
         assert template.name == "test-template"
@@ -45,7 +44,7 @@ class TestTemplate:
         template = Template(
             name="valid-template",
             content="# {{ project_name }}\nType: {{ project_type }}",
-            template_type="markdown"
+            template_type="markdown",
         )
 
         # Should not raise any exceptions
@@ -56,7 +55,7 @@ class TestTemplate:
         template = Template(
             name="invalid-template",
             content="# {{ project_name }\nMissing closing brace",
-            template_type="markdown"
+            template_type="markdown",
         )
 
         with pytest.raises(TemplateError):
@@ -74,7 +73,7 @@ Framework: {{ framework }}
 Testing: {{ test_framework }}
 {% endif %}
 """,
-            template_type="markdown"
+            template_type="markdown",
         )
 
         variables = template.extract_variables()
@@ -94,8 +93,8 @@ Testing: {{ test_framework }}
             metadata={
                 "author": "Claude Builder",
                 "version": "1.0",
-                "description": "Test template with metadata"
-            }
+                "description": "Test template with metadata",
+            },
         )
 
         assert template.metadata["author"] == "Claude Builder"
@@ -108,7 +107,7 @@ Testing: {{ test_framework }}
             name="child-template",
             content="{% extends 'base-template' %}\n{% block content %}Child content{% endblock %}",
             template_type="markdown",
-            parent_template="base-template"
+            parent_template="base-template",
         )
 
         assert child_template.parent_template == "base-template"
@@ -121,7 +120,7 @@ Testing: {{ test_framework }}
             content="# {{ title }}",
             template_type="markdown",
             variables=["title"],
-            metadata={"version": "1.0"}
+            metadata={"version": "1.0"},
         )
 
         data = template.dict()
@@ -139,9 +138,7 @@ class TestTemplateContext:
     def test_context_creation(self):
         """Test template context creation."""
         context = TemplateContext(
-            project_name="test-project",
-            project_type="python",
-            framework="fastapi"
+            project_name="test-project", project_type="python", framework="fastapi"
         )
 
         assert context.get("project_name") == "test-project"
@@ -154,12 +151,9 @@ class TestTemplateContext:
             project={
                 "name": "nested-test",
                 "type": "rust",
-                "metadata": {
-                    "version": "0.1.0",
-                    "authors": ["Claude Builder"]
-                }
+                "metadata": {"version": "0.1.0", "authors": ["Claude Builder"]},
             },
-            dependencies=["tokio", "serde", "clap"]
+            dependencies=["tokio", "serde", "clap"],
         )
 
         assert context.get("project.name") == "nested-test"
@@ -169,13 +163,14 @@ class TestTemplateContext:
 
     def test_context_dynamic_values(self):
         """Test template context with dynamic value generation."""
+
         def get_current_date():
             return "2024-01-01"
 
         context = TemplateContext(
             project_name="dynamic-test",
             current_date=get_current_date,
-            computed_value=lambda: "computed_result"
+            computed_value=lambda: "computed_result",
         )
 
         assert context.get("project_name") == "dynamic-test"
@@ -184,15 +179,9 @@ class TestTemplateContext:
 
     def test_context_merging(self):
         """Test merging multiple template contexts."""
-        base_context = TemplateContext(
-            project_name="base",
-            project_type="python"
-        )
+        base_context = TemplateContext(project_name="base", project_type="python")
 
-        override_context = TemplateContext(
-            project_type="rust",
-            framework="axum"
-        )
+        override_context = TemplateContext(project_type="rust", framework="axum")
 
         merged = base_context.merge(override_context)
 
@@ -202,14 +191,16 @@ class TestTemplateContext:
 
     def test_context_conditional_values(self):
         """Test template context with conditional value logic."""
-        context = TemplateContext(
-            project_type="python",
-            framework="fastapi"
-        )
+        context = TemplateContext(project_type="python", framework="fastapi")
 
         # Add conditional values
-        context.add_conditional("is_python", lambda: context.get("project_type") == "python")
-        context.add_conditional("is_web_framework", lambda: context.get("framework") in ["fastapi", "django", "flask"])
+        context.add_conditional(
+            "is_python", lambda: context.get("project_type") == "python"
+        )
+        context.add_conditional(
+            "is_web_framework",
+            lambda: context.get("framework") in ["fastapi", "django", "flask"],
+        )
 
         assert context.get("is_python") is True
         assert context.get("is_web_framework") is True
@@ -265,7 +256,7 @@ variables: [title, content]
         templates = [
             ("template1.md", "# {{ title1 }}"),
             ("template2.md", "# {{ title2 }}"),
-            ("template3.md", "# {{ title3 }}")
+            ("template3.md", "# {{ title3 }}"),
         ]
 
         for filename, content in templates:
@@ -349,13 +340,10 @@ class TestTemplateRenderer:
         template = Template(
             name="simple",
             content="# {{ title }}\n{{ content }}",
-            template_type="markdown"
+            template_type="markdown",
         )
 
-        context = TemplateContext(
-            title="Test Title",
-            content="Test content here"
-        )
+        context = TemplateContext(title="Test Title", content="Test content here")
 
         renderer = TemplateRenderer()
         result = renderer.render(template, context)
@@ -371,13 +359,13 @@ class TestTemplateRenderer:
 {% for dep in dependencies %}
 - {{ dep.name }}: {{ dep.version }}
 {% endfor %}""",
-            template_type="markdown"
+            template_type="markdown",
         )
 
         context = TemplateContext(
             dependencies=[
                 {"name": "fastapi", "version": "0.100.0"},
-                {"name": "uvicorn", "version": "0.23.0"}
+                {"name": "uvicorn", "version": "0.23.0"},
             ]
         )
 
@@ -399,14 +387,14 @@ Test framework: {{ test_framework }}
 {% if not has_docker %}
 Note: Docker configuration not detected
 {% endif %}""",
-            template_type="markdown"
+            template_type="markdown",
         )
 
         context = TemplateContext(
             project_name="Conditional Test",
             has_tests=True,
             test_framework="pytest",
-            has_docker=False
+            has_docker=False,
         )
 
         renderer = TemplateRenderer()
@@ -424,7 +412,7 @@ Note: Docker configuration not detected
 Project: {{ project_name | upper }}
 Created: {{ date | strftime('%Y-%m-%d') }}
 Dependencies: {{ dependencies | length }} total""",
-            template_type="markdown"
+            template_type="markdown",
         )
 
         from datetime import datetime
@@ -433,7 +421,7 @@ Dependencies: {{ dependencies | length }} total""",
             title="test project",
             project_name="filter-test",
             date=datetime(2024, 1, 1),
-            dependencies=["dep1", "dep2", "dep3"]
+            dependencies=["dep1", "dep2", "dep3"],
         )
 
         renderer = TemplateRenderer()
@@ -453,7 +441,7 @@ Dependencies: {{ dependencies | length }} total""",
         template = Template(
             name="error-test",
             content="# {{ undefined_variable }}",
-            template_type="markdown"
+            template_type="markdown",
         )
 
         context = TemplateContext(defined_variable="value")
@@ -468,13 +456,10 @@ Dependencies: {{ dependencies | length }} total""",
         template = Template(
             name="cache-test",
             content="# {{ title }}\nGenerated at: {{ timestamp }}",
-            template_type="markdown"
+            template_type="markdown",
         )
 
-        context = TemplateContext(
-            title="Cache Test",
-            timestamp="2024-01-01 12:00:00"
-        )
+        context = TemplateContext(title="Cache Test", timestamp="2024-01-01 12:00:00")
 
         renderer = TemplateRenderer(enable_cache=True)
 
@@ -512,9 +497,13 @@ class TestTemplateManager:
     def test_get_templates_by_type(self, temp_dir):
         """Test getting templates by type."""
         # Create templates of different types
-        (temp_dir / "doc1.md").write_text("---\ntype: documentation\n---\n# {{ title }}")
+        (temp_dir / "doc1.md").write_text(
+            "---\ntype: documentation\n---\n# {{ title }}"
+        )
         (temp_dir / "guide1.md").write_text("---\ntype: guide\n---\n# {{ title }}")
-        (temp_dir / "doc2.md").write_text("---\ntype: documentation\n---\n# {{ title }}")
+        (temp_dir / "doc2.md").write_text(
+            "---\ntype: documentation\n---\n# {{ title }}"
+        )
 
         manager = TemplateManager(template_directory=temp_dir)
 
@@ -531,10 +520,7 @@ class TestTemplateManager:
 
         manager = TemplateManager(template_directory=temp_dir)
 
-        context = TemplateContext(
-            project_name="Render Test",
-            project_type="python"
-        )
+        context = TemplateContext(project_name="Render Test", project_type="python")
 
         result = manager.render_template("render_test.md", context)
 
@@ -544,9 +530,15 @@ class TestTemplateManager:
     def test_template_selection_by_project_type(self, temp_dir):
         """Test automatic template selection by project type."""
         # Create project-specific templates
-        (temp_dir / "python_claude.md").write_text("---\nproject_types: [python]\n---\nPython project: {{ name }}")
-        (temp_dir / "rust_claude.md").write_text("---\nproject_types: [rust]\n---\nRust project: {{ name }}")
-        (temp_dir / "generic_claude.md").write_text("---\nproject_types: []\n---\nGeneric project: {{ name }}")
+        (temp_dir / "python_claude.md").write_text(
+            "---\nproject_types: [python]\n---\nPython project: {{ name }}"
+        )
+        (temp_dir / "rust_claude.md").write_text(
+            "---\nproject_types: [rust]\n---\nRust project: {{ name }}"
+        )
+        (temp_dir / "generic_claude.md").write_text(
+            "---\nproject_types: []\n---\nGeneric project: {{ name }}"
+        )
 
         manager = TemplateManager(template_directory=temp_dir)
 
@@ -564,7 +556,7 @@ class TestTemplateManager:
         templates = {
             "claude.md": "# {{ project_name }} - Claude Instructions",
             "readme.md": "# {{ project_name }}\n{{ description }}",
-            "guide.md": "# Development Guide for {{ project_name }}"
+            "guide.md": "# Development Guide for {{ project_name }}",
         }
 
         for filename, content in templates.items():
@@ -573,8 +565,7 @@ class TestTemplateManager:
         manager = TemplateManager(template_directory=temp_dir)
 
         context = TemplateContext(
-            project_name="Batch Test",
-            description="Test batch rendering"
+            project_name="Batch Test", description="Test batch rendering"
         )
 
         results = manager.render_all_templates(context)
@@ -600,7 +591,7 @@ class TestTemplateError:
         error = TemplateError(
             "Variable 'undefined_var' not found",
             template_name="test-template",
-            line_number=5
+            line_number=5,
         )
 
         assert "undefined_var" in str(error)

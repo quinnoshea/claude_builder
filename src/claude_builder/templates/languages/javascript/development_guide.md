@@ -122,23 +122,23 @@ module.exports = {
   rules: {
     // Customize rules as needed
     'no-console': process.env.NODE_ENV === 'production' ? 'error' : 'warn',
-    'no-unused-vars': ['error', { 
+    'no-unused-vars': ['error', {
       argsIgnorePattern: '^_',
-      varsIgnorePattern: '^_' 
+      varsIgnorePattern: '^_'
     }],
     'prefer-const': 'error',
     'no-var': 'error',
     'object-shorthand': 'error',
     'prefer-arrow-callback': 'error',
-    
+
     // Allow specific patterns
     'import/no-dynamic-require': 'off',
     'global-require': 'off',
-    'no-param-reassign': ['error', { 
-      props: true, 
-      ignorePropertyModificationsFor: ['req', 'res', 'next'] 
+    'no-param-reassign': ['error', {
+      props: true,
+      ignorePropertyModificationsFor: ['req', 'res', 'next']
     }],
-    
+
     // Async/await rules
     'prefer-promise-reject-errors': 'error',
     'no-async-promise-executor': 'error',
@@ -424,7 +424,7 @@ beforeAll(async () => {
   // Start in-memory MongoDB instance
   mongoServer = await MongoMemoryServer.create();
   const mongoUri = mongoServer.getUri();
-  
+
   await mongoose.connect(mongoUri, {
     useNewUrlParser: true,
     useUnifiedTopology: true
@@ -440,7 +440,7 @@ afterAll(async () => {
 // Clean up after each test
 afterEach(async () => {
   const collections = mongoose.connection.collections;
-  
+
   for (const key in collections) {
     const collection = collections[key];
     await collection.deleteMany({});
@@ -457,7 +457,7 @@ global.testUtils = {
       email: 'test@example.com',
       password: 'password123'
     };
-    
+
     return User.create({ ...defaultUser, ...overrides });
   },
 
@@ -465,7 +465,7 @@ global.testUtils = {
   generateAuthToken: (userId) => {
     const jwt = require('jsonwebtoken');
     const config = require('../src/config');
-    
+
     return jwt.sign({ id: userId }, config.jwt.secret, {
       expiresIn: config.jwt.expiresIn
     });
@@ -563,7 +563,7 @@ describe('User API Integration Tests', () => {
       testCases.forEach(({ field, value, expectedError }) => {
         it(`should validate ${field} field`, async () => {
           const invalidData = { ...validUserData, [field]: value };
-          
+
           const response = await request(app)
             .post('/api/users')
             .send(invalidData)
@@ -705,7 +705,7 @@ class CacheManager {
 
       descriptor.value = async function (...args) {
         const cacheKey = `${target.constructor.name}:${propertyName}:${JSON.stringify(args)}`;
-        
+
         // Try to get from cache first
         const cached = await this.cache.get(cacheKey);
         if (cached !== null) {
@@ -715,7 +715,7 @@ class CacheManager {
 
         // Execute original method
         const result = await method.apply(this, args);
-        
+
         // Store in cache
         await this.cache.set(cacheKey, result, ttl);
         logger.debug('Cache stored', { key: cacheKey });
@@ -770,7 +770,7 @@ class BaseRepository {
 
     const [result] = await this.model.aggregate(pipeline);
     const total = result.total[0]?.count || 0;
-    
+
     let data = result.data;
 
     // Handle population if needed (note: less efficient with aggregation)
@@ -849,7 +849,7 @@ class BaseRepository {
     for (let doc = await cursor.next(); doc != null; doc = await cursor.next()) {
       await processor(doc);
       processedCount++;
-      
+
       // Log progress for long operations
       if (processedCount % 1000 === 0) {
         logger.info(`Processed ${processedCount} documents`);
@@ -879,14 +879,14 @@ const cache = require('../utils/cache');
 const authenticate = async (req, res, next) => {
   try {
     const token = extractToken(req);
-    
+
     if (!token) {
       throw new AppError('Access token required', 401);
     }
 
     // Verify JWT token
     const decoded = jwt.verify(token, config.jwt.secret);
-    
+
     // Check if token is blacklisted
     const isBlacklisted = await cache.get(`blacklist:${token}`);
     if (isBlacklisted) {
@@ -941,7 +941,7 @@ const checkOwnership = (resourceField = 'userId') => {
 
       // Get resource from database
       const resource = await req.model.findById(resourceId);
-      
+
       if (!resource) {
         return next(new AppError('Resource not found', 404));
       }
@@ -962,11 +962,11 @@ const checkOwnership = (resourceField = 'userId') => {
 // Extract token from request
 const extractToken = (req) => {
   const authHeader = req.headers.authorization;
-  
+
   if (authHeader && authHeader.startsWith('Bearer ')) {
     return authHeader.substring(7);
   }
-  
+
   return null;
 };
 
@@ -983,7 +983,7 @@ const generateToken = (payload) => {
 const blacklistToken = async (token) => {
   const decoded = jwt.decode(token);
   const ttl = decoded.exp - Math.floor(Date.now() / 1000);
-  
+
   if (ttl > 0) {
     await cache.set(`blacklist:${token}`, true, ttl);
   }

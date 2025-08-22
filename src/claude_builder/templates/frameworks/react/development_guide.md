@@ -383,7 +383,7 @@ describe('Button', () => {
   it('calls onClick handler when clicked', () => {
     const handleClick = jest.fn();
     render(<Button onClick={handleClick}>Click me</Button>);
-    
+
     fireEvent.click(screen.getByRole('button'));
     expect(handleClick).toHaveBeenCalledTimes(1);
   });
@@ -526,11 +526,11 @@ export const handlers = [
   rest.get('/api/${model_name_lower}s/:id', (req, res, ctx) => {
     const { id } = req.params;
     const item = mockItems.find(item => item.id === id);
-    
+
     if (!item) {
       return res(ctx.status(404), ctx.json({ message: 'Not found' }));
     }
-    
+
     return res(ctx.json(item));
   }),
 
@@ -542,7 +542,7 @@ export const handlers = [
       ...body,
       createdAt: new Date().toISOString(),
     };
-    
+
     mockItems.push(newItem);
     return res(ctx.status(201), ctx.json(newItem));
   }),
@@ -552,11 +552,11 @@ export const handlers = [
     const { id } = req.params;
     const body = await req.json();
     const itemIndex = mockItems.findIndex(item => item.id === id);
-    
+
     if (itemIndex === -1) {
       return res(ctx.status(404), ctx.json({ message: 'Not found' }));
     }
-    
+
     mockItems[itemIndex] = { ...mockItems[itemIndex], ...body };
     return res(ctx.json(mockItems[itemIndex]));
   }),
@@ -565,11 +565,11 @@ export const handlers = [
   rest.delete('/api/${model_name_lower}s/:id', (req, res, ctx) => {
     const { id } = req.params;
     const itemIndex = mockItems.findIndex(item => item.id === id);
-    
+
     if (itemIndex === -1) {
       return res(ctx.status(404), ctx.json({ message: 'Not found' }));
     }
-    
+
     mockItems.splice(itemIndex, 1);
     return res(ctx.status(204));
   }),
@@ -577,7 +577,7 @@ export const handlers = [
   // Authentication
   rest.post('/api/auth/login', async (req, res, ctx) => {
     const { email, password } = await req.json();
-    
+
     if (email === 'test@example.com' && password === 'password') {
       return res(
         ctx.json({
@@ -590,7 +590,7 @@ export const handlers = [
         })
       );
     }
-    
+
     return res(
       ctx.status(401),
       ctx.json({ message: 'Invalid credentials' })
@@ -692,7 +692,7 @@ export const ${model_name}List = memo<${model_name}ListProps>(({
   // Memoized filtered items
   const filteredItems = useMemo(() => {
     if (!searchTerm) return items;
-    
+
     return items.filter(item =>
       item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.description.toLowerCase().includes(searchTerm.toLowerCase())
@@ -879,30 +879,30 @@ CMD ["nginx", "-g", "daemon off;"]
 server {
     listen 80;
     server_name localhost;
-    
+
     root /usr/share/nginx/html;
     index index.html;
-    
+
     # Enable gzip compression
 
     gzip on;
     gzip_vary on;
     gzip_min_length 1024;
     gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
-    
+
     # Handle client-side routing
 
     location / {
         try_files $uri $uri/ /index.html;
     }
-    
+
     # Cache static assets
 
     location /static/ {
         expires 1y;
         add_header Cache-Control "public, immutable";
     }
-    
+
     # Security headers
 
     add_header X-Frame-Options "SAMEORIGIN" always;
@@ -928,63 +928,63 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     steps:
 
     - uses: actions/checkout@v3
-    
+
     - name: Setup Node.js
 
       uses: actions/setup-node@v3
       with:
         node-version: '18'
         cache: 'npm'
-    
+
     - name: Install dependencies
 
       run: npm ci
-    
+
     - name: Run linter
 
       run: npm run lint
-    
+
     - name: Run type check
 
       run: npm run type-check
-    
+
     - name: Run tests
 
       run: npm run test:coverage
-    
+
     - name: Upload coverage
 
       uses: codecov/codecov-action@v3
       with:
         file: ./coverage/lcov.info
-    
+
   build:
     needs: test
     runs-on: ubuntu-latest
-    
+
     steps:
 
     - uses: actions/checkout@v3
-    
+
     - name: Setup Node.js
 
       uses: actions/setup-node@v3
       with:
         node-version: '18'
         cache: 'npm'
-    
+
     - name: Install dependencies
 
       run: npm ci
-    
+
     - name: Build application
 
       run: npm run build
-    
+
     - name: Upload build artifacts
 
       uses: actions/upload-artifact@v3

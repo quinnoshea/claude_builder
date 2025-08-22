@@ -1,5 +1,5 @@
 <!-- REPLACE:architecture -->
-**Project Type**: ${project_type}  
+**Project Type**: ${project_type}
 **Framework**: FastAPI
 **Complexity**: ${complexity_level}
 

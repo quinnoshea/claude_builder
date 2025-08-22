@@ -39,7 +39,7 @@ class TestAgentManager:
             "install_automatically": False,
             "exclude_agents": ["test-agent"],
             "priority_agents": ["python-pro", "backend-architect"],
-            "max_concurrent_agents": 3
+            "max_concurrent_agents": 3,
         }
         manager = AgentManager(config=config)
         assert manager.config["install_automatically"] is False
@@ -57,8 +57,12 @@ class TestAgentManager:
         # Check for core agents that should always be available
         agent_names = [agent.name for agent in agents]
         expected_core_agents = [
-            "python-pro", "frontend-developer", "backend-architect",
-            "test-writer-fixer", "ui-designer", "rapid-prototyper"
+            "python-pro",
+            "frontend-developer",
+            "backend-architect",
+            "test-writer-fixer",
+            "ui-designer",
+            "rapid-prototyper",
         ]
 
         for expected_agent in expected_core_agents:
@@ -80,7 +84,10 @@ class TestAgentManager:
 
         # Should select appropriate agents for Python web API
         agent_names = [agent.name for agent in selected_agents]
-        assert any("python" in name.lower() or "backend" in name.lower() for name in agent_names)
+        assert any(
+            "python" in name.lower() or "backend" in name.lower()
+            for name in agent_names
+        )
 
     def test_install_agent(self):
         """Test agent installation functionality."""
@@ -107,9 +114,7 @@ class TestAgentManager:
 
     def test_agent_exclusion(self, sample_analysis):
         """Test agent exclusion functionality."""
-        config = {
-            "exclude_agents": ["ui-designer", "whimsy-injector"]
-        }
+        config = {"exclude_agents": ["ui-designer", "whimsy-injector"]}
         manager = AgentManager(config=config)
 
         selected_agents = manager.select_agents_for_project(sample_analysis)
@@ -120,9 +125,7 @@ class TestAgentManager:
 
     def test_priority_agent_selection(self, sample_analysis):
         """Test priority agent selection."""
-        config = {
-            "priority_agents": ["rapid-prototyper", "test-writer-fixer"]
-        }
+        config = {"priority_agents": ["rapid-prototyper", "test-writer-fixer"]}
         manager = AgentManager(config=config)
 
         selected_agents = manager.select_agents_for_project(sample_analysis)
@@ -274,7 +277,7 @@ class TestAgentCoordinator:
         agents = [
             Mock(name="agent1", capabilities=["analysis"], priority=1),
             Mock(name="agent2", capabilities=["generation"], priority=2),
-            Mock(name="agent3", capabilities=["validation"], priority=3)
+            Mock(name="agent3", capabilities=["validation"], priority=3),
         ]
 
         workflow = coordinator.create_workflow(agents, sample_analysis)
@@ -310,7 +313,7 @@ class TestAgentCoordinator:
         agents = [
             Mock(name="agent1", capabilities=["analysis"], dependencies=[]),
             Mock(name="agent2", capabilities=["research"], dependencies=[]),
-            Mock(name="agent3", capabilities=["generation"], dependencies=["analysis"])
+            Mock(name="agent3", capabilities=["generation"], dependencies=["analysis"]),
         ]
 
         workflow = coordinator.create_workflow(agents, Mock())
@@ -327,8 +330,12 @@ class TestAgentCoordinator:
 
         # Create agents with dependencies
         agent1 = Mock(name="analyzer", capabilities=["analysis"], dependencies=[])
-        agent2 = Mock(name="generator", capabilities=["generation"], dependencies=["analysis"])
-        agent3 = Mock(name="validator", capabilities=["validation"], dependencies=["generation"])
+        agent2 = Mock(
+            name="generator", capabilities=["generation"], dependencies=["analysis"]
+        )
+        agent3 = Mock(
+            name="validator", capabilities=["validation"], dependencies=["generation"]
+        )
 
         agents = [agent3, agent1, agent2]  # Intentionally out of order
 
@@ -350,7 +357,7 @@ class TestAgentCoordinator:
         # Valid workflow
         valid_agents = [
             Mock(name="agent1", capabilities=["analysis"], dependencies=[]),
-            Mock(name="agent2", capabilities=["generation"], dependencies=["analysis"])
+            Mock(name="agent2", capabilities=["generation"], dependencies=["analysis"]),
         ]
 
         valid_workflow = coordinator.create_workflow(valid_agents, sample_analysis)
@@ -359,7 +366,7 @@ class TestAgentCoordinator:
         # Invalid workflow (circular dependency)
         invalid_agents = [
             Mock(name="agent1", capabilities=["analysis"], dependencies=["generation"]),
-            Mock(name="agent2", capabilities=["generation"], dependencies=["analysis"])
+            Mock(name="agent2", capabilities=["generation"], dependencies=["analysis"]),
         ]
 
         invalid_workflow = coordinator.create_workflow(invalid_agents, sample_analysis)
@@ -392,7 +399,7 @@ class TestAgent:
         agent = Agent(
             name="test-agent",
             capabilities=["analysis", "generation"],
-            description="A test agent"
+            description="A test agent",
         )
 
         assert agent.name == "test-agent"
@@ -402,8 +409,7 @@ class TestAgent:
     def test_agent_capability_checking(self):
         """Test agent capability checking."""
         agent = Agent(
-            name="specialized-agent",
-            capabilities=["python", "web-api", "testing"]
+            name="specialized-agent", capabilities=["python", "web-api", "testing"]
         )
 
         assert agent.has_capability("python")
@@ -416,7 +422,7 @@ class TestAgent:
             name="python-expert",
             capabilities=["python", "web-development"],
             languages=["python"],
-            frameworks=["fastapi", "django"]
+            frameworks=["fastapi", "django"],
         )
 
         # Test with Python FastAPI project
@@ -434,7 +440,7 @@ class TestAgent:
         context = {
             "project_path": "/test/path",
             "analysis_result": {"language": "python"},
-            "previous_agent_outputs": []
+            "previous_agent_outputs": [],
         }
 
         agent.set_execution_context(context)
@@ -448,7 +454,7 @@ class TestAgent:
         valid_config = {
             "timeout": 300,
             "max_retries": 3,
-            "custom_params": {"style": "verbose"}
+            "custom_params": {"style": "verbose"},
         }
 
         agent = Agent(name="configurable-agent", config=valid_config)
@@ -457,7 +463,7 @@ class TestAgent:
         # Invalid configuration should raise error
         invalid_config = {
             "timeout": -1,  # Invalid negative timeout
-            "max_retries": "invalid"  # Invalid type
+            "max_retries": "invalid",  # Invalid type
         }
 
         with pytest.raises(ValueError):
@@ -581,10 +587,16 @@ class TestAgentWorkflow:
         """Test workflow result aggregation."""
         # Create agents with different result types
         agent1 = Mock(name="analyzer")
-        agent1.execute.return_value = {"type": "analysis", "data": {"language": "python"}}
+        agent1.execute.return_value = {
+            "type": "analysis",
+            "data": {"language": "python"},
+        }
 
         agent2 = Mock(name="generator")
-        agent2.execute.return_value = {"type": "files", "data": {"CLAUDE.md": "content"}}
+        agent2.execute.return_value = {
+            "type": "files",
+            "data": {"CLAUDE.md": "content"},
+        }
 
         workflow = AgentWorkflow([agent1, agent2], sample_analysis)
         results = workflow.execute()
@@ -616,7 +628,9 @@ class TestAgentIntegration:
         with patch.object(manager, "_check_template_availability") as mock_check:
             mock_check.return_value = True
 
-            result = manager.execute_agent_with_templates(template_agent, sample_analysis)
+            result = manager.execute_agent_with_templates(
+                template_agent, sample_analysis
+            )
 
             mock_check.assert_called_once_with(template_agent.template_dependencies)
 
@@ -645,11 +659,12 @@ class TestAgentIntegration:
                 "exclude_agents": ["whimsy-injector"],
                 "agent_preferences": {
                     "python-pro": {"style": "verbose", "include_examples": True}
-                }
+                },
             }
         }
 
         import json
+
         config_file = temp_dir / "claude-builder.json"
         with open(config_file, "w") as f:
             json.dump(config_data, f)
@@ -673,17 +688,19 @@ class TestAgentIntegration:
         analyzer_agent = Mock(name="analyzer")
         analyzer_agent.execute.return_value = {
             "type": "analysis",
-            "data": {"complexity": "high", "patterns": ["mvc", "api"]}
+            "data": {"complexity": "high", "patterns": ["mvc", "api"]},
         }
 
         generator_agent = Mock(name="generator")
         generator_agent.execute.return_value = {
             "type": "files",
-            "data": {"CLAUDE.md": "generated content"}
+            "data": {"CLAUDE.md": "generated content"},
         }
 
         coordinator = AgentCoordinator()
-        workflow = coordinator.create_workflow([analyzer_agent, generator_agent], sample_analysis)
+        workflow = coordinator.create_workflow(
+            [analyzer_agent, generator_agent], sample_analysis
+        )
 
         results = workflow.execute()
 
