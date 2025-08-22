@@ -94,7 +94,7 @@ jobs:
         verbose: true
         
     - name: Upload coverage to Codacy
-      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11' && secrets.CODACY_PROJECT_TOKEN != ''
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11' && secrets.CODACY_PROJECT_TOKEN
       continue-on-error: true
       uses: codacy/codacy-coverage-reporter-action@v1
       with:
@@ -136,7 +136,7 @@ jobs:
         fi
         
     - name: Codacy Analysis (ruff)
-      if: ${{ secrets.CODACY_PROJECT_TOKEN != '' }}
+      if: ${{ secrets.CODACY_PROJECT_TOKEN }}
       continue-on-error: true
       uses: codacy/codacy-analysis-cli-action@v4
       with:
@@ -147,7 +147,7 @@ jobs:
         directory: "${{ github.workspace }}/src"
 
     - name: Codacy Analysis (pylint)
-      if: ${{ secrets.CODACY_PROJECT_TOKEN != '' }}
+      if: ${{ secrets.CODACY_PROJECT_TOKEN }}
       continue-on-error: true
       uses: codacy/codacy-analysis-cli-action@v4
       with:
@@ -158,7 +158,7 @@ jobs:
         directory: "${{ github.workspace }}/src"
 
     - name: Codacy Analysis (bandit)
-      if: ${{ secrets.CODACY_PROJECT_TOKEN != '' }}
+      if: ${{ secrets.CODACY_PROJECT_TOKEN }}
       continue-on-error: true
       uses: codacy/codacy-analysis-cli-action@v4
       with:
@@ -169,7 +169,7 @@ jobs:
         directory: "${{ github.workspace }}/src"
 
     - name: Codacy Analysis (semgrep)
-      if: ${{ secrets.CODACY_PROJECT_TOKEN != '' }}
+      if: ${{ secrets.CODACY_PROJECT_TOKEN }}
       continue-on-error: true
       uses: codacy/codacy-analysis-cli-action@v4
       with:
