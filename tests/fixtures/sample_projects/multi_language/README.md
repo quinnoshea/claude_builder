@@ -3,6 +3,7 @@
 A sample project with multiple programming languages for testing claude-builder analysis capabilities.
 
 ## Languages & Technologies
+
 - **Backend**: Rust (Axum web framework)
 - **Frontend**: TypeScript/React
 - **Scripts**: Python (data processing)
@@ -11,6 +12,7 @@ A sample project with multiple programming languages for testing claude-builder 
 - **Documentation**: Markdown
 
 ## Structure
+
 - `backend/`: Rust web API
 - `frontend/`: React TypeScript application
 - `scripts/`: Python utility scripts
@@ -19,6 +21,7 @@ A sample project with multiple programming languages for testing claude-builder 
 - `shared/`: Shared schemas and types
 
 This project is used to test:
+
 - Multi-language project detection
 - Cross-language dependency analysis
 - Complex project structure recognition

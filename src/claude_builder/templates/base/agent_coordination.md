@@ -29,15 +29,15 @@ ${coordination_patterns}
 1. **Planning Phase**
    - **studio-coach**: Project planning and task breakdown
    - **rapid-prototyper**: Initial architecture and design
-   
+
 2. **Implementation Phase**
    - **${primary_development_agent}**: Core feature implementation
    - **test-writer-fixer**: Test development and validation
-   
+
 3. **Quality Assurance Phase**
    - **performance-benchmarker**: Performance testing and optimization
    - **security-specialist**: Security review and vulnerability assessment
-   
+
 4. **Deployment Phase**
    - **devops-automator**: Deployment automation and monitoring
    - **infrastructure-maintainer**: Production environment management

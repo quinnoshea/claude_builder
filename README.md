@@ -13,8 +13,10 @@
 [![GitHub issues](https://img.shields.io/github/issues/quinnoshea/claude_builder.svg)](https://github.com/quinnoshea/claude_builder/issues)
 [![Last Commit](https://img.shields.io/github/last-commit/quinnoshea/claude_builder.svg)](https://github.com/quinnoshea/claude_builder/commits/main)
 
-🚧 **Infrastructure Complete** - Core functionality operational, completion work in progress  
-Transform any codebase into an optimized Claude Code development environment with intelligent analysis and adaptive templates.
+🚧 **Infrastructure Complete** - Core functionality operational, completion work
+in progress
+Transform any codebase into an optimized Claude Code development environment
+with intelligent analysis and adaptive templates.
 
 ## 🎯 Current Project Status
 
@@ -25,16 +27,23 @@ Transform any codebase into an optimized Claude Code development environment wit
 
 ## 🌟 What Claude Builder Does
 
-Claude Builder automates the complex task of setting up optimized Claude Code development environments. Through intelligent project analysis, it detects languages, frameworks, and project characteristics, then generates tailored documentation, agent configurations, and development workflows.
+Claude Builder automates the complex task of setting up optimized Claude Code
+development environments. Through intelligent project analysis, it detects
+languages, frameworks, and project characteristics, then generates tailored
+documentation, agent configurations, and development workflows.
 
 ### 🏆 **Current Capabilities**
-- **Multi-Language Analysis**: Python, Rust, JavaScript, TypeScript, Java, Go, and more
-- **Framework Detection**: Django, FastAPI, React, Vue, Axum, Spring Boot, Express, and others
+
+- **Multi-Language Analysis**: Python, Rust, JavaScript, TypeScript, Java, Go,
+  and more
+- **Framework Detection**: Django, FastAPI, React, Vue, Axum, Spring Boot,
+  Express, and others
 - **CLI Interface**: Professional command-line tool with Rich UI components
 - **Template System**: Hierarchical template composition working
 - **Git Integration**: Safe backup/restore operations
 
 ### 🚧 **Completion Work Required**
+
 - **Test Stabilization**: Fix 220 failing tests for production reliability
 - **Agent Integration**: Complete TODO in main CLI flow for full agent functionality
 - **Quality Gates**: Ensure all CI/CD checks pass consistently
@@ -42,32 +51,41 @@ Claude Builder automates the complex task of setting up optimized Claude Code de
 ## 🔧 Core Capabilities
 
 ### **🧠 Intelligent Project Analysis**
-- **Multi-Language Detection**: Automatic recognition of primary and secondary languages
-- **Framework Recognition**: Detects popular frameworks through dependency and pattern analysis  
+
+- **Multi-Language Detection**: Automatic recognition of primary and secondary
+  languages
+- **Framework Recognition**: Detects popular frameworks through dependency and
+  pattern analysis  
 - **Project Classification**: Web apps, CLI tools, libraries, data science projects
 - **Confidence Scoring**: Reliability metrics for all detection results
 
 ### **🎯 Agent System Foundation**
-- **Agent Selection Logic**: Intelligent matching of Claude Code agents to project characteristics
+
+- **Agent Selection Logic**: Intelligent matching of Claude Code agents to
+  project characteristics
 - **Configuration Generation**: Creates AGENTS.md files with recommended agent workflows
 - **Custom Integration**: Support for custom agent directories and configurations
 - **Workflow Patterns**: Multi-agent collaboration templates
 
 ### **📋 Template System**
+
 - **Hierarchical Composition**: Base → Language → Framework template layers
 - **Variable Substitution**: Dynamic content generation with project-specific data
 - **Template Validation**: Built-in validation and error checking
 - **Extensible Design**: Foundation ready for community template marketplace
 
 ### **🔒 Safe Git Integration**
+
 - **Non-Destructive Operations**: Complete backup/restore system
 - **Local Git Exclude**: Adds patterns to .git/info/exclude (not committed)
-- **Claude Mention Control**: Configurable policies for AI references in generated content
+- **Claude Mention Control**: Configurable policies for AI references in
+  generated content
 - **Rollback Capabilities**: Full restore functionality for generated files
 
 ## 🚀 Installation & Setup
 
 ### **Development Installation**
+
 ```bash
 # Clone the repository
 git clone https://github.com/quinnoshea/claude_builder.git
@@ -82,6 +100,7 @@ pre-commit install
 ```
 
 ### **Basic Usage**
+
 ```bash
 # Analyze and generate documentation for any project
 claude-builder /path/to/your/project
@@ -94,6 +113,7 @@ claude-builder /path/to/project --git-exclude --claude-mentions=minimal
 ```
 
 ### **System Requirements**
+
 - **Python**: 3.8+ (3.11+ recommended)
 - **Memory**: 512MB minimum for analysis operations
 - **Storage**: 100MB for development environment
@@ -104,6 +124,7 @@ claude-builder /path/to/project --git-exclude --claude-mentions=minimal
 ### **Real-World Project Analysis**
 
 #### **Python Web Application**
+
 ```bash
 claude-builder ./fastapi-ecommerce
 # ✅ Detects: Python 3.11, FastAPI, PostgreSQL dependencies
@@ -112,6 +133,7 @@ claude-builder ./fastapi-ecommerce
 ```
 
 #### **Rust CLI Tool**  
+
 ```bash
 claude-builder ./cli-performance-monitor
 # ✅ Detects: Rust, CLI patterns, system dependencies
@@ -120,6 +142,7 @@ claude-builder ./cli-performance-monitor
 ```
 
 #### **React TypeScript Frontend**
+
 ```bash
 claude-builder ./next-dashboard
 # ✅ Detects: TypeScript, Next.js, React patterns
@@ -130,6 +153,7 @@ claude-builder ./next-dashboard
 ### **Advanced Configuration**
 
 #### **Git Integration Options**
+
 ```bash
 # Add to local git exclude (recommended - safe)
 claude-builder ./project --git-exclude
@@ -146,6 +170,7 @@ claude-builder ./project --backup-existing
 ### **CLI Subcommands**
 
 #### **Project Analysis**
+
 ```bash
 # Detailed analysis with verbose output
 claude-builder analyze ./project --verbose
@@ -154,7 +179,8 @@ claude-builder analyze ./project --verbose
 claude-builder analyze ./project --output=analysis.json
 ```
 
-#### **Template Management** 
+#### **Template Management**
+
 ```bash
 # List available built-in templates
 claude-builder templates list
@@ -164,6 +190,7 @@ claude-builder templates validate ./custom-template
 ```
 
 #### **Configuration Management**
+
 ```bash
 # Initialize project configuration
 claude-builder config init ./project
@@ -175,7 +202,8 @@ claude-builder config show ./project
 ## 🏗️ Project Architecture
 
 ### **Codebase Structure**
-```
+
+```text
 claude_builder/
 ├── src/claude_builder/           # Core application  
 │   ├── core/                     # Business logic
@@ -209,7 +237,8 @@ claude_builder/
 ```
 
 ### **Generated Output Structure**
-```
+
+```text
 your-project/                     # Your analyzed project
 ├── CLAUDE.md                    # Project-specific Claude Code guidelines
 ├── AGENTS.md                    # Agent configuration and workflows
@@ -222,11 +251,12 @@ your-project/                     # Your analyzed project
 ## 🎯 Language & Framework Support
 
 ### **Languages** (Detection Working)
+
 | Language | Status | Confidence | Common Frameworks |
 |----------|--------|------------|-------------------|
 | **Python** | ✅ Operational | High | Django, Flask, FastAPI |
 | **Rust** | ✅ Operational | High | Axum, Actix, Tokio |
-| **JavaScript/TypeScript** | ✅ Operational | High | React, Vue, Express, Next.js |
+| **JS/TypeScript** | ✅ Operational | High | React, Vue, Express, Next.js |
 | **Java** | ✅ Operational | Good | Spring Boot, Maven |
 | **Go** | ✅ Operational | Good | Gin, Echo, CLI tools |
 | **C#** | ✅ Basic | Fair | ASP.NET Core |
@@ -234,6 +264,7 @@ your-project/                     # Your analyzed project
 | **Ruby** | ✅ Basic | Fair | Rails, Sinatra |
 
 ### **Project Types** (Auto-Detected)
+
 - **Web Applications**: API servers, full-stack applications, microservices
 - **CLI Tools**: Command-line utilities, system tools, automation scripts
 - **Libraries**: Reusable packages, frameworks, shared components
@@ -243,6 +274,7 @@ your-project/                     # Your analyzed project
 ## 🧪 Development & Testing
 
 ### **Running Tests**
+
 ```bash
 # Run core functionality tests
 pytest tests/unit/phase1_core/ -v
@@ -255,6 +287,7 @@ pytest tests/ -v
 ```
 
 ### **Code Quality**
+
 ```bash
 # Format code
 black claude_builder tests/
@@ -270,6 +303,7 @@ pre-commit run --all-files
 ```
 
 ### **Performance Testing**
+
 ```bash
 # Test analysis speed on sample projects
 time claude-builder tests/fixtures/sample_projects/python_project --dry-run
@@ -279,6 +313,7 @@ time claude-builder tests/fixtures/sample_projects/rust_project --dry-run
 ## 🤝 Contributing
 
 ### **Current Development Focus**
+
 We're in the infrastructure completion phase, focusing on:
 
 1. **Test Stabilization**: Fixing failing tests for production reliability
@@ -289,6 +324,7 @@ We're in the infrastructure completion phase, focusing on:
 ### **How to Contribute**
 
 #### **Phase 1: Infrastructure Completion** (Current Focus)
+
 Perfect for developers wanting to learn testing and infrastructure work:
 
 ```bash
@@ -306,11 +342,13 @@ claude-builder --help              # Should show help
 ```
 
 #### **Future Phases**
+
 - **Phase 2**: Production readiness and polish
 - **Phase 3**: Community features and template marketplace
 - **Phase 4**: Enterprise features and integrations
 
 ### **Contribution Areas**
+
 - **Test Infrastructure**: Help fix failing tests and improve coverage
 - **CLI Enhancement**: Improve user experience and error messages
 - **Template Development**: Create templates for new languages/frameworks
@@ -319,9 +357,12 @@ claude-builder --help              # Should show help
 ## 📄 License & Acknowledgments
 
 ### **License**
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-### **🙏 Acknowledgments** 
+This project is licensed under the MIT License - see the [LICENSE](LICENSE)
+file for details.
+
+### **🙏 Acknowledgments**
+
 - **Inspired by**: Original Radarr Rust planning generator concept
 - **Built for**: Claude Code ecosystem and developer productivity enhancement
 - **Thanks to**: Beta testers and early adopters providing feedback
@@ -329,18 +370,21 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🎯 Project Roadmap
 
 ### **Current Phase: Infrastructure Completion**
+
 - ✅ Core CLI functionality operational
 - 🚧 Test stabilization (220 tests requiring fixes)
 - 🚧 Agent integration completion
 - ⏳ Documentation alignment
 
 ### **Next Phase: Production Readiness**
+
 - Production-grade error handling
 - Performance optimization and validation
 - Comprehensive user testing
 - Installation and distribution improvements
 
 ### **Future Vision**
+
 - Community template marketplace
 - IDE integrations (VS Code, JetBrains)
 - Enterprise features and team management
@@ -348,4 +392,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Claude Builder has achieved significant infrastructure milestones and is positioned for successful completion with focused effort on test stabilization and agent integration.**
+**Claude Builder has achieved significant infrastructure milestones and is
+positioned for successful completion with focused effort on test stabilization
+and agent integration.**

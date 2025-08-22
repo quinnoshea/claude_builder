@@ -9,7 +9,7 @@
 **Primary Role**: Python backend systems, API design, database integration
 
 - **Specialization**: ${framework} applications, database design, API architecture
-- **Responsibilities**: 
+- **Responsibilities**:
   - Design scalable Python backend architectures
   - Implement REST/GraphQL APIs using ${framework}
   - Database schema design and optimization

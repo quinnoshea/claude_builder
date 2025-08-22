@@ -1,6 +1,7 @@
 # Contributing to Claude Builder
 
-Welcome to Claude Builder! We're excited to have you contribute to making this the best universal Claude Code environment generator.
+Welcome to Claude Builder! We're excited to have you contribute to making this
+the best universal Claude Code environment generator.
 
 ## 📋 Table of Contents
 
@@ -16,7 +17,9 @@ Welcome to Claude Builder! We're excited to have you contribute to making this t
 
 ## Code of Conduct
 
-This project adheres to a code of conduct. By participating, you are expected to uphold this code. Please report unacceptable behavior to the project maintainers.
+This project adheres to a code of conduct. By participating, you are expected
+to uphold this code. Please report unacceptable behavior to the project
+maintainers.
 
 ### Our Standards
 
@@ -37,28 +40,33 @@ This project adheres to a code of conduct. By participating, you are expected to
 ### Development Setup
 
 1. **Fork and Clone**
+
    ```bash
    git clone https://github.com/YOUR_USERNAME/claude_builder.git
    cd claude_builder
    ```
 
 2. **Create Virtual Environment**
+
    ```bash
    python -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
 
 3. **Install Development Dependencies**
+
    ```bash
    pip install -e ".[dev,test]"
    ```
 
 4. **Install Pre-commit Hooks**
+
    ```bash
    pre-commit install
    ```
 
 5. **Verify Setup**
+
    ```bash
    pytest
    claude-builder --help
@@ -134,6 +142,7 @@ git commit -m "test: add integration tests for git workflows"
 ```
 
 **Commit Types:**
+
 - `feat:` - New features
 - `fix:` - Bug fixes
 - `docs:` - Documentation changes
@@ -149,6 +158,7 @@ git push origin feature/your-feature-name
 ```
 
 Then create a Pull Request on GitHub with:
+
 - Clear title and description
 - Reference to related issues
 - Screenshots/examples if applicable
@@ -223,7 +233,7 @@ bandit -r claude_builder
 
 Follow the established structure:
 
-```
+```text
 claude_builder/
 ├── core/           # Core analysis and generation logic
 ├── cli/            # Command-line interface
@@ -307,7 +317,7 @@ pytest -x
 - **Developer Guide** - This CONTRIBUTING.md
 - **Template Documentation** - Template-specific guides
 
-### Documentation Standards
+### Writing Guidelines
 
 - **Clear and concise** language
 - **Code examples** for all features
@@ -350,4 +360,4 @@ Thank you for contributing to Claude Builder! 🚀
 
 ---
 
-For questions about contributing, please create an issue or start a discussion on GitHub.
+For questions about contributing, please create an issue or discussion on\nGitHub.

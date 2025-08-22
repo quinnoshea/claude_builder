@@ -9,7 +9,7 @@
 **Primary Role**: Node.js backend systems, API design, microservices architecture
 
 - **Specialization**: Express.js applications, MongoDB/PostgreSQL integration, RESTful APIs
-- **Responsibilities**: 
+- **Responsibilities**:
   - Design scalable Node.js architectures with proper separation of concerns
   - Implement robust API endpoints with comprehensive error handling
   - Database design and optimization for NoSQL/SQL databases
@@ -43,7 +43,7 @@
 
 **Role**: Node.js performance optimization and scaling
 
-- **Focus Areas**: 
+- **Focus Areas**:
   - Event loop optimization and async performance tuning
   - Memory usage optimization and garbage collection tuning
   - Database query optimization and connection pooling

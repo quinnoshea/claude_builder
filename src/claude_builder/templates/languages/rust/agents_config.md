@@ -9,7 +9,7 @@
 **Primary Role**: Rust system architecture, performance optimization, memory safety
 
 - **Specialization**: High-performance Rust applications, concurrent systems, memory management
-- **Responsibilities**: 
+- **Responsibilities**:
   - Design scalable Rust architectures using ownership and borrowing
   - Implement async/await patterns with Tokio runtime
   - Optimize for zero-cost abstractions and compile-time guarantees
@@ -32,7 +32,7 @@
 
 **Role**: Performance optimization and systems programming
 
-- **Focus Areas**: 
+- **Focus Areas**:
   - Memory usage optimization and zero-allocation patterns
   - Async performance tuning and task scheduling
   - Compile-time optimization and generic specialization

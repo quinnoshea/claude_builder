@@ -25,16 +25,19 @@ This is a ${primary_language} ${project_type} project with ${complexity_level} c
 
 <!-- SECTION:guidelines -->
 ### Code Quality Standards
+
 - Follow ${primary_language} best practices and conventions
 - Maintain consistent code style throughout the project
 - Write clear, documented code with appropriate comments
 
 ### Testing Requirements  
+
 - Write comprehensive tests for new functionality
 - Ensure tests pass before committing changes
 - Maintain good test coverage
 
 ### Development Workflow
+
 - Use feature branches for new development
 - Submit pull requests for code review
 - Follow the project's branching strategy
@@ -53,18 +56,21 @@ This project follows standard ${primary_language} conventions and patterns appro
 
 <!-- SECTION:getting-started -->
 ### Prerequisites
+
 - ${primary_language} development environment
 {{#if primary_framework}}
 - ${primary_framework} framework knowledge
 {{/if}}
 
 ### Setup Instructions
+
 1. Clone the repository
 2. Install dependencies
 3. Run tests to verify setup
 4. Start development
 
 ### Key Commands
+
 ```bash
 # Install dependencies
 # Run tests  

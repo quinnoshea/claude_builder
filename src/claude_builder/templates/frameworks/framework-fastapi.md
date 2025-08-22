@@ -6,6 +6,7 @@
 This FastAPI project follows modern Python web development patterns:
 
 ### FastAPI Architecture Patterns
+
 - **Dependency Injection**: Use FastAPI's dependency system for shared resources
 - **Pydantic Models**: Define request/response models with type validation
 - **Router Organization**: Group related endpoints using APIRouter
@@ -13,6 +14,7 @@ This FastAPI project follows modern Python web development patterns:
 - **Background Tasks**: Use FastAPI's background task system for async operations
 
 ### Recommended Project Structure
+
 ```
 src/
 ├── main.py              # Application entry point
@@ -35,19 +37,22 @@ src/
 
 <!-- REPLACE:getting-started -->
 ### FastAPI Prerequisites
+
 - Python 3.8+ with FastAPI support
 - Understanding of async/await patterns
 - Basic knowledge of REST API design
 
 ### FastAPI Setup Instructions
+
 1. Clone the repository
 2. Create virtual environment: `python -m venv venv`
 3. Activate environment: `source venv/bin/activate`
 4. Install dependencies: `pip install -r requirements.txt`
 5. Run development server: `uvicorn main:app --reload`
-6. Open API docs: http://localhost:8000/docs
+6. Open API docs: <http://localhost:8000/docs>
 
 ### FastAPI Key Commands
+
 ```bash
 # Install FastAPI and dependencies
 pip install "fastapi[all]" uvicorn
@@ -70,6 +75,7 @@ alembic upgrade head
 ```
 
 ### FastAPI Development Tips
+
 - Use the interactive API documentation at `/docs` for testing
 - Leverage FastAPI's automatic request/response validation
 - Use dependency injection for database connections and shared services

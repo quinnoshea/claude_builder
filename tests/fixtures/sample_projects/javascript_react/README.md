@@ -3,6 +3,7 @@
 A sample React web application for testing claude-builder analysis capabilities.
 
 ## Features
+
 - Create React App setup
 - TypeScript support
 - Component library
@@ -11,6 +12,7 @@ A sample React web application for testing claude-builder analysis capabilities.
 - Build optimization
 
 ## Structure
+
 - `src/`: React components and application code
 - `public/`: Static assets
 - `tests/`: Unit and integration tests
@@ -18,6 +20,7 @@ A sample React web application for testing claude-builder analysis capabilities.
 - `docs/`: Component documentation
 
 This project is used to test:
+
 - JavaScript/TypeScript project detection
 - React framework identification
 - Package.json analysis
