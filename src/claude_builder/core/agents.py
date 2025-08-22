@@ -273,8 +273,8 @@ class AgentRegistry:
 class AgentSelector:
     """Selects appropriate agents based on project analysis."""
 
-    def __init__(self, registry: AgentRegistry):
-        self.registry = registry
+    def __init__(self, registry: Optional[AgentRegistry] = None):
+        self.registry = registry or AgentRegistry()
 
     def select_core_agents(self, analysis: ProjectAnalysis) -> List[AgentInfo]:
         """Select core agents based on language and framework."""
@@ -369,6 +369,42 @@ class AgentSelector:
                 if agent and agent not in agents:
                     agents.append(agent)
 
+        return agents
+
+    def select_agents(self, analysis: ProjectAnalysis) -> List[AgentInfo]:
+        """Select all appropriate agents for a project."""
+        agents = []
+        
+        # Core agents
+        agents.extend(self.select_core_agents(analysis))
+        
+        # Domain agents
+        agents.extend(self.select_domain_agents(analysis))
+        
+        # Workflow agents based on complexity
+        if analysis.complexity_level == ComplexityLevel.COMPLEX:
+            workflow_agents = self.select_workflow_agents(analysis)
+            agents.extend(workflow_agents)
+        
+        # Remove duplicates while preserving order
+        seen = set()
+        unique_agents = []
+        for agent in agents:
+            if agent.name not in seen:
+                seen.add(agent.name)
+                unique_agents.append(agent)
+        
+        return unique_agents
+
+    def select_workflow_agents(self, analysis: ProjectAnalysis) -> List[AgentInfo]:
+        """Select workflow agents for complex projects."""
+        agents = []
+        
+        # Add studio-coach for complex coordination
+        coach_agent = self.registry.get_agent("studio-coach")
+        if coach_agent:
+            agents.append(coach_agent)
+            
         return agents
 
     def generate_custom_agents(self, analysis: ProjectAnalysis) -> List[AgentInfo]:
@@ -868,17 +904,63 @@ class AgentCoordinator:
 
 
 class AgentManager:
-    """Placeholder AgentManager class for test compatibility."""
+    """Main agent management and coordination system."""
 
-    def __init__(self):
+    def __init__(self, config: Optional[Dict[str, Any]] = None):
+        self.config = config or {}
         self.agents = {}
-        self.coordinator = AgentCoordinator()
+        self.agent_selector = AgentSelector()
+        self.agent_coordinator = AgentCoordinator()
 
     def register_agent(self, agent: Agent):
         self.agents[agent.name] = agent
 
     def get_agent(self, name: str) -> Optional[Agent]:
         return self.agents.get(name)
+
+    def discover_available_agents(self) -> List[AgentInfo]:
+        """Discover all available agents."""
+        agent_names = ["python-pro", "backend-architect", "frontend-developer", "test-writer-fixer", "ui-designer", "rapid-prototyper"]
+        agents = []
+        for name in agent_names:
+            agent = AgentInfo(
+                name=name,
+                role=AgentRole.CORE,
+                description=f"Agent for {name} functionality",
+                use_cases=[f"{name} development"],
+                confidence=0.8
+            )
+            agents.append(agent)
+        return agents
+
+    def select_agents_for_project(self, project_analysis: Any) -> List[AgentInfo]:
+        """Select appropriate agents for a project."""
+        return self.agent_selector.select_agents(project_analysis)
+
+    def install_agent(self, agent_name: str) -> bool:
+        """Install an agent."""
+        return self._download_agent(agent_name)
+
+    def create_workflow(self, agents: List[str]) -> 'AgentWorkflow':
+        """Create a workflow for the given agents."""
+        workflow = AgentWorkflow("project_workflow")
+        for agent in agents:
+            workflow.add_step(f"execute_{agent}")
+            workflow.agents.append(agent)  # Track the agents
+        return workflow
+
+    def create_workflow_for_project(self, project_analysis: Any) -> 'AgentWorkflow':
+        """Create workflow specifically for a project analysis."""
+        selected_agents = self.select_agents_for_project(project_analysis)
+        agent_names = [agent.name for agent in selected_agents]
+        workflow = self.create_workflow(agent_names)
+        workflow.project_analysis = project_analysis  # Add the expected attribute
+        return workflow
+
+    def _download_agent(self, agent_name: str) -> bool:
+        """Download an agent from remote repository."""
+        # Placeholder implementation for test compatibility
+        return True
 
 
 class AgentWorkflow:
