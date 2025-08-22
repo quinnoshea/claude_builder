@@ -1,7 +1,5 @@
 """File pattern utilities for project analysis."""
 
-import fnmatch
-import re
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -51,46 +49,46 @@ class FilePatterns:
 
     # Configuration file patterns
     CONFIG_FILES = {
-        "package.json",           # Node.js
-        "yarn.lock",             # Yarn
-        "package-lock.json",     # npm
-        "Cargo.toml",            # Rust
-        "Cargo.lock",            # Rust
-        "pyproject.toml",        # Python (modern)
-        "setup.py",              # Python
-        "setup.cfg",             # Python
-        "requirements.txt",      # Python
+        "package.json",  # Node.js
+        "yarn.lock",  # Yarn
+        "package-lock.json",  # npm
+        "Cargo.toml",  # Rust
+        "Cargo.lock",  # Rust
+        "pyproject.toml",  # Python (modern)
+        "setup.py",  # Python
+        "setup.cfg",  # Python
+        "requirements.txt",  # Python
         "requirements-dev.txt",  # Python
-        "Pipfile",               # Python (pipenv)
-        "Pipfile.lock",          # Python (pipenv)
-        "poetry.lock",           # Python (poetry)
-        "go.mod",                # Go
-        "go.sum",                # Go
-        "pom.xml",               # Java (Maven)
-        "build.gradle",          # Java/Kotlin (Gradle)
-        "gradle.properties",     # Gradle
-        "settings.gradle",       # Gradle
-        "composer.json",         # PHP
-        "composer.lock",         # PHP
-        "Gemfile",               # Ruby
-        "Gemfile.lock",          # Ruby
-        "mix.exs",               # Elixir
-        "mix.lock",              # Elixir
-        "pubspec.yaml",          # Dart/Flutter
-        "pubspec.lock",          # Dart/Flutter
-        "dub.json",              # D
-        "cabal.project",         # Haskell
-        "stack.yaml",            # Haskell
-        "project.clj",           # Clojure
-        "deps.edn",              # Clojure
-        "build.sbt",             # Scala
-        "CMakeLists.txt",        # C/C++
-        "Makefile",              # Make
-        "configure.ac",          # Autotools
-        "configure.in",          # Autotools
-        "meson.build",           # Meson
-        "conanfile.txt",         # Conan
-        "vcpkg.json",            # vcpkg
+        "Pipfile",  # Python (pipenv)
+        "Pipfile.lock",  # Python (pipenv)
+        "poetry.lock",  # Python (poetry)
+        "go.mod",  # Go
+        "go.sum",  # Go
+        "pom.xml",  # Java (Maven)
+        "build.gradle",  # Java/Kotlin (Gradle)
+        "gradle.properties",  # Gradle
+        "settings.gradle",  # Gradle
+        "composer.json",  # PHP
+        "composer.lock",  # PHP
+        "Gemfile",  # Ruby
+        "Gemfile.lock",  # Ruby
+        "mix.exs",  # Elixir
+        "mix.lock",  # Elixir
+        "pubspec.yaml",  # Dart/Flutter
+        "pubspec.lock",  # Dart/Flutter
+        "dub.json",  # D
+        "cabal.project",  # Haskell
+        "stack.yaml",  # Haskell
+        "project.clj",  # Clojure
+        "deps.edn",  # Clojure
+        "build.sbt",  # Scala
+        "CMakeLists.txt",  # C/C++
+        "Makefile",  # Make
+        "configure.ac",  # Autotools
+        "configure.in",  # Autotools
+        "meson.build",  # Meson
+        "conanfile.txt",  # Conan
+        "vcpkg.json",  # vcpkg
     }
 
     # Build and deployment files
@@ -116,74 +114,142 @@ class FilePatterns:
 
     # CI/CD configuration files
     CI_CD_FILES = {
-        ".github/workflows",      # GitHub Actions (directory)
-        ".gitlab-ci.yml",        # GitLab CI
-        "Jenkinsfile",           # Jenkins
-        ".travis.yml",           # Travis CI
-        "appveyor.yml",          # AppVeyor
+        ".github/workflows",  # GitHub Actions (directory)
+        ".gitlab-ci.yml",  # GitLab CI
+        "Jenkinsfile",  # Jenkins
+        ".travis.yml",  # Travis CI
+        "appveyor.yml",  # AppVeyor
         ".circleci/config.yml",  # CircleCI
-        "azure-pipelines.yml",   # Azure Pipelines
-        "bitbucket-pipelines.yml", # Bitbucket Pipelines
-        ".buildkite/pipeline.yml", # Buildkite
-        "wercker.yml",           # Wercker
-        "drone.yml",             # Drone CI
-        ".drone.yml",            # Drone CI
-        "tox.ini",               # Python tox
-        "noxfile.py",            # Python nox
+        "azure-pipelines.yml",  # Azure Pipelines
+        "bitbucket-pipelines.yml",  # Bitbucket Pipelines
+        ".buildkite/pipeline.yml",  # Buildkite
+        "wercker.yml",  # Wercker
+        "drone.yml",  # Drone CI
+        ".drone.yml",  # Drone CI
+        "tox.ini",  # Python tox
+        "noxfile.py",  # Python nox
     }
 
     # Documentation file patterns
     DOCUMENTATION_FILES = {
-        "README.md", "README.rst", "README.txt", "README",
-        "CHANGELOG.md", "CHANGELOG.rst", "CHANGELOG.txt", "CHANGELOG",
-        "HISTORY.md", "HISTORY.rst", "HISTORY.txt",
-        "LICENSE", "LICENSE.md", "LICENSE.txt",
-        "CONTRIBUTING.md", "CONTRIBUTING.rst", "CONTRIBUTING.txt",
-        "CODE_OF_CONDUCT.md", "CODE_OF_CONDUCT.rst", "CODE_OF_CONDUCT.txt",
-        "SECURITY.md", "SECURITY.rst", "SECURITY.txt",
-        "AUTHORS.md", "AUTHORS.rst", "AUTHORS.txt", "AUTHORS",
-        "CREDITS.md", "CREDITS.rst", "CREDITS.txt", "CREDITS",
-        "MAINTAINERS.md", "MAINTAINERS.rst", "MAINTAINERS.txt",
-        "docs/", "doc/", "documentation/",  # Common doc directories
+        "README.md",
+        "README.rst",
+        "README.txt",
+        "README",
+        "CHANGELOG.md",
+        "CHANGELOG.rst",
+        "CHANGELOG.txt",
+        "CHANGELOG",
+        "HISTORY.md",
+        "HISTORY.rst",
+        "HISTORY.txt",
+        "LICENSE",
+        "LICENSE.md",
+        "LICENSE.txt",
+        "CONTRIBUTING.md",
+        "CONTRIBUTING.rst",
+        "CONTRIBUTING.txt",
+        "CODE_OF_CONDUCT.md",
+        "CODE_OF_CONDUCT.rst",
+        "CODE_OF_CONDUCT.txt",
+        "SECURITY.md",
+        "SECURITY.rst",
+        "SECURITY.txt",
+        "AUTHORS.md",
+        "AUTHORS.rst",
+        "AUTHORS.txt",
+        "AUTHORS",
+        "CREDITS.md",
+        "CREDITS.rst",
+        "CREDITS.txt",
+        "CREDITS",
+        "MAINTAINERS.md",
+        "MAINTAINERS.rst",
+        "MAINTAINERS.txt",
+        "docs/",
+        "doc/",
+        "documentation/",  # Common doc directories
     }
 
     # Test file patterns
     TEST_PATTERNS = {
-        "test_*.py", "*_test.py", "tests.py",      # Python
-        "test_*.rs", "*_test.rs", "tests.rs",      # Rust
-        "*.test.js", "*.spec.js", "test.js",       # JavaScript
-        "*.test.ts", "*.spec.ts", "test.ts",       # TypeScript
-        "*Test.java", "*Tests.java",               # Java
-        "*_test.go", "*Test.go",                   # Go
-        "test_*.cpp", "*_test.cpp",                # C++
-        "*Test.cs", "*Tests.cs",                   # C#
-        "*_test.rb", "*Test.rb",                   # Ruby
-        "*Test.scala", "*Spec.scala",              # Scala
-        "*Test.kt", "*Tests.kt",                   # Kotlin
-        "*Tests.swift", "*Test.swift",             # Swift
+        "test_*.py",
+        "*_test.py",
+        "tests.py",  # Python
+        "test_*.rs",
+        "*_test.rs",
+        "tests.rs",  # Rust
+        "*.test.js",
+        "*.spec.js",
+        "test.js",  # JavaScript
+        "*.test.ts",
+        "*.spec.ts",
+        "test.ts",  # TypeScript
+        "*Test.java",
+        "*Tests.java",  # Java
+        "*_test.go",
+        "*Test.go",  # Go
+        "test_*.cpp",
+        "*_test.cpp",  # C++
+        "*Test.cs",
+        "*Tests.cs",  # C#
+        "*_test.rb",
+        "*Test.rb",  # Ruby
+        "*Test.scala",
+        "*Spec.scala",  # Scala
+        "*Test.kt",
+        "*Tests.kt",  # Kotlin
+        "*Tests.swift",
+        "*Test.swift",  # Swift
     }
 
     # Ignore patterns (common directories/files to skip)
     IGNORE_PATTERNS = {
         # Version control
-        ".git/", ".svn/", ".hg/", ".bzr/",
+        ".git/",
+        ".svn/",
+        ".hg/",
+        ".bzr/",
         # Dependencies
-        "node_modules/", "vendor/", "lib/", "libs/",
+        "node_modules/",
+        "vendor/",
+        "lib/",
+        "libs/",
         # Build outputs
-        "target/", "build/", "dist/", "out/", "bin/",
+        "target/",
+        "build/",
+        "dist/",
+        "out/",
+        "bin/",
         # Python
-        "__pycache__/", "*.pyc", ".pytest_cache/", ".tox/", "venv/", ".venv/",
+        "__pycache__/",
+        "*.pyc",
+        ".pytest_cache/",
+        ".tox/",
+        "venv/",
+        ".venv/",
         # Rust
         # Java
         ".gradle/",
         # .NET
         "obj/",
         # IDE files
-        ".idea/", ".vscode/", "*.swp", "*.swo", ".DS_Store", "Thumbs.db",
+        ".idea/",
+        ".vscode/",
+        "*.swp",
+        "*.swo",
+        ".DS_Store",
+        "Thumbs.db",
         # Logs and temps
-        "*.log", "logs/", "tmp/", "temp/", ".tmp/",
+        "*.log",
+        "logs/",
+        "tmp/",
+        "temp/",
+        ".tmp/",
         # Coverage
-        "coverage/", ".coverage", ".nyc_output/",
+        "coverage/",
+        ".coverage",
+        ".nyc_output/",
     }
 
     # Framework detection patterns
@@ -239,9 +305,7 @@ class FilePatterns:
         filename = file_path.name.lower()
 
         # Check for test patterns
-        test_indicators = [
-            "test", "spec", "tests", "__test__", "__tests__"
-        ]
+        test_indicators = ["test", "spec", "tests", "__test__", "__tests__"]
 
         return any(indicator in filename for indicator in test_indicators)
 
@@ -250,9 +314,12 @@ class FilePatterns:
         """Check if file is a configuration file."""
         filename = file_path.name
 
-        return (filename in cls.CONFIG_FILES or
-                filename in cls.BUILD_FILES or
-                file_path.suffix.lower() in {".json", ".yaml", ".yml", ".toml", ".ini", ".cfg", ".conf"})
+        return (
+            filename in cls.CONFIG_FILES
+            or filename in cls.BUILD_FILES
+            or file_path.suffix.lower()
+            in {".json", ".yaml", ".yml", ".toml", ".ini", ".cfg", ".conf"}
+        )
 
     @classmethod
     def is_documentation_file(cls, file_path: Path) -> bool:
@@ -260,8 +327,9 @@ class FilePatterns:
         filename = file_path.name
         extension = file_path.suffix.lower()
 
-        return (filename.upper() in {f.upper() for f in cls.DOCUMENTATION_FILES} or
-                extension in {".md", ".rst", ".txt", ".pdf", ".doc", ".docx"})
+        return filename.upper() in {
+            f.upper() for f in cls.DOCUMENTATION_FILES
+        } or extension in {".md", ".rst", ".txt", ".pdf", ".doc", ".docx"}
 
     @classmethod
     def should_ignore(cls, file_path: Path, project_root: Path) -> bool:
@@ -272,7 +340,10 @@ class FilePatterns:
         for pattern in cls.IGNORE_PATTERNS:
             if pattern.endswith("/"):
                 # Directory pattern
-                if path_str.startswith(pattern[:-1]) or f"/{pattern[:-1]}/" in f"/{path_str}":
+                if (
+                    path_str.startswith(pattern[:-1])
+                    or f"/{pattern[:-1]}/" in f"/{path_str}"
+                ):
                     return True
             # File pattern
             elif pattern.replace("*", "") in path_str:
@@ -294,14 +365,15 @@ class FilePatterns:
                     if (project_path / pattern).exists():
                         score += 5
                 # File pattern or content pattern
-                elif any(f.name == pattern for f in project_path.rglob("*") if f.is_file()):
+                elif any(
+                    f.name == pattern for f in project_path.rglob("*") if f.is_file()
+                ):
                     score += 3
 
             if score > 0:
                 detected[framework] = score
 
         return detected
-
 
 
 # Placeholder classes for test compatibility
@@ -322,18 +394,33 @@ class ConfigFileDetector:
             "javascript": [],
             "rust": [],
             "docker": [],
-            "general": []
+            "general": [],
         }
 
         for file_path in target_path.rglob("*"):
-            if file_path.is_file() and (FilePatterns.is_config_file(file_path) or file_path.name.startswith('.docker')):
+            if file_path.is_file() and (
+                FilePatterns.is_config_file(file_path)
+                or file_path.name.startswith(".docker")
+            ):
                 filename = file_path.name
                 relative_path = str(file_path.relative_to(target_path))
 
                 # Categorize by language/type
-                if filename in {"pyproject.toml", "setup.py", "requirements.txt", "pytest.ini", "Pipfile", "setup.cfg"}:
+                if filename in {
+                    "pyproject.toml",
+                    "setup.py",
+                    "requirements.txt",
+                    "pytest.ini",
+                    "Pipfile",
+                    "setup.cfg",
+                }:
                     config_files["python"].append(relative_path)
-                elif filename in {"package.json", "package-lock.json", "webpack.config.js", "babel.config.js"}:
+                elif filename in {
+                    "package.json",
+                    "package-lock.json",
+                    "webpack.config.js",
+                    "babel.config.js",
+                }:
                     config_files["javascript"].append(relative_path)
                 elif filename in {"tsconfig.json"}:
                     if "typescript" not in config_files:
@@ -341,7 +428,11 @@ class ConfigFileDetector:
                     config_files["typescript"].append(relative_path)
                 elif filename in {"Cargo.toml", "Cargo.lock", "rust-toolchain.toml"}:
                     config_files["rust"].append(relative_path)
-                elif filename in {"Dockerfile", "docker-compose.yml", "docker-compose.yaml"} or filename.startswith('.docker'):
+                elif filename in {
+                    "Dockerfile",
+                    "docker-compose.yml",
+                    "docker-compose.yaml",
+                } or filename.startswith(".docker"):
                     config_files["docker"].append(relative_path)
                 else:
                     config_files["general"].append(relative_path)
@@ -374,7 +465,7 @@ class ConfigFileDetector:
         return {
             "config_types": list(config_types),
             "config_count": len(config_files),
-            "has_secrets": has_secrets
+            "has_secrets": has_secrets,
         }
 
 
@@ -384,8 +475,22 @@ class FilePatternMatcher:
     def __init__(self, patterns: List[str] = None):
         # Default patterns cover common file types
         self.patterns = patterns or [
-            "*.py", "*.js", "*.ts", "*.rs", "*.go", "*.java", "*.cpp", "*.c", "*.h",
-            "*.css", "*.html", "*.md", "*.json", "*.yaml", "*.toml", "Dockerfile"
+            "*.py",
+            "*.js",
+            "*.ts",
+            "*.rs",
+            "*.go",
+            "*.java",
+            "*.cpp",
+            "*.c",
+            "*.h",
+            "*.css",
+            "*.html",
+            "*.md",
+            "*.json",
+            "*.yaml",
+            "*.toml",
+            "Dockerfile",
         ]
 
     def match(self, filepath: str) -> bool:
@@ -403,6 +508,7 @@ class FilePatternMatcher:
             if "*" in pattern:
                 # Simple glob-like matching
                 import fnmatch
+
                 if fnmatch.fnmatch(filename, pattern):
                     return True
             elif pattern == filename:
@@ -417,7 +523,8 @@ class FilePatternMatcher:
         """Check if file content matches regex pattern."""
         try:
             import re
-            content = file_path.read_text(encoding='utf-8', errors='ignore')
+
+            content = file_path.read_text(encoding="utf-8", errors="ignore")
             return bool(re.search(regex_pattern, content))
         except Exception:
             return False
@@ -429,11 +536,15 @@ class LanguageDetector:
     def __init__(self):
         self.language_patterns = {
             "python": [r"def\s+\w+\(.*\):", r"import\s+\w+", r"from\s+\w+\s+import"],
-            "javascript": [r"function\s+\w+\(.*\)", r"const\s+\w+\s*=", r"console\.log"],
+            "javascript": [
+                r"function\s+\w+\(.*\)",
+                r"const\s+\w+\s*=",
+                r"console\.log",
+            ],
             "rust": [r"fn\s+\w+\(.*\)", r"use\s+\w+", r"let\s+\w+\s*="],
             "go": [r"func\s+\w+\(.*\)", r"package\s+\w+", r"import\s+\("],
             "java": [r"public\s+class\s+\w+", r"public\s+static\s+void\s+main"],
-            "bash": [r"#!/bin/bash", r"#!/bin/sh"]
+            "bash": [r"#!/bin/bash", r"#!/bin/sh"],
         }
 
     def detect_language(self, file_path) -> str:
@@ -450,22 +561,25 @@ class LanguageDetector:
         # Try shebang detection
         if file_path.exists():
             try:
-                content = file_path.read_text(encoding='utf-8', errors='ignore')
-                first_line = content.split('\n')[0] if content else ""
+                content = file_path.read_text(encoding="utf-8", errors="ignore")
+                first_line = content.split("\n")[0] if content else ""
 
-                if first_line.startswith('#!'):
-                    if 'python' in first_line:
+                if first_line.startswith("#!"):
+                    if "python" in first_line:
                         return "python"
-                    elif 'node' in first_line:
+                    if "node" in first_line:
                         return "javascript"
-                    elif 'bash' in first_line:
-                        return "bash"
-                    elif '/bin/sh' in first_line or '/usr/bin/sh' in first_line:
+                    if (
+                        "bash" in first_line
+                        or "/bin/sh" in first_line
+                        or "/usr/bin/sh" in first_line
+                    ):
                         return "bash"
 
                 # Try content pattern matching
                 for language, patterns in self.language_patterns.items():
                     import re
+
                     for pattern in patterns:
                         if re.search(pattern, content):
                             return language
@@ -514,9 +628,17 @@ class LanguageDetector:
 class PatternRule:
     """Advanced pattern rule for project detection."""
 
-    def __init__(self, name: str = None, description: str = None, patterns: List[str] = None,
-                 priority: float = 1.0, required_patterns: List[str] = None,
-                 weight_factors: Dict[str, float] = None, pattern: str = None, action: str = "include"):
+    def __init__(
+        self,
+        name: str = None,
+        description: str = None,
+        patterns: List[str] = None,
+        priority: float = 1.0,
+        required_patterns: List[str] = None,
+        weight_factors: Dict[str, float] = None,
+        pattern: str = None,
+        action: str = "include",
+    ):
         # Support both new and legacy interfaces
         if pattern and not patterns:
             self.pattern = pattern
@@ -543,7 +665,10 @@ class PatternRule:
     def evaluate_match(self, project_path: Path):
         """Evaluate pattern rule against project."""
         from collections import namedtuple
-        MatchResult = namedtuple('MatchResult', ['matches', 'confidence', 'matched_patterns', 'score'])
+
+        MatchResult = namedtuple(
+            "MatchResult", ["matches", "confidence", "matched_patterns", "score"]
+        )
 
         matched_patterns = []
         total_score = 0.0
@@ -568,7 +693,7 @@ class PatternRule:
             matches=matches,
             confidence=confidence,
             matched_patterns=matched_patterns,
-            score=total_score
+            score=total_score,
         )
 
     def _pattern_exists(self, project_path: Path, pattern: str) -> bool:
@@ -576,9 +701,8 @@ class PatternRule:
         if "*" in pattern:
             # Glob pattern
             return len(list(project_path.glob(pattern))) > 0
-        else:
-            # Exact file/directory match
-            return (project_path / pattern).exists()
+        # Exact file/directory match
+        return (project_path / pattern).exists()
 
 
 class ProjectTypeDetector:
@@ -614,7 +738,7 @@ class ProjectTypeDetector:
             "rust": {"Cargo.toml"},
             "javascript": {"package.json"},
             "go": {"go.mod"},
-            "java": {"pom.xml", "build.gradle", "gradle.properties"}
+            "java": {"pom.xml", "build.gradle", "gradle.properties"},
         }
 
         detected_types = []
@@ -653,14 +777,16 @@ class ProjectTypeDetector:
         elif (path / "build.gradle").exists():
             build_system = "gradle"
 
-        primary_framework = max(frameworks, key=frameworks.get) if frameworks else "none"
+        primary_framework = (
+            max(frameworks, key=frameworks.get) if frameworks else "none"
+        )
 
         return {
             "type": project_type,
             "framework": primary_framework,
             "build_system": build_system,
             "frameworks": frameworks,
-            "language_stats": self.language_detector.get_language_stats(project_path)
+            "language_stats": self.language_detector.get_language_stats(project_path),
         }
 
     def add_detection_rule(self, rule):
@@ -688,7 +814,7 @@ class ProjectTypeDetector:
             "rust": {"Cargo.toml"},
             "javascript": {"package.json"},
             "go": {"go.mod"},
-            "java": {"pom.xml", "build.gradle", "gradle.properties"}
+            "java": {"pom.xml", "build.gradle", "gradle.properties"},
         }
 
         detected_types = []
@@ -698,7 +824,11 @@ class ProjectTypeDetector:
 
         # Project type indicators
         if project_type == "python":
-            indicators = [f for f in project_files if f in {"setup.py", "pyproject.toml", "requirements.txt", "Pipfile"}]
+            indicators = [
+                f
+                for f in project_files
+                if f in {"setup.py", "pyproject.toml", "requirements.txt", "Pipfile"}
+            ]
         elif project_type == "rust":
             indicators = [f for f in project_files if f == "Cargo.toml"]
         elif project_type == "javascript":
@@ -719,5 +849,5 @@ class ProjectTypeDetector:
             "indicators": indicators,
             "metadata": metadata,
             "languages": languages,
-            "all_files": project_files[:10]  # Limit for readability
+            "all_files": project_files[:10],  # Limit for readability
         }

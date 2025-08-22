@@ -13,6 +13,7 @@ from claude_builder.core.models import (
 
 class AgentRole(Enum):
     """Agent role categories."""
+
     CORE = "core"
     DOMAIN = "domain"
     WORKFLOW = "workflow"
@@ -22,6 +23,7 @@ class AgentRole(Enum):
 @dataclass
 class AgentInfo:
     """Information about a specific agent."""
+
     name: str
     role: AgentRole
     description: str
@@ -34,6 +36,7 @@ class AgentInfo:
 @dataclass
 class AgentConfiguration:
     """Complete agent configuration for a project."""
+
     core_agents: List[AgentInfo] = field(default_factory=list)
     domain_agents: List[AgentInfo] = field(default_factory=list)
     workflow_agents: List[AgentInfo] = field(default_factory=list)
@@ -44,10 +47,10 @@ class AgentConfiguration:
     def all_agents(self) -> List[AgentInfo]:
         """Get all agents sorted by priority."""
         all_agents = (
-            self.core_agents +
-            self.domain_agents +
-            self.workflow_agents +
-            self.custom_agents
+            self.core_agents
+            + self.domain_agents
+            + self.workflow_agents
+            + self.custom_agents
         )
         return sorted(all_agents, key=lambda a: (a.priority, a.name))
 
@@ -84,7 +87,7 @@ class UniversalAgentSystem:
             domain_agents=domain_agents,
             workflow_agents=workflow_agents,
             custom_agents=custom_agents,
-            coordination_patterns=coordination_patterns
+            coordination_patterns=coordination_patterns,
         )
 
 
@@ -101,85 +104,108 @@ class AgentRegistry:
     def _load_standard_agents(self):
         """Load standard awesome-claude-code-subagents."""
         # Core development agents
-        self._agents.update({
-            # Engineering Core
-            "rapid-prototyper": AgentInfo(
-                name="rapid-prototyper",
-                role=AgentRole.CORE,
-                description="MVP builder and rapid development specialist",
-                use_cases=["feature development", "proof of concepts", "rapid iteration"],
-                priority=1
-            ),
-            "backend-developer": AgentInfo(
-                name="backend-developer",
-                role=AgentRole.CORE,
-                description="Server-side architecture and API development",
-                use_cases=["API design", "business logic", "service architecture"],
-                priority=1
-            ),
-            "frontend-developer": AgentInfo(
-                name="frontend-developer",
-                role=AgentRole.CORE,
-                description="Client-side development and UI implementation",
-                use_cases=["user interfaces", "component architecture", "state management"],
-                priority=1
-            ),
-            "test-writer-fixer": AgentInfo(
-                name="test-writer-fixer",
-                role=AgentRole.CORE,
-                description="Testing strategy and implementation",
-                use_cases=["test suite design", "coverage analysis", "quality assurance"],
-                priority=2
-            ),
-
-            # Language Specialists
-            "python-pro": AgentInfo(
-                name="python-pro",
-                role=AgentRole.CORE,
-                description="Expert Python development with modern practices",
-                use_cases=["Python best practices", "type safety", "async programming"],
-                priority=1
-            ),
-
-            # Design & UX
-            "ui-designer": AgentInfo(
-                name="ui-designer",
-                role=AgentRole.WORKFLOW,
-                description="Interface design and user experience",
-                use_cases=["design systems", "component libraries", "user experience"],
-                priority=2
-            ),
-            "whimsy-injector": AgentInfo(
-                name="whimsy-injector",
-                role=AgentRole.WORKFLOW,
-                description="Adds delightful interactions and polish",
-                use_cases=["micro-interactions", "user delight", "polish"],
-                priority=3
-            ),
-
-            # DevOps & Operations
-            "devops-automator": AgentInfo(
-                name="devops-automator",
-                role=AgentRole.WORKFLOW,
-                description="Deployment and operations automation",
-                use_cases=["CI/CD pipelines", "infrastructure", "deployment"],
-                priority=2
-            ),
-            "api-tester": AgentInfo(
-                name="api-tester",
-                role=AgentRole.WORKFLOW,
-                description="API validation and testing",
-                use_cases=["API testing", "integration tests", "contract validation"],
-                priority=2
-            ),
-            "performance-benchmarker": AgentInfo(
-                name="performance-benchmarker",
-                role=AgentRole.WORKFLOW,
-                description="Performance optimization and benchmarking",
-                use_cases=["performance analysis", "optimization", "benchmarking"],
-                priority=2
-            )
-        })
+        self._agents.update(
+            {
+                # Engineering Core
+                "rapid-prototyper": AgentInfo(
+                    name="rapid-prototyper",
+                    role=AgentRole.CORE,
+                    description="MVP builder and rapid development specialist",
+                    use_cases=[
+                        "feature development",
+                        "proof of concepts",
+                        "rapid iteration",
+                    ],
+                    priority=1,
+                ),
+                "backend-developer": AgentInfo(
+                    name="backend-developer",
+                    role=AgentRole.CORE,
+                    description="Server-side architecture and API development",
+                    use_cases=["API design", "business logic", "service architecture"],
+                    priority=1,
+                ),
+                "frontend-developer": AgentInfo(
+                    name="frontend-developer",
+                    role=AgentRole.CORE,
+                    description="Client-side development and UI implementation",
+                    use_cases=[
+                        "user interfaces",
+                        "component architecture",
+                        "state management",
+                    ],
+                    priority=1,
+                ),
+                "test-writer-fixer": AgentInfo(
+                    name="test-writer-fixer",
+                    role=AgentRole.CORE,
+                    description="Testing strategy and implementation",
+                    use_cases=[
+                        "test suite design",
+                        "coverage analysis",
+                        "quality assurance",
+                    ],
+                    priority=2,
+                ),
+                # Language Specialists
+                "python-pro": AgentInfo(
+                    name="python-pro",
+                    role=AgentRole.CORE,
+                    description="Expert Python development with modern practices",
+                    use_cases=[
+                        "Python best practices",
+                        "type safety",
+                        "async programming",
+                    ],
+                    priority=1,
+                ),
+                # Design & UX
+                "ui-designer": AgentInfo(
+                    name="ui-designer",
+                    role=AgentRole.WORKFLOW,
+                    description="Interface design and user experience",
+                    use_cases=[
+                        "design systems",
+                        "component libraries",
+                        "user experience",
+                    ],
+                    priority=2,
+                ),
+                "whimsy-injector": AgentInfo(
+                    name="whimsy-injector",
+                    role=AgentRole.WORKFLOW,
+                    description="Adds delightful interactions and polish",
+                    use_cases=["micro-interactions", "user delight", "polish"],
+                    priority=3,
+                ),
+                # DevOps & Operations
+                "devops-automator": AgentInfo(
+                    name="devops-automator",
+                    role=AgentRole.WORKFLOW,
+                    description="Deployment and operations automation",
+                    use_cases=["CI/CD pipelines", "infrastructure", "deployment"],
+                    priority=2,
+                ),
+                "api-tester": AgentInfo(
+                    name="api-tester",
+                    role=AgentRole.WORKFLOW,
+                    description="API validation and testing",
+                    use_cases=[
+                        "API testing",
+                        "integration tests",
+                        "contract validation",
+                    ],
+                    priority=2,
+                ),
+                "performance-benchmarker": AgentInfo(
+                    name="performance-benchmarker",
+                    role=AgentRole.WORKFLOW,
+                    description="Performance optimization and benchmarking",
+                    use_cases=["performance analysis", "optimization", "benchmarking"],
+                    priority=2,
+                ),
+            }
+        )
 
     def _load_language_mappings(self):
         """Load language-specific agent mappings."""
@@ -189,11 +215,15 @@ class AgentRegistry:
                 "web_frameworks": {
                     "django": ["backend-developer", "database-architect"],
                     "flask": ["backend-developer", "api-designer"],
-                    "fastapi": ["backend-developer", "api-designer", "performance-benchmarker"],
-                    "data_science": ["data-scientist", "ml-engineer"]
+                    "fastapi": [
+                        "backend-developer",
+                        "api-designer",
+                        "performance-benchmarker",
+                    ],
+                    "data_science": ["data-scientist", "ml-engineer"],
                 },
                 "testing": ["test-writer-fixer"],
-                "deployment": ["devops-automator"]
+                "deployment": ["devops-automator"],
             },
             "rust": {
                 "primary": ["rust-engineer"],
@@ -201,55 +231,92 @@ class AgentRegistry:
                     "cli_tool": ["cli-developer", "performance-benchmarker"],
                     "web_service": ["backend-developer", "api-designer"],
                     "systems": ["performance-benchmarker", "security-engineer"],
-                    "library": ["documentation-engineer", "test-writer-fixer"]
-                }
+                    "library": ["documentation-engineer", "test-writer-fixer"],
+                },
             },
             "javascript": {
                 "primary": ["javascript-pro"],
                 "frontend": {
                     "react": ["frontend-developer", "react-specialist", "ui-designer"],
                     "vue": ["frontend-developer", "vue-expert", "ui-designer"],
-                    "angular": ["frontend-developer", "angular-architect", "typescript-pro"]
+                    "angular": [
+                        "frontend-developer",
+                        "angular-architect",
+                        "typescript-pro",
+                    ],
                 },
                 "backend": {
                     "node": ["backend-developer", "api-designer"],
                     "express": ["backend-developer", "api-designer"],
-                    "nestjs": ["backend-developer", "typescript-pro", "api-designer"]
-                }
-            }
+                    "nestjs": ["backend-developer", "typescript-pro", "api-designer"],
+                },
+            },
         }
 
     def _load_framework_mappings(self):
         """Load framework-specific agent mappings."""
         self.framework_mappings = {
             # Python frameworks
-            "django": ["python-pro", "backend-developer", "database-architect", "security-engineer"],
+            "django": [
+                "python-pro",
+                "backend-developer",
+                "database-architect",
+                "security-engineer",
+            ],
             "flask": ["python-pro", "backend-developer", "api-designer"],
-            "fastapi": ["python-pro", "backend-developer", "api-designer", "performance-benchmarker"],
-
+            "fastapi": [
+                "python-pro",
+                "backend-developer",
+                "api-designer",
+                "performance-benchmarker",
+            ],
             # JavaScript frameworks
             "react": ["frontend-developer", "ui-designer", "whimsy-injector"],
             "vue": ["frontend-developer", "ui-designer"],
             "angular": ["frontend-developer", "typescript-pro"],
             "express": ["backend-developer", "api-designer"],
             "nestjs": ["backend-developer", "typescript-pro", "api-designer"],
-
             # Rust frameworks
-            "axum": ["rust-engineer", "backend-developer", "api-designer", "performance-benchmarker"],
+            "axum": [
+                "rust-engineer",
+                "backend-developer",
+                "api-designer",
+                "performance-benchmarker",
+            ],
             "actix": ["rust-engineer", "backend-developer", "performance-benchmarker"],
-            "warp": ["rust-engineer", "backend-developer", "api-designer"]
+            "warp": ["rust-engineer", "backend-developer", "api-designer"],
         }
 
     def _load_domain_mappings(self):
         """Load domain-specific agent mappings."""
         self.domain_mappings = {
-            "e_commerce": ["payment-specialist", "inventory-expert", "analytics-reporter"],
+            "e_commerce": [
+                "payment-specialist",
+                "inventory-expert",
+                "analytics-reporter",
+            ],
             "data_science": ["data-scientist", "ml-engineer", "analytics-reporter"],
             "social_media": ["content-creator", "growth-hacker", "analytics-reporter"],
-            "fintech": ["security-engineer", "compliance-checker", "payment-specialist"],
-            "health_tech": ["security-engineer", "compliance-checker", "data-protection-expert"],
-            "gaming": ["performance-benchmarker", "graphics-specialist", "game-designer"],
-            "iot": ["embedded-engineer", "security-engineer", "data-pipeline-architect"]
+            "fintech": [
+                "security-engineer",
+                "compliance-checker",
+                "payment-specialist",
+            ],
+            "health_tech": [
+                "security-engineer",
+                "compliance-checker",
+                "data-protection-expert",
+            ],
+            "gaming": [
+                "performance-benchmarker",
+                "graphics-specialist",
+                "game-designer",
+            ],
+            "iot": [
+                "embedded-engineer",
+                "security-engineer",
+                "data-pipeline-architect",
+            ],
         }
 
     def get_agent(self, name: str) -> Optional[AgentInfo]:
@@ -286,7 +353,9 @@ class AgentSelector:
 
             # Add primary language agent
             if language in self.registry.language_mappings:
-                primary_agents = self.registry.language_mappings[language].get("primary", [])
+                primary_agents = self.registry.language_mappings[language].get(
+                    "primary", []
+                )
                 for agent_name in primary_agents:
                     agent = self.registry.get_agent(agent_name)
                     if agent:
@@ -330,7 +399,10 @@ class AgentSelector:
                             agents.append(agent)
 
         # Project type specific agents
-        if analysis.project_type in [ProjectType.API_SERVICE, ProjectType.WEB_APPLICATION]:
+        if analysis.project_type in [
+            ProjectType.API_SERVICE,
+            ProjectType.WEB_APPLICATION,
+        ]:
             api_agent = self.registry.get_agent("api-tester")
             if api_agent and api_agent not in agents:
                 agents.append(api_agent)
@@ -342,7 +414,10 @@ class AgentSelector:
         agents = []
 
         # Complexity-based selection
-        if analysis.complexity_level in [ComplexityLevel.COMPLEX, ComplexityLevel.ENTERPRISE]:
+        if analysis.complexity_level in [
+            ComplexityLevel.COMPLEX,
+            ComplexityLevel.ENTERPRISE,
+        ]:
             complex_agents = ["devops-automator", "performance-benchmarker"]
             for agent_name in complex_agents:
                 agent = self.registry.get_agent(agent_name)
@@ -362,7 +437,9 @@ class AgentSelector:
                 agents.append(test_agent)
 
         # UI/Frontend projects
-        if analysis.project_type in [ProjectType.WEB_APPLICATION] or analysis.framework_info.primary in ["react", "vue", "angular"]:
+        if analysis.project_type in [
+            ProjectType.WEB_APPLICATION
+        ] or analysis.framework_info.primary in ["react", "vue", "angular"]:
             ui_agents = ["ui-designer", "whimsy-injector"]
             for agent_name in ui_agents:
                 agent = self.registry.get_agent(agent_name)
@@ -374,18 +451,18 @@ class AgentSelector:
     def select_agents(self, analysis: ProjectAnalysis) -> List[AgentInfo]:
         """Select all appropriate agents for a project."""
         agents = []
-        
+
         # Core agents
         agents.extend(self.select_core_agents(analysis))
-        
+
         # Domain agents
         agents.extend(self.select_domain_agents(analysis))
-        
+
         # Workflow agents based on complexity
         if analysis.complexity_level == ComplexityLevel.COMPLEX:
             workflow_agents = self.select_workflow_agents(analysis)
             agents.extend(workflow_agents)
-        
+
         # Remove duplicates while preserving order
         seen = set()
         unique_agents = []
@@ -393,18 +470,18 @@ class AgentSelector:
             if agent.name not in seen:
                 seen.add(agent.name)
                 unique_agents.append(agent)
-        
+
         return unique_agents
 
     def select_workflow_agents(self, analysis: ProjectAnalysis) -> List[AgentInfo]:
         """Select workflow agents for complex projects."""
         agents = []
-        
+
         # Add studio-coach for complex coordination
         coach_agent = self.registry.get_agent("studio-coach")
         if coach_agent:
             agents.append(coach_agent)
-            
+
         return agents
 
     def generate_custom_agents(self, analysis: ProjectAnalysis) -> List[AgentInfo]:
@@ -437,30 +514,52 @@ class AgentSelector:
         if "scripts" in structure or "tools" in structure:
             patterns.append("automation_specialist")
 
-        if "docker" in str(structure) or "k8s" in str(structure) or "kubernetes" in str(structure):
+        if (
+            "docker" in str(structure)
+            or "k8s" in str(structure)
+            or "kubernetes" in str(structure)
+        ):
             patterns.append("container_specialist")
 
         return patterns
 
-    def _create_domain_agent(self, agent_name: str, domain: str, analysis: ProjectAnalysis) -> Optional[AgentInfo]:
+    def _create_domain_agent(
+        self, agent_name: str, domain: str, analysis: ProjectAnalysis
+    ) -> Optional[AgentInfo]:
         """Create a domain-specific agent."""
         agent_templates = {
             "payment-specialist": {
                 "description": "Payment processing and financial transactions expert",
-                "use_cases": ["payment gateways", "transaction security", "financial compliance"]
+                "use_cases": [
+                    "payment gateways",
+                    "transaction security",
+                    "financial compliance",
+                ],
             },
             "inventory-expert": {
                 "description": "Inventory management and supply chain specialist",
-                "use_cases": ["stock management", "supply chain optimization", "inventory tracking"]
+                "use_cases": [
+                    "stock management",
+                    "supply chain optimization",
+                    "inventory tracking",
+                ],
             },
             "data-scientist": {
                 "description": "Data analysis and machine learning specialist",
-                "use_cases": ["data preprocessing", "model development", "statistical analysis"]
+                "use_cases": [
+                    "data preprocessing",
+                    "model development",
+                    "statistical analysis",
+                ],
             },
             "content-creator": {
                 "description": "Content strategy and creation specialist",
-                "use_cases": ["content planning", "SEO optimization", "content automation"]
-            }
+                "use_cases": [
+                    "content planning",
+                    "SEO optimization",
+                    "content automation",
+                ],
+            },
         }
 
         template = agent_templates.get(agent_name)
@@ -470,30 +569,48 @@ class AgentSelector:
                 role=AgentRole.DOMAIN,
                 description=template["description"],
                 use_cases=template["use_cases"],
-                confidence=analysis.domain_info.confidence / 100.0 if analysis.domain_info else 0.5,
-                priority=2
+                confidence=(
+                    analysis.domain_info.confidence / 100.0
+                    if analysis.domain_info
+                    else 0.5
+                ),
+                priority=2,
             )
         return None
 
-    def _create_custom_agent(self, pattern: str, analysis: ProjectAnalysis) -> Optional[AgentInfo]:
+    def _create_custom_agent(
+        self, pattern: str, analysis: ProjectAnalysis
+    ) -> Optional[AgentInfo]:
         """Create a custom agent for detected patterns."""
         custom_templates = {
             "database_specialist": {
                 "description": f"Database architecture specialist for {analysis.language_info.primary} projects",
-                "use_cases": ["schema design", "query optimization", "migration management"]
+                "use_cases": [
+                    "schema design",
+                    "query optimization",
+                    "migration management",
+                ],
             },
             "documentation_specialist": {
                 "description": "Documentation and knowledge management specialist",
-                "use_cases": ["API documentation", "user guides", "technical writing"]
+                "use_cases": ["API documentation", "user guides", "technical writing"],
             },
             "automation_specialist": {
                 "description": "Build and deployment automation specialist",
-                "use_cases": ["build scripts", "deployment automation", "workflow optimization"]
+                "use_cases": [
+                    "build scripts",
+                    "deployment automation",
+                    "workflow optimization",
+                ],
             },
             "container_specialist": {
                 "description": "Container orchestration and deployment specialist",
-                "use_cases": ["Docker optimization", "Kubernetes deployment", "container security"]
-            }
+                "use_cases": [
+                    "Docker optimization",
+                    "Kubernetes deployment",
+                    "container security",
+                ],
+            },
         }
 
         template = custom_templates.get(pattern)
@@ -504,7 +621,7 @@ class AgentSelector:
                 description=template["description"],
                 use_cases=template["use_cases"],
                 confidence=0.7,
-                priority=3
+                priority=3,
             )
         return None
 
@@ -518,107 +635,138 @@ class AgentConfigurator:
         domain_agents: List[AgentInfo],
         workflow_agents: List[AgentInfo],
         custom_agents: List[AgentInfo],
-        analysis: ProjectAnalysis
+        analysis: ProjectAnalysis,
     ) -> Dict[str, Any]:
         """Generate coordination patterns for agent workflows."""
 
         all_agents = core_agents + domain_agents + workflow_agents + custom_agents
 
         patterns = {
-            "feature_development_workflow": self._generate_feature_workflow(all_agents, analysis),
+            "feature_development_workflow": self._generate_feature_workflow(
+                all_agents, analysis
+            ),
             "bug_fixing_workflow": self._generate_bug_workflow(all_agents, analysis),
-            "deployment_workflow": self._generate_deployment_workflow(all_agents, analysis),
+            "deployment_workflow": self._generate_deployment_workflow(
+                all_agents, analysis
+            ),
             "agent_handoffs": self._generate_handoff_patterns(all_agents),
-            "parallel_workflows": self._generate_parallel_patterns(all_agents, analysis)
+            "parallel_workflows": self._generate_parallel_patterns(
+                all_agents, analysis
+            ),
         }
 
         return patterns
 
-    def _generate_feature_workflow(self, agents: List[AgentInfo], analysis: ProjectAnalysis) -> List[str]:
+    def _generate_feature_workflow(
+        self, agents: List[AgentInfo], analysis: ProjectAnalysis
+    ) -> List[str]:
         """Generate feature development workflow."""
         workflow = []
 
         # Planning phase
         if any(a.name == "rapid-prototyper" for a in agents):
-            workflow.append("1. Planning: Use rapid-prototyper to design feature architecture")
+            workflow.append(
+                "1. Planning: Use rapid-prototyper to design feature architecture"
+            )
 
         # Core development
-        language_agent = next((a.name for a in agents if "pro" in a.name or "engineer" in a.name), None)
+        language_agent = next(
+            (a.name for a in agents if "pro" in a.name or "engineer" in a.name), None
+        )
         if language_agent:
-            workflow.append(f"2. Implementation: Use {language_agent} for core development")
+            workflow.append(
+                f"2. Implementation: Use {language_agent} for core development"
+            )
 
         # Testing
         if any(a.name == "test-writer-fixer" for a in agents):
-            workflow.append("3. Testing: Use test-writer-fixer to create comprehensive tests")
+            workflow.append(
+                "3. Testing: Use test-writer-fixer to create comprehensive tests"
+            )
 
         # Review
         workflow.append("4. Review: Use code-reviewer for quality assurance")
 
         return workflow
 
-    def _generate_bug_workflow(self, agents: List[AgentInfo], analysis: ProjectAnalysis) -> List[str]:
+    def _generate_bug_workflow(
+        self, agents: List[AgentInfo], analysis: ProjectAnalysis
+    ) -> List[str]:
         """Generate bug fixing workflow."""
         workflow = [
             "1. Investigation: Use debugging specialists to identify issues",
             "2. Fix: Use appropriate language/framework agents",
             "3. Testing: Use test-writer-fixer to prevent regressions",
-            "4. Documentation: Update relevant documentation"
+            "4. Documentation: Update relevant documentation",
         ]
         return workflow
 
-    def _generate_deployment_workflow(self, agents: List[AgentInfo], analysis: ProjectAnalysis) -> List[str]:
+    def _generate_deployment_workflow(
+        self, agents: List[AgentInfo], analysis: ProjectAnalysis
+    ) -> List[str]:
         """Generate deployment workflow."""
         workflow = []
 
         if any(a.name == "devops-automator" for a in agents):
-            workflow.extend([
-                "1. Preparation: Use devops-automator for deployment planning",
-                "2. Testing: Run comprehensive test suite",
-                "3. Deployment: Execute deployment pipeline",
-                "4. Monitoring: Set up monitoring and alerting"
-            ])
+            workflow.extend(
+                [
+                    "1. Preparation: Use devops-automator for deployment planning",
+                    "2. Testing: Run comprehensive test suite",
+                    "3. Deployment: Execute deployment pipeline",
+                    "4. Monitoring: Set up monitoring and alerting",
+                ]
+            )
         else:
-            workflow.extend([
-                "1. Manual deployment preparation",
-                "2. Test in staging environment",
-                "3. Deploy to production",
-                "4. Monitor application health"
-            ])
+            workflow.extend(
+                [
+                    "1. Manual deployment preparation",
+                    "2. Test in staging environment",
+                    "3. Deploy to production",
+                    "4. Monitor application health",
+                ]
+            )
 
         return workflow
 
-    def _generate_handoff_patterns(self, agents: List[AgentInfo]) -> Dict[str, List[str]]:
+    def _generate_handoff_patterns(
+        self, agents: List[AgentInfo]
+    ) -> Dict[str, List[str]]:
         """Generate agent handoff patterns."""
         handoffs = {}
 
         for agent in agents:
             if agent.role == AgentRole.CORE:
                 if "developer" in agent.name:
-                    handoffs[agent.name] = ["test-writer-fixer", "performance-benchmarker"]
+                    handoffs[agent.name] = [
+                        "test-writer-fixer",
+                        "performance-benchmarker",
+                    ]
                 elif "pro" in agent.name or "engineer" in agent.name:
                     handoffs[agent.name] = ["test-writer-fixer", "devops-automator"]
             elif agent.role == AgentRole.WORKFLOW:
                 if agent.name == "test-writer-fixer":
-                    handoffs[agent.name] = ["devops-automator", "performance-benchmarker"]
+                    handoffs[agent.name] = [
+                        "devops-automator",
+                        "performance-benchmarker",
+                    ]
 
         return handoffs
 
-    def _generate_parallel_patterns(self, agents: List[AgentInfo], analysis: ProjectAnalysis) -> Dict[str, List[str]]:
+    def _generate_parallel_patterns(
+        self, agents: List[AgentInfo], analysis: ProjectAnalysis
+    ) -> Dict[str, List[str]]:
         """Generate parallel workflow patterns."""
         parallel = {}
 
         # Development tracks that can run in parallel
         if analysis.project_type == ProjectType.WEB_APPLICATION:
-            parallel["frontend_backend"] = [
-                "frontend-developer",
-                "backend-developer"
-            ]
+            parallel["frontend_backend"] = ["frontend-developer", "backend-developer"]
 
-        if analysis.complexity_level in [ComplexityLevel.COMPLEX, ComplexityLevel.ENTERPRISE]:
-            parallel["development_ops"] = [
-                "rapid-prototyper",
-                "devops-automator"
-            ]
+        if analysis.complexity_level in [
+            ComplexityLevel.COMPLEX,
+            ComplexityLevel.ENTERPRISE,
+        ]:
+            parallel["development_ops"] = ["rapid-prototyper", "devops-automator"]
 
         return parallel
 
@@ -626,6 +774,7 @@ class AgentConfigurator:
 @dataclass
 class AgentTask:
     """Task for agent execution."""
+
     task_type: str
     data: Dict[str, Any] = field(default_factory=dict)
     context: Dict[str, Any] = field(default_factory=dict)
@@ -651,7 +800,12 @@ class Agent:
 class AgentCoordinator:
     """Placeholder AgentCoordinator class for test compatibility."""
 
-    def __init__(self, registry_or_agents = None, enable_monitoring: bool = False, max_concurrent_agents: int = 10):
+    def __init__(
+        self,
+        registry_or_agents=None,
+        enable_monitoring: bool = False,
+        max_concurrent_agents: int = 10,
+    ):
         if registry_or_agents is None:
             self.agents = []
             self.registry = None
@@ -692,10 +846,10 @@ class AgentCoordinator:
 
         # Find agent with highest priority (lowest number)
         if self.agents:
-            selected_agent = min(self.agents, key=lambda a: getattr(a, 'priority', 1))
+            selected_agent = min(self.agents, key=lambda a: getattr(a, "priority", 1))
 
             # If agent has execute method, call it
-            if hasattr(selected_agent, 'execute'):
+            if hasattr(selected_agent, "execute"):
                 try:
                     return selected_agent.execute(task)
                 except Exception:
@@ -711,7 +865,7 @@ class AgentCoordinator:
             "can_proceed": True,
             "read_state": {"name": "test-project"},
             "source": "high_priority",  # For priority coordination tests
-            "quality": "excellent"
+            "quality": "excellent",
         }
         return result
 
@@ -728,19 +882,25 @@ class AgentCoordinator:
 
         # Get agents with the required capability
         capable_agents = []
-        if self.registry and hasattr(self.registry, '_agents'):
-            capable_agents = [agent for agent in self.registry._agents.values()
-                             if task.task_type in getattr(agent, 'capabilities', [])]
+        if self.registry and hasattr(self.registry, "_agents"):
+            capable_agents = [
+                agent
+                for agent in self.registry._agents.values()
+                if task.task_type in getattr(agent, "capabilities", [])
+            ]
         else:
-            capable_agents = [agent for agent in self.agents
-                             if task.task_type in getattr(agent, 'capabilities', [])]
+            capable_agents = [
+                agent
+                for agent in self.agents
+                if task.task_type in getattr(agent, "capabilities", [])
+            ]
 
         # Try each agent until one succeeds
         last_error = None
         for agent in capable_agents:
             try:
                 result = agent.execute(task)
-                if getattr(result, 'success', True):
+                if getattr(result, "success", True):
                     return result
             except Exception as e:
                 # Record error and try next agent
@@ -771,20 +931,19 @@ class AgentCoordinator:
         for i, task in enumerate(tasks):
             # Find capable agent for this task
             capable_agent = None
-            if self.registry and hasattr(self.registry, '_agents'):
+            if self.registry and hasattr(self.registry, "_agents"):
                 for agent in self.registry._agents.values():
-                    if task.task_type in getattr(agent, 'capabilities', []):
+                    if task.task_type in getattr(agent, "capabilities", []):
                         capable_agent = agent
                         break
-            else:
-                # Use agents in order if available
-                if i < len(self.agents):
-                    capable_agent = self.agents[i]
-                elif self.agents:
-                    capable_agent = self.agents[0]
+            # Use agents in order if available
+            elif i < len(self.agents):
+                capable_agent = self.agents[i]
+            elif self.agents:
+                capable_agent = self.agents[0]
 
             # Execute with the capable agent
-            if capable_agent and hasattr(capable_agent, 'execute'):
+            if capable_agent and hasattr(capable_agent, "execute"):
                 try:
                     result = capable_agent.execute(task)
                     results.append(result)
@@ -816,7 +975,7 @@ class AgentCoordinator:
         results = []
         for i, task in enumerate(tasks):
             # Try to use an agent if available
-            if i < len(self.agents) and hasattr(self.agents[i], 'execute'):
+            if i < len(self.agents) and hasattr(self.agents[i], "execute"):
                 try:
                     result = self.agents[i].execute(task)
                     results.append(result)
@@ -858,7 +1017,7 @@ class AgentCoordinator:
             "max_concurrent": self.max_concurrent_agents,
             "average_response_time": 50.0,  # Mock metric
             "success_rate": 0.95,  # Mock metric
-            "coordination_patterns": len(self.coordination_patterns)
+            "coordination_patterns": len(self.coordination_patterns),
         }
 
     def execute_workflow(self, tasks: List["AgentTask"]) -> List:
@@ -871,6 +1030,7 @@ class AgentCoordinator:
                 def __init__(self):
                     self.success = True
                     self.data = {}
+
         results = []
 
         for task in tasks:
@@ -882,18 +1042,18 @@ class AgentCoordinator:
                 result.data = {
                     "project_type": "python",
                     "dependencies": ["click", "pytest"],
-                    "framework": "click"
+                    "framework": "click",
                 }
             elif task.task_type == "framework_detection":
                 result.data = {
                     "framework": "click",
                     "patterns": ["cli", "command_line"],
-                    "confidence": 0.9
+                    "confidence": 0.9,
                 }
             elif task.task_type == "documentation_generation":
                 result.data = {
                     "generated_docs": ["CLAUDE.md", "README.md", "AGENTS.md"],
-                    "template_used": "python-cli"
+                    "template_used": "python-cli",
                 }
             else:
                 result.data = {"mock": "result"}
@@ -920,7 +1080,14 @@ class AgentManager:
 
     def discover_available_agents(self) -> List[AgentInfo]:
         """Discover all available agents."""
-        agent_names = ["python-pro", "backend-architect", "frontend-developer", "test-writer-fixer", "ui-designer", "rapid-prototyper"]
+        agent_names = [
+            "python-pro",
+            "backend-architect",
+            "frontend-developer",
+            "test-writer-fixer",
+            "ui-designer",
+            "rapid-prototyper",
+        ]
         agents = []
         for name in agent_names:
             agent = AgentInfo(
@@ -928,7 +1095,7 @@ class AgentManager:
                 role=AgentRole.CORE,
                 description=f"Agent for {name} functionality",
                 use_cases=[f"{name} development"],
-                confidence=0.8
+                confidence=0.8,
             )
             agents.append(agent)
         return agents
@@ -941,7 +1108,7 @@ class AgentManager:
         """Install an agent."""
         return self._download_agent(agent_name)
 
-    def create_workflow(self, agents: List[str]) -> 'AgentWorkflow':
+    def create_workflow(self, agents: List[str]) -> "AgentWorkflow":
         """Create a workflow for the given agents."""
         workflow = AgentWorkflow("project_workflow")
         for agent in agents:
@@ -949,7 +1116,7 @@ class AgentManager:
             workflow.agents.append(agent)  # Track the agents
         return workflow
 
-    def create_workflow_for_project(self, project_analysis: Any) -> 'AgentWorkflow':
+    def create_workflow_for_project(self, project_analysis: Any) -> "AgentWorkflow":
         """Create workflow specifically for a project analysis."""
         selected_agents = self.select_agents_for_project(project_analysis)
         agent_names = [agent.name for agent in selected_agents]

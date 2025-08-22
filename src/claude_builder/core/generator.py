@@ -26,7 +26,9 @@ class DocumentGenerator:
         self.template_manager = CoreTemplateManager()
         self.agent_system = UniversalAgentSystem()
 
-    def generate(self, analysis: ProjectAnalysis, output_path: Path) -> GeneratedContent:
+    def generate(
+        self, analysis: ProjectAnalysis, output_path: Path
+    ) -> GeneratedContent:
         """Generate all documentation for the project."""
         try:
             # Create template request
@@ -34,7 +36,7 @@ class DocumentGenerator:
                 analysis=analysis,
                 template_name=self.config.get("preferred_template"),
                 output_format=self.config.get("output_format", "files"),
-                customizations=self.config.get("customizations", {})
+                customizations=self.config.get("customizations", {}),
             )
 
             # Generate content using new template system
@@ -57,9 +59,9 @@ class DocumentGenerator:
                 metadata={
                     "generation_timestamp": datetime.now().isoformat(),
                     "analyzer_version": "0.1.0",
-                    "template_version": "0.1.0"
+                    "template_version": "0.1.0",
                 },
-                template_info=self._get_template_info()
+                template_info=self._get_template_info(),
             )
 
         except Exception as e:
@@ -72,17 +74,17 @@ class DocumentGenerator:
         try:
             # Generate CLAUDE.md using hierarchical template system
             claude_content = self.template_manager.generate_from_analysis(
-                analysis,
-                template_name="base"
+                analysis, template_name="base"
             )
             files["CLAUDE.md"] = claude_content
 
         except Exception:
             # Fallback to default template if template system fails
-            default_context = self.template_manager._create_context_from_analysis(analysis)
+            default_context = self.template_manager._create_context_from_analysis(
+                analysis
+            )
             files["CLAUDE.md"] = self.template_manager.render_template(
-                self._get_default_claude_template(),
-                default_context
+                self._get_default_claude_template(), default_context
             )
 
         return files
@@ -103,27 +105,35 @@ class DocumentGenerator:
 
             # Add agent-specific variables to context
             if hasattr(agent_config, "core_agents"):
-                context["core_agents"] = ", ".join([a.name for a in agent_config.core_agents])
-                context["primary_agent"] = agent_config.core_agents[0].name if agent_config.core_agents else "rapid-prototyper"
+                context["core_agents"] = ", ".join(
+                    [a.name for a in agent_config.core_agents]
+                )
+                context["primary_agent"] = (
+                    agent_config.core_agents[0].name
+                    if agent_config.core_agents
+                    else "rapid-prototyper"
+                )
             else:
-                context["core_agents"] = "rapid-prototyper, backend-architect, test-writer-fixer"
+                context["core_agents"] = (
+                    "rapid-prototyper, backend-architect, test-writer-fixer"
+                )
                 context["primary_agent"] = "rapid-prototyper"
 
             # Use intelligent agents template
             agent_content = self.template_manager.render_template(
-                self._get_intelligent_agents_template(),
-                context
+                self._get_intelligent_agents_template(), context
             )
             files["AGENTS.md"] = agent_content
 
         except Exception:
             # Fallback to basic agents template
             context = self.template_manager._create_context_from_analysis(analysis)
-            context["core_agents"] = "rapid-prototyper, backend-architect, test-writer-fixer"
+            context["core_agents"] = (
+                "rapid-prototyper, backend-architect, test-writer-fixer"
+            )
             context["primary_agent"] = "rapid-prototyper"
             files["AGENTS.md"] = self.template_manager.render_template(
-                self._get_default_agents_template(),
-                context
+                self._get_default_agents_template(), context
             )
 
         return files
@@ -137,19 +147,19 @@ class DocumentGenerator:
 
         # Feature development workflow
         feature_workflow = self._get_feature_workflow_template()
-        files[".claude/workflows/FEATURE_DEVELOPMENT.md"] = self.template_manager.render_template(
-            feature_workflow, context
+        files[".claude/workflows/FEATURE_DEVELOPMENT.md"] = (
+            self.template_manager.render_template(feature_workflow, context)
         )
 
         # Testing workflow (if project has tests)
         if getattr(analysis, "has_tests", False) or (
-            hasattr(analysis, "filesystem_info") and
-            analysis.filesystem_info and
-            analysis.filesystem_info.test_files > 0
+            hasattr(analysis, "filesystem_info")
+            and analysis.filesystem_info
+            and analysis.filesystem_info.test_files > 0
         ):
             testing_workflow = self._get_testing_workflow_template()
-            files[".claude/workflows/TESTING.md"] = self.template_manager.render_template(
-                testing_workflow, context
+            files[".claude/workflows/TESTING.md"] = (
+                self.template_manager.render_template(testing_workflow, context)
             )
 
         return files
@@ -163,18 +173,24 @@ class DocumentGenerator:
         complexity = getattr(analysis, "complexity_level", None)
         if complexity and complexity.value in ["complex", "enterprise"]:
             arch_template = self._get_default_architecture_template()
-            files[".claude/ARCHITECTURE.md"] = self.template_manager.render_template(arch_template, context)
+            files[".claude/ARCHITECTURE.md"] = self.template_manager.render_template(
+                arch_template, context
+            )
 
         # API documentation for web projects
         is_web = getattr(analysis, "is_web_project", False)
         if is_web:
             api_template = self._get_api_documentation_template()
-            files[".claude/API_DESIGN.md"] = self.template_manager.render_template(api_template, context)
+            files[".claude/API_DESIGN.md"] = self.template_manager.render_template(
+                api_template, context
+            )
 
         # Performance guide for complex projects
         if complexity and complexity.value in ["complex", "enterprise"]:
             perf_template = self._get_default_performance_template()
-            files[".claude/PERFORMANCE.md"] = self.template_manager.render_template(perf_template, context)
+            files[".claude/PERFORMANCE.md"] = self.template_manager.render_template(
+                perf_template, context
+            )
 
         return files
 
@@ -192,19 +208,21 @@ class DocumentGenerator:
             "framework": analysis.framework or "None",
             "project_type": analysis.project_type.value.replace("_", " ").title(),
             "complexity": analysis.complexity_level.value.title(),
-            "architecture": analysis.architecture_pattern.value.replace("_", " ").title(),
+            "architecture": analysis.architecture_pattern.value.replace(
+                "_", " "
+            ).title(),
             "has_tests": "Yes" if analysis.has_tests else "No",
             "has_ci_cd": "Yes" if analysis.has_ci_cd else "No",
             "uses_database": "Yes" if analysis.uses_database else "No",
             "is_containerized": "Yes" if analysis.is_containerized else "No",
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "date": datetime.now().strftime("%Y-%m-%d"),
-
             # Language-specific variables
             "package_managers": ", ".join(analysis.dev_environment.package_managers),
-            "testing_frameworks": ", ".join(analysis.dev_environment.testing_frameworks),
+            "testing_frameworks": ", ".join(
+                analysis.dev_environment.testing_frameworks
+            ),
             "ci_cd_systems": ", ".join(analysis.dev_environment.ci_cd_systems),
-
             # File counts
             "total_files": str(analysis.filesystem_info.total_files),
             "source_files": str(analysis.filesystem_info.source_files),
@@ -215,21 +233,53 @@ class DocumentGenerator:
         if hasattr(analysis, "agent_configuration") and analysis.agent_configuration:
             agent_config = analysis.agent_configuration
 
-            variables.update({
-                "core_agents": ", ".join([a.name for a in agent_config.core_agents]),
-                "domain_agents": ", ".join([a.name for a in agent_config.domain_agents]),
-                "workflow_agents": ", ".join([a.name for a in agent_config.workflow_agents]),
-                "custom_agents": ", ".join([a.name for a in agent_config.custom_agents]),
-                "total_agents": str(len(agent_config.all_agents)),
-                "primary_agent": agent_config.core_agents[0].name if agent_config.core_agents else "rapid-prototyper",
-                "analysis_confidence": f"{analysis.analysis_confidence:.1f}",
-                "language_confidence": f"{analysis.language_info.confidence:.1f}" if analysis.language_info else "0.0",
-
-                # Agent workflow patterns
-                "feature_workflow": "\n".join(f"- {step}" for step in agent_config.coordination_patterns.get("feature_development_workflow", [])),
-                "bug_workflow": "\n".join(f"- {step}" for step in agent_config.coordination_patterns.get("bug_fixing_workflow", [])),
-                "deployment_workflow": "\n".join(f"- {step}" for step in agent_config.coordination_patterns.get("deployment_workflow", []))
-            })
+            variables.update(
+                {
+                    "core_agents": ", ".join(
+                        [a.name for a in agent_config.core_agents]
+                    ),
+                    "domain_agents": ", ".join(
+                        [a.name for a in agent_config.domain_agents]
+                    ),
+                    "workflow_agents": ", ".join(
+                        [a.name for a in agent_config.workflow_agents]
+                    ),
+                    "custom_agents": ", ".join(
+                        [a.name for a in agent_config.custom_agents]
+                    ),
+                    "total_agents": str(len(agent_config.all_agents)),
+                    "primary_agent": (
+                        agent_config.core_agents[0].name
+                        if agent_config.core_agents
+                        else "rapid-prototyper"
+                    ),
+                    "analysis_confidence": f"{analysis.analysis_confidence:.1f}",
+                    "language_confidence": (
+                        f"{analysis.language_info.confidence:.1f}"
+                        if analysis.language_info
+                        else "0.0"
+                    ),
+                    # Agent workflow patterns
+                    "feature_workflow": "\n".join(
+                        f"- {step}"
+                        for step in agent_config.coordination_patterns.get(
+                            "feature_development_workflow", []
+                        )
+                    ),
+                    "bug_workflow": "\n".join(
+                        f"- {step}"
+                        for step in agent_config.coordination_patterns.get(
+                            "bug_fixing_workflow", []
+                        )
+                    ),
+                    "deployment_workflow": "\n".join(
+                        f"- {step}"
+                        for step in agent_config.coordination_patterns.get(
+                            "deployment_workflow", []
+                        )
+                    ),
+                }
+            )
 
         return variables
 
@@ -367,7 +417,7 @@ API design and documentation for ${project_name}.
         available_templates = self.template_manager.list_available_templates()
         return {
             "templates_available": available_templates,
-            "template_count": len(available_templates)
+            "template_count": len(available_templates),
         }
 
     def _get_default_claude_template(self) -> str:
@@ -883,33 +933,33 @@ ${uses_database == 'Yes' and '''
 *Generated: ${timestamp}*
 """
 
-    def render_template_with_manager(self, template, template_manager, context: Dict[str, Any] = None) -> str:
+    def render_template_with_manager(
+        self, template, template_manager, context: Dict[str, Any] = None
+    ) -> str:
         """Render template using provided template manager (for test compatibility)."""
         try:
             # Handle different template object types
-            if hasattr(template, 'render'):
+            if hasattr(template, "render"):
                 return template.render(**(context or {}))
-            elif hasattr(template, 'content'):
+            if hasattr(template, "content"):
                 # Simple string substitution for mock templates
                 content = template.content
                 if context:
                     for key, value in context.items():
                         content = content.replace(f"${{{key}}}", str(value))
                 return content
-            elif hasattr(template, 'name'):
+            if hasattr(template, "name"):
                 # Return mock content based on template name
                 template_name = template.name
                 if "claude" in template_name.lower():
                     return "# Claude Instructions\n\nThis project provides Claude Code instructions."
-                elif "readme" in template_name.lower():
+                if "readme" in template_name.lower():
                     return "# README\n\nThis is the project README."
-                elif "contributing" in template_name.lower():
+                if "contributing" in template_name.lower():
                     return "# Contributing\n\nContribution guidelines."
-                else:
-                    return f"# {template_name.title()}\n\nGenerated content for {template_name}."
-            else:
-                # Return generic mock content
-                return "# Generated Template\n\nMock template content."
+                return f"# {template_name.title()}\n\nGenerated content for {template_name}."
+            # Return generic mock content
+            return "# Generated Template\n\nMock template content."
         except Exception as e:
             return f"Error rendering template {template}: {e}"
 
@@ -949,22 +999,23 @@ class TemplateLoader:
         except Exception:
             return False
 
-    def render_template_with_manager(self, template_manager, template_name: str, context: Dict[str, Any] = None) -> str:
+    def render_template_with_manager(
+        self, template_manager, template_name: str, context: Dict[str, Any] = None
+    ) -> str:
         """Render template using provided template manager (for test compatibility)."""
         try:
             # Get template using the provided manager
             template = template_manager.get_template(template_name)
-            if template and hasattr(template, 'render'):
+            if template and hasattr(template, "render"):
                 return template.render(**(context or {}))
-            elif template and hasattr(template, 'content'):
+            if template and hasattr(template, "content"):
                 # Simple string substitution for mock templates
                 content = template.content
                 if context:
                     for key, value in context.items():
                         content = content.replace(f"${{{key}}}", str(value))
                 return content
-            else:
-                # Return mock content
-                return f"Rendered template: {template_name}"
+            # Return mock content
+            return f"Rendered template: {template_name}"
         except Exception as e:
             return f"Error rendering template {template_name}: {e}"

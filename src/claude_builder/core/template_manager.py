@@ -62,7 +62,7 @@ class TemplateMetadata:
             "repository": self.repository,
             "license": self.license,
             "created": self.created,
-            "updated": self.updated
+            "updated": self.updated,
         }
 
     @property
@@ -79,8 +79,12 @@ class TemplateMetadata:
 class CommunityTemplate:
     """Represents a community template."""
 
-    def __init__(self, metadata: TemplateMetadata, source_url: Optional[str] = None,
-                 local_path: Optional[Path] = None):
+    def __init__(
+        self,
+        metadata: TemplateMetadata,
+        source_url: Optional[str] = None,
+        local_path: Optional[Path] = None,
+    ):
         self.metadata = metadata
         self.source_url = source_url
         self.local_path = local_path
@@ -104,13 +108,17 @@ class CommunityTemplate:
         # Language matching (high weight)
         if self.metadata.languages:
             max_score += 40
-            if analysis.language and analysis.language.lower() in [l.lower() for l in self.metadata.languages]:
+            if analysis.language and analysis.language.lower() in [
+                l.lower() for l in self.metadata.languages
+            ]:
                 score += 40
 
         # Framework matching (high weight)
         if self.metadata.frameworks:
             max_score += 30
-            if analysis.framework and analysis.framework.lower() in [f.lower() for f in self.metadata.frameworks]:
+            if analysis.framework and analysis.framework.lower() in [
+                f.lower() for f in self.metadata.frameworks
+            ]:
                 score += 30
 
         # Project type matching (medium weight)
@@ -135,12 +143,12 @@ class TemplateValidator:
     def __init__(self):
         self.required_files = [
             "template.json",  # Metadata file
-            "claude_instructions.md"  # At minimum, must have Claude instructions
+            "claude_instructions.md",  # At minimum, must have Claude instructions
         ]
         self.recommended_files = [
             "agents_config.md",
             "development_guide.md",
-            "README.md"
+            "README.md",
         ]
 
     def validate_template(self, template_path: Path) -> ValidationResult:
@@ -152,7 +160,7 @@ class TemplateValidator:
         if not template_path.exists():
             return ValidationResult(
                 is_valid=False,
-                errors=[f"Template path does not exist: {template_path}"]
+                errors=[f"Template path does not exist: {template_path}"],
             )
 
         # Validate structure
@@ -178,10 +186,7 @@ class TemplateValidator:
         is_valid = len(errors) == 0
 
         return ValidationResult(
-            is_valid=is_valid,
-            errors=errors,
-            warnings=warnings,
-            suggestions=suggestions
+            is_valid=is_valid, errors=errors, warnings=warnings, suggestions=suggestions
         )
 
     def _validate_structure(self, template_path: Path) -> ValidationResult:
@@ -201,7 +206,9 @@ class TemplateValidator:
             if not file_path.exists():
                 warnings.append(f"Recommended file missing: {recommended_file}")
 
-        return ValidationResult(is_valid=len(errors) == 0, errors=errors, warnings=warnings)
+        return ValidationResult(
+            is_valid=len(errors) == 0, errors=errors, warnings=warnings
+        )
 
     def _validate_metadata(self, template_path: Path) -> ValidationResult:
         """Validate template metadata."""
@@ -211,8 +218,7 @@ class TemplateValidator:
         metadata_file = template_path / "template.json"
         if not metadata_file.exists():
             return ValidationResult(
-                is_valid=False,
-                errors=["Missing template.json metadata file"]
+                is_valid=False, errors=["Missing template.json metadata file"]
             )
 
         try:
@@ -220,13 +226,11 @@ class TemplateValidator:
                 metadata = json.load(f)
         except json.JSONDecodeError as e:
             return ValidationResult(
-                is_valid=False,
-                errors=[f"Invalid JSON in template.json: {e}"]
+                is_valid=False, errors=[f"Invalid JSON in template.json: {e}"]
             )
         except Exception as e:
             return ValidationResult(
-                is_valid=False,
-                errors=[f"Cannot read template.json: {e}"]
+                is_valid=False, errors=[f"Cannot read template.json: {e}"]
             )
 
         # Validate required metadata fields
@@ -245,10 +249,15 @@ class TemplateValidator:
         # Validate version format (basic check)
         if "version" in metadata:
             version = metadata["version"]
-            if not isinstance(version, str) or not version.replace(".", "").replace("-", "").isalnum():
+            if (
+                not isinstance(version, str)
+                or not version.replace(".", "").replace("-", "").isalnum()
+            ):
                 warnings.append("Version format may not be valid")
 
-        return ValidationResult(is_valid=len(errors) == 0, errors=errors, warnings=warnings)
+        return ValidationResult(
+            is_valid=len(errors) == 0, errors=errors, warnings=warnings
+        )
 
     def _validate_content_quality(self, template_path: Path) -> ValidationResult:
         """Validate content quality and completeness."""
@@ -265,11 +274,15 @@ class TemplateValidator:
 
                 # Check for template variables (${{variable}} format)
                 if "$" not in content:
-                    warnings.append(f"File {file_path.name} appears to have no template variables")
+                    warnings.append(
+                        f"File {file_path.name} appears to have no template variables"
+                    )
 
                 # Check minimum content length
                 if len(content) < 100:
-                    warnings.append(f"File {file_path.name} appears to have very little content")
+                    warnings.append(
+                        f"File {file_path.name} appears to have very little content"
+                    )
 
                 # Check for common issues
                 if "TODO" in content.upper():
@@ -278,7 +291,9 @@ class TemplateValidator:
             except Exception as e:
                 warnings.append(f"Could not analyze content of {file_path.name}: {e}")
 
-        return ValidationResult(is_valid=True, warnings=warnings, suggestions=suggestions)
+        return ValidationResult(
+            is_valid=True, warnings=warnings, suggestions=suggestions
+        )
 
     def _validate_security(self, template_path: Path) -> ValidationResult:
         """Basic security validation."""
@@ -293,7 +308,9 @@ class TemplateValidator:
             executable_files.extend(list(template_path.glob(f"**/*{ext}")))
 
         if executable_files:
-            warnings.append(f"Template contains executable files: {[f.name for f in executable_files]}")
+            warnings.append(
+                f"Template contains executable files: {[f.name for f in executable_files]}"
+            )
 
         # Check for suspicious content in template files
         template_files = list(template_path.glob("**/*.md"))
@@ -303,17 +320,30 @@ class TemplateValidator:
                     content = f.read().lower()
 
                 # Check for potentially dangerous patterns
-                suspicious_patterns = ["eval(", "exec(", "system(", "shell_exec", "$(", "`"]
-                found_patterns = [pattern for pattern in suspicious_patterns if pattern in content]
+                suspicious_patterns = [
+                    "eval(",
+                    "exec(",
+                    "system(",
+                    "shell_exec",
+                    "$(",
+                    "`",
+                ]
+                found_patterns = [
+                    pattern for pattern in suspicious_patterns if pattern in content
+                ]
 
                 if found_patterns:
-                    warnings.append(f"File {file_path.name} contains potentially suspicious patterns: {found_patterns}")
+                    warnings.append(
+                        f"File {file_path.name} contains potentially suspicious patterns: {found_patterns}"
+                    )
 
             except (OSError, UnicodeDecodeError):
                 # Ignore read errors for security check
                 pass
 
-        return ValidationResult(is_valid=len(errors) == 0, errors=errors, warnings=warnings)
+        return ValidationResult(
+            is_valid=len(errors) == 0, errors=errors, warnings=warnings
+        )
 
 
 class TemplateManager:
@@ -329,13 +359,16 @@ class TemplateManager:
         self.validator = TemplateValidator()
 
         # Community template sources
-        self.official_repository = "https://raw.githubusercontent.com/claude-builder/templates/main"
+        self.official_repository = (
+            "https://raw.githubusercontent.com/claude-builder/templates/main"
+        )
         self.community_sources = [
             "https://raw.githubusercontent.com/claude-builder/community-templates/main"
         ]
 
-    def list_available_templates(self, include_installed: bool = True,
-                                include_community: bool = True) -> List[CommunityTemplate]:
+    def list_available_templates(
+        self, include_installed: bool = True, include_community: bool = True
+    ) -> List[CommunityTemplate]:
         """List all available templates."""
         templates = []
 
@@ -354,7 +387,9 @@ class TemplateManager:
 
         return list(unique_templates.values())
 
-    def search_templates(self, query: str, project_analysis: Optional[ProjectAnalysis] = None) -> List[CommunityTemplate]:
+    def search_templates(
+        self, query: str, project_analysis: Optional[ProjectAnalysis] = None
+    ) -> List[CommunityTemplate]:
         """Search for templates matching query and project analysis."""
         all_templates = self.list_available_templates()
 
@@ -382,14 +417,15 @@ class TemplateManager:
 
         return matching_templates
 
-    def install_template(self, template_id: str, force: bool = False) -> ValidationResult:
+    def install_template(
+        self, template_id: str, force: bool = False
+    ) -> ValidationResult:
         """Install a community template."""
         # Find template in community sources
         template = self._find_community_template(template_id)
         if not template:
             return ValidationResult(
-                is_valid=False,
-                errors=[f"{TEMPLATE_NOT_FOUND}: {template_id}"]
+                is_valid=False, errors=[f"{TEMPLATE_NOT_FOUND}: {template_id}"]
             )
 
         # Check if already installed
@@ -397,7 +433,9 @@ class TemplateManager:
         if install_path.exists() and not force:
             return ValidationResult(
                 is_valid=False,
-                errors=[f"Template already installed: {template_id}. Use --force to reinstall."]
+                errors=[
+                    f"Template already installed: {template_id}. Use --force to reinstall."
+                ],
             )
 
         # Download and install
@@ -406,7 +444,7 @@ class TemplateManager:
         except Exception as e:
             return ValidationResult(
                 is_valid=False,
-                errors=[f"Failed to install template {template_id}: {e}"]
+                errors=[f"Failed to install template {template_id}: {e}"],
             )
 
     def uninstall_template(self, template_name: str) -> ValidationResult:
@@ -415,30 +453,28 @@ class TemplateManager:
 
         if not template_path.exists():
             return ValidationResult(
-                is_valid=False,
-                errors=[f"Template not installed: {template_name}"]
+                is_valid=False, errors=[f"Template not installed: {template_name}"]
             )
 
         try:
             shutil.rmtree(template_path)
             return ValidationResult(
-                is_valid=True,
-                suggestions=[f"Template uninstalled: {template_name}"]
+                is_valid=True, suggestions=[f"Template uninstalled: {template_name}"]
             )
         except Exception as e:
             return ValidationResult(
                 is_valid=False,
-                errors=[f"Failed to uninstall template {template_name}: {e}"]
+                errors=[f"Failed to uninstall template {template_name}: {e}"],
             )
 
-    def create_custom_template(self, name: str, project_path: Path,
-                             template_config: Dict[str, Any]) -> ValidationResult:
+    def create_custom_template(
+        self, name: str, project_path: Path, template_config: Dict[str, Any]
+    ) -> ValidationResult:
         """Create a custom template from existing project."""
         # Validate inputs
         if not project_path.exists():
             return ValidationResult(
-                is_valid=False,
-                errors=["Project path does not exist"]
+                is_valid=False, errors=["Project path does not exist"]
             )
 
         # Create template directory
@@ -450,14 +486,16 @@ class TemplateManager:
             metadata = {
                 "name": name,
                 "version": "1.0.0",
-                "description": template_config.get("description", f"Custom template for {name}"),
+                "description": template_config.get(
+                    "description", f"Custom template for {name}"
+                ),
                 "author": template_config.get("author", "local-user"),
                 "category": template_config.get("category", "custom"),
                 "languages": template_config.get("languages", []),
                 "frameworks": template_config.get("frameworks", []),
                 "project_types": template_config.get("project_types", []),
                 "created": datetime.now().isoformat(),
-                "updated": datetime.now().isoformat()
+                "updated": datetime.now().isoformat(),
             }
 
             # Write metadata
@@ -471,7 +509,9 @@ class TemplateManager:
             validation_result = self.validator.validate_template(template_path)
 
             if validation_result.is_valid:
-                validation_result.suggestions.append(f"Custom template created: {template_path}")
+                validation_result.suggestions.append(
+                    f"Custom template created: {template_path}"
+                )
 
             return validation_result
 
@@ -480,8 +520,7 @@ class TemplateManager:
             if template_path.exists():
                 shutil.rmtree(template_path)
             return ValidationResult(
-                is_valid=False,
-                errors=[f"Failed to create custom template: {e}"]
+                is_valid=False, errors=[f"Failed to create custom template: {e}"]
             )
 
     def validate_template_directory(self, template_path: Path) -> ValidationResult:
@@ -582,7 +621,9 @@ class TemplateManager:
                 return templates
             request = Request(index_url, headers={"User-Agent": "Claude-Builder/0.1.0"})
 
-            with urlopen(request, timeout=10) as response:  # nosec B310: scheme validated above
+            with urlopen(
+                request, timeout=10
+            ) as response:  # nosec B310: scheme validated above
                 index_data = json.loads(response.read().decode("utf-8"))
 
             # Parse template entries
@@ -612,13 +653,13 @@ class TemplateManager:
 
         return None
 
-    def _download_and_install_template(self, template: CommunityTemplate,
-                                     install_path: Path) -> ValidationResult:
+    def _download_and_install_template(
+        self, template: CommunityTemplate, install_path: Path
+    ) -> ValidationResult:
         """Download and install a template."""
         if not template.source_url:
             return ValidationResult(
-                is_valid=False,
-                errors=["Template has no source URL"]
+                is_valid=False, errors=["Template has no source URL"]
             )
 
         # Create temporary directory for download
@@ -639,7 +680,7 @@ class TemplateManager:
             if not template_root:
                 return ValidationResult(
                     is_valid=False,
-                    errors=["Downloaded template does not contain template.json"]
+                    errors=["Downloaded template does not contain template.json"],
                 )
 
             # Validate before installation
@@ -653,7 +694,9 @@ class TemplateManager:
 
             shutil.copytree(template_root, install_path)
 
-            validation_result.suggestions.append(f"Template installed to: {install_path}")
+            validation_result.suggestions.append(
+                f"Template installed to: {install_path}"
+            )
             return validation_result
 
     def _download_file(self, url: str, destination: Path) -> None:
@@ -663,7 +706,9 @@ class TemplateManager:
             raise ValueError(UNSUPPORTED_URL_SCHEME)
         request = Request(url, headers={"User-Agent": "Claude-Builder/0.1.0"})
 
-        with urlopen(request, timeout=30) as response:  # nosec B310: scheme validated above
+        with urlopen(
+            request, timeout=30
+        ) as response:  # nosec B310: scheme validated above
             with open(destination, "wb") as f:
                 shutil.copyfileobj(response, f)
 
@@ -680,8 +725,9 @@ class TemplateManager:
 
         return None
 
-    def _generate_template_files(self, project_path: Path, template_path: Path,
-                                config: Dict[str, Any]) -> None:
+    def _generate_template_files(
+        self, project_path: Path, template_path: Path, config: Dict[str, Any]
+    ) -> None:
         """Generate template files from a project."""
         from claude_builder.core.analyzer import ProjectAnalyzer
         from claude_builder.core.generator import DocumentGenerator
@@ -730,8 +776,9 @@ class TemplateManager:
 
         return template_content
 
-    def _generate_template_readme(self, config: Dict[str, Any],
-                                 analysis: ProjectAnalysis) -> str:
+    def _generate_template_readme(
+        self, config: Dict[str, Any], analysis: ProjectAnalysis
+    ) -> str:
         """Generate README for custom template."""
         return f"""# {config.get('name', 'Custom Template')}
 
@@ -779,7 +826,6 @@ claude-builder /path/to/project --template={config.get('name', 'custom-template'
 """
 
 
-
 # Placeholder classes for test compatibility
 class Template:
     """Placeholder Template class for test compatibility."""
@@ -794,14 +840,13 @@ class Template:
         # Return specific content based on template name
         if "claude" in self.name.lower():
             return "# Claude Instructions\n\nThis project provides Claude Code instructions."
-        elif "readme" in self.name.lower():
+        if "readme" in self.name.lower():
             # Use context if provided for project name
-            project_name = context.get('project_name', 'sample_python_project')
+            project_name = context.get("project_name", "sample_python_project")
             return f"# README\n\nThis is the project README for {project_name}."
-        elif "contributing" in self.name.lower():
+        if "contributing" in self.name.lower():
             return "# Contributing to Project\n\nContribution guidelines."
-        else:
-            return f"# {self.name.title()}\n\nGenerated content for {self.name}."
+        return f"# {self.name.title()}\n\nGenerated content for {self.name}."
 
 
 class TemplateBuilder:
@@ -820,7 +865,7 @@ class TemplateBuilder:
         """Build a set of templates for project."""
         return {
             "main": Template("main", "Main template content"),
-            "config": Template("config", "Config template content")
+            "config": Template("config", "Config template content"),
         }
 
 
@@ -882,7 +927,7 @@ class TemplateLoader:
             self.template_dirs = [
                 current_dir / "templates" / "base",
                 current_dir / "templates" / "languages",
-                current_dir / "templates" / "frameworks"
+                current_dir / "templates" / "frameworks",
             ]
 
         # Ensure directories exist
@@ -996,7 +1041,9 @@ class TemplateRenderer:
 
         return rendered_content
 
-    def render_file(self, template_path: str, output_path: str, variables: Dict[str, Any]) -> bool:
+    def render_file(
+        self, template_path: str, output_path: str, variables: Dict[str, Any]
+    ) -> bool:
         """Render template file to output file.
 
         Args:
@@ -1096,7 +1143,9 @@ class CoreTemplateManager:
         """Load template content."""
         return self.loader.load_template(template_name)
 
-    def compose_templates(self, base_template: str, overlay_templates: List[str] = None) -> str:
+    def compose_templates(
+        self, base_template: str, overlay_templates: List[str] = None
+    ) -> str:
         """Compose hierarchical templates.
 
         Args:
@@ -1118,7 +1167,9 @@ class CoreTemplateManager:
             for overlay_name in overlay_templates:
                 try:
                     overlay_content = self.load_template(overlay_name)
-                    composed_content = self._merge_templates(composed_content, overlay_content)
+                    composed_content = self._merge_templates(
+                        composed_content, overlay_content
+                    )
                 except FileNotFoundError:
                     # Skip missing overlay templates
                     continue
@@ -1183,7 +1234,12 @@ class CoreTemplateManager:
                 def replace_section(match):
                     return f"<!-- SECTION:{section_name} -->{replacement_content.strip()}<!-- /SECTION:{section_name} -->"
 
-                merged_content = re.sub(base_section_pattern, replace_section, merged_content, flags=re.DOTALL)
+                merged_content = re.sub(
+                    base_section_pattern,
+                    replace_section,
+                    merged_content,
+                    flags=re.DOTALL,
+                )
         else:
             # Simple append strategy
             merged_content = base_content + "\n\n" + overlay_content
@@ -1195,8 +1251,12 @@ class CoreTemplateManager:
         context = {}
 
         # Basic project information
-        context["project_name"] = analysis.project_path.name if analysis.project_path else "Unknown Project"
-        context["project_path"] = str(analysis.project_path) if analysis.project_path else ""
+        context["project_name"] = (
+            analysis.project_path.name if analysis.project_path else "Unknown Project"
+        )
+        context["project_path"] = (
+            str(analysis.project_path) if analysis.project_path else ""
+        )
 
         # Language information
         if hasattr(analysis, "language_info") and analysis.language_info:
@@ -1220,12 +1280,18 @@ class CoreTemplateManager:
 
         # Project characteristics
         if hasattr(analysis, "project_type"):
-            context["project_type"] = analysis.project_type.value if analysis.project_type else "unknown"
+            context["project_type"] = (
+                analysis.project_type.value if analysis.project_type else "unknown"
+            )
         else:
             context["project_type"] = "unknown"
 
         if hasattr(analysis, "complexity_level"):
-            context["complexity_level"] = analysis.complexity_level.value if analysis.complexity_level else "simple"
+            context["complexity_level"] = (
+                analysis.complexity_level.value
+                if analysis.complexity_level
+                else "simple"
+            )
         else:
             context["complexity_level"] = "simple"
 
@@ -1240,12 +1306,20 @@ class CoreTemplateManager:
         overlays = []
 
         # Add language-specific overlay
-        if hasattr(analysis, "language_info") and analysis.language_info and analysis.language_info.primary:
+        if (
+            hasattr(analysis, "language_info")
+            and analysis.language_info
+            and analysis.language_info.primary
+        ):
             language_template = f"language-{analysis.language_info.primary.lower()}"
             overlays.append(language_template)
 
         # Add framework-specific overlay
-        if hasattr(analysis, "framework_info") and analysis.framework_info and analysis.framework_info.primary:
+        if (
+            hasattr(analysis, "framework_info")
+            and analysis.framework_info
+            and analysis.framework_info.primary
+        ):
             framework_template = f"framework-{analysis.framework_info.primary.lower()}"
             overlays.append(framework_template)
 
