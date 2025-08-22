@@ -1,478 +1,320 @@
 # Claude Builder - Universal Claude Code Environment Generator
 
-[![PyPI version](https://img.shields.io/badge/PyPI-coming%20soon-orange.svg)](https://pypi.org/)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Tests](https://img.shields.io/badge/tests-511%20passing-brightgreen.svg)](https://github.com/quinnoshea/claude_builder/tree/main/tests)
+[![Development Status](https://img.shields.io/badge/status-infrastructure%20complete-yellow.svg)](https://github.com/quinnoshea/claude_builder)
 [![CI](https://github.com/quinnoshea/claude_builder/workflows/CI/badge.svg)](https://github.com/quinnoshea/claude_builder/actions)
-[![Tests](https://img.shields.io/badge/tests-415%20passing-brightgreen.svg)](https://github.com/quinnoshea/claude_builder/tree/main/tests)
 [![Codacy Badge](https://app.codacy.com/project/badge/Coverage/c0920529ab54462387f217498a4e01db)](https://app.codacy.com/gh/quinnoshea/claude_builder/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_coverage)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/c0920529ab54462387f217498a4e01db)](https://app.codacy.com/gh/quinnoshea/claude_builder/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
-[![Performance](https://img.shields.io/badge/analysis-%3C1s-brightgreen.svg)](https://github.com/quinnoshea/claude_builder)
-[![Languages](https://img.shields.io/badge/languages-15%2B%20supported-blue.svg)](https://github.com/quinnoshea/claude_builder)
-[![Frameworks](https://img.shields.io/badge/frameworks-25%2B%20supported-blue.svg)](https://github.com/quinnoshea/claude_builder)
-[![Production Ready](https://img.shields.io/badge/status-production%20ready-brightgreen.svg)](https://github.com/quinnoshea/claude_builder)
 [![GitHub stars](https://img.shields.io/github/stars/quinnoshea/claude_builder.svg)](https://github.com/quinnoshea/claude_builder/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/quinnoshea/claude_builder.svg)](https://github.com/quinnoshea/claude_builder/network)
 [![GitHub issues](https://img.shields.io/github/issues/quinnoshea/claude_builder.svg)](https://github.com/quinnoshea/claude_builder/issues)
 [![Last Commit](https://img.shields.io/github/last-commit/quinnoshea/claude_builder.svg)](https://github.com/quinnoshea/claude_builder/commits/main)
 
-🚀 **Production-Ready** Universal Claude Code Environment Generator  
-Transform any codebase into an optimized development environment with intelligent analysis, adaptive templates, and automated agent selection.
+🚧 **Infrastructure Complete** - Core functionality operational, completion work in progress  
+Transform any codebase into an optimized Claude Code development environment with intelligent analysis and adaptive templates.
 
-## 🎯 Production Status
+## 🎯 Current Project Status
 
-**System Status**: ✅ **PRODUCTION-READY** with exceptional performance  
-**Performance**: <1 second analysis (30x faster than target)  
-**Accuracy**: 90%+ detection across 15+ languages and 25+ frameworks  
-**Testing**: 415 tests passing with comprehensive CI/CD pipeline  
+**Development Phase**: Core infrastructure complete, stabilization in progress  
+**Core Functionality**: ✅ All major CLI commands operational  
+**Test Coverage**: 67% (511 passing tests, 220 requiring fixes)  
+**Next Milestone**: Test stabilization and agent integration completion  
 
-## 🌟 What Makes Claude Builder Special
+## 🌟 What Claude Builder Does
 
-Claude Builder represents a **breakthrough achievement** in developer productivity tooling - transforming the complex task of Claude Code environment setup from hours of manual configuration into seconds of intelligent automation.
+Claude Builder automates the complex task of setting up optimized Claude Code development environments. Through intelligent project analysis, it detects languages, frameworks, and project characteristics, then generates tailored documentation, agent configurations, and development workflows.
 
-### 🏆 **Exceptional Achievements**
-- **30x Performance**: Sub-second analysis vs 30-second target
-- **Universal Coverage**: 15+ languages, 25+ frameworks supported  
-- **Production Quality**: Comprehensive testing, error handling, documentation
-- **Intelligent Automation**: 90%+ accurate project detection and configuration
+### 🏆 **Current Capabilities**
+- **Multi-Language Analysis**: Python, Rust, JavaScript, TypeScript, Java, Go, and more
+- **Framework Detection**: Django, FastAPI, React, Vue, Axum, Spring Boot, Express, and others
+- **CLI Interface**: Professional command-line tool with Rich UI components
+- **Template System**: Hierarchical template composition working
+- **Git Integration**: Safe backup/restore operations
+
+### 🚧 **Completion Work Required**
+- **Test Stabilization**: Fix 220 failing tests for production reliability
+- **Agent Integration**: Complete TODO in main CLI flow for full agent functionality
+- **Quality Gates**: Ensure all CI/CD checks pass consistently
 
 ## 🔧 Core Capabilities
 
 ### **🧠 Intelligent Project Analysis**
-- **Multi-Language Detection**: Python, Rust, JavaScript, TypeScript, Java, Go, C#, PHP, Ruby, Swift, and more
-- **Framework Recognition**: Django, FastAPI, React, Vue, Axum, Spring Boot, Express, Next.js, and 20+ others
-- **Architecture Patterns**: MVC, microservices, domain-driven, event-driven, hexagonal, serverless
-- **Confidence Scoring**: Multi-factor analysis with graceful degradation for complex projects
+- **Multi-Language Detection**: Automatic recognition of primary and secondary languages
+- **Framework Recognition**: Detects popular frameworks through dependency and pattern analysis  
+- **Project Classification**: Web apps, CLI tools, libraries, data science projects
+- **Confidence Scoring**: Reliability metrics for all detection results
 
-### **🎯 Dynamic Agent Ecosystem**
-- **Intelligent Selection**: Automatically chooses optimal Claude Code agents based on project characteristics
-- **15+ Core Agents**: python-pro, rust-engineer, backend-architect, frontend-developer, test-writer-fixer
-- **Workflow Coordination**: Multi-agent collaboration patterns for complex development tasks
-- **Custom Integration**: Extensible agent system supporting custom and community agents
+### **🎯 Agent System Foundation**
+- **Agent Selection Logic**: Intelligent matching of Claude Code agents to project characteristics
+- **Configuration Generation**: Creates AGENTS.md files with recommended agent workflows
+- **Custom Integration**: Support for custom agent directories and configurations
+- **Workflow Patterns**: Multi-agent collaboration templates
 
-### **📋 Adaptive Template System**
-- **Hierarchical Composition**: Base → Language → Framework template overlay system
-- **Variable Substitution**: Dynamic content generation with project-specific context
-- **Community Templates**: Framework for sharing and discovering specialized templates
-- **Quality Assurance**: Automated template validation and testing pipeline
+### **📋 Template System**
+- **Hierarchical Composition**: Base → Language → Framework template layers
+- **Variable Substitution**: Dynamic content generation with project-specific data
+- **Template Validation**: Built-in validation and error checking
+- **Extensible Design**: Foundation ready for community template marketplace
 
 ### **🔒 Safe Git Integration**
-- **Non-Destructive Operations**: Complete backup/restore system with rollback capabilities
-- **Claude Mention Control**: Configurable policies (forbidden/minimal/allowed) for all generated content
-- **Smart Git Exclude**: Local-only exclude patterns vs tracked files management
-- **Hook Management**: Intelligent git hook installation with conflict resolution
+- **Non-Destructive Operations**: Complete backup/restore system
+- **Local Git Exclude**: Adds patterns to .git/info/exclude (not committed)
+- **Claude Mention Control**: Configurable policies for AI references in generated content
+- **Rollback Capabilities**: Full restore functionality for generated files
 
-### **⚡ Performance & Reliability**
-- **Ultra-Fast Analysis**: <1 second for typical projects, <3 seconds for complex monorepos
-- **Memory Efficient**: <100MB usage for analysis and generation
-- **High Accuracy**: 90%+ correct detection with intelligent fallback strategies
-- **Robust Error Handling**: Comprehensive exception handling with actionable user guidance
+## 🚀 Installation & Setup
 
-## 🚀 Quick Start
-
-### **Instant Setup**
-```bash
-# Install (via uv - recommended for speed)
-uv pip install claude-builder
-
-# Or via pip
-pip install claude-builder
-```
-
-### **Basic Usage - Just Works™**
-```bash
-# Universal analysis and generation - works with any project
-claude-builder /path/to/your/project
-# ✅ Detects: Python FastAPI project → Generates comprehensive dev environment
-
-claude-builder ./my-rust-cli
-# ✅ Detects: Rust CLI tool → Generates optimal agent configuration  
-
-claude-builder ./react-frontend
-# ✅ Detects: React TypeScript → Generates frontend development workflow
-```
-
-### **Advanced Usage - Full Control**
-```bash
-# Preview before generation
-claude-builder ./project --dry-run --verbose
-
-# Safe git integration
-claude-builder ./project --git-exclude --claude-mentions=forbidden
-
-# Custom templates and configuration  
-claude-builder ./project --template=enterprise-web --config=team-standards.json
-```
-
-### **Immediate Results**
-```
-✅ Analysis completed in 0.8s
-✅ Generated 4 files: CLAUDE.md, AGENTS.md, .claude/workflows/, .claude/context/
-✅ Configured 5 specialized agents for optimal development workflow
-✅ Added to .git/info/exclude (local only, safe)
-
-🎯 Your project is now optimized for Claude Code development!
-```
-
-## 📦 Installation Options
-
-### **Production Installation**
-```bash
-# Recommended: uv (fastest)
-uv pip install claude-builder
-
-# Alternative: pip
-pip install claude-builder
-
-# Verify installation
-claude-builder --version  # Should show v0.1.0+
-```
-
-### **Development Setup** 
+### **Development Installation**
 ```bash
 # Clone the repository
 git clone https://github.com/quinnoshea/claude_builder.git
 cd claude_builder
 
-# Development environment with all tools
-uv pip install -e ".[dev]"  # or pip install -e ".[dev]"
-pre-commit install
+# Install with development dependencies (prefer uv)
+uv pip install -e ".[dev]"  # Recommended: faster, modern
+# OR: pip install -e ".[dev]"  # Alternative: traditional pip
 
-# Verify development setup
-pytest tests/unit/phase1_core/ -v  # Should pass all tests
-claude-builder --help                # Should show all commands
+# Set up pre-commit hooks
+pre-commit install
+```
+
+### **Basic Usage**
+```bash
+# Analyze and generate documentation for any project
+claude-builder /path/to/your/project
+
+# Preview what would be generated (safe)
+claude-builder /path/to/project --dry-run --verbose
+
+# Generate with git integration
+claude-builder /path/to/project --git-exclude --claude-mentions=minimal
 ```
 
 ### **System Requirements**
-- **Python**: 3.8+ (3.11+ recommended for optimal performance)
-- **Memory**: 512MB minimum, 1GB recommended for large projects  
-- **Storage**: 50MB for installation, 100MB for full development environment
+- **Python**: 3.8+ (3.11+ recommended)
+- **Memory**: 512MB minimum for analysis operations
+- **Storage**: 100MB for development environment
 - **OS**: Linux, macOS, Windows (WSL2 recommended on Windows)
 
-## 📚 Comprehensive Usage Guide
+## 📚 Usage Examples
 
-### **🎯 Real-World Examples**
+### **Real-World Project Analysis**
 
 #### **Python Web Application**
 ```bash
 claude-builder ./fastapi-ecommerce
-# ✅ Detected: Python 3.11, FastAPI, PostgreSQL, Docker
-# ✅ Generated: FastAPI development workflow with api-tester, backend-architect
-# ✅ Templates: Async patterns, database migrations, API documentation
+# ✅ Detects: Python 3.11, FastAPI, PostgreSQL dependencies
+# ✅ Generates: API development workflow, backend agent configuration
+# ✅ Creates: CLAUDE.md with FastAPI-specific patterns and best practices
 ```
 
-#### **Rust Systems Tool**  
+#### **Rust CLI Tool**  
 ```bash
 claude-builder ./cli-performance-monitor
-# ✅ Detected: Rust, CLI tool, system metrics, cross-platform
-# ✅ Generated: Systems development workflow with rust-engineer, performance-benchmarker
-# ✅ Templates: Memory safety patterns, cross-compilation, packaging
+# ✅ Detects: Rust, CLI patterns, system dependencies
+# ✅ Generates: Systems development workflow with Rust-specific guidance
+# ✅ Creates: Development environment optimized for Rust CLI development
 ```
 
-#### **React + TypeScript Frontend**
+#### **React TypeScript Frontend**
 ```bash
 claude-builder ./next-dashboard
-# ✅ Detected: TypeScript, Next.js, React, state management
-# ✅ Generated: Frontend workflow with frontend-developer, ui-designer, test-writer-fixer
-# ✅ Templates: Component patterns, state management, accessibility
+# ✅ Detects: TypeScript, Next.js, React patterns
+# ✅ Generates: Frontend development workflow and component guidance
+# ✅ Creates: TypeScript-aware development environment
 ```
 
-### **⚙️ Advanced Configuration**
+### **Advanced Configuration**
 
-#### **Git Integration Modes**
+#### **Git Integration Options**
 ```bash
-# Safe local-only (recommended)
+# Add to local git exclude (recommended - safe)
 claude-builder ./project --git-exclude
-# → Adds to .git/info/exclude (not committed)
 
-# Tracked files (team sharing)  
-claude-builder ./project --git-track
-# → Commits generated files to repository
-
-# Claude mention control
+# Control Claude mentions in generated content
 claude-builder ./project --claude-mentions=forbidden  # No AI references
 claude-builder ./project --claude-mentions=minimal    # Minimal references  
 claude-builder ./project --claude-mentions=allowed    # Full attribution
-```
 
-#### **Template System**
-```bash
-# Override auto-detection
-claude-builder ./project --template=enterprise-api
-
-# Custom configuration
-claude-builder ./project --config=team-standards.json
-
-# Template management (Community Phase 4)
-claude-builder templates search --category=web --language=python
-claude-builder templates install community/django-enterprise  
-claude-builder templates validate ./my-custom-template
-```
-
-#### **Analysis & Generation Control**
-```bash
-# Analysis only (no file writes)
-claude-builder analyze ./project --output=analysis.json --verbose
-
-# Generate from existing analysis  
-claude-builder generate ./project --from-analysis=analysis.json --dry-run
-
-# Partial generation
-claude-builder ./project --components=agents,workflows --skip=documentation
-
-# Backup and rollback
+# Backup existing files before generation
 claude-builder ./project --backup-existing
-# → Creates .claude-backup/ with rollback capability
 ```
 
-### **🔍 CLI Subcommands**
+### **CLI Subcommands**
 
 #### **Project Analysis**
 ```bash
-# Detailed project analysis
-claude-builder analyze ./project
-# → Shows: languages, frameworks, complexity, confidence scores
+# Detailed analysis with verbose output
+claude-builder analyze ./project --verbose
 
-# Export analysis data
-claude-builder analyze ./project --output=project-analysis.json --format=json
-claude-builder analyze ./project --output=report.md --format=markdown
+# Export analysis to JSON for inspection
+claude-builder analyze ./project --output=analysis.json
 ```
 
-#### **Agent Management** 
+#### **Template Management** 
 ```bash
-# List available agents
-claude-builder agents list --category=engineering --project-type=web
+# List available built-in templates
+claude-builder templates list
 
-# Get agent recommendations
-claude-builder agents recommend ./project
-# → Suggests optimal agents based on project analysis
-
-# Custom agent configuration
-claude-builder agents configure ./project --agents=python-pro,test-writer-fixer,devops-automator
+# Validate custom template structure
+claude-builder templates validate ./custom-template
 ```
 
-#### **Template Operations**
+#### **Configuration Management**
 ```bash
-# List built-in templates
-claude-builder templates list --language=python --framework=fastapi
+# Initialize project configuration
+claude-builder config init ./project
 
-# Validate custom templates  
-claude-builder templates validate ./custom-template-dir
-
-# Template development assistance
-claude-builder templates init ./new-template --type=framework --language=rust
-```
-
-### **🎛️ Configuration File**
-
-Create `claude-builder.json` for team-specific settings:
-```json
-{
-  "analysis": {
-    "ignore_patterns": ["vendor/", "node_modules/", "__pycache__/"],
-    "confidence_threshold": 85,
-    "custom_detectors": ["internal_framework_detector"]
-  },
-  "templates": {
-    "preferred_hierarchy": ["base", "enterprise", "python", "fastapi"],
-    "custom_template_dirs": ["./templates", "~/.claude-templates"],
-    "template_validation": "strict"
-  },
-  "agents": {
-    "required_agents": ["python-pro", "test-writer-fixer"],
-    "excluded_agents": ["ai-engineer"],  
-    "custom_agents": ["./agents/company-standards-agent.md"]
-  },
-  "git_integration": {
-    "mode": "exclude_only",
-    "claude_mention_policy": "minimal",
-    "hook_management": true,
-    "backup_retention": 7
-  },
-  "output": {
-    "verbosity": "standard",
-    "progress_indicators": true,
-    "color_output": true
-  }
-}
+# Show current configuration
+claude-builder config show ./project
 ```
 
 ## 🏗️ Project Architecture
 
-### **Production Codebase Structure**
+### **Codebase Structure**
 ```
-claude_builder/                    # 📦 Production-ready system
-├── src/claude_builder/           # 🧠 Core application  
-│   ├── core/                     # 🔧 Business logic (2,000+ lines)
-│   │   ├── analyzer.py          # 🎯 Multi-language project analysis
-│   │   ├── template_manager.py  # 📋 Hierarchical template system  
-│   │   ├── agents.py            # 🤖 Dynamic agent selection
-│   │   ├── generator.py         # 📄 Document generation pipeline
-│   │   └── config.py            # ⚙️ Configuration management
-│   ├── cli/                      # 💻 Command-line interface
-│   │   ├── main.py              # 🚪 Entry point and orchestration
-│   │   ├── analyze_commands.py  # 📊 Analysis operations  
-│   │   ├── generate_commands.py # 📝 Generation workflows
-│   │   ├── template_commands.py # 📋 Template management
-│   │   └── agent_commands.py    # 🤖 Agent configuration
-│   ├── templates/                # 📚 Hierarchical template system
-│   │   ├── base/                # 🏗️ Universal patterns
-│   │   ├── languages/           # 🔤 Language-specific (Python, Rust, JS)
-│   │   └── frameworks/          # 🛠️ Framework overlays (Django, React)
-│   └── utils/                    # 🛠️ Utility functions
-│       ├── git.py               # 🌿 Safe git operations
-│       ├── validation.py        # ✅ Input validation
-│       └── exceptions.py        # 🚨 Error handling
-├── tests/                        # 🧪 Comprehensive test suite (415 tests)
-│   ├── unit/phase1_core/        # 🔬 Core functionality tests
-│   ├── unit/phase2_intelligence/# 🧠 Intelligence layer tests  
-│   ├── unit/phase3_cli/         # 💻 CLI integration tests
-│   └── integration/             # 🔗 End-to-end workflow tests
-└── docs/                         # 📖 Production documentation
-    ├── architecture/            # 🏗️ System design documents
-    ├── api/                     # 📊 API reference  
-    └── examples/                # 💡 Usage examples
+claude_builder/
+├── src/claude_builder/           # Core application  
+│   ├── core/                     # Business logic
+│   │   ├── analyzer.py          # Project analysis engine
+│   │   ├── template_manager.py  # Template system
+│   │   ├── agents.py            # Agent selection logic
+│   │   ├── generator.py         # Document generation
+│   │   └── config.py            # Configuration management
+│   ├── cli/                      # Command-line interface
+│   │   ├── main.py              # Entry point and main workflow
+│   │   ├── analyze_commands.py  # Analysis operations  
+│   │   ├── generate_commands.py # Generation workflows
+│   │   ├── template_commands.py # Template management
+│   │   ├── config_commands.py   # Configuration operations
+│   │   └── git_commands.py      # Git integration
+│   ├── templates/                # Hierarchical template system
+│   │   ├── base/                # Universal base templates
+│   │   ├── languages/           # Language-specific templates
+│   │   └── frameworks/          # Framework-specific overlays
+│   └── utils/                    # Utility functions
+│       ├── git.py               # Git operations and safety
+│       ├── validation.py        # Input validation
+│       └── exceptions.py        # Error handling
+├── tests/                        # Comprehensive test suite
+│   ├── unit/                    # Unit tests by phase
+│   │   ├── phase1_core/         # Core functionality tests
+│   │   ├── phase2_intelligence/ # Analysis and detection tests
+│   │   └── phase3_advanced/     # Advanced feature tests
+│   └── integration/             # End-to-end workflow tests
+└── docs/                         # Project documentation
 ```
 
 ### **Generated Output Structure**
 ```
-your-project/                     # 🎯 Your analyzed project
-├── CLAUDE.md                    # 📋 Project-specific dev guidelines
-├── AGENTS.md                    # 🤖 Agent configuration & workflows
-└── .claude/                     # 📁 Detailed development environment
-    ├── development_workflow.md  # 🔄 Multi-phase dev processes
-    ├── agent_coordination.md    # 🤝 Multi-agent collaboration  
-    ├── project_context.md       # 📊 Analysis results & insights
-    └── templates/               # 📚 Project-specific templates
+your-project/                     # Your analyzed project
+├── CLAUDE.md                    # Project-specific Claude Code guidelines
+├── AGENTS.md                    # Agent configuration and workflows
+└── .claude/                     # Detailed development environment
+    ├── development_workflow.md  # Development process guidance
+    ├── agent_coordination.md    # Multi-agent collaboration patterns
+    └── project_context.md       # Analysis results and project insights
 ```
 
-## 🎯 Universal Project Support
+## 🎯 Language & Framework Support
 
-### **🔤 Languages** (15+ Production-Ready)
-| Language | Frameworks | Project Types | Status |
-|----------|------------|---------------|---------|
-| **Python** | Django, Flask, FastAPI, Celery | Web APIs, CLI, Data Science, ML | ✅ 90%+ accuracy |
-| **Rust** | Axum, Actix, Tokio, Clap | Systems, Web Services, CLI | ✅ 90%+ accuracy |
-| **JavaScript/TypeScript** | React, Vue, Angular, Express, Next.js | Frontend, Full-stack, APIs | ✅ 85%+ accuracy |
-| **Java** | Spring Boot, Maven, Gradle | Enterprise, Microservices | ✅ 85%+ accuracy |
-| **Go** | Gin, Echo, Chi, Cobra | Microservices, CLI, DevOps | ✅ 80%+ accuracy |
-| **C#** | ASP.NET Core, .NET 6+ | Enterprise, Web APIs | ✅ 80%+ accuracy |
-| **PHP** | Laravel, Symfony, Composer | Web Applications, CMS | ✅ 75%+ accuracy |
-| **Ruby** | Rails, Sinatra, RSpec | Web Applications, CLI | ✅ 75%+ accuracy |
-| **Swift** | SwiftUI, UIKit, SPM | iOS/macOS Applications | ✅ 70%+ accuracy |
+### **Languages** (Detection Working)
+| Language | Status | Confidence | Common Frameworks |
+|----------|--------|------------|-------------------|
+| **Python** | ✅ Operational | High | Django, Flask, FastAPI |
+| **Rust** | ✅ Operational | High | Axum, Actix, Tokio |
+| **JavaScript/TypeScript** | ✅ Operational | High | React, Vue, Express, Next.js |
+| **Java** | ✅ Operational | Good | Spring Boot, Maven |
+| **Go** | ✅ Operational | Good | Gin, Echo, CLI tools |
+| **C#** | ✅ Basic | Fair | ASP.NET Core |
+| **PHP** | ✅ Basic | Fair | Laravel, Symfony |
+| **Ruby** | ✅ Basic | Fair | Rails, Sinatra |
 
-### **🏗️ Architecture Patterns** (Auto-Detected)
-- **MVC/MVP/MVVM**: Traditional web applications, mobile apps
-- **Microservices**: Service-oriented architectures, container orchestration
-- **Domain-Driven Design**: Complex business domains, enterprise systems  
-- **Event-Driven**: Message queues, pub/sub, reactive systems
-- **Hexagonal/Clean**: Port-adapter patterns, testable architectures
-- **Serverless**: Functions-as-a-Service, cloud-native applications
-- **Monorepo**: Multi-project repositories, shared libraries
+### **Project Types** (Auto-Detected)
+- **Web Applications**: API servers, full-stack applications, microservices
+- **CLI Tools**: Command-line utilities, system tools, automation scripts
+- **Libraries**: Reusable packages, frameworks, shared components
+- **Data Science**: Jupyter notebooks, ML pipelines, analysis projects
+- **Mobile**: React Native, Flutter, native mobile applications
 
-### **🎯 Domain Specializations**
-| Domain | Detection Patterns | Specialized Agents | Generated Workflows |
-|--------|-------------------|-------------------|---------------------|
-| **E-commerce** | Payment gateways, shopping carts, inventory | backend-architect, security-engineer | Payment integration, order processing |
-| **Data Science/ML** | Jupyter, pandas, tensorflow, models/ | ai-engineer, data-scientist | Model training, data pipelines, experiments |
-| **DevOps Tools** | Docker, K8s, Terraform, CI/CD | devops-automator, infrastructure-maintainer | Deployment, monitoring, scaling |
-| **Media Management** | FFmpeg, image processing, CDNs | performance-benchmarker, storage-optimizer | Media pipelines, optimization, delivery |
-| **Financial Services** | Trading APIs, compliance, security | security-engineer, legal-compliance-checker | Audit trails, security, regulation compliance |
-| **Gaming** | Game engines, real-time systems | performance-benchmarker, mobile-app-builder | Performance optimization, multiplayer |
-| **Healthcare** | HIPAA, patient data, compliance | security-engineer, legal-compliance-checker | Privacy protection, compliance workflows |
+## 🧪 Development & Testing
 
-## 🧪 Development & Quality Assurance
-
-### **🔬 Testing Infrastructure** (Production-Grade)
+### **Running Tests**
 ```bash
-# Complete test suite (415 tests passing)
-pytest tests/ --cov=claude_builder --cov-report=term-missing
-# ✅ Coverage: 85%+ maintained across all modules
+# Run core functionality tests
+pytest tests/unit/phase1_core/ -v
 
-# Phase-based testing (matching development phases)
-pytest tests/unit/phase1_core/ -v       # Core functionality
-pytest tests/unit/phase2_intelligence/ -v  # Intelligence layer  
-pytest tests/unit/phase3_cli/ -v        # CLI integration
-pytest tests/integration/ -v            # End-to-end workflows
+# Check current test coverage
+pytest --cov=claude_builder --cov-report=term-missing
 
-# Performance regression testing
-pytest tests/performance/ --benchmark-only
-# ✅ Maintains <1s analysis speed across test suite
+# Run all tests (expect some failures - work in progress)
+pytest tests/ -v
 ```
 
-### **⚙️ Code Quality Pipeline** (Automated)
+### **Code Quality**
 ```bash
-# All quality gates (enforced by CI/CD)
-black claude_builder tests/             # Auto-formatting (PEP 8)
-ruff claude_builder tests/ --fix        # Comprehensive linting  
-mypy claude_builder/                     # Strict type checking
-bandit -r claude_builder/               # Security vulnerability scan
-safety check                            # Dependency security audit
+# Format code
+black claude_builder tests/
 
-# Pre-commit hooks (automatic)
-pre-commit install  # Runs all checks before each commit
+# Lint code
+ruff claude_builder tests/
+
+# Type checking
+mypy claude_builder/
+
+# Pre-commit checks (runs automatically)
+pre-commit run --all-files
 ```
 
-### **📈 Performance Monitoring**
+### **Performance Testing**
 ```bash
-# Built-in performance analysis
-claude-builder analyze ./large-project --benchmark --verbose
-# → Reports: analysis time, memory usage, detection confidence
-
-# Load testing with real projects
-python -m claude_builder.benchmarks --projects=10 --size=large
-# → Validates: <1s average, <3s 95th percentile, <100MB memory
+# Test analysis speed on sample projects
+time claude-builder tests/fixtures/sample_projects/python_project --dry-run
+time claude-builder tests/fixtures/sample_projects/rust_project --dry-run
 ```
 
-## 🤝 Contributing to Production System
+## 🤝 Contributing
 
-### **🚀 Phase 4 Development (Open to Contributors)**
-Claude Builder is entering **Phase 4: Community Expansion** with clear opportunities for developers at all levels.
+### **Current Development Focus**
+We're in the infrastructure completion phase, focusing on:
 
-#### **👨‍💻 Junior Engineers - Perfect Onboarding Project**
-**Template Marketplace Development** (3-4 weeks)
-- **Clear specifications** with comprehensive documentation
-- **Safe environment** with extensive testing framework
-- **Real impact** enabling community template ecosystem  
-- **Mentorship available** with weekly check-ins
+1. **Test Stabilization**: Fixing failing tests for production reliability
+2. **Agent Integration**: Completing the agent configuration in main CLI
+3. **Quality Assurance**: Ensuring all CI/CD gates pass consistently
+4. **Documentation**: Keeping docs aligned with implementation
 
-#### **🎯 Experienced Developers - High Impact Features**  
-- **Agent Intelligence Enhancement**: ML-based recommendations
-- **IDE Integrations**: VS Code, JetBrains extensions
-- **Enterprise Features**: Team configuration, policy management
-- **Cloud Integration**: SaaS platform development
+### **How to Contribute**
 
-### **📋 Contribution Process**
+#### **Phase 1: Infrastructure Completion** (Current Focus)
+Perfect for developers wanting to learn testing and infrastructure work:
+
 ```bash
-# 1. Development setup (5 minutes)
-git clone https://github.com/quinnoshea/claude_builder.git  
-cd claude_builder/
+# Set up development environment
+git clone https://github.com/quinnoshea/claude_builder.git
+cd claude_builder
 uv pip install -e ".[dev]"
 pre-commit install
 
-# 2. Verify environment
-pytest tests/unit/phase1_core/ -v  # Should pass all tests
-claude-builder --help              # Should show all commands
+# Verify setup
+pytest tests/unit/phase1_core/ -v  # Should pass
+claude-builder --help              # Should show help
 
-# 3. Create feature branch
-git checkout -b feature/community-templates
-
-# 4. Development workflow (TDD encouraged)  
-# Write failing test → Implement → Pass test → Refactor → Commit
-
-# 5. Quality gates (automated)
-pytest --cov=claude_builder        # >80% coverage required
-pre-commit run --all-files         # All checks must pass
-
-# 6. Submit PR with comprehensive description
+# Work on test fixes (see 12-TASKING.md for specific tasks)
 ```
 
-### **🏆 Recognition & Growth**
-- **Open Source Portfolio**: Public contributions to production system
-- **Technical Mentorship**: Code reviews from senior engineers
-- **Community Impact**: Direct influence on developer productivity ecosystem  
-- **Conference Opportunities**: Present work at Python meetups, developer conferences
+#### **Future Phases**
+- **Phase 2**: Production readiness and polish
+- **Phase 3**: Community features and template marketplace
+- **Phase 4**: Enterprise features and integrations
+
+### **Contribution Areas**
+- **Test Infrastructure**: Help fix failing tests and improve coverage
+- **CLI Enhancement**: Improve user experience and error messages
+- **Template Development**: Create templates for new languages/frameworks
+- **Documentation**: Improve guides, examples, and API documentation
 
 ## 📄 License & Acknowledgments
 
@@ -481,15 +323,29 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### **🙏 Acknowledgments** 
 - **Inspired by**: Original Radarr Rust planning generator concept
-- **Built for**: Claude Code ecosystem and developer productivity
-- **Community**: awesome-claude-code-subagents contributors
-- **Thanks to**: All beta testers who validated production readiness
+- **Built for**: Claude Code ecosystem and developer productivity enhancement
+- **Thanks to**: Beta testers and early adopters providing feedback
 
-### **🌟 Project Recognition**
-Claude Builder represents a **significant achievement** in developer tooling:
-- **30x Performance Improvement** over original targets
-- **Universal Language Support** across 15+ languages  
-- **Production-Ready Quality** with comprehensive testing and documentation
-- **Community-Ready Architecture** designed for ecosystem expansion
+## 🎯 Project Roadmap
 
-**Ready for community adoption and enterprise deployment.**
+### **Current Phase: Infrastructure Completion**
+- ✅ Core CLI functionality operational
+- 🚧 Test stabilization (220 tests requiring fixes)
+- 🚧 Agent integration completion
+- ⏳ Documentation alignment
+
+### **Next Phase: Production Readiness**
+- Production-grade error handling
+- Performance optimization and validation
+- Comprehensive user testing
+- Installation and distribution improvements
+
+### **Future Vision**
+- Community template marketplace
+- IDE integrations (VS Code, JetBrains)
+- Enterprise features and team management
+- ML-enhanced project analysis
+
+---
+
+**Claude Builder has achieved significant infrastructure milestones and is positioned for successful completion with focused effort on test stabilization and agent integration.**
