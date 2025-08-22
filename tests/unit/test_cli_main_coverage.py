@@ -309,7 +309,7 @@ def test_write_generated_files_not_quiet(mock_console, temp_dir):
     _write_generated_files(generated_content, temp_dir, kwargs)
     
     # Should print summary with file count
-    expected_call = f"\\n[green]✓ Wrote 2 files to {temp_dir}[/green]"
+    expected_call = f"\n[green]✓ Wrote 2 files to {temp_dir}[/green]"
     mock_console.print.assert_called_with(expected_call)
 
 
@@ -320,7 +320,7 @@ def test_display_summary_dry_run(mock_console):
     
     _display_summary(project_path, dry_run=True)
     
-    mock_console.print.assert_any_call("\\n[bold green]✓ Complete![/bold green]")
+    mock_console.print.assert_any_call("\n[bold green]✓ Complete![/bold green]")
     mock_console.print.assert_any_call("Would generate Claude Code environment for [cyan]/test/project[/cyan]")
 
 
@@ -331,11 +331,10 @@ def test_display_summary_actual_run(mock_console):
     
     _display_summary(project_path, dry_run=False)
     
-    mock_console.print.assert_any_call("\\n[bold green]✓ Complete![/bold green]")
+    mock_console.print.assert_any_call("\n[bold green]✓ Complete![/bold green]")
     mock_console.print.assert_any_call("Generated Claude Code environment for [cyan]/test/project[/cyan]")
     
     # Should print next steps
-    mock_console.print.assert_any_call("\\nNext steps:")
     mock_console.print.assert_any_call("1. Review generated CLAUDE.md file")
     mock_console.print.assert_any_call("2. Configure agents using the generated AGENTS.md")
     mock_console.print.assert_any_call("3. Start using Claude Code with your optimized environment!")

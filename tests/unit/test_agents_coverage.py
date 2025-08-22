@@ -7,6 +7,8 @@ import pytest
 from claude_builder.core.agents import (
     AgentConfiguration,
     AgentInfo,
+    AgentRole,
+    AgentRegistry,
     AgentSelector,
     UniversalAgentSystem,
 )
@@ -18,18 +20,18 @@ def test_agent_info_creation():
     """Test AgentInfo creation - covers AgentInfo dataclass."""
     agent = AgentInfo(
         name="test-agent",
+        role=AgentRole.CORE,
         description="Test agent description",
-        priority=1,
-        category="test",
-        capabilities=["testing", "validation"]
+        use_cases=["testing", "validation"],
+        priority=1
     )
     
     assert agent.name == "test-agent"
     assert agent.description == "Test agent description"
     assert agent.priority == 1
-    assert agent.category == "test"
-    assert "testing" in agent.capabilities
-    assert "validation" in agent.capabilities
+    assert agent.role == AgentRole.CORE
+    assert "testing" in agent.use_cases
+    assert "validation" in agent.use_cases
 
 
 def test_agent_configuration_creation():
@@ -48,10 +50,10 @@ def test_agent_configuration_all_agents():
     config = AgentConfiguration()
     
     # Add some test agents
-    core_agent = AgentInfo(name="core-agent", priority=1)
-    domain_agent = AgentInfo(name="domain-agent", priority=2)
-    workflow_agent = AgentInfo(name="workflow-agent", priority=3)
-    custom_agent = AgentInfo(name="custom-agent", priority=4)
+    core_agent = AgentInfo(name="core-agent", role=AgentRole.CORE, description="Test core agent", use_cases=["core"], priority=1)
+    domain_agent = AgentInfo(name="domain-agent", role=AgentRole.DOMAIN, description="Test domain agent", use_cases=["domain"], priority=2)
+    workflow_agent = AgentInfo(name="workflow-agent", role=AgentRole.WORKFLOW, description="Test workflow agent", use_cases=["workflow"], priority=3)
+    custom_agent = AgentInfo(name="custom-agent", role=AgentRole.CUSTOM, description="Test custom agent", use_cases=["custom"], priority=4)
     
     config.core_agents = [core_agent]
     config.domain_agents = [domain_agent]
@@ -77,24 +79,27 @@ def test_universal_agent_system_initialization():
 
 def test_universal_agent_system_with_config():
     """Test UniversalAgentSystem with config - covers config handling."""
-    config = {"test_key": "test_value"}
-    system = UniversalAgentSystem(config=config)
+    # UniversalAgentSystem doesn't take config parameter, just test initialization
+    system = UniversalAgentSystem()
     
-    assert system.config == config
-    assert system.config["test_key"] == "test_value"
+    assert system.agent_registry is not None
+    assert system.selector is not None
 
 
 def test_agent_selector_initialization():
     """Test AgentSelector initialization - covers AgentSelector.__init__."""
-    selector = AgentSelector()
+    registry = AgentRegistry()
+    selector = AgentSelector(registry)
     
     assert selector is not None
+    assert selector.registry is not None
     # Basic initialization test
 
 
 def test_agent_selector_select_core_agents_basic():
     """Test AgentSelector.select_core_agents basic functionality."""
-    selector = AgentSelector()
+    registry = AgentRegistry()
+    selector = AgentSelector(registry)
     
     # Create a basic analysis
     analysis = ProjectAnalysis(
@@ -114,7 +119,8 @@ def test_agent_selector_select_core_agents_basic():
 
 def test_agent_selector_select_domain_agents_basic():
     """Test AgentSelector.select_domain_agents basic functionality."""
-    selector = AgentSelector()
+    registry = AgentRegistry()
+    selector = AgentSelector(registry)
     
     analysis = ProjectAnalysis(
         project_path=Path("/test"),
@@ -133,7 +139,8 @@ def test_agent_selector_select_domain_agents_basic():
 
 def test_agent_selector_select_workflow_agents_basic():
     """Test AgentSelector.select_workflow_agents basic functionality."""
-    selector = AgentSelector()
+    registry = AgentRegistry()
+    selector = AgentSelector(registry)
     
     analysis = ProjectAnalysis(
         project_path=Path("/test"),
@@ -152,7 +159,8 @@ def test_agent_selector_select_workflow_agents_basic():
 
 def test_agent_selector_different_project_types():
     """Test AgentSelector with different project types - covers project type handling."""
-    selector = AgentSelector()
+    registry = AgentRegistry()
+    selector = AgentSelector(registry)
     
     # Test CLI project
     cli_analysis = ProjectAnalysis(
@@ -179,7 +187,8 @@ def test_agent_selector_different_project_types():
 
 def test_agent_selector_different_languages():
     """Test AgentSelector with different languages - covers language-specific logic."""
-    selector = AgentSelector()
+    registry = AgentRegistry()
+    selector = AgentSelector(registry)
     
     languages = ["python", "rust", "javascript", "java", "go"]
     
@@ -197,9 +206,10 @@ def test_agent_selector_different_languages():
 
 def test_agent_selector_different_complexities():
     """Test AgentSelector with different complexities - covers complexity handling."""
-    selector = AgentSelector()
+    registry = AgentRegistry()
+    selector = AgentSelector(registry)
     
-    complexities = [ComplexityLevel.SIMPLE, ComplexityLevel.MODERATE, ComplexityLevel.HIGH]
+    complexities = [ComplexityLevel.SIMPLE, ComplexityLevel.MODERATE, ComplexityLevel.COMPLEX]
     
     for complexity in complexities:
         analysis = ProjectAnalysis(
@@ -225,7 +235,7 @@ def test_universal_agent_system_configure_agents():
         complexity_level=ComplexityLevel.MODERATE
     )
     
-    config = system.configure_agents(analysis)
+    config = system.select_agents(analysis)
     
     assert isinstance(config, AgentConfiguration)
     assert isinstance(config.core_agents, list)
@@ -236,48 +246,49 @@ def test_universal_agent_system_configure_agents():
 
 def test_agent_info_defaults():
     """Test AgentInfo with default values - covers default initialization."""
-    agent = AgentInfo(name="minimal-agent")
+    agent = AgentInfo(
+        name="minimal-agent",
+        role=AgentRole.CORE,
+        description="Minimal agent",
+        use_cases=["minimal"]
+    )
     
     assert agent.name == "minimal-agent"
-    assert agent.description == ""
-    assert agent.priority == 0
-    assert agent.category == "general"
-    assert agent.capabilities == []
-    assert agent.requirements == []
-    assert agent.conflicts == []
-    assert agent.metadata == {}
+    assert agent.role == AgentRole.CORE
+    assert agent.description == "Minimal agent"
+    assert agent.use_cases == ["minimal"]
+    assert agent.dependencies == []
+    assert agent.priority == 1
+    assert agent.confidence == 0.0
 
 
 def test_agent_info_full_initialization():
     """Test AgentInfo with all fields - covers full initialization."""
     agent = AgentInfo(
         name="full-agent",
+        role=AgentRole.DOMAIN,
         description="Full agent with all fields",
+        use_cases=["analysis", "generation"],
+        dependencies=["python>=3.8"],
         priority=5,
-        category="specialized",
-        capabilities=["analysis", "generation"],
-        requirements=["python>=3.8"],
-        conflicts=["old-agent"],
-        metadata={"version": "1.0", "author": "test"}
+        confidence=0.95
     )
     
     assert agent.name == "full-agent"
+    assert agent.role == AgentRole.DOMAIN
     assert agent.description == "Full agent with all fields"
+    assert agent.use_cases == ["analysis", "generation"]
+    assert agent.dependencies == ["python>=3.8"]
     assert agent.priority == 5
-    assert agent.category == "specialized"
-    assert agent.capabilities == ["analysis", "generation"]
-    assert agent.requirements == ["python>=3.8"]
-    assert agent.conflicts == ["old-agent"]
-    assert agent.metadata["version"] == "1.0"
-    assert agent.metadata["author"] == "test"
+    assert agent.confidence == 0.95
 
 
 def test_agent_configuration_with_agents():
     """Test AgentConfiguration with various agents - covers initialization with data."""
-    core_agent = AgentInfo(name="core-1", priority=1)
-    domain_agent = AgentInfo(name="domain-1", priority=2)
-    workflow_agent = AgentInfo(name="workflow-1", priority=3)
-    custom_agent = AgentInfo(name="custom-1", priority=4)
+    core_agent = AgentInfo(name="core-1", role=AgentRole.CORE, description="Core agent", use_cases=["core"], priority=1)
+    domain_agent = AgentInfo(name="domain-1", role=AgentRole.DOMAIN, description="Domain agent", use_cases=["domain"], priority=2)
+    workflow_agent = AgentInfo(name="workflow-1", role=AgentRole.WORKFLOW, description="Workflow agent", use_cases=["workflow"], priority=3)
+    custom_agent = AgentInfo(name="custom-1", role=AgentRole.CUSTOM, description="Custom agent", use_cases=["custom"], priority=4)
     
     config = AgentConfiguration(
         core_agents=[core_agent],
@@ -306,7 +317,7 @@ def test_universal_agent_system_empty_analysis():
         complexity_level=ComplexityLevel.SIMPLE
     )
     
-    config = system.configure_agents(analysis)
+    config = system.select_agents(analysis)
     
     assert isinstance(config, AgentConfiguration)
     # Should handle minimal analysis gracefully
