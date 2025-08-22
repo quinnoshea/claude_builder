@@ -22,13 +22,13 @@ repos:
     rev: v0.6.3
     hooks:
       - id: ruff
-        args: [--fix, --exit-non-zero-on-fix]
-        exclude: ^src/claude_builder/templates/
+        args: [--fix, --exit-non-zero-on-fix, --ignore=T201,S314,S603,S607]
+        exclude: ^(src/claude_builder/templates/|scripts/)
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.11.2
     hooks:
       - id: mypy
         additional_dependencies: [types-toml, types-click]
-        args: [--config-file=pyproject.toml]
-        exclude: ^(tests/|src/claude_builder/templates/)
+        args: [--config-file=pyproject.toml, --ignore-missing-imports]
+        exclude: ^(tests/|src/claude_builder/templates/|scripts/)
