@@ -733,7 +733,7 @@ for file in $staged_files; do
         if file "$file" | grep -q "binary"; then
             continue
         fi
-        
+
         # Check for Claude mentions in source code files
         case "$file" in
             *.py|*.js|*.ts|*.jsx|*.tsx|*.rs|*.go|*.java|*.cpp|*.c|*.h)
@@ -744,7 +744,7 @@ for file in $staged_files; do
                         exit 1
                     fi
                 fi
-                ;; 
+                ;;
         esac
     fi
 done

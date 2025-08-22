@@ -316,7 +316,7 @@ class ConfigFileDetector:
         target_path = Path(project_path) if project_path else self.project_path
         if not target_path or not target_path.exists():
             return {}
-            
+
         config_files = {
             "python": [],
             "javascript": [],
@@ -324,12 +324,12 @@ class ConfigFileDetector:
             "docker": [],
             "general": []
         }
-        
+
         for file_path in target_path.rglob("*"):
             if file_path.is_file() and (FilePatterns.is_config_file(file_path) or file_path.name.startswith('.docker')):
                 filename = file_path.name
                 relative_path = str(file_path.relative_to(target_path))
-                
+
                 # Categorize by language/type
                 if filename in {"pyproject.toml", "setup.py", "requirements.txt", "pytest.ini", "Pipfile", "setup.cfg"}:
                     config_files["python"].append(relative_path)
@@ -345,7 +345,7 @@ class ConfigFileDetector:
                     config_files["docker"].append(relative_path)
                 else:
                     config_files["general"].append(relative_path)
-        
+
         # Remove empty categories and return
         return {k: v for k, v in config_files.items() if v}
 
@@ -354,11 +354,11 @@ class ConfigFileDetector:
         config_files = self.detect_config_files()
         config_types = set()
         has_secrets = False
-        
+
         for config_file in config_files:
             file_path = self.project_path / config_file
             ext = file_path.suffix.lower()
-            
+
             if ext in {".yaml", ".yml"}:
                 config_types.add("yaml")
             elif ext == ".json":
@@ -370,7 +370,7 @@ class ConfigFileDetector:
             elif file_path.name.startswith(".env"):
                 config_types.add("env")
                 has_secrets = True
-        
+
         return {
             "config_types": list(config_types),
             "config_count": len(config_files),
@@ -391,11 +391,11 @@ class FilePatternMatcher:
     def match(self, filepath: str) -> bool:
         """Basic pattern matching."""
         return any(pattern in filepath for pattern in self.patterns)
-    
+
     def matches_extension(self, file_path: Path, extensions: List[str]) -> bool:
         """Check if file matches any of the given extensions."""
         return file_path.suffix.lower() in [ext.lower() for ext in extensions]
-    
+
     def matches_filename(self, file_path: Path, patterns: List[str]) -> bool:
         """Check if filename matches any of the given patterns."""
         filename = file_path.name
@@ -408,11 +408,11 @@ class FilePatternMatcher:
             elif pattern == filename:
                 return True
         return False
-    
+
     def find_files(self, root_path: Path, pattern: str):
         """Find files matching glob pattern."""
         return root_path.glob(pattern)
-    
+
     def matches_content_pattern(self, file_path: Path, regex_pattern: str) -> bool:
         """Check if file content matches regex pattern."""
         try:
@@ -440,19 +440,19 @@ class LanguageDetector:
         """Detect language from file path or content."""
         if isinstance(file_path, str):
             file_path = Path(file_path)
-            
+
         # First try extension-based detection
         extension = file_path.suffix.lower()
         for language, extensions in FilePatterns.LANGUAGE_EXTENSIONS.items():
             if extension in extensions:
                 return language
-        
+
         # Try shebang detection
         if file_path.exists():
             try:
                 content = file_path.read_text(encoding='utf-8', errors='ignore')
                 first_line = content.split('\n')[0] if content else ""
-                
+
                 if first_line.startswith('#!'):
                     if 'python' in first_line:
                         return "python"
@@ -462,17 +462,17 @@ class LanguageDetector:
                         return "bash"
                     elif '/bin/sh' in first_line or '/usr/bin/sh' in first_line:
                         return "bash"
-                
+
                 # Try content pattern matching
                 for language, patterns in self.language_patterns.items():
                     import re
                     for pattern in patterns:
                         if re.search(pattern, content):
                             return language
-                            
+
             except Exception:
                 pass
-        
+
         return "unknown"
 
     def detect_primary_language(self, project_path: str) -> str:
@@ -486,36 +486,36 @@ class LanguageDetector:
         """Get language statistics for a project."""
         path = Path(project_path)
         stats = {}
-        
+
         for file_path in path.rglob("*"):
             if file_path.is_file() and not FilePatterns.should_ignore(file_path, path):
                 language = self.detect_language(file_path)
                 if language != "unknown":
                     stats[language] = stats.get(language, 0) + 1
-        
+
         return stats
-    
+
     def analyze_project_languages(self, project_path: Path) -> Dict[str, Any]:
         """Analyze languages in project with detailed statistics."""
         if isinstance(project_path, str):
             project_path = Path(project_path)
-            
+
         stats = self.get_language_stats(str(project_path))
         total_files = sum(stats.values())
-        
+
         # Return format expected by tests: language -> {"file_count": count}
         result = {}
         for language, count in stats.items():
             result[language] = {"file_count": count}
-            
+
         return result
 
 
 class PatternRule:
     """Advanced pattern rule for project detection."""
 
-    def __init__(self, name: str = None, description: str = None, patterns: List[str] = None, 
-                 priority: float = 1.0, required_patterns: List[str] = None, 
+    def __init__(self, name: str = None, description: str = None, patterns: List[str] = None,
+                 priority: float = 1.0, required_patterns: List[str] = None,
                  weight_factors: Dict[str, float] = None, pattern: str = None, action: str = "include"):
         # Support both new and legacy interfaces
         if pattern and not patterns:
@@ -524,7 +524,7 @@ class PatternRule:
         else:
             self.patterns = patterns or []
             self.pattern = patterns[0] if patterns else ""
-            
+
         self.name = name or "unnamed_rule"
         self.description = description or ""
         self.action = action
@@ -539,38 +539,38 @@ class PatternRule:
     def apply(self, file_path: str) -> bool:
         """Legacy compatibility method."""
         return self.action == "include"
-    
+
     def evaluate_match(self, project_path: Path):
         """Evaluate pattern rule against project."""
         from collections import namedtuple
         MatchResult = namedtuple('MatchResult', ['matches', 'confidence', 'matched_patterns', 'score'])
-        
+
         matched_patterns = []
         total_score = 0.0
-        
+
         # Check each pattern
         for pattern in self.patterns:
             if self._pattern_exists(project_path, pattern):
                 matched_patterns.append(pattern)
                 weight = self.weight_factors.get(pattern, 1.0)
                 total_score += weight
-        
+
         # Check required patterns
         required_satisfied = all(
-            self._pattern_exists(project_path, req_pattern) 
+            self._pattern_exists(project_path, req_pattern)
             for req_pattern in self.required_patterns
         )
-        
+
         matches = required_satisfied and len(matched_patterns) > 0
         confidence = min(total_score / max(len(self.patterns), 1), 1.0)
-        
+
         return MatchResult(
             matches=matches,
             confidence=confidence,
             matched_patterns=matched_patterns,
             score=total_score
         )
-    
+
     def _pattern_exists(self, project_path: Path, pattern: str) -> bool:
         """Check if pattern exists in project."""
         if "*" in pattern:
@@ -593,21 +593,21 @@ class ProjectTypeDetector:
         path = Path(project_path)
         if not path.exists():
             return "unknown"
-        
+
         # Fall back to primary language
         primary_lang = self.language_detector.detect_primary_language(project_path)
         lang_stats = self.language_detector.get_language_stats(project_path)
-        
+
         # Special handling for really empty projects
         if not lang_stats:
             return "unknown"
-        
+
         # Check for specific project indicators across all subdirectories
         all_files = []
         for file_path in path.rglob("*"):
             if file_path.is_file():
                 all_files.append(file_path.name)
-        
+
         # Count different project type indicators
         project_indicators = {
             "python": {"setup.py", "pyproject.toml", "requirements.txt", "Pipfile"},
@@ -616,27 +616,27 @@ class ProjectTypeDetector:
             "go": {"go.mod"},
             "java": {"pom.xml", "build.gradle", "gradle.properties"}
         }
-        
+
         detected_types = []
         for project_type, indicators in project_indicators.items():
             if any(indicator in all_files for indicator in indicators):
                 detected_types.append(project_type)
-        
+
         # Multi-language project if multiple types detected
         if len(detected_types) > 1:
             return "multi_language"
-        
+
         # Single language project
         if detected_types:
             return detected_types[0]
-        
+
         return primary_lang if primary_lang != "unknown" else "unknown"
 
     def get_project_metadata(self, project_path: str) -> Dict[str, Any]:
         """Get comprehensive project metadata."""
         project_type = self.detect_project_type(project_path)
         frameworks = FilePatterns.detect_frameworks(Path(project_path))
-        
+
         # Determine build system
         build_system = "unknown"
         path = Path(project_path)
@@ -652,9 +652,9 @@ class ProjectTypeDetector:
             build_system = "maven"
         elif (path / "build.gradle").exists():
             build_system = "gradle"
-        
+
         primary_framework = max(frameworks, key=frameworks.get) if frameworks else "none"
-        
+
         return {
             "type": project_type,
             "framework": primary_framework,
@@ -666,23 +666,23 @@ class ProjectTypeDetector:
     def add_detection_rule(self, rule):
         """Add custom detection rule."""
         self.detection_rules.append(rule)
-    
+
     def get_detection_details(self, project_path: str) -> Dict[str, Any]:
         """Get detailed detection information."""
         path = Path(project_path)
         project_type = self.detect_project_type(project_path)
         metadata = self.get_project_metadata(project_path)
-        
+
         # Additional details
         project_files = [f.name for f in path.iterdir() if f.is_file()]
         indicators = []
-        
+
         # Re-run detection logic to get detected_types
         all_files = []
         for file_path in path.rglob("*"):
             if file_path.is_file():
                 all_files.append(file_path.name)
-        
+
         project_indicators = {
             "python": {"setup.py", "pyproject.toml", "requirements.txt", "Pipfile"},
             "rust": {"Cargo.toml"},
@@ -690,12 +690,12 @@ class ProjectTypeDetector:
             "go": {"go.mod"},
             "java": {"pom.xml", "build.gradle", "gradle.properties"}
         }
-        
+
         detected_types = []
         for ptype, pindicators in project_indicators.items():
             if any(indicator in all_files for indicator in pindicators):
                 detected_types.append(ptype)
-        
+
         # Project type indicators
         if project_type == "python":
             indicators = [f for f in project_files if f in {"setup.py", "pyproject.toml", "requirements.txt", "Pipfile"}]
@@ -703,16 +703,16 @@ class ProjectTypeDetector:
             indicators = [f for f in project_files if f == "Cargo.toml"]
         elif project_type == "javascript":
             indicators = [f for f in project_files if f == "package.json"]
-        
+
         confidence = 0.9 if indicators else (0.3 if project_type == "unknown" else 0.5)
-        
+
         # Add languages list for multi-language projects
         languages = []
         if project_type == "multi_language":
             languages = detected_types
         elif project_type != "unknown":
             languages = [project_type]
-        
+
         return {
             "project_type": project_type,
             "confidence": confidence,

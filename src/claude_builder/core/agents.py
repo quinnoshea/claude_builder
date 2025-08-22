@@ -657,14 +657,14 @@ class AgentCoordinator:
         # Find agent with highest priority (lowest number)
         if self.agents:
             selected_agent = min(self.agents, key=lambda a: getattr(a, 'priority', 1))
-            
+
             # If agent has execute method, call it
             if hasattr(selected_agent, 'execute'):
                 try:
                     return selected_agent.execute(task)
                 except Exception:
                     pass  # Fall back to mock result
-        
+
         # Fall back to mock result
         result = Mock()
         result.success = True
@@ -693,12 +693,12 @@ class AgentCoordinator:
         # Get agents with the required capability
         capable_agents = []
         if self.registry and hasattr(self.registry, '_agents'):
-            capable_agents = [agent for agent in self.registry._agents.values() 
+            capable_agents = [agent for agent in self.registry._agents.values()
                              if task.task_type in getattr(agent, 'capabilities', [])]
         else:
-            capable_agents = [agent for agent in self.agents 
+            capable_agents = [agent for agent in self.agents
                              if task.task_type in getattr(agent, 'capabilities', [])]
-        
+
         # Try each agent until one succeeds
         last_error = None
         for agent in capable_agents:
@@ -709,7 +709,7 @@ class AgentCoordinator:
             except Exception as e:
                 # Record error and try next agent
                 last_error = e
-        
+
         # Return mock fallback result
         result = Mock()
         result.success = True
@@ -719,7 +719,7 @@ class AgentCoordinator:
     def execute_parallel(self, tasks: List["AgentTask"]) -> List:
         """Execute tasks in parallel."""
         return self.execute_tasks_parallel(tasks)
-        
+
     def execute_tasks_parallel(self, tasks: List["AgentTask"]) -> List:
         """Execute tasks in parallel."""
         try:
@@ -746,7 +746,7 @@ class AgentCoordinator:
                     capable_agent = self.agents[i]
                 elif self.agents:
                     capable_agent = self.agents[0]
-            
+
             # Execute with the capable agent
             if capable_agent and hasattr(capable_agent, 'execute'):
                 try:
@@ -787,7 +787,7 @@ class AgentCoordinator:
                     continue
                 except Exception:
                     pass
-            
+
             # Fall back to mock result
             result = Mock()
             result.success = True
