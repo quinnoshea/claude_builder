@@ -13,52 +13,52 @@
 [![GitHub issues](https://img.shields.io/github/issues/quinnoshea/claude_builder.svg)](https://github.com/quinnoshea/claude_builder/issues)
 [![Last Commit](https://img.shields.io/github/last-commit/quinnoshea/claude_builder.svg)](https://github.com/quinnoshea/claude_builder/commits/main)
 
-> **Transform any project directory into an intelligent Claude Code development environment where agents respond to natural language and work together seamlessly - no memorization, no manual coordination, just conversation.**
+> **Analyzes your project and generates tailored Claude Code development environments with intelligent agent selection and project-specific guidance.**
 
-## 🚀 The Revolution
+## What Claude Builder Does
 
-**Before:** Manual agent discovery, memorizing 40+ agent names, explicit coordination between specialists
+**Currently:** Analyzes projects (15+ languages, 25+ frameworks) and generates intelligent `CLAUDE.md` and `AGENTS.md` files with project-specific agent recommendations.
 
-**After:** "Build user authentication" → Automatic expert team selection and seamless coordination
+**In Development:** Working toward natural language triggers like "optimize this API" that automatically suggest relevant agent teams based on your project context.
 
-**Impact:** 90% reduction in agent management complexity, 10x faster development workflows
+**Goal:** Reduce the overhead of discovering and coordinating Claude Code agents by providing smart defaults and context-aware suggestions.
 
 ---
 
-## 🔥 Key Features
+## Key Features
 
-### 🤖 **Intelligent Agent Orchestration**
-Natural language → Optimal agent teams → Seamless coordination
+### 🔍 **Project Analysis**
+Detects languages, frameworks, project types, and complexity to understand your codebase
 ```bash
-"optimize this API" → backend-architect + performance-optimizer + api-tester
-"debug memory leak" → profiler-agent + error-detective + test-writer-fixer
-```
-
-### 🎯 **Project-Specific Intelligence**
-FastAPI + React → backend-architect + frontend-developer + test-writer-fixer
-```bash
-# Analyzes your project and selects the perfect team automatically
+# Analyzes project characteristics
 Project: Python FastAPI + PostgreSQL
-Generated Team: backend-architect, api-tester, database-tuner, security-auditor
-Natural Triggers: "optimize database", "secure endpoints", "test API performance"
+Detection: Web API, moderate complexity
+Suggests: backend-architect, api-tester, database-optimizer
 ```
 
-### 🌐 **Community Agent Ecosystem**
-Live connection to 150+ specialized agents with local customization
-```yaml
-repositories:
-  - claude-code-community: 150+ agents automatically indexed
-  - enterprise-agents: Company-specific workflows
-  - local-custom: Your personal agent specializations
+### 🤖 **Agent Recommendations**
+Suggests relevant Claude Code agents based on your project's characteristics
+```bash
+# For a React dashboard project
+Recommended agents: frontend-developer, ui-designer, performance-optimizer
+Generated triggers: "optimize bundle size", "improve accessibility", "design components"
 ```
 
-### ⚡ **Instant Environment Setup**
-One command → Complete development environment with tailored agent teams
+### 📝 **Documentation Generation**
+Creates tailored `CLAUDE.md` and `AGENTS.md` files with project-specific guidance
 ```bash
 claude-builder /your/project
-# Generates complete AGENTS.md with natural language triggers
-# Creates project-specific development workflows
-# Sets up intelligent agent team coordination
+# Generates CLAUDE.md with development guidelines
+# Creates AGENTS.md with suggested agent teams
+# Includes project-specific best practices
+```
+
+### 🛠️ **Template System**
+Uses hierarchical templates (base + language + framework) for consistent, relevant output
+```bash
+# Template composition example
+base.md → python.md → fastapi.md → final output
+# Results in FastAPI-specific development guidance
 ```
 
 ---
@@ -109,20 +109,20 @@ claude-builder /path/to/project analyze --output=json   # Export project analysi
 - Intelligent handoff mechanisms
 - Adaptive team composition
 
-### 🎯 **REVOLUTIONARY VISION** (Complete design, implementing)
+### 🎯 **PLANNED FEATURES** (In design/development)
 
-**Full Conversational Agent Interaction**
+**Enhanced Natural Language Integration**
 ```bash
-# Instead of memorizing agent names:
-"optimize this API" → automatic expert team deployment
-"build login system" → full-stack security-focused team activation
-"investigate slow queries" → database performance team coordination
+# Vision: More intuitive interaction with agents
+"optimize this API" → suggests backend-architect + performance-optimizer
+"build login system" → suggests security-auditor + backend-architect
+"investigate slow queries" → suggests database-optimizer + profiler-agent
 ```
 
-**Community Ecosystem Integration**
-- Shared intelligence across development teams
-- Best practice propagation through agent selection
-- Continuous learning from usage patterns
+**Community Agent Integration**
+- Connect to community agent repositories for broader coverage
+- Support custom agent definitions for specialized workflows
+- Share successful agent patterns across projects
 
 **Adaptive Team Composition**
 - Teams that learn from successful development patterns
@@ -172,24 +172,17 @@ your-project/
 
 ---
 
-## 🌟 Real-World Transformations
+## Real-World Examples
 
 ### Python FastAPI Project
-**Before:** Manual setup, generic agent coordination, trial-and-error workflows
-```bash
-# Traditional approach
-- Research which agents might help with API development
-- Manually create AGENTS.md with generic agent lists
-- Remember agent names: "Use backend-architect for API design"
-- Coordinate agents manually: "First security-auditor, then api-tester"
-```
+**Manual approach:** Research agents, create generic configurations, remember which agents work well together
 
-**After:** Automatic expert environment with natural triggers
+**With claude-builder:**
 ```bash
 claude-builder ./my-fastapi-project
-# Automatically detects: Python 3.11, FastAPI, PostgreSQL, Redis
-# Generates intelligent team: backend-architect, api-tester, database-tuner, security-auditor
-# Natural language triggers: "optimize database queries", "secure API endpoints", "test performance"
+# Detects: Python 3.11, FastAPI, PostgreSQL, Redis
+# Suggests: backend-architect, api-tester, database-optimizer, security-auditor
+# Generates context: API development patterns, database optimization, security considerations
 ```
 
 ### React Dashboard Project
@@ -449,22 +442,19 @@ When contributing agent definitions or coordination patterns:
 
 ## 📈 Success Stories & Impact
 
-### Development Productivity Metrics
-- **Projects Supported**: 15+ languages, 25+ frameworks, unlimited project complexity
-- **Agent Selection Accuracy**: 90%+ for major project types, 85%+ for hybrid projects
-- **Setup Time Reduction**: 60-80% faster environment configuration vs manual setup
-- **Community Adoption**: Growing ecosystem of specialized agents and templates
+### Current Status
+- **Projects Supported**: 15+ languages, 25+ frameworks with good detection accuracy
+- **Agent Suggestions**: Works well for common project types (Python web apps, React SPAs, Rust CLI tools)
+- **Setup**: Automates the manual process of researching and configuring Claude Code agents
+- **Community**: Growing set of templates and agent configurations
 
-### User Feedback
-> "Transformed our team's Claude Code adoption from painful trial-and-error to seamless expert consultation. We went from struggling with agent coordination to having natural conversations with specialized development teams."
-> *- Senior Engineering Team Lead*
+### User Experience
+The tool helps reduce the initial setup overhead when starting to use Claude Code agents on a new project. Instead of manually researching which agents might be relevant and creating configuration files from scratch, claude-builder analyzes your project and provides educated suggestions based on what it detects.
 
-> "The project intelligence is incredible - it detected our microservices architecture, suggested the perfect agent team, and generated coordination patterns we hadn't even considered."
-> *- Full-Stack Developer*
-
-### Development Team Impact
-- **40-60% faster** project setup and agent environment configuration
-- **90% reduction** in agent discovery and memorization overhead
+### Development Impact
+- Faster initial setup compared to manual agent discovery
+- Consistent agent configuration patterns across projects
+- Good starting point for teams new to Claude Code agents
 - **Seamless onboarding** for new team members through generated environments
 - **Consistent workflows** across diverse project types and team experience levels
 
@@ -472,21 +462,21 @@ When contributing agent definitions or coordination patterns:
 
 ## 🗺️ Roadmap & Future Vision
 
-### 🎯 **Next Major Release** (Agent Orchestration Engine)
+### 🎯 **Planned Development** (Next Major Features)
 
-**Natural Language Orchestration**
+**Improved Natural Language Integration**
 ```bash
-# Full conversational interaction with project-specific agent teams
-"optimize this API for mobile users" → performance-optimizer + mobile-specialist + api-tester
-"build secure payment processing" → security-auditor + fintech-specialist + compliance-checker
-"investigate production errors" → error-detective + monitoring-specialist + incident-responder
+# Goal: More intuitive ways to interact with agent suggestions
+"optimize this API for mobile users" → suggests relevant performance and mobile-focused agents
+"build secure payment processing" → suggests security and compliance-focused agent teams
+"investigate production errors" → suggests debugging and monitoring agent workflows
 ```
 
-**Community Ecosystem Integration**
-- Live repository scanning with 150+ community agents
-- Automatic capability indexing and intelligent matching
-- Custom agent integration with shared community intelligence
-- Version management and update coordination
+**Community Integration**
+- Connect to community agent repositories for broader coverage
+- Support importing and sharing agent configuration patterns
+- Better integration with custom agent definitions
+- Version tracking for agent configurations
 
 **Adaptive Intelligence**
 - Team composition learning from successful development patterns
@@ -547,26 +537,26 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ## 🎯 Call to Action
 
-**Experience the future of AI-assisted development.**
+**Try Claude Builder on your projects.**
 
-Transform your projects into intelligent environments where expert agents respond to your needs naturally and work together seamlessly.
+Automate the process of discovering and configuring relevant Claude Code agents based on your project's characteristics.
 
 ```bash
-# Start your transformation today
+# Get started
 uv pip install -e ".[dev]"  # or pip install claude-builder
 claude-builder /your/project
 
-# Join the revolution
-# ✅ No more memorizing agent names
-# ✅ No more manual coordination
-# ✅ No more generic development environments
-# ✅ Just natural conversation with expert AI teams
+# See what it generates
+# ✅ Project-specific CLAUDE.md with development guidelines
+# ✅ AGENTS.md with relevant agent recommendations
+# ✅ Context-aware suggestions based on your tech stack
+# ✅ Templates tailored to your project type
 ```
 
-**Ready to 10x your development workflow?**
+**Interested in contributing or trying it out?**
 
-[⭐ Star this repository](https://github.com/quinnoshea/claude_builder) | [🚀 Try it now](#-quick-start) | [🤝 Contribute](#-contributing--community) | [💬 Join discussions](https://github.com/quinnoshea/claude_builder/discussions)
+[⭐ Star this repository](https://github.com/quinnoshea/claude_builder) | [🚀 Quick start](#quick-start) | [🤝 Contribute](#-contributing--community) | [💬 Discussions](https://github.com/quinnoshea/claude_builder/discussions)
 
 ---
 
-*Claude Builder: Where every project becomes an intelligent agent-assisted development environment.*
+*Claude Builder: Intelligent agent configuration for Claude Code projects.*
