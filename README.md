@@ -343,13 +343,13 @@ claude-builder ./project deploy "with security audit and performance testing"
 ### Running Tests
 ```bash
 # Core functionality tests (should pass)
-pytest tests/unit/phase1_core/ -v
+pytest tests/unit/core/ -v
 
 # Intelligence layer tests
-pytest tests/unit/phase2_intelligence/ -v
+pytest tests/unit/intelligence/ -v
 
 # Advanced features (some in development)
-pytest tests/unit/phase3_advanced/ -v
+pytest tests/unit/advanced/ -v
 
 # Full test suite with coverage
 pytest --cov=claude_builder --cov-report=term-missing
@@ -408,9 +408,9 @@ pre-commit install
 #### 🧪 **Test Infrastructure & Quality** (Great for Learning)
 ```bash
 # Help fix failing tests for production reliability
-pytest tests/unit/phase1_core/ -v  # Should pass
-pytest tests/unit/phase2_intelligence/ -v  # Some fixes needed
-pytest tests/unit/phase3_advanced/ -v  # Work in progress
+pytest tests/unit/core/ -v  # Should pass
+pytest tests/unit/intelligence/ -v  # Some fixes needed
+pytest tests/unit/advanced/ -v  # Work in progress
 
 # Improve test coverage and quality
 pytest --cov=claude_builder --cov-report=html

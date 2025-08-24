@@ -1,4 +1,4 @@
-"""Tests for Phase 1 core functionality: Document Generator.
+"""Tests for core functionality: Document Generator.
 
 Tests cover the document generation capabilities including:
 - Template loading and processing
@@ -16,7 +16,7 @@ from claude_builder.core.models import ComplexityLevel, ProjectType
 
 
 @pytest.mark.unit
-@pytest.mark.phase1
+@pytest.mark.core
 class TestDocumentGenerator:
     """Test the main DocumentGenerator class."""
 
@@ -205,7 +205,7 @@ class TestDocumentGenerator:
 
 
 @pytest.mark.unit
-@pytest.mark.phase1
+@pytest.mark.core
 class TestTemplateLoader:
     """Test the TemplateLoader component."""
 
@@ -352,7 +352,7 @@ Testing configuration here.
 
 
 @pytest.mark.unit
-@pytest.mark.phase1
+@pytest.mark.core
 class TestOutputGeneration:
     """Test output generation and file organization."""
 

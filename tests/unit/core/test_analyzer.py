@@ -1,4 +1,4 @@
-"""Tests for Phase 1 core functionality: Project Analyzer.
+"""Tests for core functionality: Project Analyzer.
 
 Tests cover the fundamental project analysis capabilities including:
 - Language detection and confidence scoring
@@ -21,7 +21,7 @@ from tests.conftest import create_test_project
 
 
 @pytest.mark.unit
-@pytest.mark.phase1
+@pytest.mark.core
 class TestProjectAnalyzer:
     """Test the main ProjectAnalyzer class."""
 
@@ -176,7 +176,7 @@ class TestProjectAnalyzer:
 
 
 @pytest.mark.unit
-@pytest.mark.phase1
+@pytest.mark.core
 class TestLanguageDetector:
     """Test the LanguageDetector component."""
 
@@ -275,7 +275,7 @@ class TestLanguageDetector:
 
 
 @pytest.mark.unit
-@pytest.mark.phase1
+@pytest.mark.core
 class TestFrameworkDetector:
     """Test the FrameworkDetector component."""
 
@@ -408,7 +408,7 @@ async fn main() {
 
 
 @pytest.mark.unit
-@pytest.mark.phase1
+@pytest.mark.core
 class TestProjectTypeClassification:
     """Test project type classification logic."""
 
@@ -511,7 +511,7 @@ setup(
 
 
 @pytest.mark.unit
-@pytest.mark.phase1
+@pytest.mark.core
 class TestComplexityAssessment:
     """Test complexity level assessment."""
 

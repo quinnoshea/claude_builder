@@ -1,4 +1,4 @@
-"""Tests for Phase 2 intelligence layer: Agent System.
+"""Tests for intelligence layer: Agent System.
 
 Tests cover the agent management and coordination system including:
 - Agent discovery and selection
@@ -22,7 +22,7 @@ from claude_builder.core.models import ComplexityLevel, ProjectType
 
 
 @pytest.mark.unit
-@pytest.mark.phase2
+@pytest.mark.intelligence
 class TestAgentManager:
     """Test the main AgentManager class."""
 
@@ -137,7 +137,7 @@ class TestAgentManager:
 
 
 @pytest.mark.unit
-@pytest.mark.phase2
+@pytest.mark.intelligence
 class TestAgentSelector:
     """Test the AgentSelector component."""
 
@@ -259,7 +259,7 @@ class TestAgentSelector:
 
 
 @pytest.mark.unit
-@pytest.mark.phase2
+@pytest.mark.intelligence
 class TestAgentCoordinator:
     """Test the AgentCoordinator component."""
 
@@ -390,7 +390,7 @@ class TestAgentCoordinator:
 
 
 @pytest.mark.unit
-@pytest.mark.phase2
+@pytest.mark.intelligence
 class TestAgent:
     """Test the Agent base class and specific agent implementations."""
 
@@ -503,7 +503,7 @@ class TestAgent:
 
 
 @pytest.mark.unit
-@pytest.mark.phase2
+@pytest.mark.intelligence
 class TestAgentWorkflow:
     """Test the AgentWorkflow class."""
 
@@ -611,7 +611,7 @@ class TestAgentWorkflow:
 
 
 @pytest.mark.unit
-@pytest.mark.phase2
+@pytest.mark.intelligence
 class TestAgentIntegration:
     """Test agent system integration with other components."""
 

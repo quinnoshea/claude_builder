@@ -149,9 +149,9 @@ markers = [
     "slow: Slow tests (may take >1 second)",
     "requires_git: Tests that require git",
     "requires_network: Tests that require network access",
-    "phase1: Phase 1 core functionality tests",
-    "phase2: Phase 2 intelligence layer tests",
-    "phase3: Phase 3 advanced features tests",
+    "core: Core functionality tests (analyzer, generator, CLI, config)",
+    "intelligence: Intelligence layer tests (agents, templates, detection)",
+    "advanced: Advanced features tests (template ecosystem, config management, git)",
 ]
 
 [tool.coverage.run]

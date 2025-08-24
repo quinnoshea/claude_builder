@@ -750,7 +750,7 @@ class TestAgentRepositoryScanner:
         assert "Implementation pending" in result.errors[0]
 
 
-@pytest.mark.phase3
+@pytest.mark.advanced
 class TestIntegrationAgentRepository:
     """Integration tests for agent repository system."""
 

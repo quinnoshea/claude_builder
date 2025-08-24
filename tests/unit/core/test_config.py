@@ -1,4 +1,4 @@
-"""Tests for Phase 1 core functionality: Configuration Management.
+"""Tests for core functionality: Configuration Management.
 
 Tests cover the basic configuration system including:
 - Configuration loading and saving
@@ -27,7 +27,7 @@ from claude_builder.utils.exceptions import ConfigError
 
 
 @pytest.mark.unit
-@pytest.mark.phase1
+@pytest.mark.core
 class TestConfig:
     """Test the main Config dataclass."""
 
@@ -101,7 +101,7 @@ class TestConfig:
 
 
 @pytest.mark.unit
-@pytest.mark.phase1
+@pytest.mark.core
 class TestConfigManager:
     """Test the ConfigManager class."""
 
@@ -387,7 +387,7 @@ class TestConfigManager:
 
 
 @pytest.mark.unit
-@pytest.mark.phase1
+@pytest.mark.core
 class TestConfigIntegration:
     """Test configuration integration with other components."""
 
