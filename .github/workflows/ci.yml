@@ -193,11 +193,6 @@ jobs:
           **/*.md
           !.venv/**
           !node_modules/**
-        config: |
-          {
-            "MD013": false,
-            "MD033": false
-          }
 
   integration-tests:
     runs-on: ubuntu-latest
