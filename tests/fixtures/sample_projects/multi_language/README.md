@@ -1,6 +1,7 @@
 # Multi-Language Sample Project
 
-A sample project with multiple programming languages for testing claude-builder analysis capabilities.
+A sample project with multiple programming languages for testing
+claude-builder analysis capabilities.
 
 ## Languages & Technologies
 

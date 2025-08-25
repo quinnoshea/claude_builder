@@ -65,7 +65,8 @@ docker run --name postgres -e POSTGRES_PASSWORD=password -p 5432:5432 -d postgre
 
 # Set DATABASE_URL environment variable
 
-echo "DATABASE_URL=postgresql://username:password@localhost:5432/${project_name}" > .env
+echo "DATABASE_URL=postgresql://username:password@localhost:5432/\
+${project_name}" > .env
 
 # Create database and run migrations
 
@@ -90,12 +91,14 @@ edition = "2021"
 axum = { version = "0.7", features = ["macros"] }
 tokio = { version = "1.0", features = ["full"] }
 tower = "0.4"
-tower-http = { version = "0.5", features = ["cors", "trace", "compression", "fs"] }
+tower-http = { version = "0.5", \
+  features = ["cors", "trace", "compression", "fs"] }
 hyper = { version = "1.0", features = ["full"] }
 
 # Database
 
-sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid", "migrate"] }
+sqlx = { version = "0.7", \
+  features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid", "migrate"] }
 
 # Serialization
 
@@ -388,7 +391,9 @@ impl TestContext {
 
     pub async fn cleanup(&self) -> Result<()> {
         // Clean up test data
-        sqlx::query("TRUNCATE TABLE users, ${model_name_lower}s RESTART IDENTITY CASCADE")
+        sqlx::query(
+            "TRUNCATE TABLE users, ${model_name_lower}s RESTART IDENTITY CASCADE"
+        )
             .execute(&self.db)
             .await?;
         Ok(())
@@ -421,7 +426,8 @@ impl TestContext {
             user_id,
             email: "test@example.com".to_string(),
             is_admin: false,
-            exp: (chrono::Utc::now() + chrono::Duration::hours(1)).timestamp() as usize,
+            exp: (chrono::Utc::now() + chrono::Duration::hours(1))
+                .timestamp() as usize,
         };
 
         let token = encode(
@@ -499,7 +505,10 @@ mod tests {
             status: None,
         };
 
-        let ${model_name_lower} = service.create_${model_name_lower}(owner_id, create_request).await.unwrap();
+        let ${model_name_lower} = service.create_${model_name_lower}(
+            owner_id, 
+            create_request
+        ).await.unwrap();
 
         // Try to update with different user
         let update_request = Update${model_name}Request {
@@ -509,7 +518,11 @@ mod tests {
             status: None,
         };
 
-        let result = service.update_${model_name_lower}(${model_name_lower}.id, other_user_id, update_request).await;
+        let result = service.update_${model_name_lower}(
+            ${model_name_lower}.id, 
+            other_user_id, 
+            update_request
+        ).await;
         assert!(result.is_err());
 
         match result.unwrap_err() {
@@ -691,7 +704,9 @@ fn bench_health_check(c: &mut Criterion) {
                 .body(Body::empty())
                 .unwrap();
 
-            let response = app.clone().oneshot(black_box(request)).await.unwrap();
+            let response = app.clone()
+                .oneshot(black_box(request))
+                .await.unwrap();
             black_box(response);
         });
     });
@@ -723,7 +738,9 @@ fn bench_${model_name_lower}_creation(c: &mut Criterion) {
                             .body(Body::from(payload.to_string()))
                             .unwrap();
 
-                        let response = app.clone().oneshot(black_box(request)).await.unwrap();
+                        let response = app.clone()
+                .oneshot(black_box(request))
+                .await.unwrap();
                         black_box(response);
                     }
                 });
@@ -1084,7 +1101,8 @@ jobs:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       run: |
-        echo $DOCKER_PASSWORD | docker login $DOCKER_REGISTRY -u $DOCKER_USERNAME --password-stdin
+        echo $DOCKER_PASSWORD | docker login $DOCKER_REGISTRY \
+            -u $DOCKER_USERNAME --password-stdin
         docker build -t $DOCKER_REGISTRY/${project_name}:${{ github.sha }} .
         docker push $DOCKER_REGISTRY/${project_name}:${{ github.sha }}
         docker tag $DOCKER_REGISTRY/${project_name}:${{ github.sha }} $DOCKER_REGISTRY/${project_name}:latest

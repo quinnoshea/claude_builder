@@ -1,3 +1,5 @@
+# FastAPI Development Guide
+
 <!-- REPLACE:architecture -->
 **Project Type**: ${project_type}
 **Framework**: FastAPI
@@ -5,7 +7,7 @@
 
 This FastAPI project follows modern Python web development patterns:
 
-### FastAPI Architecture Patterns
+## FastAPI Architecture Patterns
 
 - **Dependency Injection**: Use FastAPI's dependency system for shared resources
 - **Pydantic Models**: Define request/response models with type validation
@@ -15,7 +17,7 @@ This FastAPI project follows modern Python web development patterns:
 
 ### Recommended Project Structure
 
-```
+```text
 src/
 ├── main.py              # Application entry point
 ├── api/
@@ -64,7 +66,8 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker
 
 # Generate OpenAPI schema
-python -c "import json; from main import app; print(json.dumps(app.openapi(), indent=2))" > openapi.json
+python -c "import json; from main import app; \
+    print(json.dumps(app.openapi(), indent=2))" > openapi.json
 
 # Run tests with FastAPI test client
 pytest tests/ -v

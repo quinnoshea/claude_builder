@@ -14,7 +14,7 @@ ${project_description}
 
 ### Project Structure
 
-```
+```text
 ${project_name}/
 ├── public/
 │   ├── index.html
@@ -644,7 +644,10 @@ export const api = createApi({
       }),
       invalidatesTags: ['${model_name}'],
     }),
-    update${model_name}: builder.mutation<${model_name}, { id: string; ${model_name_lower}: Partial<${model_name}> }>({
+    update${model_name}: builder.mutation<
+      ${model_name}, 
+      { id: string; ${model_name_lower}: Partial<${model_name}> }
+    >({
       query: ({ id, ${model_name_lower} }) => ({
         url: `${model_name_lower}s/${id}`,
         method: 'PUT',
@@ -685,7 +688,9 @@ import { TextArea } from '@/components/ui/TextArea';
 import { ${model_name} } from '@/types/${feature}';
 
 const schema = yup.object({
-  title: yup.string().required('Title is required').min(3, 'Title must be at least 3 characters'),
+  title: yup.string()
+    .required('Title is required')
+    .min(3, 'Title must be at least 3 characters'),
   description: yup.string().optional(),
   content: yup.string().required('Content is required'),
   status: yup.string().oneOf(['draft', 'published'], 'Invalid status'),
@@ -904,7 +909,8 @@ export function useErrorHandler() {
         rethrow = false,
       } = options;
 
-      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+      const errorMessage = error instanceof Error ? 
+        error.message : 'An unexpected error occurred';
 
       if (logError) {
         console.error('Error handled:', error);
@@ -1148,7 +1154,10 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, helperText, required, fullWidth, className, id, ...props }, ref) => {
+  (
+    { label, error, helperText, required, fullWidth, className, id, ...props },
+    ref
+  ) => {
     const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`;
     const errorId = error ? `${inputId}-error` : undefined;
     const helperTextId = helperText ? `${inputId}-helper` : undefined;
@@ -1158,7 +1167,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         {label && (
           <label htmlFor={inputId} className="form-label">
             {label}
-            {required && <span className="required-indicator" aria-hidden="true"> *</span>}
+            {required && (
+              <span className="required-indicator" aria-hidden="true"> *</span>
+            )}
           </label>
         )}
         <input

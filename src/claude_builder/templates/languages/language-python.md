@@ -1,5 +1,7 @@
+# Python Development Guidelines
+
 <!-- REPLACE:guidelines -->
-### Python Code Quality Standards
+## Python Code Quality Standards
 
 - Follow PEP 8 style guidelines for consistent formatting
 - Use type hints for function parameters and return values
@@ -33,7 +35,8 @@
 1. Clone the repository
 2. Create virtual environment: `python -m venv venv` or `uv venv`
 3. Activate virtual environment: `source venv/bin/activate`
-4. Install dependencies: `pip install -r requirements.txt` or `uv pip install -r requirements.txt`
+4. Install dependencies: `pip install -r requirements.txt` or \
+   `uv pip install -r requirements.txt`
 5. Run tests: `pytest`
 6. Start development
 

@@ -6,9 +6,11 @@
 
 #### backend-architect
 
-**Primary Role**: Node.js backend systems, API design, microservices architecture
+**Primary Role**: Node.js backend systems, API design,
+microservices architecture
 
-- **Specialization**: Express.js applications, MongoDB/PostgreSQL integration, RESTful APIs
+- **Specialization**: Express.js applications, MongoDB/PostgreSQL integration,
+  RESTful APIs
 - **Responsibilities**:
   - Design scalable Node.js architectures with proper separation of concerns
   - Implement robust API endpoints with comprehensive error handling
@@ -17,9 +19,11 @@
 
 #### frontend-developer
 
-**Primary Role**: JavaScript frontend development, SPA frameworks, UI implementation
+**Primary Role**: JavaScript frontend development, SPA frameworks,
+UI implementation
 
-- **Specialization**: ${frontend_framework} applications, modern JavaScript (ES6+), responsive design
+- **Specialization**: ${frontend_framework} applications,
+  modern JavaScript (ES6+), responsive design
 - **Responsibilities**:
   - Implement responsive and interactive user interfaces
   - State management with appropriate patterns (Redux, Context API, Vuex)
@@ -86,9 +90,11 @@
 **JavaScript Performance Focus**:
 
 - **Profiling**: Node.js built-in profiler, Chrome DevTools, clinic.js
-- **Benchmarking**: Benchmark.js for micro-benchmarks, autocannon for API load testing
+- **Benchmarking**: Benchmark.js for micro-benchmarks,
+  autocannon for API load testing
 - **Memory Analysis**: Memory usage profiling and leak detection
-- **Bundle Analysis**: Webpack Bundle Analyzer, source-map-explorer for frontend optimization
+- **Bundle Analysis**: Webpack Bundle Analyzer,
+  source-map-explorer for frontend optimization
 
 ### Framework-Specific Agents
 
@@ -107,7 +113,7 @@
 
 ### Full-Stack Development Pipeline
 
-```
+```text
 
 1. rapid-prototyper: Initial feature prototyping and architecture validation
 
@@ -139,7 +145,7 @@
 
 ### API Development Pipeline
 
-```
+```text
 
 1. backend-architect: API design and endpoint implementation
 
@@ -626,7 +632,9 @@ class DatabaseManager {
   createPool(database) {
     const mongoose = require('mongoose');
 
-    return mongoose.createConnection(process.env[`${database.toUpperCase()}_DB_URI`], {
+    return mongoose.createConnection(
+      process.env[`${database.toUpperCase()}_DB_URI`],
+      {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       maxPoolSize: 20,          // Maximum number of connections
@@ -687,7 +695,8 @@ class AsyncOperationManager {
   }
 
   async processQueue() {
-    while (this.queue.length > 0 && this.activeOperations < this.concurrencyLimit) {
+    while (this.queue.length > 0 &&
+           this.activeOperations < this.concurrencyLimit) {
       const { operation, resolve, reject } = this.queue.shift();
 
       this.activeOperations++;

@@ -888,7 +888,9 @@ server {
     gzip on;
     gzip_vary on;
     gzip_min_length 1024;
-    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+    gzip_types text/plain text/css application/json \
+        application/javascript text/xml application/xml \
+        application/xml+rss text/javascript;
 
     # Handle client-side routing
 

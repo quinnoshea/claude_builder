@@ -6,9 +6,11 @@
 
 #### backend-architect
 
-**Primary Role**: Rust system architecture, performance optimization, memory safety
+**Primary Role**: Rust system architecture,
+performance optimization, memory safety
 
-- **Specialization**: High-performance Rust applications, concurrent systems, memory management
+- **Specialization**: High-performance Rust applications,
+  concurrent systems, memory management
 - **Responsibilities**:
   - Design scalable Rust architectures using ownership and borrowing
   - Implement async/await patterns with Tokio runtime
@@ -94,7 +96,7 @@
 
 ### Rust Development Pipeline
 
-```
+```text
 
 1. rapid-prototyper: Initial Rust implementation with proper error handling
 
@@ -122,7 +124,7 @@
 
 ### Quality Assurance Pipeline
 
-```
+```text
 
 1. Any Agent: Rust code implementation
 
@@ -180,7 +182,8 @@ serde = { version = "${serde_version}", features = ["derive"] }
 # Tracing and logging
 
 tracing = "${tracing_version}"
-tracing-subscriber = { version = "${tracing_subscriber_version}", features = ["json"] }
+tracing-subscriber = { version = "${tracing_subscriber_version}", \
+  features = ["json"] }
 
 # ${additional_dependencies}
 

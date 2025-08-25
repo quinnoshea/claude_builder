@@ -14,7 +14,7 @@ ${project_description}
 
 ### Project Structure
 
-```
+```text
 ${project_name}/
 ├── manage.py                     # Django management script
 ├── requirements.txt              # Production dependencies
@@ -86,7 +86,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='', cast=lambda v: [s.strip() for s in v.split(',')])
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='', \
+    cast=lambda v: [s.strip() for s in v.split(',')])
 
 # Application definition
 
@@ -426,7 +427,8 @@ class ${model_name}(TimeStampedModel):
         return self.title
 
     def get_absolute_url(self):
-        return reverse('${app_name}:${model_name_lower}-detail', kwargs={'slug': self.slug})
+        return reverse('${app_name}:${model_name_lower}-detail', \
+            kwargs={'slug': self.slug})
 
     def save(self, *args, **kwargs):
 

@@ -947,7 +947,8 @@ const checkOwnership = (resourceField = 'userId') => {
       }
 
       // Check if user owns the resource or is admin
-      if (resource[resourceField].toString() !== userId && req.user.role !== 'admin') {
+      if (resource[resourceField].toString() !== userId && \
+          req.user.role !== 'admin') {
         return next(new AppError('Access denied', 403));
       }
 

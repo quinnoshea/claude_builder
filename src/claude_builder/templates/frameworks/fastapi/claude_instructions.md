@@ -14,7 +14,7 @@ ${project_description}
 
 ### Project Structure
 
-```
+```text
 ${project_name}/
 ├── app/
 │   ├── __init__.py
@@ -99,7 +99,9 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
 
     @validator("BACKEND_CORS_ORIGINS", pre=True)
-    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
+    def assemble_cors_origins(
+        cls, v: Union[str, List[str]]
+    ) -> Union[List[str], str]:
         if isinstance(v, str) and not v.startswith("["):
             return [i.strip() for i in v.split(",")]
         elif isinstance(v, (list, str)):
@@ -206,7 +208,8 @@ class ${model_name}(Base, TimestampMixin):
     slug = Column(String(200), unique=True, nullable=False, index=True)
     description = Column(Text)
     content = Column(Text)
-    status = Column(Enum(${model_name}Status), default=${model_name}Status.DRAFT, nullable=False, index=True)
+    status = Column(Enum(${model_name}Status), \
+        default=${model_name}Status.DRAFT, nullable=False, index=True)
     is_featured = Column(Boolean, default=False, nullable=False, index=True)
 
     # Relationships

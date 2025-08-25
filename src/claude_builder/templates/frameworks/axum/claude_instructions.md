@@ -14,7 +14,7 @@ ${project_description}
 
 ### Project Structure
 
-```
+```text
 ${project_name}/
 ├── Cargo.toml                   # Project configuration
 ├── Cargo.lock                   # Dependency lock file
@@ -92,7 +92,8 @@ repository = "${repository_url}"
 axum = { version = "${axum_version}", features = ["macros"] }
 tokio = { version = "${tokio_version}", features = ["full"] }
 tower = "${tower_version}"
-tower-http = { version = "${tower_http_version}", features = ["cors", "trace", "compression", "fs"] }
+tower-http = { version = "${tower_http_version}", 
+  features = ["cors", "trace", "compression", "fs"] }
 hyper = { version = "${hyper_version}", features = ["full"] }
 
 # Async runtime and utilities
@@ -107,7 +108,8 @@ serde_json = "${serde_json_version}"
 
 # Database
 
-sqlx = { version = "${sqlx_version}", features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid", "migrate"] }
+sqlx = { version = "${sqlx_version}", 
+  features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid", "migrate"] }
 
 # Authentication & Security
 
@@ -123,7 +125,8 @@ dotenvy = "${dotenvy_version}"
 # Logging and tracing
 
 tracing = "${tracing_version}"
-tracing-subscriber = { version = "${tracing_subscriber_version}", features = ["env-filter"] }
+tracing-subscriber = { version = "${tracing_subscriber_version}", 
+  features = ["env-filter"] }
 
 # Error handling
 
@@ -605,7 +608,10 @@ use uuid::Uuid;
 use chrono::Utc;
 
 use crate::models::{
-    ${model}::{${model_name}, Create${model_name}Request, Update${model_name}Request, ${model_name}Query, ${model_name}Status},
+    ${model}::{
+        ${model_name}, Create${model_name}Request, Update${model_name}Request, 
+        ${model_name}Query, ${model_name}Status
+    },
     user::User,
 };
 use crate::utils::errors::{AppError, AppResult};
@@ -630,9 +636,11 @@ impl ${service_name}Service {
         let ${model_name_lower} = sqlx::query_as!(
             ${model_name},
             r#"
-            INSERT INTO ${model_name_lower}s (id, title, description, content, status, author_id, created_at, updated_at)
+            INSERT INTO ${model_name_lower}s 
+            (id, title, description, content, status, author_id, created_at, updated_at)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-            RETURNING id, title, description, content, status as "status: ${model_name}Status", author_id, created_at, updated_at
+            RETURNING id, title, description, content, 
+            status as "status: ${model_name}Status", author_id, created_at, updated_at
             "#,
             ${model_name_lower}_id,
             request.title,
@@ -647,17 +655,24 @@ impl ${service_name}Service {
         .await
         .map_err(|e| {
             tracing::error!("Failed to create ${model_name_lower}: {}", e);
-            AppError::DatabaseError("Failed to create ${model_name_lower}".to_string())
+            AppError::DatabaseError(
+                "Failed to create ${model_name_lower}".to_string()
+            )
         })?;
 
         Ok(${model_name_lower})
     }
 
-    pub async fn get_${model_name_lower}_by_id(&self, id: Uuid) -> AppResult<Option<${model_name}>> {
+    pub async fn get_${model_name_lower}_by_id(
+        &self, 
+        id: Uuid
+    ) -> AppResult<Option<${model_name}>> {
         let ${model_name_lower} = sqlx::query_as!(
             ${model_name},
             r#"
-            SELECT id, title, description, content, status as "status: ${model_name}Status", author_id, created_at, updated_at
+            SELECT id, title, description, content, 
+            status as "status: ${model_name}Status", 
+            author_id, created_at, updated_at
             FROM ${model_name_lower}s
             WHERE id = $1
             "#,
@@ -667,7 +682,9 @@ impl ${service_name}Service {
         .await
         .map_err(|e| {
             tracing::error!("Failed to get ${model_name_lower}: {}", e);
-            AppError::DatabaseError("Failed to get ${model_name_lower}".to_string())
+            AppError::DatabaseError(
+                "Failed to get ${model_name_lower}".to_string()
+            )
         })?;
 
         Ok(${model_name_lower})
@@ -682,8 +699,11 @@ impl ${service_name}Service {
         let limit = query.limit.unwrap_or(20).min(100); // Max 100 items per page
         let offset = (page - 1) * limit;
 
-        let mut sql_query = "SELECT id, title, description, content, status, author_id, created_at, updated_at FROM ${model_name_lower}s WHERE 1=1".to_string();
-        let mut params: Vec<Box<dyn sqlx::Encode<'_, sqlx::Postgres> + Send + Sync>> = Vec::new();
+        let mut sql_query = "SELECT id, title, description, content, \
+            status, author_id, created_at, updated_at \
+            FROM ${model_name_lower}s WHERE 1=1".to_string();
+        let mut params: Vec<Box<dyn sqlx::Encode<'_, sqlx::Postgres> + \
+            Send + Sync>> = Vec::new();
         let mut param_count = 0;
 
         // Add status filter
@@ -697,7 +717,10 @@ impl ${service_name}Service {
         if let Some(search) = &query.search {
             if !search.is_empty() {
                 param_count += 1;
-                sql_query.push_str(&format!(" AND (title ILIKE ${} OR description ILIKE ${})", param_count, param_count));
+                sql_query.push_str(&format!(
+                    " AND (title ILIKE ${} OR description ILIKE ${})", 
+                    param_count, param_count
+                ));
                 params.push(Box::new(format!("%{}%", search)));
             }
         }
@@ -757,7 +780,9 @@ impl ${service_name}Service {
                 status = COALESCE($4, status),
                 updated_at = $5
             WHERE id = $6
-            RETURNING id, title, description, content, status as "status: ${model_name}Status", author_id, created_at, updated_at
+            RETURNING id, title, description, content, 
+            status as "status: ${model_name}Status", 
+            author_id, created_at, updated_at
             "#,
             request.title,
             request.description,
@@ -776,7 +801,11 @@ impl ${service_name}Service {
         Ok(${model_name_lower})
     }
 
-    pub async fn delete_${model_name_lower}(&self, id: Uuid, user_id: Uuid) -> AppResult<()> {
+    pub async fn delete_${model_name_lower}(
+        &self, 
+        id: Uuid, 
+        user_id: Uuid
+    ) -> AppResult<()> {
         let result = sqlx::query!(
             "DELETE FROM ${model_name_lower}s WHERE id = $1 AND author_id = $2",
             id,
@@ -790,7 +819,9 @@ impl ${service_name}Service {
         })?;
 
         if result.rows_affected() == 0 {
-            return Err(AppError::NotFound("${model_name} not found or not owned by user".to_string()));
+            return Err(AppError::NotFound(
+                "${model_name} not found or not owned by user".to_string()
+            ));
         }
 
         Ok(())
@@ -804,7 +835,8 @@ impl ${service_name}Service {
         let count = match (status, user_id) {
             (Some(s), Some(uid)) => {
                 sqlx::query_scalar!(
-                    "SELECT COUNT(*) FROM ${model_name_lower}s WHERE status = $1 AND author_id = $2",
+                    "SELECT COUNT(*) FROM ${model_name_lower}s \
+                    WHERE status = $1 AND author_id = $2",
                     s as ${model_name}Status,
                     uid
                 )
@@ -821,7 +853,8 @@ impl ${service_name}Service {
             },
             (None, Some(uid)) => {
                 sqlx::query_scalar!(
-                    "SELECT COUNT(*) FROM ${model_name_lower}s WHERE author_id = $1",
+                    "SELECT COUNT(*) FROM ${model_name_lower}s \
+                    WHERE author_id = $1",
                     uid
                 )
                 .fetch_one(&self.db)
@@ -859,7 +892,10 @@ use validator::Validate;
 use crate::{
     app::AppState,
     models::{
-        ${model}::{Create${model_name}Request, Update${model_name}Request, ${model_name}Query, ${model_name}Response},
+        ${model}::{
+            Create${model_name}Request, Update${model_name}Request, 
+            ${model_name}Query, ${model_name}Response
+        },
         user::User,
     },
     services::${service}::${service_name}Service,
@@ -880,11 +916,16 @@ pub async fn create_${model_name_lower}(
         .map_err(|e| AppError::ValidationError(e.to_string()))?;
 
     let service = ${service_name}Service::new(state.db.clone());
-    let ${model_name_lower} = service.create_${model_name_lower}(claims.user_id, request).await?;
+    let ${model_name_lower} = service.create_${model_name_lower}(
+        claims.user_id, 
+        request
+    ).await?;
 
     Ok((
         StatusCode::CREATED,
-        Json(ApiResponse::success(${model_name}Response::from(${model_name_lower}))),
+        Json(ApiResponse::success(
+            ${model_name}Response::from(${model_name_lower})
+        )),
     ))
 }
 
@@ -899,10 +940,13 @@ pub async fn get_${model_name_lower}(
     match ${model_name_lower} {
         Some(${model_name_lower}) => {
             // Check if user can access this ${model_name_lower}
-            if ${model_name_lower}.author_id != claims.user_id && !claims.is_admin {
+            if ${model_name_lower}.author_id != claims.user_id && \
+                !claims.is_admin {
                 return Err(AppError::Forbidden("Access denied".to_string()));
             }
-            Ok(Json(ApiResponse::success(${model_name}Response::from(${model_name_lower}))))
+            Ok(Json(ApiResponse::success(
+                ${model_name}Response::from(${model_name_lower})
+            )))
         },
         None => Err(AppError::NotFound("${model_name} not found".to_string())),
     }
@@ -951,9 +995,15 @@ pub async fn update_${model_name_lower}(
         .map_err(|e| AppError::ValidationError(e.to_string()))?;
 
     let service = ${service_name}Service::new(state.db.clone());
-    let ${model_name_lower} = service.update_${model_name_lower}(id, claims.user_id, request).await?;
+    let ${model_name_lower} = service.update_${model_name_lower}(
+        id, 
+        claims.user_id, 
+        request
+    ).await?;
 
-    Ok(Json(ApiResponse::success(${model_name}Response::from(${model_name_lower}))))
+    Ok(Json(ApiResponse::success(
+        ${model_name}Response::from(${model_name_lower})
+    )))
 }
 
 pub async fn delete_${model_name_lower}(
@@ -1032,7 +1082,9 @@ where
 }
 
 pub fn auth_layer() -> axum::middleware::FromFnLayer<
-    fn(Request, Next) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<Response, StatusCode>> + Send>>,
+    fn(Request, Next) -> std::pin::Pin<Box<
+        dyn std::future::Future<Output = Result<Response, StatusCode>> + Send
+    >>,
     (),
 > {
     axum::middleware::from_fn(auth_middleware)

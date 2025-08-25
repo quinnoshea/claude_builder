@@ -80,7 +80,8 @@ serde_json = "${serde_json_version}"
 # Logging and tracing
 
 tracing = "${tracing_version}"
-tracing-subscriber = { version = "${tracing_subscriber_version}", features = ["json"] }
+tracing-subscriber = { version = "${tracing_subscriber_version}", \
+  features = ["json"] }
 
 # Configuration
 
@@ -92,7 +93,8 @@ reqwest = { version = "${reqwest_version}", features = ["json", "rustls-tls"] }
 
 # Database (if needed)
 
-sqlx = { version = "${sqlx_version}", features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid"] }
+sqlx = { version = "${sqlx_version}", \
+  features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid"] }
 
 # ${framework_dependencies}
 

@@ -83,7 +83,7 @@
 
 ### Feature Development Pipeline
 
-```
+```text
 
 1. rapid-prototyper: Initial feature implementation
 
@@ -107,7 +107,7 @@
 
 ### Code Quality Pipeline
 
-```
+```text
 
 1. Any Agent: Code implementation
 

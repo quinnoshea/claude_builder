@@ -21,7 +21,7 @@ ${project_description}
 
 ### Project Structure
 
-```
+```text
 ${project_name}/
 ├── package.json                  # Project configuration
 ├── package-lock.json            # Dependency lock file
@@ -655,7 +655,9 @@ const requiredEnvVars = ['DATABASE_URI'];
 const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
 
 if (missingEnvVars.length > 0) {
-  throw new Error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
+  throw new Error(
+    `Missing required environment variables: ${missingEnvVars.join(', ')}`
+  );
 }
 
 module.exports = config;
@@ -675,7 +677,8 @@ const devFormat = winston.format.combine(
   winston.format.colorize(),
   winston.format.timestamp({ format: 'HH:mm:ss' }),
   winston.format.printf(({ level, message, timestamp, ...meta }) => {
-    const metaString = Object.keys(meta).length ? JSON.stringify(meta, null, 2) : '';
+    const metaString = Object.keys(meta).length ? 
+      JSON.stringify(meta, null, 2) : '';
     return `${timestamp} [${level}]: ${message} ${metaString}`;
   })
 );

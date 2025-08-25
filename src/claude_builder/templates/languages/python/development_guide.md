@@ -170,7 +170,7 @@ mypy ${package_name}/
 
 ### Test Structure and Organization
 
-```
+```text
 tests/
 ├── conftest.py                    # Pytest configuration and fixtures
 ├── unit/                          # Unit tests (fast, isolated)

@@ -659,13 +659,16 @@ class Test${model_name}API:
         )
 
         data = {'title': 'Updated Title'}
-        url = reverse('api:${app_name}:${model_name_lower}-detail', kwargs={'slug': ${model_name_lower}.slug})
+        url = reverse('api:${app_name}:${model_name_lower}-detail', \
+            kwargs={'slug': ${model_name_lower}.slug})
         response = authenticated_client.patch(url, data)
 
         assert response.status_code == status.HTTP_200_OK
         assert response.data['title'] == 'Updated Title'
 
-    def test_cannot_update_others_${model_name_lower}(self, authenticated_client, user):
+    def test_cannot_update_others_${model_name_lower}(
+        self, authenticated_client, user
+    ):
         """Test that users cannot update others' ${model_name_lower}s."""
         from django.contrib.auth import get_user_model
         User = get_user_model()
@@ -682,7 +685,8 @@ class Test${model_name}API:
         )
 
         data = {'title': 'Hacked Title'}
-        url = reverse('api:${app_name}:${model_name_lower}-detail', kwargs={'slug': ${model_name_lower}.slug})
+        url = reverse('api:${app_name}:${model_name_lower}-detail', \
+            kwargs={'slug': ${model_name_lower}.slug})
         response = authenticated_client.patch(url, data)
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -893,7 +897,8 @@ from .models import ${model_name}
 
 User = get_user_model()
 
-@shared_task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 3})
+@shared_task(bind=True, autoretry_for=(Exception,), \
+    retry_kwargs={'max_retries': 3})
 def send_${model_name_lower}_notification(self, ${model_name_lower}_id, user_id):
     """Send notification when ${model_name_lower} is published."""
     try:
@@ -902,7 +907,8 @@ def send_${model_name_lower}_notification(self, ${model_name_lower}_id, user_id)
 
         send_mail(
             subject=f'New ${model_name}: {${model_name_lower}.title}',
-            message=f'A new ${model_name_lower} "{${model_name_lower}.title}" has been published.',
+            message=f'A new ${model_name_lower} \
+                "{${model_name_lower}.title}" has been published.',
             from_email='noreply@${project_name}.com',
             recipient_list=[user.email],
             fail_silently=False,
@@ -979,7 +985,8 @@ import bleach
 
 def clean_html_content(content):
     """Clean HTML content to prevent XSS."""
-    allowed_tags = ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'a', 'h1', 'h2', 'h3']
+    allowed_tags = ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', \
+    'a', 'h1', 'h2', 'h3']
     allowed_attributes = {'a': ['href', 'title']}
 
     return bleach.clean(content, tags=allowed_tags, attributes=allowed_attributes)

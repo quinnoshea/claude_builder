@@ -291,7 +291,10 @@ impl ${async_service} {
         }
     }
 
-    pub async fn send_command(&self, data: ${data_type}) -> Result<${response_type}> {
+    pub async fn send_command(
+        &self, 
+        data: ${data_type}
+    ) -> Result<${response_type}> {
         let (tx, rx) = oneshot::channel();
         let command = ${command_type}::${command_variant}(data, tx);
 
@@ -482,7 +485,10 @@ pub fn process_slice(data: &[u8]) -> &[u8] {
 // Use Cow for conditional ownership
 use std::borrow::Cow;
 
-pub fn maybe_transform<'a>(input: &'a str, should_transform: bool) -> Cow<'a, str> {
+pub fn maybe_transform<'a>(
+    input: &'a str, 
+    should_transform: bool
+) -> Cow<'a, str> {
     if should_transform {
         Cow::Owned(input.to_uppercase())
     } else {
