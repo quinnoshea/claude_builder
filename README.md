@@ -13,22 +13,30 @@
 [![GitHub issues](https://img.shields.io/github/issues/quinnoshea/claude_builder.svg)](https://github.com/quinnoshea/claude_builder/issues)
 [![Last Commit](https://img.shields.io/github/last-commit/quinnoshea/claude_builder.svg)](https://github.com/quinnoshea/claude_builder/commits/main)
 
-> **Analyzes your project and generates tailored Claude Code development environments with intelligent agent selection and project-specific guidance.**
+> **Analyzes your project and generates tailored Claude Code development environments
+> with intelligent agent selection and project-specific guidance.**
 
 ## What Claude Builder Does
 
-**Currently:** Analyzes projects (15+ languages, 25+ frameworks) and generates intelligent `CLAUDE.md` and `AGENTS.md` files with project-specific agent recommendations.
+**Currently:** Analyzes projects (15+ languages, 25+ frameworks) and generates
+intelligent `CLAUDE.md` and `AGENTS.md` files with project-specific agent
+recommendations.
 
-**In Development:** Working toward natural language triggers like "optimize this API" that automatically suggest relevant agent teams based on your project context.
+**In Development:** Working toward natural language triggers like "optimize this
+API" that automatically suggest relevant agent teams based on your project
+context.
 
-**Goal:** Reduce the overhead of discovering and coordinating Claude Code agents by providing smart defaults and context-aware suggestions.
+**Goal:** Reduce the overhead of discovering and coordinating Claude Code
+agents by providing smart defaults and context-aware suggestions.
 
 ---
 
 ## Key Features
 
 ### 🔍 **Project Analysis**
+
 Detects languages, frameworks, project types, and complexity to understand your codebase
+
 ```bash
 # Analyzes project characteristics
 Project: Python FastAPI + PostgreSQL
@@ -37,7 +45,9 @@ Suggests: backend-architect, api-tester, database-optimizer
 ```
 
 ### 🤖 **Agent Recommendations**
+
 Suggests relevant Claude Code agents based on your project's characteristics
+
 ```bash
 # For a React dashboard project
 Recommended agents: frontend-developer, ui-designer, performance-optimizer
@@ -45,7 +55,9 @@ Generated triggers: "optimize bundle size", "improve accessibility", "design com
 ```
 
 ### 📝 **Documentation Generation**
+
 Creates tailored `CLAUDE.md` and `AGENTS.md` files with project-specific guidance
+
 ```bash
 claude-builder /your/project
 # Generates CLAUDE.md with development guidelines
@@ -54,7 +66,10 @@ claude-builder /your/project
 ```
 
 ### 🛠️ **Template System**
-Uses hierarchical templates (base + language + framework) for consistent, relevant output
+
+Uses hierarchical templates (base + language + framework) for consistent,
+relevant output
+
 ```bash
 # Template composition example
 base.md → python.md → fastapi.md → final output
@@ -67,13 +82,19 @@ base.md → python.md → fastapi.md → final output
 
 ### ✅ **OPERATIONAL** (Ready to use today)
 
-**Sophisticated Project Analysis (90%+ accuracy)**
-- **15+ Languages**: Python, Rust, JavaScript, TypeScript, Java, Go, PHP, C#, Ruby, and more
-- **25+ Frameworks**: Django, FastAPI, React, Vue, Axum, Spring Boot, Express, Next.js, Laravel
-- **Architecture Patterns**: MVC, microservices, domain-driven design, serverless detection
-- **Intelligence Engine**: Dependency analysis, file pattern recognition, confidence scoring
+#### Sophisticated Project Analysis (90%+ accuracy)
 
-**Production-Ready CLI with Rich UI**
+- **15+ Languages**: Python, Rust, JavaScript, TypeScript, Java, Go, PHP, C#,
+  Ruby, and more
+- **25+ Frameworks**: Django, FastAPI, React, Vue, Axum, Spring Boot, Express,
+  Next.js, Laravel
+- **Architecture Patterns**: MVC, microservices, domain-driven design,
+  serverless detection
+- **Intelligence Engine**: Dependency analysis, file pattern recognition,
+  confidence scoring
+
+#### Production-Ready CLI with Rich UI
+
 ```bash
 # Comprehensive command structure
 claude-builder /path/to/project                          # Full environment generation
@@ -82,36 +103,42 @@ claude-builder /path/to/project generate agents          # Agent-specific genera
 claude-builder /path/to/project analyze --output=json   # Export project analysis
 ```
 
-**Template System with Hierarchical Composition**
+#### Template System with Hierarchical Composition
+
 - **Base + Language + Framework** intelligent overlay system
 - **Variable Substitution Engine** with project-specific context
 - **Professional Documentation** with working examples and guidance
 
-**Agent System Foundation**
+#### Agent System Foundation
+
 - **40+ Specialized Agents** with intelligent project-based selection
 - **Team Composition Logic** for optimal agent combinations
 - **Git Integration** with agent environment versioning
 
 ### 🔧 **IN ACTIVE DEVELOPMENT**
 
-**Natural Language Trigger Generation**
+#### Natural Language Trigger Generation
+
 - Intuitive phrase mapping to agent teams
 - Context-aware trigger customization
 - Workflow pattern automation
 
-**Community Agent Repository Integration**
+#### Community Agent Repository Integration
+
 - Live agent scanning and capability indexing
 - Automatic updates from community repositories
 - Custom agent integration framework
 
-**Advanced Coordination Patterns**
+#### Advanced Coordination Patterns
+
 - Multi-agent workflow orchestration
 - Intelligent handoff mechanisms
 - Adaptive team composition
 
 ### 🎯 **PLANNED FEATURES** (In design/development)
 
-**Enhanced Natural Language Integration**
+#### Enhanced Natural Language Integration
+
 ```bash
 # Vision: More intuitive interaction with agents
 "optimize this API" → suggests backend-architect + performance-optimizer
@@ -119,12 +146,14 @@ claude-builder /path/to/project analyze --output=json   # Export project analysi
 "investigate slow queries" → suggests database-optimizer + profiler-agent
 ```
 
-**Community Agent Integration**
+#### Community Agent Integration
+
 - Connect to community agent repositories for broader coverage
 - Support custom agent definitions for specialized workflows
 - Share successful agent patterns across projects
 
-**Adaptive Team Composition**
+#### Adaptive Team Composition
+
 - Teams that learn from successful development patterns
 - Dynamic environment evolution as projects grow
 - Context-aware specialization for specific domains
@@ -134,6 +163,7 @@ claude-builder /path/to/project analyze --output=json   # Export project analysi
 ## 🚀 Quick Start
 
 ### Installation
+
 ```bash
 # Install claude-builder (prefer uv for speed)
 uv pip install -e ".[dev]"
@@ -144,6 +174,7 @@ claude-builder --help
 ```
 
 ### Basic Usage
+
 ```bash
 # Generate complete development environment for any project
 claude-builder /path/to/your/project
@@ -159,6 +190,7 @@ claude-builder /path/to/project --git-exclude --claude-mentions=minimal
 ```
 
 ### Instant Results
+
 ```bash
 # After running claude-builder on your project:
 your-project/
@@ -175,9 +207,12 @@ your-project/
 ## Real-World Examples
 
 ### Python FastAPI Project
-**Manual approach:** Research agents, create generic configurations, remember which agents work well together
+
+**Manual approach:** Research agents, create generic configurations, remember
+which agents work well together
 
 **With claude-builder:**
+
 ```bash
 claude-builder ./my-fastapi-project
 # Detects: Python 3.11, FastAPI, PostgreSQL, Redis
@@ -186,7 +221,9 @@ claude-builder ./my-fastapi-project
 ```
 
 ### React Dashboard Project
+
 **Before:** Individual agent discovery, manual coordination overhead
+
 ```bash
 # Traditional approach
 - Look up frontend-specific agents
@@ -195,6 +232,7 @@ claude-builder ./my-fastapi-project
 ```
 
 **After:** Seamless team orchestration with contextual intelligence
+
 ```bash
 claude-builder ./react-dashboard
 # Detects: TypeScript, React, Next.js, Tailwind CSS
@@ -203,7 +241,9 @@ claude-builder ./react-dashboard
 ```
 
 ### Rust CLI Tool
+
 **Before:** Generic guidance, no systems-specific optimization
+
 ```bash
 # Traditional approach
 - Use general-purpose agents not optimized for systems programming
@@ -212,6 +252,7 @@ claude-builder ./react-dashboard
 ```
 
 **After:** Systems programming expertise with Rust specialization
+
 ```bash
 claude-builder ./rust-cli-tool
 # Detects: Rust, CLI patterns, system dependencies, performance requirements
@@ -224,6 +265,7 @@ claude-builder ./rust-cli-tool
 ## 💡 Natural Language Interaction Examples
 
 ### Feature Development Workflows
+
 ```yaml
 # Generated automatically for each project
 feature_development:
@@ -243,6 +285,7 @@ performance_optimization:
 ```
 
 ### Debugging & Investigation
+
 ```bash
 # Natural language triggers generated for your specific project:
 "debug this error" → error-detective + test-writer-fixer + documentation-updater
@@ -256,6 +299,7 @@ performance_optimization:
 ## 🏗️ Advanced Usage
 
 ### Project Analysis & Intelligence
+
 ```bash
 # Detailed project analysis with comprehensive output
 claude-builder analyze ./project --verbose
@@ -271,6 +315,7 @@ claude-builder ./project generate agents --template=web-api
 ```
 
 ### Git Integration & Safety
+
 ```bash
 # Safe git integration (recommended - files not committed)
 claude-builder ./project --git-exclude
@@ -285,6 +330,7 @@ claude-builder ./project --backup-existing
 ```
 
 ### Template & Configuration Management
+
 ```bash
 # List available built-in templates
 claude-builder templates list
@@ -299,6 +345,7 @@ claude-builder config show ./project
 ```
 
 ### Future Natural Language Interaction (Vision)
+
 ```bash
 # Coming with Agent Orchestration Engine:
 claude-builder ./project orchestrate "build user authentication system"
@@ -311,27 +358,32 @@ claude-builder ./project deploy "with security audit and performance testing"
 ## 📊 Language & Framework Support
 
 ### Languages (90%+ Detection Accuracy)
+
 | Language | Status | Confidence | Specialized Agents |
 |----------|--------|------------|-------------------|
-| **Python** | ✅ Excellent | 95%+ | backend-architect, api-tester, data-scientist |
-| **Rust** | ✅ Excellent | 93%+ | systems-programmer, performance-optimizer, memory-auditor |
-| **JavaScript/TypeScript** | ✅ Excellent | 94%+ | frontend-developer, ui-designer, performance-optimizer |
-| **Java** | ✅ Very Good | 88%+ | enterprise-architect, spring-specialist, jvm-optimizer |
-| **Go** | ✅ Very Good | 87%+ | microservices-architect, api-designer, concurrency-expert |
-| **C#** | ✅ Good | 82%+ | dotnet-specialist, enterprise-architect, azure-deployer |
+| **Python** | ✅ Excellent | 95%+ | backend-architect, api-tester |
+| **Rust** | ✅ Excellent | 93%+ | systems-programmer, optimizer |
+| **JavaScript/TypeScript** | ✅ Excellent | 94%+ | frontend-developer |
+| **Java** | ✅ Very Good | 88%+ | enterprise-architect, spring-specialist |
+| **Go** | ✅ Very Good | 87%+ | microservices-architect, api-designer |
+| **C#** | ✅ Good | 82%+ | dotnet-specialist, azure-deployer |
 | **PHP** | ✅ Good | 80%+ | web-developer, laravel-specialist, security-auditor |
 | **Ruby** | ✅ Good | 79%+ | rails-developer, web-architect, gem-creator |
 
 ### Framework Intelligence (25+ Supported)
-- **Web Frameworks**: Django, Flask, FastAPI, Express, React, Vue, Angular, Next.js, Laravel
+
+- **Web Frameworks**: Django, Flask, FastAPI, Express, React, Vue, Angular,
+  Next.js, Laravel
 - **Systems**: Axum, Actix, Tokio, Spring Boot, .NET Core, Gin, Echo
 - **Mobile**: React Native, Flutter, Xamarin, Ionic
 - **Data**: Jupyter, Pandas, Spark, Airflow, Django REST Framework
 
 ### Project Types (Auto-Detected)
+
 - **Web Applications**: Full-stack, SPAs, progressive web apps, microservices architectures
 - **API Services**: REST APIs, GraphQL, gRPC, serverless functions
-- **CLI Tools**: System utilities, developer tools, automation scripts, command-line applications
+- **CLI Tools**: System utilities, developer tools, automation scripts,
+  command-line applications
 - **Libraries & Frameworks**: Reusable packages, shared components, open-source projects
 - **Data Science**: ML pipelines, analysis notebooks, data processing workflows
 - **Mobile Applications**: Native and hybrid mobile development projects
@@ -341,6 +393,7 @@ claude-builder ./project deploy "with security audit and performance testing"
 ## 🧪 Development & Quality Assurance
 
 ### Running Tests
+
 ```bash
 # Core functionality tests (should pass)
 pytest tests/unit/core/ -v
@@ -356,6 +409,7 @@ pytest --cov=claude_builder --cov-report=term-missing
 ```
 
 ### Code Quality & Standards
+
 ```bash
 # Format code with Black
 black claude_builder tests/
@@ -371,6 +425,7 @@ pre-commit run --all-files
 ```
 
 ### Performance Benchmarking
+
 ```bash
 # Measure analysis speed on real projects
 time claude-builder tests/fixtures/sample_projects/python_project --dry-run
@@ -383,9 +438,12 @@ time claude-builder tests/fixtures/sample_projects/react_project --dry-run
 ## 🤝 Contributing & Community
 
 ### Current Development Focus
-We're building the future of AI-assisted development. Join us in creating intelligent agent orchestration:
 
-**Phase 1** ✅ **Infrastructure Complete**: Project analysis, template system, CLI foundation
+We're building the future of AI-assisted development. Join us in creating
+intelligent agent orchestration:
+
+**Phase 1** ✅ **Infrastructure Complete**: Project analysis, template system,
+CLI foundation
 **Phase 2** ✅ **Agent Foundation**: Basic agent selection, team composition logic
 **Phase 3** 🔧 **Natural Language Orchestration**: Intuitive triggers, workflow automation
 **Phase 4** 🎯 **Community Ecosystem**: Repository integration, shared intelligence
@@ -393,6 +451,7 @@ We're building the future of AI-assisted development. Join us in creating intell
 ### How to Contribute
 
 #### 🚀 **Agent Orchestration Development** (High Impact)
+
 ```bash
 # Set up development environment
 git clone https://github.com/quinnoshea/claude_builder.git
@@ -406,6 +465,7 @@ pre-commit install
 ```
 
 #### 🧪 **Test Infrastructure & Quality** (Great for Learning)
+
 ```bash
 # Help fix failing tests for production reliability
 pytest tests/unit/core/ -v  # Should pass
@@ -417,6 +477,7 @@ pytest --cov=claude_builder --cov-report=html
 ```
 
 #### 🎨 **Template Development** (Community Building)
+
 ```bash
 # Create templates for new languages and frameworks
 # Develop specialized agent configuration patterns
@@ -424,6 +485,7 @@ pytest --cov=claude_builder --cov-report=html
 ```
 
 ### Contribution Areas
+
 - **Natural Language Processing**: Help build intuitive trigger generation
 - **Agent Coordination**: Develop intelligent team composition algorithms
 - **Community Integration**: Build repository scanning and agent indexing
@@ -432,7 +494,9 @@ pytest --cov=claude_builder --cov-report=html
 - **Documentation**: Develop comprehensive guides and examples
 
 ### Agent Definition Guidelines
+
 When contributing agent definitions or coordination patterns:
+
 - **Specialization Focus**: Agents should have clear, non-overlapping specializations
 - **Natural Triggers**: Include intuitive phrases that map to agent capabilities
 - **Coordination Patterns**: Define how agents work with others in team contexts
@@ -443,15 +507,24 @@ When contributing agent definitions or coordination patterns:
 ## 📈 Success Stories & Impact
 
 ### Current Status
-- **Projects Supported**: 15+ languages, 25+ frameworks with good detection accuracy
-- **Agent Suggestions**: Works well for common project types (Python web apps, React SPAs, Rust CLI tools)
-- **Setup**: Automates the manual process of researching and configuring Claude Code agents
+
+- **Projects Supported**: 15+ languages, 25+ frameworks with good detection
+  accuracy
+- **Agent Suggestions**: Works well for common project types (Python web apps,
+  React SPAs, Rust CLI tools)
+- **Setup**: Automates the manual process of researching and configuring
+  Claude Code agents
 - **Community**: Growing set of templates and agent configurations
 
 ### User Experience
-The tool helps reduce the initial setup overhead when starting to use Claude Code agents on a new project. Instead of manually researching which agents might be relevant and creating configuration files from scratch, claude-builder analyzes your project and provides educated suggestions based on what it detects.
+
+The tool helps reduce the initial setup overhead when starting to use Claude Code
+agents on a new project. Instead of manually researching which agents might be
+relevant and creating configuration files from scratch, claude-builder analyzes
+your project and provides educated suggestions based on what it detects.
 
 ### Development Impact
+
 - Faster initial setup compared to manual agent discovery
 - Consistent agent configuration patterns across projects
 - Good starting point for teams new to Claude Code agents
@@ -464,21 +537,26 @@ The tool helps reduce the initial setup overhead when starting to use Claude Cod
 
 ### 🎯 **Planned Development** (Next Major Features)
 
-**Improved Natural Language Integration**
+#### Improved Natural Language Integration
+
 ```bash
 # Goal: More intuitive ways to interact with agent suggestions
-"optimize this API for mobile users" → suggests relevant performance and mobile-focused agents
-"build secure payment processing" → suggests security and compliance-focused agent teams
+"optimize this API for mobile users" → suggests relevant performance and
+mobile-focused agents
+"build secure payment processing" → suggests security and compliance-focused
+agent teams
 "investigate production errors" → suggests debugging and monitoring agent workflows
 ```
 
-**Community Integration**
+#### Community Integration
+
 - Connect to community agent repositories for broader coverage
 - Support importing and sharing agent configuration patterns
 - Better integration with custom agent definitions
 - Version tracking for agent configurations
 
-**Adaptive Intelligence**
+#### Adaptive Intelligence
+
 - Team composition learning from successful development patterns
 - Project-specific customization based on usage analytics
 - Continuous optimization through community feedback
@@ -486,19 +564,22 @@ The tool helps reduce the initial setup overhead when starting to use Claude Cod
 
 ### 🚀 **Long-Term Vision**
 
-**Enterprise Features**
+#### Enterprise Features
+
 - Team collaboration with shared agent configurations
 - Enterprise agent repositories with access control
 - Integration with development workflow tools (Jira, GitHub, Slack)
 - Advanced analytics and team productivity insights
 
-**Developer Experience Evolution**
+#### Developer Experience Evolution
+
 - IDE integrations (VS Code, JetBrains, Vim)
 - Real-time agent suggestions during development
 - Context-aware code completion with agent expertise
 - Seamless integration with existing developer workflows
 
-**AI-Driven Development Ecosystem**
+#### AI-Driven Development Ecosystem
+
 - Machine learning-enhanced project analysis
 - Predictive agent team recommendations
 - Automated workflow optimization based on project outcomes
@@ -509,13 +590,18 @@ The tool helps reduce the initial setup overhead when starting to use Claude Cod
 ## ⚙️ Technical Requirements
 
 ### System Requirements
+
 - **Python**: 3.8+ (3.11+ recommended for optimal performance)
-- **Memory**: 512MB minimum for project analysis, 1GB+ recommended for large projects
-- **Storage**: 100MB for development environment, additional space for community agent caches
-- **Network**: Internet connection for community agent repository updates (optional)
+- **Memory**: 512MB minimum for project analysis, 1GB+ recommended for large
+  projects
+- **Storage**: 100MB for development environment, additional space for
+  community agent caches
+- **Network**: Internet connection for community agent repository updates
+  (optional)
 - **Git**: Required for project analysis and version control integration
 
 ### Optional Dependencies
+
 - **uv**: Recommended for faster Python package management
 - **Community Repositories**: Enhanced agent selection with live repository integration
 - **IDE Plugins**: Enhanced development experience (coming soon)
@@ -525,13 +611,21 @@ The tool helps reduce the initial setup overhead when starting to use Claude Cod
 ## 📄 License & Acknowledgments
 
 ### License
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details. This ensures maximum community contribution and enterprise adoption flexibility.
+
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE)
+file for details. This ensures maximum community contribution and enterprise
+adoption flexibility.
 
 ### 🙏 Acknowledgments
-- **Built for Claude Code Ecosystem**: Designed to maximize developer productivity with AI-assisted development
-- **Inspired by Real Developer Pain**: Born from the need to eliminate friction in agent adoption and coordination
-- **Community Driven**: Thanks to beta testers, early adopters, and community contributors providing feedback and agent definitions
-- **Professional Engineering Standards**: Built with production-grade architecture, comprehensive testing, and maintainable design patterns
+
+- **Built for Claude Code Ecosystem**: Designed to maximize developer
+  productivity with AI-assisted development
+- **Inspired by Real Developer Pain**: Born from the need to eliminate friction
+  in agent adoption and coordination
+- **Community Driven**: Thanks to beta testers, early adopters, and community
+  contributors providing feedback and agent definitions
+- **Professional Engineering Standards**: Built with production-grade
+  architecture, comprehensive testing, and maintainable design patterns
 
 ---
 
@@ -539,7 +633,8 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 **Try Claude Builder on your projects.**
 
-Automate the process of discovering and configuring relevant Claude Code agents based on your project's characteristics.
+Automate the process of discovering and configuring relevant Claude Code agents
+based on your project's characteristics.
 
 ```bash
 # Get started
@@ -555,7 +650,10 @@ claude-builder /your/project
 
 **Interested in contributing or trying it out?**
 
-[⭐ Star this repository](https://github.com/quinnoshea/claude_builder) | [🚀 Quick start](#quick-start) | [🤝 Contribute](#-contributing--community) | [💬 Discussions](https://github.com/quinnoshea/claude_builder/discussions)
+[⭐ Star this repository](https://github.com/quinnoshea/claude_builder) |
+[🚀 Quick start](#-quick-start) |
+[🤝 Contribute](#-contributing--community) |
+[💬 Discussions](https://github.com/quinnoshea/claude_builder/discussions)
 
 ---
 

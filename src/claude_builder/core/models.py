@@ -390,7 +390,10 @@ class DependencyInfo:
             raise ValueError(DEPENDENCY_NAME_CANNOT_BE_EMPTY)
 
         if self.dependency_type not in self.VALID_DEPENDENCY_TYPES:
-            msg = f"{INVALID_DEPENDENCY_TYPE}: {self.dependency_type}. Valid types: {', '.join(self.VALID_DEPENDENCY_TYPES)}"
+            msg = (
+                f"{INVALID_DEPENDENCY_TYPE}: {self.dependency_type}. "
+                f"Valid types: {', '.join(self.VALID_DEPENDENCY_TYPES)}"
+            )
             raise ValueError(msg)
 
     def is_dev_dependency(self) -> bool:
@@ -432,7 +435,10 @@ class FileStructure:
             raise ValueError(PATH_CANNOT_BE_EMPTY)
 
         if self.file_type not in self.VALID_FILE_TYPES:
-            msg = f"{INVALID_FILE_TYPE}: {self.file_type}. Valid types: {', '.join(self.VALID_FILE_TYPES)}"
+            msg = (
+                f"{INVALID_FILE_TYPE}: {self.file_type}. "
+                f"Valid types: {', '.join(self.VALID_FILE_TYPES)}"
+            )
             raise ValueError(msg)
 
     def is_directory(self) -> bool:
@@ -479,11 +485,17 @@ class GenerationConfig:
     def validate(self) -> None:
         """Validate the configuration."""
         if self.output_format not in self.VALID_OUTPUT_FORMATS:
-            msg = f"{INVALID_OUTPUT_FORMAT}: {self.output_format}. Valid formats: {', '.join(self.VALID_OUTPUT_FORMATS)}"
+            msg = (
+                f"{INVALID_OUTPUT_FORMAT}: {self.output_format}. "
+                f"Valid formats: {', '.join(self.VALID_OUTPUT_FORMATS)}"
+            )
             raise ValueError(msg)
 
         if self.template_variant not in self.VALID_TEMPLATE_VARIANTS:
-            msg = f"{INVALID_TEMPLATE_VARIANT}: {self.template_variant}. Valid variants: {', '.join(self.VALID_TEMPLATE_VARIANTS)}"
+            msg = (
+                f"{INVALID_TEMPLATE_VARIANT}: {self.template_variant}. "
+                f"Valid variants: {', '.join(self.VALID_TEMPLATE_VARIANTS)}"
+            )
             raise ValueError(msg)
 
     def dict(self) -> Dict[str, Any]:
@@ -535,7 +547,10 @@ class ProjectInfo:
             raise ValueError(PROJECT_NAME_CANNOT_BE_EMPTY)
 
         if self.project_type and self.project_type not in self.VALID_PROJECT_TYPES:
-            msg = f"{INVALID_PROJECT_TYPE}: {self.project_type}. Valid types: {', '.join(self.VALID_PROJECT_TYPES)}"
+            msg = (
+                f"{INVALID_PROJECT_TYPE}: {self.project_type}. "
+                f"Valid types: {', '.join(self.VALID_PROJECT_TYPES)}"
+            )
             raise ValueError(msg)
 
     def dict(self) -> Dict[str, Any]:

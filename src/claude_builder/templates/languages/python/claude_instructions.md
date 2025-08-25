@@ -84,7 +84,7 @@ except SpecificError as e:
 
 ### Test Organization
 
-```
+```text
 tests/
 ├── unit/                 # Unit tests
 │   ├── test_${module1}.py
@@ -156,7 +156,7 @@ pytest -v -s
 
 ### Standard Python Package Layout
 
-```
+```text
 ${package_name}/
 ├── __init__.py
 ├── cli/                  # Command-line interface

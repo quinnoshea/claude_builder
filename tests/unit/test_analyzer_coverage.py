@@ -97,7 +97,8 @@ def test_analyze_empty_directory(temp_dir):
 
 
 def test_analyze_mixed_language_project(temp_dir):
-    """Test analysis of project with multiple languages - covers multi-language detection."""
+    """Test analysis of project with multiple languages - covers
+    multi-language detection."""
     project_path = temp_dir / "mixed_project"
     project_path.mkdir()
 
@@ -272,7 +273,8 @@ def test_framework_detector_django(temp_dir):
     project_path.mkdir()
     (project_path / "requirements.txt").write_text("Django>=4.0.0")
     (project_path / "manage.py").write_text(
-        "#!/usr/bin/env python\nfrom django.core.management import execute_from_command_line"
+        "#!/usr/bin/env python\n"
+        "from django.core.management import execute_from_command_line"
     )
     (project_path / "settings.py").write_text(
         "INSTALLED_APPS = ['django.contrib.admin']"
@@ -325,7 +327,8 @@ def test_framework_detector_no_framework(temp_dir):
 
 
 def test_framework_detector_multiple_frameworks(temp_dir):
-    """Test detection when multiple frameworks are present - covers multiple framework logic."""
+    """Test detection when multiple frameworks are present - covers
+    multiple framework logic."""
     project_path = temp_dir / "multi_framework"
     project_path.mkdir()
     (project_path / "requirements.txt").write_text("fastapi\nflask\ndjango")

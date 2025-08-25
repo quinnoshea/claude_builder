@@ -632,7 +632,10 @@ class ConfigManager:
         # Validate agent selection algorithm
         valid_algorithms = ["intelligent", "strict", "permissive"]
         if config.agents.agent_selection_algorithm not in valid_algorithms:
-            msg = f"{INVALID_AGENT_SELECTION_ALGORITHM}. Must be one of: {valid_algorithms}"
+            msg = (
+                f"{INVALID_AGENT_SELECTION_ALGORITHM}. "
+                f"Must be one of: {valid_algorithms}"
+            )
             raise ConfigError(msg)
 
 

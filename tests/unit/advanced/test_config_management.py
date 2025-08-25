@@ -328,7 +328,8 @@ class TestConfigValidator:
                 if cache_size < (max_workers * min_cache_per_worker):
                     return (
                         False,
-                        f"Cache size too small for {max_workers} workers. Minimum: {max_workers * min_cache_per_worker}",
+                        f"Cache size too small for {max_workers} workers. "
+                        f"Minimum: {max_workers * min_cache_per_worker}",
                     )
 
             return True, None

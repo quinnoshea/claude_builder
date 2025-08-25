@@ -159,10 +159,12 @@ def status(project_path: str) -> None:
             )
             console.print(f"Mode: [cyan]{config.git_integration.mode.value}[/cyan]")
             console.print(
-                f"Claude mention policy: [cyan]{config.git_integration.claude_mention_policy.value}[/cyan]"
+                f"Claude mention policy: "
+                f"[cyan]{config.git_integration.claude_mention_policy.value}[/cyan]"
             )
             console.print(
-                f"Backup before changes: [cyan]{config.git_integration.backup_before_changes}[/cyan]"
+                f"Backup before changes: "
+                f"[cyan]{config.git_integration.backup_before_changes}[/cyan]"
             )
 
         except Exception as e:
@@ -275,7 +277,8 @@ def unexclude(project_path: str) -> None:
 
         if result.success:
             console.print(
-                "[green]✓ Claude Builder patterns removed from .git/info/exclude[/green]"
+                "[green]✓ Claude Builder patterns removed from "
+                ".git/info/exclude[/green]"
             )
             for operation in result.operations_performed:
                 console.print(f"  {operation}")
@@ -363,7 +366,9 @@ def install_hooks(project_path: str, policy: str | None, *, pre_commit: bool) ->
             Panel(
                 f"**Git hooks installed with policy: {claude_policy.value}**\n\n"
                 f"**commit-msg hook:** Filters Claude mentions from commit messages\n"
-                f"**pre-commit hook:** {'Installed' if pre_commit else 'Not installed'} - Checks staged files for Claude mentions\n\n"
+                f"**pre-commit hook:** {'Installed' if pre_commit else 'Not installed'}"
+                f" - "
+                f"Checks staged files for Claude mentions\n\n"
                 f"**Policy behavior:**\n"
                 f"• forbidden: Remove all Claude/AI mentions\n"
                 f"• minimal: Remove Claude-specific mentions, keep general AI terms\n"
@@ -635,7 +640,8 @@ def remove_exclude(project_path: str) -> None:
 
         if result.success:
             console.print(
-                "[green]✓ Claude Builder patterns removed from .git/info/exclude[/green]"
+                "[green]✓ Claude Builder patterns removed from "
+                ".git/info/exclude[/green]"
             )
             for operation in result.operations_performed:
                 console.print(f"  {operation}")

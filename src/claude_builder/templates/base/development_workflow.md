@@ -26,7 +26,7 @@ This document outlines the development workflow and best practices for ${project
 
 ### Example Commit Messages
 
-```
+```text
 feat(${primary_component}): add user authentication system
 fix(${primary_component}): resolve memory leak in data processing
 docs: update API documentation for v2.0
@@ -60,7 +60,7 @@ test: add integration tests for payment flow
 
 ### Test Organization
 
-```
+```text
 ${test_structure}
 ```
 

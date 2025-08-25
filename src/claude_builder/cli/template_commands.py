@@ -351,7 +351,8 @@ def create(name: str, **kwargs: Any) -> None:
         if config.project_path:
             # Create from existing project
             console.print(
-                f"[cyan]Creating template '{name}' from project: {config.project_path}[/cyan]"
+                f"[cyan]Creating template '{name}' from project: "
+                f"{config.project_path}[/cyan]"
             )
             result = manager.create_custom_template(
                 name, Path(config.project_path), template_config
@@ -471,20 +472,40 @@ def info(template_name: str) -> None:
             else "[yellow]Available[/yellow]"
         )
 
-        info_panel = f"""[bold]{template.metadata.name}[/bold] v{template.metadata.version} ({status})
+        info_panel = (
+            f"[bold]{template.metadata.name}[/bold] "
+            f"v{template.metadata.version} ({status})\n\n"
+            f"[bold]Description:[/bold] {template.metadata.description}\n"
+            f"[bold]Author:[/bold] {template.metadata.author}\n"
+            f"[bold]Category:[/bold] {template.metadata.category}\n"
+            f"[bold]License:[/bold] {template.metadata.license}\n\n"
+            f"[bold]Compatibility:[/bold]\\n"
+        )
 
-[bold]Description:[/bold] {template.metadata.description}
-[bold]Author:[/bold] {template.metadata.author}
-[bold]Category:[/bold] {template.metadata.category}
-[bold]License:[/bold] {template.metadata.license}
+        # Add compatibility information
+        languages = (
+            ", ".join(template.metadata.languages)
+            if template.metadata.languages
+            else "Any"
+        )
+        frameworks = (
+            ", ".join(template.metadata.frameworks)
+            if template.metadata.frameworks
+            else "Any"
+        )
+        project_types = (
+            ", ".join(template.metadata.project_types)
+            if template.metadata.project_types
+            else "Any"
+        )
+        tags = ", ".join(template.metadata.tags) if template.metadata.tags else "None"
 
-[bold]Compatibility:[/bold]
-  Languages: {', '.join(template.metadata.languages) if template.metadata.languages else 'Any'}
-  Frameworks: {', '.join(template.metadata.frameworks) if template.metadata.frameworks else 'Any'}
-  Project Types: {', '.join(template.metadata.project_types) if template.metadata.project_types else 'Any'}
-
-[bold]Tags:[/bold] {', '.join(template.metadata.tags) if template.metadata.tags else 'None'}
-"""
+        info_panel += (
+            f"  Languages: {languages}\\n"
+            f"  Frameworks: {frameworks}\\n"
+            f"  Project Types: {project_types}\\n\\n"
+            f"[bold]Tags:[/bold] {tags}"
+        )
 
         if template.metadata.homepage:
             info_panel += f"\n[bold]Homepage:[/bold] {template.metadata.homepage}"
@@ -503,7 +524,8 @@ def info(template_name: str) -> None:
         # Show installation command if not installed
         if not template.installed:
             console.print(
-                f"\n[blue]To install:[/blue] claude-builder templates install {template.id}"
+                f"\n[blue]To install:[/blue] "
+                f"claude-builder templates install {template.id}"
             )
 
     except Exception as e:

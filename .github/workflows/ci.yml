@@ -186,6 +186,19 @@ jobs:
         pip install interrogate
         interrogate . --ignore-init-method --ignore-magic --ignore-module --ignore-nested-functions --fail-under=50 || true
 
+    - name: Lint markdown files
+      uses: DavidAnson/markdownlint-cli2-action@v16
+      with:
+        globs: |
+          **/*.md
+          !.venv/**
+          !node_modules/**
+        config: |
+          {
+            "MD013": false,
+            "MD033": false
+          }
+
   integration-tests:
     runs-on: ubuntu-latest
     needs: test

@@ -311,7 +311,8 @@ class TemplateValidator:
 
         if executable_files:
             warnings.append(
-                f"Template contains executable files: {[f.name for f in executable_files]}"
+                f"Template contains executable files: "
+                f"{[f.name for f in executable_files]}"
             )
 
         # Check for suspicious content in template files
@@ -336,7 +337,8 @@ class TemplateValidator:
 
                 if found_patterns:
                     warnings.append(
-                        f"File {file_path.name} contains potentially suspicious patterns: {found_patterns}"
+                        f"File {file_path.name} contains potentially suspicious "
+                        f"patterns: {found_patterns}"
                     )
 
             except (OSError, UnicodeDecodeError):
@@ -419,7 +421,12 @@ class TemplateManager:
 
         for template in all_templates:
             # Check name, description, tags, languages, frameworks
-            search_text = f"{template.metadata.name} {template.metadata.description} {' '.join(template.metadata.tags)} {' '.join(template.metadata.languages)} {' '.join(template.metadata.frameworks)}".lower()
+            search_text = (
+                f"{template.metadata.name} {template.metadata.description} "
+                f"{' '.join(template.metadata.tags)} "
+                f"{' '.join(template.metadata.languages)} "
+                f"{' '.join(template.metadata.frameworks)}"
+            ).lower()
 
             if query_lower in search_text:
                 matching_templates.append(template)
@@ -454,7 +461,8 @@ class TemplateManager:
             return ValidationResult(
                 is_valid=False,
                 errors=[
-                    f"Template already installed: {template_id}. Use --force to reinstall."
+                    f"Template already installed: {template_id}. "
+                    f"Use --force to reinstall."
                 ],
             )
 
@@ -828,7 +836,8 @@ This template uses the following variables:
 
 ## Usage
 
-This template is automatically used by Claude Builder when it matches your project characteristics.
+This template is automatically used by Claude Builder when it matches your
+project characteristics.
 
 You can also specify it explicitly:
 
@@ -967,7 +976,10 @@ class Template:
         # Return specific content based on template name if no content provided
         if not self.content:
             if "claude" in self.name.lower():
-                return "# Claude Instructions\n\nThis project provides Claude Code instructions."
+                return (
+                    "# Claude Instructions\n\n"
+                    "This project provides Claude Code instructions."
+                )
             if "readme" in self.name.lower():
                 project_name = context.get("project_name", "sample_python_project")
                 return f"# README\n\nThis is the project README for {project_name}."
@@ -1292,7 +1304,8 @@ class TemplateRenderer:
         """Initialize template renderer.
 
         Args:
-            template_engine: Type of template engine ("simple" for now, "jinja2" for future)
+            template_engine: Type of template engine ("simple" for now,
+                "jinja2" for future)
             enable_cache: Whether to enable render caching
         """
         self.template_engine = template_engine
@@ -1544,7 +1557,8 @@ class CoreTemplateManager:
     """Core template management system for Phase 2 implementation.
 
     This class provides the fundamental template loading and composition functionality
-    needed for Phase 2, separate from the advanced community features in TemplateManager.
+    needed for Phase 2, separate from the advanced community features in
+    TemplateManager.
     """
 
     def __init__(self, template_dirs: Optional[List[str]] = None):
@@ -1627,7 +1641,8 @@ class CoreTemplateManager:
         """Merge overlay template into base template.
 
         Simple merge strategy:
-        - If overlay has sections marked with <!-- REPLACE:section -->, replace those sections
+        - If overlay has sections marked with <!-- REPLACE:section -->, replace
+          those sections
         - Otherwise, append overlay content to base content
         """
         import re
@@ -1642,10 +1657,17 @@ class CoreTemplateManager:
             # Apply section replacements
             for section_name, replacement_content in replacements:
                 # Find corresponding section in base template
-                base_section_pattern = f"<!-- SECTION:{section_name} -->(.*?)<!-- /SECTION:{section_name} -->"
+                base_section_pattern = (
+                    f"<!-- SECTION:{section_name} -->(.*?)"
+                    f"<!-- /SECTION:{section_name} -->"
+                )
 
                 def replace_section(match: Any) -> str:
-                    return f"<!-- SECTION:{section_name} -->{replacement_content.strip()}<!-- /SECTION:{section_name} -->"
+                    return (
+                        f"<!-- SECTION:{section_name} -->"
+                        f"{replacement_content.strip()}"
+                        f"<!-- /SECTION:{section_name} -->"
+                    )
 
                 merged_content = re.sub(
                     base_section_pattern,

@@ -304,7 +304,8 @@ def _list_templates() -> None:
 
         if len(templates) > 10:
             console.print(
-                f"\n[dim]... and {len(templates) - 10} more. Use 'claude-builder templates list' for full list[/dim]"
+                f"\n[dim]... and {len(templates) - 10} more. "
+                f"Use 'claude-builder templates list' for full list[/dim]"
             )
 
     except Exception as e:
@@ -338,30 +339,38 @@ def _display_analysis_results(analysis: Any) -> None:
     """Display project analysis results."""
     console.print("\n[bold]Analysis Results:[/bold]")
     console.print(
-        f"Language: [green]{analysis.language_info.primary or 'Unknown'}[/green] ({analysis.language_info.confidence:.1f}% confidence)"
+        f"Language: [green]{analysis.language_info.primary or 'Unknown'}[/green] "
+        f"({analysis.language_info.confidence:.1f}% confidence)"
     )
     if analysis.language_info.secondary:
         console.print(
-            f"Secondary languages: [dim]{', '.join(analysis.language_info.secondary)}[/dim]"
+            f"Secondary languages: "
+            f"[dim]{', '.join(analysis.language_info.secondary)}[/dim]"
         )
     console.print(
-        f"Framework: [blue]{analysis.framework_info.primary or 'None detected'}[/blue] ({analysis.framework_info.confidence:.1f}% confidence)"
+        f"Framework: [blue]{analysis.framework_info.primary or 'None detected'}[/blue] "
+        f"({analysis.framework_info.confidence:.1f}% confidence)"
     )
     console.print(
-        f"Project type: [yellow]{analysis.project_type.value.replace('_', ' ').title()}[/yellow]"
+        f"Project type: "
+        f"[yellow]{analysis.project_type.value.replace('_', ' ').title()}[/yellow]"
     )
     console.print(
         f"Complexity: [magenta]{analysis.complexity_level.value.title()}[/magenta]"
     )
     console.print(
-        f"Files: [cyan]{analysis.filesystem_info.total_files}[/cyan] total, [cyan]{analysis.filesystem_info.source_files}[/cyan] source"
+        f"Files: [cyan]{analysis.filesystem_info.total_files}[/cyan] total, "
+        f"[cyan]{analysis.filesystem_info.source_files}[/cyan] source"
     )
     if analysis.domain_info and analysis.domain_info.domain:
         console.print(
-            f"Domain: [purple]{analysis.domain_info.domain.replace('_', ' ').title()}[/purple] ({analysis.domain_info.confidence:.1f}% confidence)"
+            f"Domain: "
+            f"[purple]{analysis.domain_info.domain.replace('_', ' ').title()}[/purple] "
+            f"({analysis.domain_info.confidence:.1f}% confidence)"
         )
     console.print(
-        f"Overall confidence: [bright_green]{analysis.analysis_confidence:.1f}%[/bright_green]"
+        f"Overall confidence: "
+        f"[bright_green]{analysis.analysis_confidence:.1f}%[/bright_green]"
     )
 
 

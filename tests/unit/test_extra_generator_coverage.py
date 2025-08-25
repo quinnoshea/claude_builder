@@ -93,7 +93,8 @@ def test_create_template_variables_minimal_analysis():
 
 
 def test_create_template_variables_without_dev_environment(sample_analysis):
-    """Test _create_template_variables without dev environment - covers None handling."""
+    """Test _create_template_variables without dev environment - covers
+    None handling."""
     generator = DocumentGenerator()
 
     # Remove dev environment
@@ -124,7 +125,8 @@ def test_get_template_info_basic():
 
 
 def test_get_feature_workflow_template_basic():
-    """Test _get_feature_workflow_template basic structure - covers workflow template."""
+    """Test _get_feature_workflow_template basic structure - covers
+    workflow template."""
     generator = DocumentGenerator()
     template = generator._get_feature_workflow_template()
 
@@ -150,7 +152,8 @@ def test_get_testing_workflow_template_basic():
 
 
 def test_get_api_documentation_template_basic():
-    """Test _get_api_documentation_template basic structure - covers API docs template."""
+    """Test _get_api_documentation_template basic structure - covers
+    API docs template."""
     generator = DocumentGenerator()
     template = generator._get_api_documentation_template()
 
@@ -190,7 +193,8 @@ def test_get_default_agents_template_basic():
 
 
 def test_get_intelligent_agents_template_basic():
-    """Test _get_intelligent_agents_template basic structure - covers intelligent agents template."""
+    """Test _get_intelligent_agents_template basic structure - covers
+    intelligent agents template."""
     generator = DocumentGenerator()
     template = generator._get_intelligent_agents_template()
 
@@ -203,7 +207,8 @@ def test_get_intelligent_agents_template_basic():
 
 
 def test_get_default_architecture_template_basic():
-    """Test _get_default_architecture_template basic structure - covers architecture template."""
+    """Test _get_default_architecture_template basic structure - covers
+    architecture template."""
     generator = DocumentGenerator()
     template = generator._get_default_architecture_template()
 
@@ -216,7 +221,8 @@ def test_get_default_architecture_template_basic():
 
 
 def test_get_default_performance_template_basic():
-    """Test _get_default_performance_template basic structure - covers performance template."""
+    """Test _get_default_performance_template basic structure - covers
+    performance template."""
     generator = DocumentGenerator()
     template = generator._get_default_performance_template()
 

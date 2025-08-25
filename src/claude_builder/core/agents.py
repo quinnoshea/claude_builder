@@ -576,7 +576,10 @@ class AgentSelector:
         """Create a custom agent for detected patterns."""
         custom_templates = {
             "database_specialist": {
-                "description": f"Database architecture specialist for {analysis.language_info.primary} projects",
+                "description": (
+                    f"Database architecture specialist for "
+                    f"{analysis.language_info.primary} projects"
+                ),
                 "use_cases": [
                     "schema design",
                     "query optimization",

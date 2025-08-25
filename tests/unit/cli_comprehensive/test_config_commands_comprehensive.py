@@ -520,7 +520,10 @@ class TestConfigHelperFunctions:
         profiles = [
             {
                 "name": "profile1",
-                "description": "A very long description that should be truncated because it exceeds fifty characters",
+                "description": (
+                    "A very long description that should be truncated "
+                    "because it exceeds fifty characters"
+                ),
                 "created": "2024-01-01T00:00:00",
             },
             {

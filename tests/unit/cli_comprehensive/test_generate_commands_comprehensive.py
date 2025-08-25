@@ -723,7 +723,7 @@ class TestGenerateCommandsErrorHandling:
             analysis_file = Path(tmp_dir) / "analysis.yaml"
             analysis_file.write_text("project_path: test")
 
-            # This should raise ClaudeBuilderError since yaml import fails in the function
+            # This should raise ClaudeBuilderError since yaml import fails
             try:
                 _load_analysis_from_file(analysis_file)
                 assert False, "Expected ClaudeBuilderError"

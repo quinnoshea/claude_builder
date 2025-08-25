@@ -193,7 +193,10 @@ class TestTemplateCommands:
 
     @patch("claude_builder.cli.template_commands.TemplateManager")
     def test_install_template_command_with_version(self, mock_template_manager_class):
-        """Test templates install command. Note: --version option doesn't exist in actual CLI."""
+        """Test templates install command.
+
+        Note: --version option doesn't exist in actual CLI.
+        """
         mock_template_manager = Mock()
 
         # Create proper mock result structure

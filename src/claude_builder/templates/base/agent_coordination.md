@@ -2,7 +2,8 @@
 
 ## Overview
 
-This document defines the agent coordination patterns and workflows for ${project_name} development.
+This document defines the agent coordination patterns and workflows for
+${project_name} development.
 
 **Project Type**: ${project_type}
 **Primary Language**: ${primary_language}
@@ -46,7 +47,7 @@ ${coordination_patterns}
 
 #### Code Implementation → Testing
 
-```
+```text
 ${primary_development_agent} completes feature
   ↓
 test-writer-fixer creates comprehensive tests
@@ -58,7 +59,7 @@ security-specialist reviews security implications
 
 #### Testing → Deployment
 
-```
+```text
 All tests pass and quality gates met
   ↓
 devops-automator handles deployment

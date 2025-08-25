@@ -20,7 +20,7 @@ ${project_description}
 
 ### Project Structure
 
-```
+```text
 ${project_name}/
 ├── Cargo.toml                    # Project configuration
 ├── Cargo.lock                    # Dependency lock file

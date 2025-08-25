@@ -42,7 +42,8 @@ def test_validate_project_path_nonexistent():
 
 
 def test_validate_project_path_file_not_directory(temp_dir):
-    """Test validate_project_path with file instead of directory - covers lines 35-39."""
+    """Test validate_project_path with file instead of directory - covers
+    lines 35-39."""
     temp_file = temp_dir / "test_file.txt"
     temp_file.touch()
 
@@ -124,7 +125,8 @@ def test_validate_project_path_large_directory(temp_dir):
 
 
 def test_validate_project_path_oserror_during_file_count(temp_dir):
-    """Test validate_project_path with OSError during file count - covers lines 85-87."""
+    """Test validate_project_path with OSError during file count - covers
+    lines 85-87."""
     with patch("pathlib.Path.rglob", side_effect=OSError("Permission denied")):
         result = validate_project_path(temp_dir)
 
@@ -230,7 +232,8 @@ def test_validate_config_file_valid(temp_dir):
 
 
 def test_validate_output_directory_nonexistent_no_create(temp_dir):
-    """Test validate_output_directory with nonexistent dir, no create - covers lines 152, 161-165."""
+    """Test validate_output_directory with nonexistent dir, no create - covers
+    lines 152, 161-165."""
     nonexistent = temp_dir / "nonexistent"
     result = validate_output_directory(nonexistent, create_if_missing=False)
 
@@ -239,7 +242,8 @@ def test_validate_output_directory_nonexistent_no_create(temp_dir):
 
 
 def test_validate_output_directory_create_success(temp_dir):
-    """Test validate_output_directory with successful creation - covers lines 153-156."""
+    """Test validate_output_directory with successful creation - covers
+    lines 153-156."""
     new_dir = temp_dir / "new_output_dir"
     result = validate_output_directory(new_dir, create_if_missing=True)
 
@@ -269,7 +273,8 @@ def test_validate_output_directory_file_not_directory(temp_dir):
 
 
 def test_validate_output_directory_no_write_permission(temp_dir):
-    """Test validate_output_directory without write permission - covers lines 174-178."""
+    """Test validate_output_directory without write permission - covers
+    lines 174-178."""
     with patch("os.access", return_value=False):
         result = validate_output_directory(temp_dir)
 
@@ -285,7 +290,8 @@ def test_validate_output_directory_valid(temp_dir):
 
 
 def test_validate_directory_structure_nonexistent():
-    """Test validate_directory_structure with nonexistent directory - covers lines 193-197."""
+    """Test validate_directory_structure with nonexistent directory - covers
+    lines 193-197."""
     nonexistent = Path("/nonexistent/path")
     result = validate_directory_structure(nonexistent, {})
 
@@ -305,7 +311,8 @@ def test_validate_directory_structure_file_not_directory(temp_dir):
 
 
 def test_validate_directory_structure_missing_directory(temp_dir):
-    """Test validate_directory_structure with missing directory - covers lines 214-216."""
+    """Test validate_directory_structure with missing directory - covers
+    lines 214-216."""
     expected_structure = {"src": {"main.py": True}}
 
     result = validate_directory_structure(temp_dir, expected_structure)
@@ -316,7 +323,8 @@ def test_validate_directory_structure_missing_directory(temp_dir):
 
 
 def test_validate_directory_structure_file_instead_of_directory(temp_dir):
-    """Test validate_directory_structure with file where directory expected - covers lines 217-218."""
+    """Test validate_directory_structure with file where directory expected -
+    covers lines 217-218."""
     # Create a file where we expect a directory
     (temp_dir / "src").touch()
     expected_structure = {"src": {"main.py": True}}
@@ -356,7 +364,8 @@ def test_validate_directory_structure_missing_file(temp_dir):
 
 
 def test_validate_directory_structure_directory_instead_of_file(temp_dir):
-    """Test validate_directory_structure with directory where file expected - covers lines 228-229."""
+    """Test validate_directory_structure with directory where file expected -
+    covers lines 228-229."""
     # Create directory where we expect a file
     (temp_dir / "README.md").mkdir()
     expected_structure = {"README.md": True}

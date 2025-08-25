@@ -437,11 +437,14 @@ API design and documentation for ${project_name}.
         """Get default CLAUDE.md template."""
         return """# CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with
+code in this repository.
 
 ## Project Overview
 
-This is a **${project_type}** project written in **${language}**${ framework and f' using the {framework} framework' or ''}.
+This is a **${project_type}** project written in **${language}**${
+    framework and f' using the {framework} framework' or ''
+}.
 
 **Project Details:**
 - **Language**: ${language}
@@ -457,13 +460,19 @@ This is a **${project_type}** project written in **${language}**${ framework and
 ### Setup
 ```bash
 # Project setup commands will be generated based on detected package managers
-${package_managers and f'Package managers detected: {package_managers}' or 'No package managers detected'}
+${
+    package_managers and f'Package managers detected: {package_managers}'
+    or 'No package managers detected'
+}
 ```
 
 ### Testing
 ```bash
 # Testing commands will be generated based on detected frameworks
-${testing_frameworks and f'Testing frameworks: {testing_frameworks}' or 'No testing frameworks detected'}
+${
+    testing_frameworks and f'Testing frameworks: {testing_frameworks}'
+    or 'No testing frameworks detected'
+}
 ```
 
 ### Build and Run
@@ -647,7 +656,9 @@ ${analysis.has_ci_cd and '''
 ---
 
 *Agent configuration generated for ${project_type} project*
-*Detected: ${language}${framework and f' with {framework}' or ''} | Complexity: ${complexity}*
+*Detected: ${language}${
+    framework and f' with {framework}' or ''
+} | Complexity: ${complexity}*
 """
 
     def _get_intelligent_agents_template(self) -> str:
@@ -660,7 +671,8 @@ ${analysis.has_ci_cd and '''
 
 ## 🎯 Project-Specific Agent Selection
 
-Based on comprehensive project analysis, the following agents have been intelligently selected:
+Based on comprehensive project analysis, the following agents have been
+intelligently selected:
 
 ### 🔧 Core Development Agents (${total_agents} total)
 **Primary**: `${primary_agent}` - Your main development agent
@@ -713,7 +725,10 @@ ${deployment_workflow}
 ### Why These Agents Were Selected
 
 **Language Analysis**: ${language} detected with ${language_confidence}% confidence
-${framework and f'**Framework**: {framework} detected' or '**Framework**: No framework detected'}
+${
+    framework and f'**Framework**: {framework} detected'
+    or '**Framework**: No framework detected'
+}
 **Project Type**: ${project_type} (${analysis.complexity} complexity)
 **Architecture**: ${architecture} pattern
 
@@ -781,13 +796,15 @@ As your project evolves, you may need different agents:
 ${custom_agents and f'''Your project generated custom agents for unique patterns:
 {custom_agents}
 
-These agents were created because your project has specific characteristics that benefit from specialized expertise.
+These agents were created because your project has specific characteristics
+that benefit from specialized expertise.
 ''' or 'No custom agents were needed - your project fits standard patterns well.'}
 
 ## 🚀 Getting Started
 
 ### Quick Start Workflow
-1. **Start Development**: `Use ${primary_agent} to analyze the codebase and suggest improvements`
+1. **Start Development**: `Use ${primary_agent} to analyze the codebase and
+   suggest improvements`
 2. **Add Features**: `Use ${primary_agent} to implement [specific feature]`
 3. **Ensure Quality**: `Use test-writer-fixer to create comprehensive tests`
 4. **Deploy**: `Use devops-automator to set up deployment pipeline`
@@ -827,18 +844,39 @@ This ${project_type} project follows a ${architecture} architecture pattern.
 ## Architecture Decisions
 
 ### Language Choice: ${language}
-${language == 'python' and 'Python was chosen for its versatility, extensive ecosystem, and ease of development.' or ''}
-${language == 'rust' and 'Rust was chosen for its performance, memory safety, and modern language features.' or ''}
-${language == 'javascript' and 'JavaScript/TypeScript was chosen for its ubiquity and extensive ecosystem.' or ''}
+${
+    language == 'python' and
+    'Python was chosen for its versatility, extensive ecosystem, and ease of '
+    'development.'
+    or ''
+}
+${
+    language == 'rust' and
+    'Rust was chosen for its performance, memory safety, and modern language features.'
+    or ''
+}
+${
+    language == 'javascript' and
+    'JavaScript/TypeScript was chosen for its ubiquity and extensive ecosystem.'
+    or ''
+}
 
 ### Framework: ${framework}
 Framework-specific architectural considerations and patterns.
 
 ### Database Strategy
-${uses_database == 'Yes' and 'This project uses a database for persistent storage.' or 'This project does not appear to use a database.'}
+${
+    uses_database == 'Yes' and
+    'This project uses a database for persistent storage.'
+    or 'This project does not appear to use a database.'
+}
 
 ### Testing Strategy
-${has_tests == 'Yes' and 'Comprehensive testing strategy is in place.' or 'Consider implementing a testing strategy.'}
+${
+    has_tests == 'Yes' and
+    'Comprehensive testing strategy is in place.'
+    or 'Consider implementing a testing strategy.'
+}
 
 ## Component Architecture
 
@@ -969,12 +1007,18 @@ ${uses_database == 'Yes' and '''
                 # Return mock content based on template name
                 template_name = template.name
                 if "claude" in template_name.lower():
-                    return "# Claude Instructions\n\nThis project provides Claude Code instructions."
+                    return (
+                        "# Claude Instructions\n\n"
+                        "This project provides Claude Code instructions."
+                    )
                 if "readme" in template_name.lower():
                     return "# README\n\nThis is the project README."
                 if "contributing" in template_name.lower():
                     return "# Contributing\n\nContribution guidelines."
-                return f"# {template_name.title()}\n\nGenerated content for {template_name}."
+                return (
+                    f"# {template_name.title()}\n\n"
+                    f"Generated content for {template_name}."
+                )
             # Return generic mock content
             return "# Generated Template\n\nMock template content."
         except Exception as e:
@@ -997,7 +1041,10 @@ class TemplateLoader:
             templates = self.template_manager.list_available_templates()
             if isinstance(templates, list):
                 if template_name in templates:
-                    return f"# Template: {template_name}\n\nTemplate content for {template_name}"
+                    return (
+                        f"# Template: {template_name}\n\n"
+                        f"Template content for {template_name}"
+                    )
                 msg = f"Template '{template_name}' not found"
                 raise GenerationError(msg)
             if isinstance(templates, dict):  # type: ignore[unreachable]

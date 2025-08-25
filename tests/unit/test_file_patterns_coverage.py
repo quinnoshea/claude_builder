@@ -170,7 +170,9 @@ def test_should_ignore():
     # Test file patterns
     assert FilePatterns.should_ignore(Path("/project/debug.log"), project_root) is True
     # Note: .DS_Store is a literal filename, not a pattern match like *.log
-    # assert FilePatterns.should_ignore(Path("/project/.DS_Store"), project_root) is True
+    # assert FilePatterns.should_ignore(
+    #     Path("/project/.DS_Store"), project_root
+    # ) is True
     assert FilePatterns.should_ignore(Path("/project/temp.swp"), project_root) is True
 
     # Test files that should not be ignored
@@ -271,7 +273,8 @@ def test_file_pattern_matcher():
     assert matcher.match("*.py") is True  # "*.py" in "*.py"
     assert matcher.match("path/test*") is True  # "test*" in "path/test*"
 
-    # Test with explicit empty patterns - implementation uses default patterns when empty list provided
+    # Test with explicit empty patterns - implementation uses default patterns
+    # when empty list provided
     empty_matcher = FilePatternMatcher([])
     assert (
         len(empty_matcher.patterns) > 0

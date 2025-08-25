@@ -123,7 +123,10 @@ def validate_template_name(template_name: str) -> ValidationResult:
     if not template_name.replace("-", "").replace("_", "").isalnum():
         return ValidationResult(
             is_valid=False,
-            error="Template name can only contain letters, numbers, hyphens, and underscores",
+            error=(
+                "Template name can only contain letters, numbers, hyphens, "
+                "and underscores"
+            ),
         )
 
     return ValidationResult(is_valid=True)
@@ -146,7 +149,10 @@ def validate_config_file(config_path: Path) -> ValidationResult:
     if config_path.suffix.lower() not in valid_extensions:
         return ValidationResult(
             is_valid=False,
-            error=f"Configuration file must have .json or .toml extension, got: {config_path.suffix}",
+            error=(
+                f"Configuration file must have .json or .toml extension, "
+                f"got: {config_path.suffix}"
+            ),
         )
 
     # Check if readable

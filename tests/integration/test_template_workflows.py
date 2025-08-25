@@ -218,7 +218,7 @@ project_types: [python]
 {% extends 'base_project.md' %}
 
 {% block overview %}
-A Python {{ framework }} project for {{ description | default('awesome functionality') }}.
+A Python {{ framework }} project for {{ description | default('awesome') }}.
 {% endblock %}
 
 {% block structure %}

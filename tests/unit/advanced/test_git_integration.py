@@ -59,7 +59,10 @@ class TestAdvancedGitAnalyzer:
                 # git log --stat
                 MagicMock(
                     returncode=0,
-                    stdout="commit abc123\nAuthor: John Doe\nDate: 2024-01-01\n\n 2 files changed, 10 insertions(+), 2 deletions(-)\n",
+                    stdout=(
+                        "commit abc123\nAuthor: John Doe\nDate: 2024-01-01\n\n"
+                        " 2 files changed, 10 insertions(+), 2 deletions(-)\n"
+                    ),
                 ),
             ]
 

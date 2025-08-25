@@ -116,7 +116,8 @@ def _write_agent_files(agent_files: dict[str, str], output_path: Path) -> None:
             with file_path.open("w", encoding="utf-8") as f:
                 f.write(content)
         console.print(
-            f"[green]✓ Agent files written to: {output_path.parent if output_path.is_file() else output_path}[/green]"
+            f"[green]✓ Agent files written to: "
+            f"{output_path.parent if output_path.is_file() else output_path}[/green]"
         )
 
 

@@ -292,7 +292,8 @@ def test_config_manager_cli_overrides(temp_dir):
 
 
 def test_config_manager_validation_success():
-    """Test successful configuration validation - covers _validate_config success path."""
+    """Test successful configuration validation - covers _validate_config
+    success path."""
     config = Config()
     manager = ConfigManager()
 
@@ -301,7 +302,8 @@ def test_config_manager_validation_success():
 
 
 def test_config_manager_validation_invalid_confidence():
-    """Test validation fails for invalid confidence - covers _validate_config error path."""
+    """Test validation fails for invalid confidence - covers _validate_config
+    error path."""
     config = Config()
     config.analysis.confidence_threshold = 150  # Invalid: > 100
 
@@ -314,7 +316,8 @@ def test_config_manager_validation_invalid_confidence():
 
 
 def test_config_manager_validation_invalid_permissions():
-    """Test validation fails for invalid permissions - covers _validate_config error path."""
+    """Test validation fails for invalid permissions - covers _validate_config
+    error path."""
     config = Config()
     config.output.file_permissions = "invalid"
 
@@ -325,7 +328,8 @@ def test_config_manager_validation_invalid_permissions():
 
 
 def test_config_manager_validation_unsupported_version():
-    """Test validation fails for unsupported version - covers _validate_config error path."""
+    """Test validation fails for unsupported version - covers _validate_config
+    error path."""
     config = Config()
     config.version = "2.0"  # Unsupported version
 

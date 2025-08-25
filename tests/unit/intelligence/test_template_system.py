@@ -105,7 +105,10 @@ Testing: {{ test_framework }}
         """Test template inheritance information."""
         child_template = Template(
             name="child-template",
-            content="{% extends 'base-template' %}\n{% block content %}Child content{% endblock %}",
+            content=(
+                "{% extends 'base-template' %}\n"
+                "{% block content %}Child content{% endblock %}"
+            ),
             template_type="markdown",
             parent_template="base-template",
         )

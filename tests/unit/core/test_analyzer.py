@@ -309,7 +309,8 @@ def read_root():
         project_path.mkdir()
         (project_path / "requirements.txt").write_text("Django>=4.0.0")
         (project_path / "manage.py").write_text(
-            "#!/usr/bin/env python\nfrom django.core.management import execute_from_command_line"
+            "#!/usr/bin/env python\n"
+            "from django.core.management import execute_from_command_line"
         )
         (project_path / "settings.py").write_text(
             "INSTALLED_APPS = ['django.contrib.admin']"

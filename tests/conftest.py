@@ -37,7 +37,8 @@ def temp_dir() -> Generator[Path, None, None]:
 
 @pytest.fixture
 def temp_project_dir(temp_dir: Path) -> Path:
-    """Create a temporary directory with sample project structure - matches guide expectations."""
+    """Create a temporary directory with sample project structure - matches
+    guide expectations."""
     project_path = temp_dir / "test_project"
     project_path.mkdir()
 

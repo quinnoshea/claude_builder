@@ -185,7 +185,10 @@ def test_agent_selector_select_workflow_agents_basic():
 
 
 def test_agent_selector_different_project_types():
-    """Test AgentSelector with different project types - covers project type handling."""
+    """Test AgentSelector with different project types.
+
+    Covers project type handling.
+    """
     registry = AgentRegistry()
     selector = AgentSelector(registry)
 

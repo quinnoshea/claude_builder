@@ -86,7 +86,8 @@ def init(
             # Customize config based on analysis
             config = _customize_config_from_analysis(config, analysis)
             console.print(
-                f"[green]✓ Configuration optimized for {analysis.language} {analysis.project_type.value}[/green]"
+                f"[green]✓ Configuration optimized for {analysis.language} "
+                f"{analysis.project_type.value}[/green]"
             )
 
         # Interactive configuration
@@ -114,7 +115,8 @@ def init(
                 f"• Review and customize the configuration: `{config_filename}`\n"
                 f"• Run claude-builder to use the new configuration\n"
                 f"• Use `claude-builder config validate` to check configuration\n"
-                f"• Create project profiles with `claude-builder config create-profile`",
+                f"• Create project profiles with "
+                f"`claude-builder config create-profile`",
                 title="Configuration Setup Complete",
             )
         )
@@ -311,9 +313,11 @@ def create_profile(
             Panel(
                 f"Profile created successfully!\n\n"
                 f"**Usage:**\n"
-                f"• Apply to new projects: `claude-builder --profile={profile_name} /path/to/project`\n"
+                f"• Apply to new projects: "
+                f"`claude-builder --profile={profile_name} /path/to/project`\n"
                 f"• List all profiles: `claude-builder config list-profiles`\n"
-                f"• View profile details: `claude-builder config show-profile {profile_name}`",
+                f"• View profile details: "
+                f"`claude-builder config show-profile {profile_name}`",
                 title=f"Profile: {profile_name}",
             )
         )
@@ -367,7 +371,13 @@ def show_profile(profile_name: str) -> None:
             return
 
         # Display profile information
-        info_panel = f"""[bold]{profile['name']}[/bold]\n\n[bold]Description:[/bold] {profile.get('description', 'No description')}\n[bold]Created:[/bold] {profile.get('created', 'Unknown')}\n\n[bold]Configuration Preview:[/bold]\n"""
+        info_panel = (
+            f"[bold]{profile['name']}[/bold]\n\n"
+            f"[bold]Description:[/bold] "
+            f"{profile.get('description', 'No description')}\n"
+            f"[bold]Created:[/bold] {profile.get('created', 'Unknown')}\n\n"
+            f"[bold]Configuration Preview:[/bold]\n"
+        )
 
         # Show key configuration sections
         config_preview = {}
@@ -496,7 +506,8 @@ def _display_config_table(config: Any, section: str | None = None) -> None:
 
         table.add_row(
             "Analysis",
-            f"Threshold: {config.analysis.confidence_threshold}%, Cache: {config.analysis.cache_enabled}",
+            f"Threshold: {config.analysis.confidence_threshold}%, "
+            f"Cache: {config.analysis.cache_enabled}",
         )
         table.add_row(
             "Templates",
@@ -507,7 +518,8 @@ def _display_config_table(config: Any, section: str | None = None) -> None:
         )
         table.add_row(
             "Git Integration",
-            f"Mode: {config.git_integration.mode.value}, Mentions: {config.git_integration.claude_mention_policy.value}",
+            f"Mode: {config.git_integration.mode.value}, "
+            f"Mentions: {config.git_integration.claude_mention_policy.value}",
         )
         table.add_row(
             "Output",

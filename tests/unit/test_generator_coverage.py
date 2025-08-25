@@ -115,7 +115,8 @@ def test_create_template_variables_basic(sample_analysis):
 
 
 def test_create_template_variables_with_agent_config(sample_analysis):
-    """Test _create_template_variables with agent configuration - covers lines 207-225."""
+    """Test _create_template_variables with agent configuration - covers
+    lines 207-225."""
     generator = DocumentGenerator()
 
     # Add mock agent configuration to analysis

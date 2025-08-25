@@ -155,7 +155,7 @@ hotfix/security-patch 2024-01-15
                 # Git merge information
                 Mock(
                     returncode=0,
-                    stdout="""abc123 Merge pull request #45 from feature/user-authentication
+                    stdout="""abc123 Merge pull request #45 from feature/user-auth
 def456 Merge branch 'hotfix/security-patch' into main
 ghi789 Merge pull request #46 from feature/api-improvements
 """,

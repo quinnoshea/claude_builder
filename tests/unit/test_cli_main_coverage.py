@@ -137,7 +137,10 @@ def test_list_templates_long_description(mock_template_manager, mock_console):
     mock_template.metadata.version = "1.0.0"
     mock_template.metadata.category = "python"
     # Long description that should be truncated
-    mock_template.metadata.description = "This is a very long description that exceeds the 50 character limit and should be truncated"
+    mock_template.metadata.description = (
+        "This is a very long description that exceeds the 50 character "
+        "limit and should be truncated"
+    )
 
     mock_manager = MagicMock()
     mock_manager.list_available_templates.return_value = [mock_template]
@@ -244,7 +247,10 @@ def test_write_generated_files_basic(temp_dir):
 
 
 def test_write_generated_files_custom_output_dir(temp_dir):
-    """Test _write_generated_files with custom output directory - covers lines 261-264."""
+    """Test _write_generated_files with custom output directory.
+
+    Covers lines 261-264.
+    """
     output_dir = temp_dir / "custom_output"
 
     generated_content = MagicMock()

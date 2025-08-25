@@ -424,11 +424,17 @@ class TestTechnologyStackAnalyzer:
 
         # Create full-stack project
         files = {
-            "backend/requirements.txt": "fastapi==0.100.0\npsycopg2==2.9.7\nredis==4.6.0",
+            "backend/requirements.txt": (
+                "fastapi==0.100.0\npsycopg2==2.9.7\nredis==4.6.0"
+            ),
             "backend/main.py": "from fastapi import FastAPI",
-            "frontend/package.json": '{"dependencies": {"react": "^18.0.0", "axios": "^1.4.0"}}',
+            "frontend/package.json": (
+                '{"dependencies": {"react": "^18.0.0", "axios": "^1.4.0"}}'
+            ),
             "frontend/src/App.js": "import React from 'react';",
-            "docker-compose.yml": "version: '3'\nservices:\n  postgres:\n    image: postgres:15",
+            "docker-compose.yml": (
+                "version: '3'\nservices:\n  postgres:\n    image: postgres:15"
+            ),
             "nginx.conf": "server { listen 80; }",
             ".github/workflows/ci.yml": "name: CI\non: [push]",
         }
@@ -629,9 +635,13 @@ class TestAdvancedProjectDetector:
             "backend/models/user.py": "class User: pass",
             "backend/services/user_service.py": "class UserService: pass",
             # Frontend
-            "frontend/package.json": '{"dependencies": {"react": "^18.0.0", "typescript": "^5.0.0"}}',
+            "frontend/package.json": (
+                '{"dependencies": {"react": "^18.0.0", "typescript": "^5.0.0"}}'
+            ),
             "frontend/src/App.tsx": "import React from 'react';",
-            "frontend/src/components/Header.tsx": "export const Header = () => <div>Header</div>;",
+            "frontend/src/components/Header.tsx": (
+                "export const Header = () => <div>Header</div>;"
+            ),
             # Infrastructure
             "docker-compose.yml": "version: '3'\nservices:\n  app:\n    build: .",
             "Dockerfile": "FROM python:3.9",
@@ -663,10 +673,20 @@ class TestAdvancedProjectDetector:
 
         # Create project with clear indicators
         clear_indicators = {
-            "package.json": '{"dependencies": {"react": "^18.0.0", "react-dom": "^18.0.0"}}',
-            "src/App.js": "import React from 'react'; export default function App() { return <div>App</div>; }",
-            "src/index.js": "import React from 'react'; import ReactDOM from 'react-dom';",
-            "public/index.html": "<html><head><title>React App</title></head><body><div id='root'></div></body></html>",
+            "package.json": (
+                '{"dependencies": {"react": "^18.0.0", "react-dom": "^18.0.0"}}'
+            ),
+            "src/App.js": (
+                "import React from 'react'; export default function App() { "
+                "return <div>App</div>; }"
+            ),
+            "src/index.js": (
+                "import React from 'react'; import ReactDOM from 'react-dom';"
+            ),
+            "public/index.html": (
+                "<html><head><title>React App</title></head><body>"
+                "<div id='root'></div></body></html>"
+            ),
         }
 
         for file_path, content in clear_indicators.items():

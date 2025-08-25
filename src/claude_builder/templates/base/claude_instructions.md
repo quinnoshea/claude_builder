@@ -50,7 +50,7 @@ ${development_agents}
 
 ## Project Structure
 
-```
+```text
 ${project_structure}
 ```
 
