@@ -11,14 +11,16 @@ import json
 import shutil
 import tempfile
 import zipfile
+
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 from urllib.error import HTTPError, URLError
 from urllib.parse import urljoin, urlparse
 from urllib.request import Request, urlopen
 
 from claude_builder.core.models import ProjectAnalysis, ValidationResult
+
 
 UNSUPPORTED_URL_SCHEME = "Unsupported URL scheme for download"
 TEMPLATE_NOT_FOUND = "Template not found"
@@ -297,8 +299,8 @@ class TemplateValidator:
 
     def _validate_security(self, template_path: Path) -> ValidationResult:
         """Basic security validation."""
-        errors = []
-        warnings = []
+        errors: List[str] = []
+        warnings: List[str] = []
 
         # Check for potentially dangerous files
         dangerous_extensions = [".exe", ".bat", ".sh", ".ps1", ".py", ".js"]
@@ -669,7 +671,7 @@ class TemplateManager:
         community_templates = self._discover_community_templates()
 
         for template in community_templates:
-            if template.id == template_id or template.metadata.name == template_id:
+            if template_id in (template.id, template.metadata.name):
                 return template
 
         return None
@@ -938,8 +940,8 @@ class Template:
         self,
         name: str,
         content: str = "",
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> None:
         self.name = name
         self.content = content
         self.template_type = kwargs.get("template_type", "markdown")
@@ -955,7 +957,7 @@ class Template:
         }
         self.metadata.update(remaining_kwargs)
 
-    def render(self, **context) -> str:
+    def render(self, **context: Any) -> str:
         """Render template with context."""
         # Simple variable substitution for testing
         result = self.content
@@ -983,7 +985,8 @@ class Template:
         close_braces = content.count("}}")
 
         if open_braces != close_braces:
-            raise TemplateError(f"Unbalanced template braces in {self.name}")
+            msg = f"Unbalanced template braces in {self.name}"
+            raise TemplateError(msg)
 
         return True
 
@@ -1028,7 +1031,7 @@ class TemplateBuilder:
     """Placeholder TemplateBuilder class for test compatibility."""
 
     def __init__(self) -> None:
-        self.templates = {}
+        self.templates: Dict[str, Template] = {}
 
     def create_template(self, name: str, content: str) -> Template:
         """Create a new template."""
@@ -1036,7 +1039,7 @@ class TemplateBuilder:
         self.templates[name] = template
         return template
 
-    def build_template_set(self, project_analysis) -> dict:
+    def build_template_set(self, project_analysis: Any) -> Dict[str, Template]:
         """Build a set of templates for project."""
         return {
             "main": Template("main", "Main template content"),
@@ -1091,7 +1094,7 @@ class TemplateEcosystem:
     """Placeholder TemplateEcosystem class for test compatibility."""
 
     def __init__(self) -> None:
-        self.templates = {}
+        self.templates: Dict[str, Any] = {}
 
     def load_ecosystem(self, path: str) -> Dict[str, Any]:
         return {"templates": 5, "loaded": True}
@@ -1119,7 +1122,7 @@ class TemplateMarketplace:
     """Placeholder TemplateMarketplace class for test compatibility."""
 
     def __init__(self) -> None:
-        self.templates = {}
+        self.templates: Dict[str, str] = {}
         self.marketplace_url = "https://example.com/templates"
 
     def search_templates(self, query: str) -> List[str]:
@@ -1138,9 +1141,9 @@ class TemplateLoader:
         template_directory: Optional[str] = None,
     ):
         """Initialize template loader with search directories."""
-        self.template_dirs = []
-        self.loaded_templates = {}
-        self.cache = {}
+        self.template_dirs: List[Path] = []
+        self.loaded_templates: Dict[str, Any] = {}
+        self.cache: Dict[str, Any] = {}
 
         # Add default template directories
         if template_directory:
@@ -1165,13 +1168,15 @@ class TemplateLoader:
         template_path = self._find_template(template_name)
 
         if not template_path:
-            raise FileNotFoundError(f"{TEMPLATE_NOT_FOUND}: {template_name}")
+            msg = f"{TEMPLATE_NOT_FOUND}: {template_name}"
+            raise FileNotFoundError(msg)
 
         try:
             with template_path.open(encoding="utf-8") as f:
                 return f.read()
         except Exception as e:
-            raise OSError(f"{FAILED_TO_LOAD_TEMPLATE} {template_name}: {e}")
+            msg = f"{FAILED_TO_LOAD_TEMPLATE} {template_name}: {e}"
+            raise OSError(msg)
 
     def list_templates(self) -> List[str]:
         """List all available templates."""
@@ -1213,7 +1218,7 @@ class TemplateLoader:
             content = self.load_template(template_name)
 
             # Parse frontmatter if present
-            metadata = {}
+            metadata: Dict[str, Any] = {}
             if content.startswith("---"):
                 parts = content.split("---", 2)
                 if len(parts) >= 3:
@@ -1237,7 +1242,8 @@ class TemplateLoader:
             return template
 
         except FileNotFoundError:
-            raise TemplateError(f"Template not found: {template_name}")
+            msg = f"Template not found: {template_name}"
+            raise TemplateError(msg)
 
     def load_all_templates(self) -> List[Template]:
         """Load all templates from directory."""
@@ -1257,7 +1263,7 @@ class TemplateLoader:
         """Get template from cache."""
         return self.cache.get(template_name)
 
-    def cache_template(self, template: Template):
+    def cache_template(self, template: Template) -> None:
         """Cache template for future use."""
         self.cache[template.name] = template
 
@@ -1265,9 +1271,9 @@ class TemplateLoader:
 class TemplateRepository:
     """Placeholder TemplateRepository class for test compatibility."""
 
-    def __init__(self, repo_url: str = None):
+    def __init__(self, repo_url: Optional[str] = None):
         self.repo_url = repo_url or "https://github.com/example/templates"
-        self.templates = {}
+        self.templates: Dict[str, Any] = {}
 
     def clone_repository(self) -> bool:
         return True
@@ -1291,7 +1297,7 @@ class TemplateRenderer:
         """
         self.template_engine = template_engine
         self.enable_cache = enable_cache
-        self.render_cache = {} if enable_cache else None
+        self.render_cache: Optional[Dict[str, str]] = {} if enable_cache else None
         self.filters = {
             "length": len,
             "upper": str.upper,
@@ -1326,9 +1332,7 @@ class TemplateRenderer:
         rendered_content = self._process_conditionals(rendered_content, variables)
 
         # Handle lists: {{#each items}}{{item}}{{/each}}
-        rendered_content = self._process_lists(rendered_content, variables)
-
-        return rendered_content
+        return self._process_lists(rendered_content, variables)
 
     def render_file(
         self, template_path: str, output_path: str, variables: Dict[str, Any]
@@ -1361,8 +1365,7 @@ class TemplateRenderer:
 
             return True
 
-        except Exception as e:
-            print(f"Error rendering template file: {e}")
+        except Exception:
             return False
 
     def _process_conditionals(self, content: str, variables: Dict[str, Any]) -> str:
@@ -1372,13 +1375,13 @@ class TemplateRenderer:
         # Pattern for {{#if variable}}content{{/if}}
         pattern = r"\{\{#if\s+(\w+)\}\}(.*?)\{\{/if\}}"
 
-        def replace_conditional(match):
+        def replace_conditional(match: Any) -> str:
             var_name = match.group(1)
             section_content = match.group(2)
 
             # Check if variable exists and is truthy
             if variables.get(var_name):
-                return section_content
+                return str(section_content)
             return ""
 
         return re.sub(pattern, replace_conditional, content, flags=re.DOTALL)
@@ -1390,7 +1393,7 @@ class TemplateRenderer:
         # Pattern for {{#each items}}{{item}}{{/each}}
         pattern = r"\{\{#each\s+(\w+)\}\}(.*?)\{\{/each\}}"
 
-        def replace_list(match):
+        def replace_list(match: Any) -> str:
             list_name = match.group(1)
             item_template = match.group(2)
 
@@ -1416,7 +1419,10 @@ class TemplateRenderer:
         return re.sub(pattern, replace_list, content, flags=re.DOTALL)
 
     def render(
-        self, template: Template, context: Optional[Dict[str, Any]] = None, **kwargs
+        self,
+        template: Template,
+        context: Union[Dict[str, Any], Any, None] = None,
+        **kwargs: Any,
     ) -> str:
         """Render a Template object with context."""
         # Handle both positional context and kwargs
@@ -1427,7 +1433,10 @@ class TemplateRenderer:
             context = {**context, **kwargs}
         elif hasattr(context, "variables"):
             # Handle TemplateContext objects
-            context = context.variables
+            context = dict(context.variables) if context.variables else {}
+        else:
+            # Fallback to empty dict
+            context = {}
 
         # Check cache first
         if self.render_cache is not None:
@@ -1458,7 +1467,7 @@ class TemplateRenderer:
         # Handle loops: {% for item in items %}
         loop_pattern = r"\{%\s*for\s+(\w+)\s+in\s+(\w+)\s*%\}(.*?)\{%\s*endfor\s*%\}"
 
-        def replace_loop(match):
+        def replace_loop(match: Any) -> str:
             item_var = match.group(1)
             list_var = match.group(2)
             loop_content = match.group(3)
@@ -1488,9 +1497,9 @@ class TemplateRenderer:
         # Handle conditionals: {% if condition %}
         if_pattern = r"\{%\s*if\s+(\w+)\s*%\}(.*?)\{%\s*endif\s*%\}"
 
-        def replace_if(match):
+        def replace_if(match: Any) -> str:
             condition_var = match.group(1)
-            if_content = match.group(2)
+            if_content = match.group(2) or ""
 
             condition_value = context.get(condition_var, False)
             if isinstance(condition_value, str):
@@ -1503,7 +1512,7 @@ class TemplateRenderer:
         # Handle filters: {{ variable|filter }}
         filter_pattern = r"\{\{\s*(\w+)\s*\|\s*(\w+)\s*\}\}"
 
-        def replace_filter(match):
+        def replace_filter(match: Any) -> str:
             var_name = match.group(1)
             filter_name = match.group(2)
 
@@ -1524,13 +1533,11 @@ class TemplateRenderer:
         # Handle simple variables: {{ variable }}
         var_pattern = r"\{\{\s*(\w+)\s*\}\}"
 
-        def replace_var(match):
+        def replace_var(match: Any) -> str:
             var_name = match.group(1)
             return str(context.get(var_name, ""))
 
-        content = re.sub(var_pattern, replace_var, content)
-
-        return content
+        return re.sub(var_pattern, replace_var, content)
 
 
 class CoreTemplateManager:
@@ -1550,7 +1557,7 @@ class CoreTemplateManager:
         return self.loader.load_template(template_name)
 
     def compose_templates(
-        self, base_template: str, overlay_templates: List[str] = None
+        self, base_template: str, overlay_templates: Optional[List[str]] = None
     ) -> str:
         """Compose hierarchical templates.
 
@@ -1586,7 +1593,7 @@ class CoreTemplateManager:
         """Render template with context variables."""
         return self.renderer.render_template(template_content, context)
 
-    def generate_from_analysis(self, analysis, template_name: str = "base") -> str:
+    def generate_from_analysis(self, analysis: Any, template_name: str = "base") -> str:
         """Generate content from project analysis.
 
         Args:
@@ -1637,7 +1644,7 @@ class CoreTemplateManager:
                 # Find corresponding section in base template
                 base_section_pattern = f"<!-- SECTION:{section_name} -->(.*?)<!-- /SECTION:{section_name} -->"
 
-                def replace_section(match):
+                def replace_section(match: Any) -> str:
                     return f"<!-- SECTION:{section_name} -->{replacement_content.strip()}<!-- /SECTION:{section_name} -->"
 
                 merged_content = re.sub(
@@ -1652,7 +1659,7 @@ class CoreTemplateManager:
 
         return merged_content
 
-    def _create_context_from_analysis(self, analysis) -> Dict[str, Any]:
+    def _create_context_from_analysis(self, analysis: Any) -> Dict[str, Any]:
         """Create template context from project analysis."""
         context = {}
 
@@ -1707,7 +1714,7 @@ class CoreTemplateManager:
 
         return context
 
-    def _determine_overlays(self, analysis) -> List[str]:
+    def _determine_overlays(self, analysis: Any) -> List[str]:
         """Determine which overlay templates to apply based on analysis."""
         overlays = []
 

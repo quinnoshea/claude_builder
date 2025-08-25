@@ -2,9 +2,10 @@
 
 import os
 import re
+
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Union
 
 
 @dataclass
@@ -98,7 +99,8 @@ def validate_project_path(project_path: Path) -> ValidationResult:
     # Check for very large directories (performance warning)
     try:
         file_count = sum(1 for _ in project_path.rglob("*") if _.is_file())
-        if file_count > 10000:
+        max_file_count_threshold = 10000
+        if file_count > max_file_count_threshold:
             warnings.append(f"Large project detected ({file_count} files)")
             suggestions.append("Analysis may take longer than usual")
     except OSError:
@@ -360,13 +362,13 @@ class PathValidator:
     def validate_path(self, path: str) -> bool:
         return Path(path).exists()
 
-    def is_valid_file(self, file_path: str | Path) -> bool:
+    def is_valid_file(self, file_path: Union[str, Path]) -> bool:
         """Check if path is a valid file."""
         if isinstance(file_path, str):
             file_path = Path(file_path)
         return bool(file_path.exists() and file_path.is_file())
 
-    def is_valid_directory(self, dir_path: str | Path) -> bool:
+    def is_valid_directory(self, dir_path: Union[str, Path]) -> bool:
         """Check if path is a valid directory."""
         if isinstance(dir_path, str):
             dir_path = Path(dir_path)

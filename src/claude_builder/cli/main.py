@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import sys
+
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import click
+
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
@@ -18,6 +20,14 @@ from claude_builder.core.template_manager import TemplateManager
 from claude_builder.utils.exceptions import ClaudeBuilderError
 from claude_builder.utils.git import GitIntegrationManager
 from claude_builder.utils.validation import validate_project_path
+
+# Import subcommands
+from .analyze_commands import analyze
+from .config_commands import config
+from .generate_commands import generate
+from .git_commands import git
+from .template_commands import templates
+
 
 INVALID_PROJECT_PATH = "Invalid project path"
 PROJECT_PATH_IS_NONE = "project_path is None!"
@@ -122,10 +132,9 @@ def cli(ctx: click.Context, project_path: str | None, **kwargs: Any) -> None:
         return
 
     # If no subcommand was called and no project path, show help
-    if ctx.invoked_subcommand is None:
-        if not project_path:
-            click.echo(ctx.get_help())
-            return
+    if ctx.invoked_subcommand is None and not project_path:
+        click.echo(ctx.get_help())
+        return
 
     # Main execution (only if no subcommand)
     if ctx.invoked_subcommand is None:
@@ -154,8 +163,9 @@ def _execute_main(project_path: str, **kwargs: Any) -> None:
     # Validate project path
     validation_result = validate_project_path(project_path_obj)
     if not validation_result.is_valid:
+        msg = f"{INVALID_PROJECT_PATH}: {validation_result.error}"
         raise ClaudeBuilderError(
-            f"{INVALID_PROJECT_PATH}: {validation_result.error}",
+            msg,
             ExitCodes.PROJECT_NOT_FOUND,
         )
 
@@ -215,12 +225,11 @@ def _execute_main(project_path: str, **kwargs: Any) -> None:
 
             # Initialize agent system
             from claude_builder.core.agents import UniversalAgentSystem
-            from claude_builder.core.generator import DocumentGenerator
 
             agent_system = UniversalAgentSystem()
 
             # Configure agents for this project
-            agent_config = agent_system.select_agents(analysis)
+            agent_system.select_agents(analysis)
 
             # Generate AGENTS.md file using DocumentGenerator
             agent_generator = DocumentGenerator({"agents_only": True})
@@ -236,7 +245,7 @@ def _execute_main(project_path: str, **kwargs: Any) -> None:
         if not kwargs["no_git"] and (kwargs["git_exclude"] or kwargs["git_track"]):
             task4 = progress.add_task("Setting up git integration...", total=None)
             git_manager = GitIntegrationManager()
-            git_result = git_manager.integrate(project_path_obj, config.git_integration)
+            git_manager.integrate(project_path_obj, config.git_integration)
             progress.update(
                 task4, completed=True, description="✓ Git integration complete"
             )
@@ -246,7 +255,7 @@ def _execute_main(project_path: str, **kwargs: Any) -> None:
         _display_summary(project_path_obj, dry_run=kwargs["dry_run"])
 
 
-def _get_git_mode(kwargs: Dict[str, Any]) -> str:
+def _get_git_mode(kwargs: dict[str, Any]) -> str:
     """Get git integration mode description."""
     if kwargs["no_git"]:
         return "disabled"
@@ -309,7 +318,7 @@ def _list_templates() -> None:
         table.add_column("Description", style="white")
 
         # Built-in templates
-        builtin_templates: List[Tuple[str, str, str]] = [
+        builtin_templates: list[tuple[str, str, str]] = [
             (
                 "python-web",
                 "Language+Framework",
@@ -357,12 +366,13 @@ def _display_analysis_results(analysis: Any) -> None:
 
 
 def _write_generated_files(
-    generated_content: Any, project_path: Path, kwargs: Dict[str, Any]
+    generated_content: Any, project_path: Path, kwargs: dict[str, Any]
 ) -> None:
     """Write generated files to disk."""
     # Debug: Check what's None
     if project_path is None:
-        raise ValueError(f"{PROJECT_PATH_IS_NONE} kwargs: {kwargs}")
+        msg = f"{PROJECT_PATH_IS_NONE} kwargs: {kwargs}"  # type: ignore[unreachable]
+        raise ValueError(msg)
     if kwargs.get("output_dir") is None:
         output_dir = project_path
     else:
@@ -402,13 +412,6 @@ def _display_summary(project_path: Path, *, dry_run: bool) -> None:
         console.print("2. Configure agents using the generated AGENTS.md")
         console.print("3. Start using Claude Code with your optimized environment!")
 
-
-# Import and register subcommands
-from .analyze_commands import analyze
-from .config_commands import config
-from .generate_commands import generate
-from .git_commands import git
-from .template_commands import templates
 
 # Register subcommands
 cli.add_command(templates)

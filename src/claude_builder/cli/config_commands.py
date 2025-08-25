@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import json
+
 from pathlib import Path
 from typing import Any
 
 import click
+
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Confirm, IntPrompt, Prompt
@@ -16,6 +18,7 @@ from claude_builder.core.analyzer import ProjectAnalyzer
 from claude_builder.core.config import Config, ConfigManager
 from claude_builder.core.models import GitIntegrationMode
 from claude_builder.utils.exceptions import ConfigError
+
 
 FAILED_TO_CREATE_CONFIGURATION = "Failed to create configuration"
 CONFIGURATION_VALIDATION_FAILED = "Configuration validation failed"
@@ -298,7 +301,9 @@ def create_profile(
                 "Profile description", default=f"Profile for {profile_name}"
             )
 
-        config_manager.create_project_profile(profile_name, config, description)
+        # Ensure description is never None
+        final_description = description or f"Profile for {profile_name}"
+        config_manager.create_project_profile(profile_name, config, final_description)
         console.print(f"[green]✓ Project profile '{profile_name}' created[/green]")
 
         # Show usage instructions
@@ -388,7 +393,7 @@ def show_profile(profile_name: str) -> None:
         raise click.ClickException(error_msg) from e
 
 
-def _customize_config_from_analysis(config: Config, analysis) -> Config:
+def _customize_config_from_analysis(config: Config, analysis: Any) -> Config:
     """Customize configuration based on project analysis."""
     # Customize based on language
     if analysis.language == "python":
@@ -569,6 +574,7 @@ def set_value(key: str, value: str, project_path: str = ".") -> None:
         if hasattr(current, final_key):
             # Convert string value to appropriate type
             current_value = getattr(current, final_key)
+            converted_value: Any
             if isinstance(current_value, bool):
                 converted_value = value.lower() in ("true", "1", "yes", "on")
             elif isinstance(current_value, int):
@@ -602,7 +608,7 @@ def set_value(key: str, value: str, project_path: str = ".") -> None:
     required=False,
 )
 @click.option("--force", is_flag=True, help="Force reset without confirmation")
-def reset(project_path: str, *, force: bool):
+def reset(project_path: str, *, force: bool) -> None:
     """Reset configuration to defaults."""
     try:
         project_path_obj = Path(project_path).resolve()

@@ -1,10 +1,11 @@
 """Project analysis engine for Claude Builder."""
 
 import json
+
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import toml
 
@@ -56,10 +57,12 @@ class ProjectAnalyzer:
         try:
             # Check if project path exists
             if not project_path.exists():
-                raise AnalysisError(f"Project path does not exist: {project_path}")
+                msg = f"Project path does not exist: {project_path}"
+                raise AnalysisError(msg)
 
             if not project_path.is_dir():
-                raise AnalysisError(f"Project path is not a directory: {project_path}")
+                msg = f"Project path is not a directory: {project_path}"
+                raise AnalysisError(msg)
 
             # Initialize analysis
             analysis = ProjectAnalysis(
@@ -121,7 +124,8 @@ class ProjectAnalyzer:
             return analysis
 
         except Exception as e:
-            raise AnalysisError(f"Failed to analyze project: {e}")
+            msg = f"Failed to analyze project: {e}"
+            raise AnalysisError(msg)
 
     def _analyze_filesystem(self, project_path: Path) -> FileSystemInfo:
         """Analyze project file system structure."""
@@ -229,7 +233,7 @@ class ProjectAnalyzer:
             env.testing_frameworks.append("pytest")
         if "jest" in str(filesystem_info.root_files):
             env.testing_frameworks.append("jest")
-        if any("test" in d for d in filesystem_info.directory_structure.keys()):
+        if any("test" in d for d in filesystem_info.directory_structure):
             env.testing_frameworks.append("generic_testing")
 
         return env
@@ -299,7 +303,7 @@ class ProjectAnalyzer:
                 "notebooks" in filesystem_info.directory_structure,
                 "data" in filesystem_info.directory_structure,
                 "models" in filesystem_info.directory_structure,
-                any(".ipynb" in str(filesystem_info.directory_structure)),
+                ".ipynb" in str(filesystem_info.directory_structure),
                 "analysis" in filesystem_info.directory_structure,
                 "experiments" in filesystem_info.directory_structure,
             ]
@@ -325,7 +329,7 @@ class ProjectAnalyzer:
         # Monorepo patterns - enhanced
         package_dirs = [
             d
-            for d in filesystem_info.directory_structure.keys()
+            for d in filesystem_info.directory_structure
             if any(
                 pkg in str(filesystem_info.directory_structure.get(d, {}))
                 for pkg in ["package.json", "Cargo.toml", "pyproject.toml"]
@@ -353,9 +357,8 @@ class ProjectAnalyzer:
         if (
             "src" in filesystem_info.directory_structure
             and language_info.confidence > 70
-        ):
-            if language_info.primary in ["rust", "go", "java", "csharp"]:
-                return ProjectType.APPLICATION
+        ) and language_info.primary in ["rust", "go", "java", "csharp"]:
+            return ProjectType.APPLICATION
 
         return ProjectType.UNKNOWN
 
@@ -598,17 +601,14 @@ class LanguageDetector:
         # Add version_info field expected by tests
         if hasattr(result, "primary") and result.primary:
             # Add version info based on detected language
-            version_info = {result.primary: "detected"}
             # Create a new LanguageInfo with version_info
-            enhanced_result = LanguageInfo(
+            return LanguageInfo(
                 primary=result.primary,
                 secondary=result.secondary,
                 confidence=result.confidence,
                 file_counts=result.file_counts,
                 total_lines=result.total_lines,
             )
-            enhanced_result.version_info = version_info
-            return enhanced_result
 
         return result
 
@@ -780,7 +780,7 @@ class FrameworkDetector:
             return FrameworkInfo(confidence=0.0)
 
         # Determine primary framework
-        primary = max(detected_frameworks.keys(), key=detected_frameworks.get)
+        primary = max(detected_frameworks.keys(), key=lambda k: detected_frameworks[k])
         confidence = min(detected_frameworks[primary] * 10, 100.0)  # Scale to 0-100
 
         # Secondary frameworks
@@ -832,7 +832,7 @@ class FrameworkDetector:
             if result.primary in web_frameworks:
                 details["web_framework"] = True
 
-            result.details = details
+            # Framework details would be stored in metadata if needed
 
         return result
 
@@ -849,7 +849,7 @@ class FrameworkDetector:
         self, project_path: Path, primary_language: Optional[str]
     ) -> Dict[str, float]:
         """Check package files for framework dependencies."""
-        scores = defaultdict(float)
+        scores: Dict[str, float] = defaultdict(float)
 
         if primary_language == "python":
             self._check_python_packages(project_path, scores)
@@ -1026,16 +1026,16 @@ class FrameworkDetector:
             scores["django"] += 8
 
         # Check for React patterns
-        for jsx_file in project_path.rglob("*.jsx"):
+        for _jsx_file in project_path.rglob("*.jsx"):
             scores["react"] += 2
             break
 
-        for tsx_file in project_path.rglob("*.tsx"):
+        for _tsx_file in project_path.rglob("*.tsx"):
             scores["react"] += 2
             break
 
         # Check for Vue patterns
-        for vue_file in project_path.rglob("*.vue"):
+        for _vue_file in project_path.rglob("*.vue"):
             scores["vue"] += 2
             break
 
@@ -1168,7 +1168,7 @@ class DomainDetector:
         found_indicators: Dict[str, List[str]] = defaultdict(list)
 
         # Check directory names
-        for dir_name in filesystem_info.directory_structure.keys():
+        for dir_name in filesystem_info.directory_structure:
             self._check_indicators(dir_name.lower(), domain_scores, found_indicators)
 
         # Check file names
@@ -1182,7 +1182,7 @@ class DomainDetector:
             return DomainInfo(confidence=0.0)
 
         # Determine primary domain
-        primary_domain = max(domain_scores.keys(), key=domain_scores.get)
+        primary_domain = max(domain_scores.keys(), key=lambda k: domain_scores[k])
         confidence = min(domain_scores[primary_domain] * 10, 100.0)
 
         return DomainInfo(
@@ -1331,7 +1331,7 @@ class ArchitectureDetector:
         service_indicators = ["services", "microservices", "service-"]
         service_count = sum(
             1
-            for dir_name in filesystem_info.directory_structure.keys()
+            for dir_name in filesystem_info.directory_structure
             if any(indicator in dir_name.lower() for indicator in service_indicators)
         )
 
@@ -1347,7 +1347,7 @@ class ArchitectureDetector:
             for pattern in mvc_dirs
             if any(
                 pattern in dir_name.lower()
-                for dir_name in filesystem_info.directory_structure.keys()
+                for dir_name in filesystem_info.directory_structure
             )
         )
 
@@ -1361,7 +1361,7 @@ class ArchitectureDetector:
             for indicator in ddd_indicators
             if any(
                 indicator in dir_name.lower()
-                for dir_name in filesystem_info.directory_structure.keys()
+                for dir_name in filesystem_info.directory_structure
             )
         )
 
@@ -1378,7 +1378,7 @@ class ArchitectureDetector:
         ]
         return any(
             indicator in dir_name.lower()
-            for dir_name in filesystem_info.directory_structure.keys()
+            for dir_name in filesystem_info.directory_structure
             for indicator in event_indicators
         )
 
@@ -1400,7 +1400,7 @@ class ArchitectureDetector:
             for indicator in layer_indicators
             if any(
                 indicator in dir_name.lower()
-                for dir_name in filesystem_info.directory_structure.keys()
+                for dir_name in filesystem_info.directory_structure
             )
         )
 
@@ -1429,18 +1429,15 @@ class AdvancedProjectDetector:
 
     def analyze_project(self, project_path: Optional[Path] = None) -> Dict[str, Any]:
         """Analyze project patterns and architecture."""
-        path = project_path or self.project_path
 
         # Basic analysis - enhance as needed
-        analysis = {
+        return {
             "architecture": self.analyze_architecture(),
             "patterns": self.detect_project_patterns(),
             "confidence": 0.8,
             "project_type": "unknown",
             "complexity": "medium",
         }
-
-        return analysis
 
 
 class ArchitectureAnalyzer:
@@ -1453,20 +1450,20 @@ class ArchitectureAnalyzer:
         self, project_path: Optional[Path] = None
     ) -> Dict[str, str]:
         # Use provided path or instance path
-        path = project_path or self.project_path
         return {"pattern": "layered", "confidence": "medium"}
 
 
 class PatternMatcher:
     """Pattern matching system for project detection."""
 
-    def __init__(self, patterns: Optional[List[str]] = None) -> None:
+    def __init__(
+        self, patterns: Optional[Union[List[str], Dict[str, Any]]] = None
+    ) -> None:
         # For backwards compatibility, accept both dict and list patterns
-        if patterns is None:
-            self.patterns = {}
-        elif isinstance(patterns, list):
+        if isinstance(patterns, list):
             self.patterns = {p: {"name": p} for p in patterns}
         else:
+            # patterns is None or already a dict
             self.patterns = patterns or {}
 
         self._pattern_registry = {
@@ -1482,12 +1479,14 @@ class PatternMatcher:
         if isinstance(self.patterns, dict):
             pattern_names = list(self.patterns.keys())
             return [f for f in file_paths if any(p in f for p in pattern_names)]
-        return [f for f in file_paths if any(p in f for p in self.patterns)]
+        if isinstance(self.patterns, list):  # type: ignore[unreachable]
+            return [f for f in file_paths if any(p in f for p in self.patterns)]
+        return []
 
     def add_pattern(self, pattern: str) -> None:
         if isinstance(self.patterns, dict):
             self.patterns[pattern] = {"name": pattern}
-        else:
+        elif isinstance(self.patterns, list):  # type: ignore[unreachable]
             self.patterns.append(pattern)
 
     def matches_pattern(self, file_path: Path, pattern_name: str) -> bool:
@@ -1578,7 +1577,13 @@ class PatternMatcher:
                 )
 
         # Sort by confidence descending
-        matches.sort(key=lambda x: x["confidence"], reverse=True)
+        def _get_confidence(x: Dict[str, Any]) -> float:
+            conf = x.get("confidence", 0)
+            if isinstance(conf, (int, float)):
+                return float(conf)
+            return 0.0
+
+        matches.sort(key=_get_confidence, reverse=True)
         return matches
 
 

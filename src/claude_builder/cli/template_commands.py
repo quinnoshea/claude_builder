@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import json
+
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional
+from typing import TYPE_CHECKING, Any
 
 import click
+
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Confirm, Prompt
@@ -15,6 +17,10 @@ from rich.table import Table
 
 from claude_builder.core.analyzer import ProjectAnalyzer
 from claude_builder.core.template_manager import CommunityTemplate, TemplateManager
+
+
+if TYPE_CHECKING:
+    import builtins
 
 FAILED_TO_LIST_TEMPLATES = "Failed to list templates"
 FAILED_TO_SEARCH_TEMPLATES = "Failed to search templates"
@@ -52,13 +58,13 @@ console = Console()
 class TemplateConfig:
     """Configuration for template commands."""
 
-    project_path: Optional[str] = None
-    description: Optional[str] = None
-    author: Optional[str] = None
-    category: Optional[str] = None
-    languages: Optional[str] = None
-    frameworks: Optional[str] = None
-    project_types: Optional[str] = None
+    project_path: str | None = None
+    description: str | None = None
+    author: str | None = None
+    category: str | None = None
+    languages: str | None = None
+    frameworks: str | None = None
+    project_types: str | None = None
     interactive: bool = False
 
 
@@ -87,8 +93,8 @@ def list(
     *,
     installed_only: bool,
     community_only: bool,
-    category: Optional[str],
-    language: Optional[str],
+    category: str | None,
+    language: str | None,
     output_format: str,
 ) -> None:
     """List available templates."""
@@ -125,7 +131,8 @@ def list(
 
     except Exception as e:
         console.print(f"[red]Error listing templates: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_LIST_TEMPLATES}: {e}")
+        msg = f"{FAILED_TO_LIST_TEMPLATES}: {e}"
+        raise click.ClickException(msg)
 
 
 @templates.command()
@@ -136,7 +143,7 @@ def list(
     help="Analyze project and rank templates by compatibility",
 )
 @click.option("--limit", type=int, default=10, help="Maximum number of results")
-def search(query: str, project_path: Optional[str], limit: int) -> None:
+def search(query: str, project_path: str | None, limit: int) -> None:
     """Search for templates matching query."""
     try:
         manager = TemplateManager()
@@ -166,7 +173,8 @@ def search(query: str, project_path: Optional[str], limit: int) -> None:
 
     except Exception as e:
         console.print(f"[red]Error searching templates: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_SEARCH_TEMPLATES}: {e}")
+        msg = f"{FAILED_TO_SEARCH_TEMPLATES}: {e}"
+        raise click.ClickException(msg)
 
 
 @templates.command()
@@ -228,7 +236,8 @@ def install(template_id: str, *, force: bool, dry_run: bool) -> None:
 
     except Exception as e:
         console.print(f"[red]Error installing template: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_INSTALL_TEMPLATE}: {e}")
+        msg = f"{FAILED_TO_INSTALL_TEMPLATE}: {e}"
+        raise click.ClickException(msg)
 
 
 @templates.command()
@@ -267,7 +276,8 @@ def uninstall(template_name: str, *, force: bool) -> None:
 
     except Exception as e:
         console.print(f"[red]Error uninstalling template: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_UNINSTALL_TEMPLATE}: {e}")
+        msg = f"{FAILED_TO_UNINSTALL_TEMPLATE}: {e}"
+        raise click.ClickException(msg)
 
 
 @templates.command()
@@ -284,7 +294,7 @@ def uninstall(template_name: str, *, force: bool) -> None:
 @click.option("--frameworks", help="Comma-separated list of frameworks")
 @click.option("--project-types", help="Comma-separated list of project types")
 @click.option("--interactive", is_flag=True, help="Interactive template creation")
-def create(name: str, **kwargs) -> None:
+def create(name: str, **kwargs: Any) -> None:
     """Create a custom template."""
     # Create config from kwargs
     config = TemplateConfig(**kwargs)
@@ -305,12 +315,12 @@ def create(name: str, **kwargs) -> None:
                 "Project types (comma-separated)", default=""
             )
         else:
-            description = config.description
-            author = config.author
-            category = config.category
-            languages = config.languages
-            frameworks = config.frameworks
-            project_types = config.project_types
+            description = config.description or ""
+            author = config.author or ""
+            category = config.category or ""
+            languages = config.languages or ""
+            frameworks = config.frameworks or ""
+            project_types = config.project_types or ""
 
         # Set defaults
         description = description or f"Custom template for {name}"
@@ -373,7 +383,8 @@ def create(name: str, **kwargs) -> None:
 
     except Exception as e:
         console.print(f"[red]Error creating template: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_CREATE_TEMPLATE}: {e}")
+        msg = f"{FAILED_TO_CREATE_TEMPLATE}: {e}"
+        raise click.ClickException(msg)
 
 
 @templates.command()
@@ -437,7 +448,8 @@ def validate(template_path: str, *, strict: bool, output_format: str) -> None:
 
     except Exception as e:
         console.print(f"[red]Error validating template: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_VALIDATE_TEMPLATE}: {e}")
+        msg = f"{FAILED_TO_VALIDATE_TEMPLATE}: {e}"
+        raise click.ClickException(msg)
 
 
 @templates.command()
@@ -496,11 +508,12 @@ def info(template_name: str) -> None:
 
     except Exception as e:
         console.print(f"[red]Error getting template info: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_GET_TEMPLATE_INFO}: {e}")
+        msg = f"{FAILED_TO_GET_TEMPLATE_INFO}: {e}"
+        raise click.ClickException(msg)
 
 
 def _display_templates_table(
-    templates: List[CommunityTemplate], *, show_compatibility: bool = False
+    templates: builtins.list[CommunityTemplate], *, show_compatibility: bool = False
 ) -> None:
     """Display templates in table format."""
     if not templates:
@@ -544,7 +557,7 @@ def _display_templates_table(
     console.print(table)
 
 
-def _display_templates_list(templates: List[CommunityTemplate]) -> None:
+def _display_templates_list(templates: builtins.list[CommunityTemplate]) -> None:
     """Display templates in simple list format."""
     if not templates:
         console.print("[yellow]No templates found[/yellow]")
@@ -557,7 +570,7 @@ def _display_templates_list(templates: List[CommunityTemplate]) -> None:
         )
 
 
-def _display_templates_json(templates: List[CommunityTemplate]) -> None:
+def _display_templates_json(templates: builtins.list[CommunityTemplate]) -> None:
     """Display templates in JSON format."""
     template_data = []
     for template in templates:

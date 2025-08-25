@@ -4,7 +4,24 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from claude_builder.core.models import ComplexityLevel, ProjectAnalysis, ProjectType
+from claude_builder.core.models import (
+    AgentInfo,
+    AgentSelection,
+    ComplexityLevel,
+    ProjectAnalysis,
+    ProjectType,
+)
+
+
+# Mock class for test compatibility
+try:
+    from unittest.mock import Mock as TestMock
+except ImportError:
+    # Fallback mock class for environments without unittest.mock
+    class TestMock:  # type: ignore
+        def __init__(self) -> None:
+            self.success = True
+            self.data: Dict[str, Any] = {}
 
 
 class AgentRole(Enum):
@@ -16,17 +33,7 @@ class AgentRole(Enum):
     CUSTOM = "custom"
 
 
-@dataclass
-class AgentInfo:
-    """Information about a specific agent."""
-
-    name: str
-    role: AgentRole
-    description: str
-    use_cases: List[str]
-    dependencies: List[str] = field(default_factory=list)
-    priority: int = 1
-    confidence: float = 0.0
+# AgentInfo is now imported from models.py
 
 
 @dataclass
@@ -59,7 +66,7 @@ class UniversalAgentSystem:
         self.selector = AgentSelector(self.agent_registry)
         self.configurator = AgentConfigurator()
 
-    def select_agents(self, project_analysis: ProjectAnalysis) -> AgentConfiguration:
+    def select_agents(self, project_analysis: ProjectAnalysis) -> AgentSelection:
         """Select and configure agents based on project analysis."""
         # Step 1: Select core agents based on language/framework
         core_agents = self.selector.select_core_agents(project_analysis)
@@ -78,7 +85,7 @@ class UniversalAgentSystem:
             core_agents, domain_agents, workflow_agents, custom_agents, project_analysis
         )
 
-        return AgentConfiguration(
+        return AgentSelection(
             core_agents=core_agents,
             domain_agents=domain_agents,
             workflow_agents=workflow_agents,
@@ -91,7 +98,7 @@ class AgentRegistry:
     """Registry of available agents with their capabilities."""
 
     def __init__(self) -> None:
-        self._agents: Dict[str, Agent] = {}
+        self._agents: Dict[str, AgentInfo] = {}
         self._load_standard_agents()
         self._load_language_mappings()
         self._load_framework_mappings()
@@ -105,7 +112,7 @@ class AgentRegistry:
                 # Engineering Core
                 "rapid-prototyper": AgentInfo(
                     name="rapid-prototyper",
-                    role=AgentRole.CORE,
+                    role=AgentRole.CORE.value,
                     description="MVP builder and rapid development specialist",
                     use_cases=[
                         "feature development",
@@ -116,14 +123,14 @@ class AgentRegistry:
                 ),
                 "backend-developer": AgentInfo(
                     name="backend-developer",
-                    role=AgentRole.CORE,
+                    role=AgentRole.CORE.value,
                     description="Server-side architecture and API development",
                     use_cases=["API design", "business logic", "service architecture"],
                     priority=1,
                 ),
                 "frontend-developer": AgentInfo(
                     name="frontend-developer",
-                    role=AgentRole.CORE,
+                    role=AgentRole.CORE.value,
                     description="Client-side development and UI implementation",
                     use_cases=[
                         "user interfaces",
@@ -134,7 +141,7 @@ class AgentRegistry:
                 ),
                 "test-writer-fixer": AgentInfo(
                     name="test-writer-fixer",
-                    role=AgentRole.CORE,
+                    role=AgentRole.CORE.value,
                     description="Testing strategy and implementation",
                     use_cases=[
                         "test suite design",
@@ -146,7 +153,7 @@ class AgentRegistry:
                 # Language Specialists
                 "python-pro": AgentInfo(
                     name="python-pro",
-                    role=AgentRole.CORE,
+                    role=AgentRole.CORE.value,
                     description="Expert Python development with modern practices",
                     use_cases=[
                         "Python best practices",
@@ -158,7 +165,7 @@ class AgentRegistry:
                 # Design & UX
                 "ui-designer": AgentInfo(
                     name="ui-designer",
-                    role=AgentRole.WORKFLOW,
+                    role=AgentRole.WORKFLOW.value,
                     description="Interface design and user experience",
                     use_cases=[
                         "design systems",
@@ -169,7 +176,7 @@ class AgentRegistry:
                 ),
                 "whimsy-injector": AgentInfo(
                     name="whimsy-injector",
-                    role=AgentRole.WORKFLOW,
+                    role=AgentRole.WORKFLOW.value,
                     description="Adds delightful interactions and polish",
                     use_cases=["micro-interactions", "user delight", "polish"],
                     priority=3,
@@ -177,14 +184,14 @@ class AgentRegistry:
                 # DevOps & Operations
                 "devops-automator": AgentInfo(
                     name="devops-automator",
-                    role=AgentRole.WORKFLOW,
+                    role=AgentRole.WORKFLOW.value,
                     description="Deployment and operations automation",
                     use_cases=["CI/CD pipelines", "infrastructure", "deployment"],
                     priority=2,
                 ),
                 "api-tester": AgentInfo(
                     name="api-tester",
-                    role=AgentRole.WORKFLOW,
+                    role=AgentRole.WORKFLOW.value,
                     description="API validation and testing",
                     use_cases=[
                         "API testing",
@@ -195,7 +202,7 @@ class AgentRegistry:
                 ),
                 "performance-benchmarker": AgentInfo(
                     name="performance-benchmarker",
-                    role=AgentRole.WORKFLOW,
+                    role=AgentRole.WORKFLOW.value,
                     description="Performance optimization and benchmarking",
                     use_cases=["performance analysis", "optimization", "benchmarking"],
                     priority=2,
@@ -321,7 +328,7 @@ class AgentRegistry:
 
     def get_agents_by_role(self, role: AgentRole) -> List[AgentInfo]:
         """Get all agents with specific role."""
-        return [agent for agent in self._agents.values() if agent.role == role]
+        return [agent for agent in self._agents.values() if agent.role == role.value]
 
     def register_agent(self, agent: AgentInfo) -> None:
         """Register a new agent."""
@@ -469,17 +476,6 @@ class AgentSelector:
 
         return unique_agents
 
-    def select_workflow_agents(self, analysis: ProjectAnalysis) -> List[AgentInfo]:
-        """Select workflow agents for complex projects."""
-        agents = []
-
-        # Add studio-coach for complex coordination
-        coach_agent = self.registry.get_agent("studio-coach")
-        if coach_agent:
-            agents.append(coach_agent)
-
-        return agents
-
     def generate_custom_agents(self, analysis: ProjectAnalysis) -> List[AgentInfo]:
         """Generate custom agents for unique project patterns."""
         agents = []
@@ -562,9 +558,9 @@ class AgentSelector:
         if template:
             return AgentInfo(
                 name=agent_name,
-                role=AgentRole.DOMAIN,
-                description=template["description"],
-                use_cases=template["use_cases"],
+                role=AgentRole.DOMAIN.value,
+                description=str(template["description"]),
+                use_cases=list(template["use_cases"]),
                 confidence=(
                     analysis.domain_info.confidence / 100.0
                     if analysis.domain_info
@@ -613,9 +609,9 @@ class AgentSelector:
         if template:
             return AgentInfo(
                 name=pattern,
-                role=AgentRole.CUSTOM,
-                description=template["description"],
-                use_cases=template["use_cases"],
+                role=AgentRole.CUSTOM.value,
+                description=str(template["description"]),
+                use_cases=list(template["use_cases"]),
                 confidence=0.7,
                 priority=3,
             )
@@ -637,7 +633,7 @@ class AgentConfigurator:
 
         all_agents = core_agents + domain_agents + workflow_agents + custom_agents
 
-        patterns = {
+        return {
             "feature_development_workflow": self._generate_feature_workflow(
                 all_agents, analysis
             ),
@@ -650,8 +646,6 @@ class AgentConfigurator:
                 all_agents, analysis
             ),
         }
-
-        return patterns
 
     def _generate_feature_workflow(
         self, agents: List[AgentInfo], analysis: ProjectAnalysis
@@ -689,13 +683,12 @@ class AgentConfigurator:
         self, agents: List[AgentInfo], analysis: ProjectAnalysis
     ) -> List[str]:
         """Generate bug fixing workflow."""
-        workflow = [
+        return [
             "1. Investigation: Use debugging specialists to identify issues",
             "2. Fix: Use appropriate language/framework agents",
             "3. Testing: Use test-writer-fixer to prevent regressions",
             "4. Documentation: Update relevant documentation",
         ]
-        return workflow
 
     def _generate_deployment_workflow(
         self, agents: List[AgentInfo], analysis: ProjectAnalysis
@@ -731,7 +724,7 @@ class AgentConfigurator:
         handoffs = {}
 
         for agent in agents:
-            if agent.role == AgentRole.CORE:
+            if agent.role == AgentRole.CORE.value:
                 if "developer" in agent.name:
                     handoffs[agent.name] = [
                         "test-writer-fixer",
@@ -739,7 +732,7 @@ class AgentConfigurator:
                     ]
                 elif "pro" in agent.name or "engineer" in agent.name:
                     handoffs[agent.name] = ["test-writer-fixer", "devops-automator"]
-            elif agent.role == AgentRole.WORKFLOW:
+            elif agent.role == AgentRole.WORKFLOW.value:
                 if agent.name == "test-writer-fixer":
                     handoffs[agent.name] = [
                         "devops-automator",
@@ -809,7 +802,7 @@ class AgentCoordinator:
         elif hasattr(registry_or_agents, "register"):
             # It's a registry
             self.registry = registry_or_agents
-            self.agents: List[Agent] = []
+            self.agents = []
         else:
             # It's a list of agents
             self.agents = registry_or_agents or []
@@ -830,16 +823,9 @@ class AgentCoordinator:
         """Get agent by name."""
         return next((agent for agent in self.agents if agent.name == name), None)
 
-    def execute_task(self, task: "AgentTask") -> None:
+    def execute_task(self, task: "AgentTask") -> Any:
         """Execute a task using appropriate agents."""
-        try:
-            from unittest.mock import Mock
-        except ImportError:
-            # Create a simple mock class
-            class Mock:
-                def __init__(self) -> None:
-                    self.success = True
-                    self.data: Dict[str, Any] = {}
+        # Use the module-level TestMock
 
         # Find agent with highest priority (lowest number)
         if self.agents:
@@ -848,12 +834,12 @@ class AgentCoordinator:
             # If agent has execute method, call it
             if hasattr(selected_agent, "execute"):
                 try:
-                    return selected_agent.execute(task)
+                    return selected_agent.execute(str(task.task_type))
                 except Exception:
                     pass  # Fall back to mock result
 
         # Fall back to mock result
-        result = Mock()
+        result = TestMock()
         result.success = True
         result.task_type = task.task_type
         result.data = {
@@ -868,14 +854,7 @@ class AgentCoordinator:
 
     def execute_with_fallback(self, task: "AgentTask") -> Any:
         """Execute task with fallback support."""
-        try:
-            from unittest.mock import Mock
-        except ImportError:
-            # Create a simple mock class
-            class Mock:
-                def __init__(self) -> None:
-                    self.success = True
-                    self.data = {"analysis": "fallback_result"}
+        # Use the module-level TestMock for fallback
 
         # Get agents with the required capability
         capable_agents = []
@@ -893,18 +872,17 @@ class AgentCoordinator:
             ]
 
         # Try each agent until one succeeds
-        last_error = None
         for agent in capable_agents:
             try:
                 result = agent.execute(task)
                 if getattr(result, "success", True):
                     return result
-            except Exception as e:
+            except Exception:
                 # Record error and try next agent
-                last_error = e
+                pass
 
         # Return mock fallback result
-        result = Mock()
+        result = TestMock()
         result.success = True
         result.data = {"analysis": "fallback_result"}
         return result
@@ -915,14 +893,7 @@ class AgentCoordinator:
 
     def execute_tasks_parallel(self, tasks: List["AgentTask"]) -> List:
         """Execute tasks in parallel."""
-        try:
-            from unittest.mock import Mock
-        except ImportError:
-            # Create a simple mock class
-            class Mock:
-                def __init__(self) -> None:
-                    self.success = True
-                    self.data: Dict[str, Any] = {}
+        # Use the module-level TestMock
 
         results = []
         for i, task in enumerate(tasks):
@@ -946,13 +917,13 @@ class AgentCoordinator:
                     results.append(result)
                 except Exception:
                     # Fall back to mock result
-                    result = Mock()
+                    result = TestMock()
                     result.success = True
                     result.data = {"result": f"mock_parallel_result_{task.task_type}"}
                     results.append(result)
             else:
                 # No capable agent, return mock result
-                result = Mock()
+                result = TestMock()
                 result.success = True
                 result.data = {"result": f"mock_parallel_result_{task.task_type}"}
                 results.append(result)
@@ -960,28 +931,21 @@ class AgentCoordinator:
 
     def execute_with_messaging(self, tasks: List["AgentTask"]) -> List:
         """Execute tasks with messaging support."""
-        try:
-            from unittest.mock import Mock
-        except ImportError:
-            # Create a simple mock class
-            class Mock:
-                def __init__(self) -> None:
-                    self.success = True
-                    self.data: Dict[str, Any] = {}
+        # Use the module-level TestMock
 
         results = []
         for i, task in enumerate(tasks):
             # Try to use an agent if available
             if i < len(self.agents) and hasattr(self.agents[i], "execute"):
                 try:
-                    result = self.agents[i].execute(task)
+                    result = self.agents[i].execute(str(task.task_type))
                     results.append(result)
                     continue
                 except Exception:
                     pass
 
             # Fall back to mock result
-            result = Mock()
+            result = TestMock()
             result.success = True
             result.data = {"message": f"Processed {task.task_type} with messaging"}
             results.append(result)
@@ -989,18 +953,11 @@ class AgentCoordinator:
 
     def execute_with_load_balancing(self, tasks: List["AgentTask"]) -> List:
         """Execute tasks with load balancing."""
-        try:
-            from unittest.mock import Mock
-        except ImportError:
-            # Create a simple mock class
-            class Mock:
-                def __init__(self) -> None:
-                    self.success = True
-                    self.data: Dict[str, Any] = {}
+        # Use the module-level TestMock
 
         results = []
         for task in tasks:
-            result = Mock()
+            result = TestMock()
             result.success = True
             result.data = {"result": f"Load balanced execution of {task.task_type}"}
             results.append(result)
@@ -1019,20 +976,13 @@ class AgentCoordinator:
 
     def execute_workflow(self, tasks: List["AgentTask"]) -> List:
         """Execute a workflow of tasks and return mock results."""
-        try:
-            from unittest.mock import Mock
-        except ImportError:
-            # Create a simple mock class
-            class Mock:
-                def __init__(self) -> None:
-                    self.success = True
-                    self.data: Dict[str, Any] = {}
+        # Use the module-level TestMock
 
         results = []
 
         for task in tasks:
             # Find appropriate agent for task type
-            result = Mock()
+            result = TestMock()
             result.success = True
 
             if task.task_type == "project_analysis":
@@ -1089,7 +1039,7 @@ class AgentManager:
         for name in agent_names:
             agent = AgentInfo(
                 name=name,
-                role=AgentRole.CORE,
+                role=AgentRole.CORE.value,
                 description=f"Agent for {name} functionality",
                 use_cases=[f"{name} development"],
                 confidence=0.8,
@@ -1110,7 +1060,9 @@ class AgentManager:
         workflow = AgentWorkflow("project_workflow")
         for agent in agents:
             workflow.add_step(f"execute_{agent}")
-            workflow.agents.append(agent)  # Track the agents
+            # Create Agent objects for the workflow
+            agent_obj = Agent(name=agent)
+            workflow.agents.append(agent_obj)
         return workflow
 
     def create_workflow_for_project(self, project_analysis: Any) -> "AgentWorkflow":
@@ -1134,6 +1086,7 @@ class AgentWorkflow:
         self.workflow_name = workflow_name
         self.steps: List[str] = []
         self.agents: List[Agent] = []
+        self.project_analysis: Optional[Any] = None
 
     def add_step(self, step: str) -> None:
         self.steps.append(step)

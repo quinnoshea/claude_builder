@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
+
 DEPENDENCY_NAME_CANNOT_BE_EMPTY = "Dependency name cannot be empty"
 INVALID_DEPENDENCY_TYPE = "Invalid dependency type"
 PATH_CANNOT_BE_EMPTY = "Path cannot be empty"
@@ -30,6 +31,7 @@ class ProjectType(Enum):
     DESKTOP_APP = "desktop_app"
     MOBILE_APP = "mobile_app"
     GAME = "game"
+    APPLICATION = "application"  # Generic application type
     UNKNOWN = "unknown"
 
 
@@ -141,6 +143,9 @@ class ProjectAnalysis:
     warnings: List[str] = field(default_factory=list)
     suggestions: List[str] = field(default_factory=list)
 
+    # Agent configuration
+    agent_configuration: Optional["AgentSelection"] = None
+
     @property
     def language(self) -> Optional[str]:
         """Primary language shorthand."""
@@ -204,15 +209,41 @@ class GitIntegrationMode(Enum):
 
 
 @dataclass
+class AgentInfo:
+    """Information about an agent."""
+
+    name: str
+    description: str = ""
+    category: str = "general"
+    confidence: float = 1.0
+
+    # Additional fields for compatibility
+    role: Optional[str] = None
+    use_cases: List[str] = field(default_factory=list)
+    dependencies: List[str] = field(default_factory=list)
+    priority: int = 1
+
+
+@dataclass
 class AgentSelection:
     """Selected agents for a project."""
 
-    core_agents: List[str] = field(default_factory=list)
-    specialized_agents: List[str] = field(default_factory=list)
-    workflow_agents: List[str] = field(default_factory=list)
-    custom_agents: List[str] = field(default_factory=list)
+    core_agents: List[AgentInfo] = field(default_factory=list)
+    domain_agents: List[AgentInfo] = field(default_factory=list)
+    workflow_agents: List[AgentInfo] = field(default_factory=list)
+    custom_agents: List[AgentInfo] = field(default_factory=list)
     agent_priorities: Dict[str, int] = field(default_factory=dict)
     coordination_patterns: Dict[str, List[str]] = field(default_factory=dict)
+
+    @property
+    def all_agents(self) -> List[AgentInfo]:
+        """Get all agents combined."""
+        return (
+            self.core_agents
+            + self.domain_agents
+            + self.workflow_agents
+            + self.custom_agents
+        )
 
 
 @dataclass
@@ -312,26 +343,6 @@ class AnalysisResult:
         if self.analysis_timestamp is None:
             self.analysis_timestamp = datetime.now()
 
-        # Handle project_info dictionary
-        if isinstance(self.project_info, dict):
-            self.project_info = ProjectInfo(**self.project_info)
-
-        # Handle frameworks list of dictionaries
-        if self.frameworks and isinstance(self.frameworks[0], dict):
-            self.frameworks = [
-                TestFrameworkInfo(**f) for f in self.frameworks if isinstance(f, dict)
-            ]
-
-        # Handle dependencies list of dictionaries
-        if self.dependencies and isinstance(self.dependencies[0], dict):
-            self.dependencies = [
-                DependencyInfo(**d) for d in self.dependencies if isinstance(d, dict)
-            ]
-
-        # Handle file_structure dictionary
-        if isinstance(self.file_structure, dict):
-            self.file_structure = FileStructure(**self.file_structure)
-
     def dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
@@ -379,9 +390,8 @@ class DependencyInfo:
             raise ValueError(DEPENDENCY_NAME_CANNOT_BE_EMPTY)
 
         if self.dependency_type not in self.VALID_DEPENDENCY_TYPES:
-            raise ValueError(
-                f"{INVALID_DEPENDENCY_TYPE}: {self.dependency_type}. Valid types: {', '.join(self.VALID_DEPENDENCY_TYPES)}"
-            )
+            msg = f"{INVALID_DEPENDENCY_TYPE}: {self.dependency_type}. Valid types: {', '.join(self.VALID_DEPENDENCY_TYPES)}"
+            raise ValueError(msg)
 
     def is_dev_dependency(self) -> bool:
         """Check if this is a development dependency."""
@@ -422,9 +432,8 @@ class FileStructure:
             raise ValueError(PATH_CANNOT_BE_EMPTY)
 
         if self.file_type not in self.VALID_FILE_TYPES:
-            raise ValueError(
-                f"{INVALID_FILE_TYPE}: {self.file_type}. Valid types: {', '.join(self.VALID_FILE_TYPES)}"
-            )
+            msg = f"{INVALID_FILE_TYPE}: {self.file_type}. Valid types: {', '.join(self.VALID_FILE_TYPES)}"
+            raise ValueError(msg)
 
     def is_directory(self) -> bool:
         """Check if this represents a directory."""
@@ -470,14 +479,12 @@ class GenerationConfig:
     def validate(self) -> None:
         """Validate the configuration."""
         if self.output_format not in self.VALID_OUTPUT_FORMATS:
-            raise ValueError(
-                f"{INVALID_OUTPUT_FORMAT}: {self.output_format}. Valid formats: {', '.join(self.VALID_OUTPUT_FORMATS)}"
-            )
+            msg = f"{INVALID_OUTPUT_FORMAT}: {self.output_format}. Valid formats: {', '.join(self.VALID_OUTPUT_FORMATS)}"
+            raise ValueError(msg)
 
         if self.template_variant not in self.VALID_TEMPLATE_VARIANTS:
-            raise ValueError(
-                f"{INVALID_TEMPLATE_VARIANT}: {self.template_variant}. Valid variants: {', '.join(self.VALID_TEMPLATE_VARIANTS)}"
-            )
+            msg = f"{INVALID_TEMPLATE_VARIANT}: {self.template_variant}. Valid variants: {', '.join(self.VALID_TEMPLATE_VARIANTS)}"
+            raise ValueError(msg)
 
     def dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
@@ -528,9 +535,8 @@ class ProjectInfo:
             raise ValueError(PROJECT_NAME_CANNOT_BE_EMPTY)
 
         if self.project_type and self.project_type not in self.VALID_PROJECT_TYPES:
-            raise ValueError(
-                f"{INVALID_PROJECT_TYPE}: {self.project_type}. Valid types: {', '.join(self.VALID_PROJECT_TYPES)}"
-            )
+            msg = f"{INVALID_PROJECT_TYPE}: {self.project_type}. Valid types: {', '.join(self.VALID_PROJECT_TYPES)}"
+            raise ValueError(msg)
 
     def dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""

@@ -1,4 +1,55 @@
 """Models package - compatibility layer."""
 
 # Re-export core models for backward compatibility
-from claude_builder.core.models import *
+from claude_builder.core.models import (
+    AgentInfo,
+    AgentSelection,
+    AnalysisResult,
+    ArchitecturePattern,
+    ClaudeMentionPolicy,
+    ComplexityLevel,
+    DependencyInfo,
+    DevelopmentEnvironment,
+    DomainInfo,
+    ExecutionResult,
+    FileStructure,
+    FileSystemInfo,
+    FrameworkInfo,
+    GeneratedContent,
+    GenerationConfig,
+    GitIntegrationMode,
+    LanguageInfo,
+    ProjectAnalysis,
+    ProjectInfo,
+    ProjectType,
+    TemplateRequest,
+    TestFrameworkInfo,
+    ValidationResult,
+)
+
+
+__all__ = [
+    "AnalysisResult",
+    "ArchitecturePattern",
+    "AgentInfo",
+    "AgentSelection",
+    "ClaudeMentionPolicy",
+    "ComplexityLevel",
+    "DependencyInfo",
+    "DevelopmentEnvironment",
+    "DomainInfo",
+    "ExecutionResult",
+    "FileStructure",
+    "FileSystemInfo",
+    "FrameworkInfo",
+    "GeneratedContent",
+    "GenerationConfig",
+    "GitIntegrationMode",
+    "LanguageInfo",
+    "ProjectAnalysis",
+    "ProjectInfo",
+    "ProjectType",
+    "TemplateRequest",
+    "TestFrameworkInfo",
+    "ValidationResult",
+]

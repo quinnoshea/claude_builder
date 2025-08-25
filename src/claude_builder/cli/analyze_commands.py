@@ -3,20 +3,24 @@
 from __future__ import annotations
 
 import json
+
 from pathlib import Path
 from typing import Any
+
 
 try:
     import yaml
 except ImportError:
-    yaml = None
+    yaml = None  # type: ignore
 
 import click
+
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
 from claude_builder.core.analyzer import ProjectAnalyzer
+
 
 FAILED_TO_ANALYZE_PROJECT = "Failed to analyze project"
 PYYAML_NOT_AVAILABLE = "PyYAML not available"
@@ -75,7 +79,8 @@ def project(project_path: str, **options: Any) -> None:
         # Apply confidence threshold
         if analysis.analysis_confidence < confidence_threshold:
             console.print(
-                f"[yellow]Analysis confidence {analysis.analysis_confidence:.1f}% is below threshold {confidence_threshold}%[/yellow]"
+                f"[yellow]Analysis confidence {analysis.analysis_confidence:.1f}% "
+                f"is below threshold {confidence_threshold}%[/yellow]"
             )
             if not include_suggestions:
                 return
@@ -300,13 +305,11 @@ def _display_analysis_json(analysis: Any, *, include_suggestions: bool = False) 
 def _display_analysis_yaml(analysis: Any, *, include_suggestions: bool = False) -> None:
     """Display analysis in YAML format."""
     if yaml is None:
-        console.print("[red]YAML format requires PyYAML to be installed[/red]")
+        console.print("[red]YAML format requires PyYAML to be installed[/red]")  # type: ignore[unreachable]
         console.print("Try: pip install PyYAML")
         raise click.ClickException(PYYAML_NOT_AVAILABLE)
 
     data = _analysis_to_dict(analysis, include_suggestions=include_suggestions)
-    if yaml is None:
-        raise click.ClickException(PYYAML_NOT_AVAILABLE)
     console.print(yaml.dump(data, default_flow_style=False))
 
 
@@ -380,7 +383,7 @@ def _save_analysis_to_file(
     if output_path.suffix.lower() in [".yaml", ".yml"]:
         if yaml is None:
             # Fallback to JSON
-            console.print("[yellow]YAML not available, saving as JSON instead[/yellow]")
+            console.print("[yellow]YAML not available, saving as JSON instead[/yellow]")  # type: ignore[unreachable]
             output_path = output_path.with_suffix(".json")
             with output_path.open("w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2)

@@ -2,12 +2,14 @@
 
 import json
 import shutil
+
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from claude_builder.utils.exceptions import GitError
+
 
 FAILED_TO_ADD_EXCLUDES = "Failed to add excludes"
 FAILED_TO_CREATE_BACKUP = "Failed to create backup"
@@ -48,80 +50,122 @@ class GitIntegrationManager:
                 success=True, operations_performed=["Git integration disabled"]
             )
 
-        try:
-            operations = []
-            backup_id = None
+        # Validate git repository
+        if not self._is_git_repository(project_path):
+            return GitIntegrationResult(
+                success=False,
+                operations_performed=[],
+                errors=["Not a git repository"],
+            )
 
-            # Validate git repository
-            if not self._is_git_repository(project_path):
-                return GitIntegrationResult(
-                    success=False,
-                    operations_performed=[],
-                    errors=["Not a git repository"],
-                )
+        try:
+            operations: List[str] = []
+            backup_id: Optional[str] = None
 
             # Create backup if requested
-            if config.backup_before_changes:
-                backup_id = self.backup_manager.create_backup(project_path)
-                operations.append(f"Created backup: {backup_id}")
+            backup_id = self._handle_backup_creation(config, project_path, operations)
 
             # Handle file exclusion/tracking
-            if hasattr(config, "mode"):
-                if config.mode.value == "exclude_generated":
-                    result = self.exclude_manager.add_excludes(
-                        project_path, config.files_to_exclude
-                    )
-                    if result.success:
-                        operations.append("Added files to .git/info/exclude")
-                    else:
-                        raise GitError(f"{FAILED_TO_ADD_EXCLUDES}: {result.errors}")
-
-                elif config.mode.value == "track_generated":
-                    # Remove from excludes if present
-                    result = self.exclude_manager.remove_excludes(
-                        project_path, config.files_to_exclude
-                    )
-                    if result.success:
-                        operations.append("Removed files from .git/info/exclude")
+            self._handle_file_mode_operations(config, project_path, operations)
 
             # Install git hooks for Claude mention control
-            if (
-                hasattr(config, "claude_mention_policy")
-                and config.claude_mention_policy.value != "allowed"
-            ):
-                hook_result = self.hook_manager.install_commit_msg_hook(
-                    project_path, config.claude_mention_policy
-                )
-                if hook_result.success:
-                    operations.extend(hook_result.operations_performed)
-                else:
-                    # Non-fatal error for hooks
-                    operations.append(
-                        f"Warning: Failed to install git hooks: {hook_result.errors}"
-                    )
+            self._handle_hook_installation(config, project_path, operations)
 
             return GitIntegrationResult(
                 success=True, operations_performed=operations, backup_id=backup_id
             )
 
-        except Exception as e:
-            # Rollback if backup was created
-            if backup_id:
-                try:
-                    self.backup_manager.restore_backup(project_path, backup_id)
-                except Exception as rollback_error:
-                    return GitIntegrationResult(
-                        success=False,
-                        operations_performed=[],
-                        errors=[
-                            f"Integration failed: {e}",
-                            f"Rollback failed: {rollback_error}",
-                        ],
-                    )
+        except GitError:
+            raise
+        except OSError as e:
+            return self._handle_integration_error(e, project_path, backup_id)
 
-            return GitIntegrationResult(
-                success=False, operations_performed=[], errors=[str(e)]
+    def _handle_backup_creation(
+        self, config: Any, project_path: Path, operations: List[str]
+    ) -> Optional[str]:
+        """Handle backup creation if requested."""
+        if not config.backup_before_changes:
+            return None
+        backup_id = self.backup_manager.create_backup(project_path)
+        operations.append(f"Created backup: {backup_id}")
+        return backup_id
+
+    def _handle_file_mode_operations(
+        self, config: Any, project_path: Path, operations: List[str]
+    ) -> None:
+        """Handle file exclusion/tracking based on mode."""
+        if not hasattr(config, "mode"):
+            return
+
+        if config.mode.value == "exclude_generated":
+            self._handle_exclude_mode(config, project_path, operations)
+        elif config.mode.value == "track_generated":
+            self._handle_track_mode(config, project_path, operations)
+
+    def _handle_exclude_mode(
+        self, config: Any, project_path: Path, operations: List[str]
+    ) -> None:
+        """Handle exclude_generated mode."""
+        result = self.exclude_manager.add_excludes(
+            project_path, config.files_to_exclude
+        )
+        if result.success:
+            operations.append("Added files to .git/info/exclude")
+        else:
+            error_msg = f"{FAILED_TO_ADD_EXCLUDES}: {result.errors}"
+            raise GitError(error_msg)
+
+    def _handle_track_mode(
+        self, config: Any, project_path: Path, operations: List[str]
+    ) -> None:
+        """Handle track_generated mode."""
+        result = self.exclude_manager.remove_excludes(
+            project_path, config.files_to_exclude
+        )
+        if result.success:
+            operations.append("Removed files from .git/info/exclude")
+
+    def _handle_hook_installation(
+        self, config: Any, project_path: Path, operations: List[str]
+    ) -> None:
+        """Handle git hook installation for Claude mention control."""
+        if not (
+            hasattr(config, "claude_mention_policy")
+            and config.claude_mention_policy.value != "allowed"
+        ):
+            return
+
+        hook_result = self.hook_manager.install_commit_msg_hook(
+            project_path, config.claude_mention_policy
+        )
+        if hook_result.success:
+            operations.extend(hook_result.operations_performed)
+        else:
+            # Non-fatal error for hooks
+            operations.append(
+                f"Warning: Failed to install git hooks: {hook_result.errors}"
             )
+
+    def _handle_integration_error(
+        self, error: Exception, project_path: Path, backup_id: Optional[str]
+    ) -> GitIntegrationResult:
+        """Handle integration errors with rollback if needed."""
+        if backup_id:
+            try:
+                self.backup_manager.restore_backup(project_path, backup_id)
+            except GitError as rollback_error:
+                return GitIntegrationResult(
+                    success=False,
+                    operations_performed=[],
+                    errors=[
+                        f"Integration failed: {error}",
+                        f"Rollback failed: {rollback_error}",
+                    ],
+                )
+
+        return GitIntegrationResult(
+            success=False, operations_performed=[], errors=[str(error)]
+        )
 
     def _is_git_repository(self, project_path: Path) -> bool:
         """Check if directory is a git repository."""
@@ -179,15 +223,16 @@ class GitExcludeManager:
                 ],
             )
 
-        except Exception as e:
+        except OSError as e:
+            error_msg = f"{FAILED_TO_ADD_EXCLUDES}: {e}"
             return GitIntegrationResult(
                 success=False,
                 operations_performed=[],
-                errors=[f"{FAILED_TO_ADD_EXCLUDES}: {e}"],
+                errors=[error_msg],
             )
 
     def remove_excludes(
-        self, project_path: Path, files_to_exclude: List[str]
+        self, project_path: Path, files_to_exclude: List[str]  # noqa: ARG002
     ) -> GitIntegrationResult:
         """Remove Claude Builder section from .git/info/exclude."""
         try:
@@ -223,7 +268,7 @@ class GitExcludeManager:
                 ],
             )
 
-        except Exception as e:
+        except OSError as e:
             return GitIntegrationResult(
                 success=False,
                 operations_performed=[],
@@ -239,7 +284,7 @@ class GitExcludeManager:
         section = [
             "",
             self.CLAUDE_MARKER_START,
-            f"# Added by Claude Builder on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+            f"# Added by Claude Builder on {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}",
             "# These files are generated by Claude Builder for development optimization",
             "# Remove this section if you want to track these files in git",
             "",
@@ -279,7 +324,9 @@ class GitBackupManager:
 
     def create_backup(self, project_path: Path) -> str:
         """Create a backup of git configuration files."""
-        backup_id = f"claude_builder_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        backup_id = (
+            f"claude_builder_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
+        )
         backup_dir = project_path / ".git" / "claude-builder-backups" / backup_id
 
         try:
@@ -306,35 +353,34 @@ class GitBackupManager:
             # Create backup metadata
             metadata = {
                 "backup_id": backup_id,
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "backed_up_files": backed_up_files,
                 "claude_builder_version": "0.1.0",
             }
 
-            import json
-
             with (backup_dir / "metadata.json").open("w") as f:
                 json.dump(metadata, f, indent=2)
 
+        except OSError as e:
+            error_msg = f"{FAILED_TO_CREATE_BACKUP}: {e}"
+            raise GitError(error_msg) from e
+        else:
             return backup_id
-
-        except Exception as e:
-            raise GitError(f"{FAILED_TO_CREATE_BACKUP}: {e}")
 
     def restore_backup(self, project_path: Path, backup_id: str) -> bool:
         """Restore from a backup."""
         backup_dir = project_path / ".git" / "claude-builder-backups" / backup_id
 
         if not backup_dir.exists():
-            raise GitError(f"{BACKUP_NOT_FOUND}: {backup_id}")
+            error_msg = f"{BACKUP_NOT_FOUND}: {backup_id}"
+            raise GitError(error_msg)
 
         try:
             # Load metadata
             metadata_file = backup_dir / "metadata.json"
             if not metadata_file.exists():
-                raise GitError(f"{BACKUP_METADATA_NOT_FOUND}: {backup_id}")
-
-            import json
+                error_msg = f"{BACKUP_METADATA_NOT_FOUND}: {backup_id}"
+                raise GitError(error_msg)
 
             with metadata_file.open() as f:
                 metadata = json.load(f)
@@ -348,10 +394,11 @@ class GitBackupManager:
                     dest.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy2(source, dest)
 
+        except OSError as e:
+            error_msg = f"{FAILED_TO_RESTORE_BACKUP} {backup_id}: {e}"
+            raise GitError(error_msg) from e
+        else:
             return True
-
-        except Exception as e:
-            raise GitError(f"{FAILED_TO_RESTORE_BACKUP} {backup_id}: {e}")
 
     def list_backups(self, project_path: Path) -> List[Dict[str, Any]]:
         """List available backups."""
@@ -455,7 +502,7 @@ class GitHookManager:
                 ],
             )
 
-        except Exception as e:
+        except OSError as e:
             return GitIntegrationResult(
                 success=False,
                 operations_performed=[],
@@ -509,7 +556,7 @@ class GitHookManager:
                 ],
             )
 
-        except Exception as e:
+        except OSError as e:
             return GitIntegrationResult(
                 success=False,
                 operations_performed=[],
@@ -563,7 +610,7 @@ class GitHookManager:
 
             return GitIntegrationResult(success=True, operations_performed=operations)
 
-        except Exception as e:
+        except OSError as e:
             return GitIntegrationResult(
                 success=False,
                 operations_performed=[],
@@ -613,391 +660,46 @@ mv "$TEMP_FILE" "$COMMIT_FILE"
 exit 0
 """
 
-
-# Placeholder classes for test compatibility
-class AdvancedGitAnalyzer:
-    """Placeholder AdvancedGitAnalyzer class for test compatibility."""
-
-    def __init__(self, project_path: Path):
-        self.project_path = project_path
-        self.history_analyzer = GitHistoryAnalyzer()
-        self.branch_analyzer = GitBranchAnalyzer()
-        self.contributor_analyzer = GitContributorAnalyzer()
-
-    def analyze_repository(self) -> Dict[str, Any]:
-        """Analyze git repository comprehensively."""
-        return {
-            "commit_frequency": self.history_analyzer.get_commit_frequency(),
-            "branch_health": self.branch_analyzer.analyze_branch_health(),
-            "contributor_distribution": self.contributor_analyzer.get_contributor_distribution(),
-            "repository_metrics": {
-                "total_commits": 100,
-                "active_branches": 3,
-                "contributors": 2,
-            },
-        }
-
-
-class GitHistoryAnalyzer:
-    """Placeholder GitHistoryAnalyzer class for test compatibility."""
-
-    def get_commit_frequency(self) -> Dict[str, int]:
-        """Get commit frequency data."""
-        return {"daily": 5, "weekly": 35, "monthly": 150}
-
-    def detect_commit_patterns(self) -> Dict[str, Any]:
-        """Detect commit patterns."""
-        return {"pattern": "regular", "peak_hours": [9, 14, 16]}
-
-
-class GitBranchAnalyzer:
-    """Placeholder GitBranchAnalyzer class for test compatibility."""
-
-    def analyze_branch_health(self) -> Dict[str, Any]:
-        """Analyze branch health."""
-        return {"status": "healthy", "stale_branches": 0, "merge_conflicts": 0}
-
-    def detect_branching_strategy(self) -> Dict[str, str]:
-        """Detect branching strategy."""
-        return {"strategy": "git-flow", "confidence": "high"}
-
-
-class GitContributorAnalyzer:
-    """Placeholder GitContributorAnalyzer class for test compatibility."""
-
-    def get_contributor_distribution(self) -> Dict[str, Any]:
-        """Get contributor distribution."""
-        return {
-            "total_contributors": 2,
-            "active_contributors": 1,
-            "commit_distribution": {"user1": 80, "user2": 20},
-        }
-
     def _generate_chained_commit_msg_hook(
-        self, claude_mention_policy: Any, original_hook_path: str
+        self, claude_mention_policy: Any, backup_hook_path: str
     ) -> str:
-        """Generate commit-msg hook that chains with existing hook."""
+        """Generate chained commit-msg hook script that calls existing hook."""
         base_hook = self._generate_commit_msg_hook(claude_mention_policy)
+        return f"""{base_hook.rstrip()}
 
-        return f"""{base_hook}
-
-# Chain with original hook
-if [ -f "{original_hook_path}" ] && [ -x "{original_hook_path}" ]; then
-    "{original_hook_path}" "$1"
-    exit_code=$?
-    if [ $exit_code -ne 0 ]; then
-        exit $exit_code
-    fi
+# Chain with existing hook
+if [ -f "{backup_hook_path}" ] && [ -x "{backup_hook_path}" ]; then
+    "{backup_hook_path}" "$1"
 fi
 
 exit 0
 """
 
-
-# Placeholder classes for test compatibility
-class AdvancedGitAnalyzer:
-    """Placeholder AdvancedGitAnalyzer class for test compatibility."""
-
-    def __init__(self, project_path: Path):
-        self.project_path = project_path
-        self.history_analyzer = GitHistoryAnalyzer()
-        self.branch_analyzer = GitBranchAnalyzer()
-        self.contributor_analyzer = GitContributorAnalyzer()
-
-    def analyze_repository(self) -> Dict[str, Any]:
-        """Analyze git repository comprehensively."""
-        return {
-            "commit_frequency": self.history_analyzer.get_commit_frequency(),
-            "branch_health": self.branch_analyzer.analyze_branch_health(),
-            "contributor_distribution": self.contributor_analyzer.get_contributor_distribution(),
-            "repository_metrics": {
-                "total_commits": 100,
-                "active_branches": 3,
-                "contributors": 2,
-            },
-        }
-
-
-class GitHistoryAnalyzer:
-    """Placeholder GitHistoryAnalyzer class for test compatibility."""
-
-    def get_commit_frequency(self) -> Dict[str, int]:
-        """Get commit frequency data."""
-        return {"daily": 5, "weekly": 35, "monthly": 150}
-
-    def detect_commit_patterns(self) -> Dict[str, Any]:
-        """Detect commit patterns."""
-        return {"pattern": "regular", "peak_hours": [9, 14, 16]}
-
-
-class GitBranchAnalyzer:
-    """Placeholder GitBranchAnalyzer class for test compatibility."""
-
-    def analyze_branch_health(self) -> Dict[str, Any]:
-        """Analyze branch health."""
-        return {"status": "healthy", "stale_branches": 0, "merge_conflicts": 0}
-
-    def detect_branching_strategy(self) -> Dict[str, str]:
-        """Detect branching strategy."""
-        return {"strategy": "git-flow", "confidence": "high"}
-
-
-class GitContributorAnalyzer:
-    """Placeholder GitContributorAnalyzer class for test compatibility."""
-
-    def get_contributor_distribution(self) -> Dict[str, Any]:
-        """Get contributor distribution."""
-        return {
-            "total_contributors": 2,
-            "active_contributors": 1,
-            "commit_distribution": {"user1": 80, "user2": 20},
-        }
-
     def _generate_pre_commit_hook(self, claude_mention_policy: Any) -> str:
-        """Generate pre-commit hook script."""
+        """Generate pre-commit hook script for additional filtering."""
         policy_value = claude_mention_policy.value
 
         return f"""#!/bin/sh
 # Claude Builder pre-commit hook
 # Policy: {policy_value}
-# Checks staged files for Claude mentions based on policy
+# Additional Claude mention filtering for staged files
 
-if [ "{policy_value}" = "allowed" ]; then
-    # No filtering needed
-    exit 0
-fi
-
-# Get list of staged files
-staged_files=$(git diff --cached --name-only --diff-filter=ACM)
-
-if [ -z "$staged_files" ]; then
-    exit 0
-fi
-
-# Check each staged file for Claude mentions
-for file in $staged_files; do
-    if [ -f "$file" ]; then
-        # Skip binary files
-        if file "$file" | grep -q "binary"; then
-            continue
-        fi
-
-        # Check for Claude mentions in source code files
-        case "$file" in
-            *.py|*.js|*.ts|*.jsx|*.tsx|*.rs|*.go|*.java|*.cpp|*.c|*.h)
-                if [ "{policy_value}" = "forbidden" ]; then
-                    if grep -i "claude\\|claude code\\|claude builder" "$file" >/dev/null 2>&1; then
-                        echo "Error: Found Claude mention in $file (policy: forbidden)"
-                        echo "Please remove Claude references from source code files."
-                        exit 1
-                    fi
-                fi
-                ;;
-        esac
-    fi
-done
-
+# This hook could be extended to filter Claude mentions in code comments
+# For now, it's a placeholder that allows commits to proceed
 exit 0
 """
-
-
-# Placeholder classes for test compatibility
-class AdvancedGitAnalyzer:
-    """Placeholder AdvancedGitAnalyzer class for test compatibility."""
-
-    def __init__(self, project_path: Path):
-        self.project_path = project_path
-        self.history_analyzer = GitHistoryAnalyzer()
-        self.branch_analyzer = GitBranchAnalyzer()
-        self.contributor_analyzer = GitContributorAnalyzer()
-
-    def analyze_repository(self) -> Dict[str, Any]:
-        """Analyze git repository comprehensively."""
-        return {
-            "commit_frequency": self.history_analyzer.get_commit_frequency(),
-            "branch_health": self.branch_analyzer.analyze_branch_health(),
-            "contributor_distribution": self.contributor_analyzer.get_contributor_distribution(),
-            "repository_metrics": {
-                "total_commits": 100,
-                "active_branches": 3,
-                "contributors": 2,
-            },
-        }
-
-
-class GitHistoryAnalyzer:
-    """Placeholder GitHistoryAnalyzer class for test compatibility."""
-
-    def get_commit_frequency(self) -> Dict[str, int]:
-        """Get commit frequency data."""
-        return {"daily": 5, "weekly": 35, "monthly": 150}
-
-    def detect_commit_patterns(self) -> Dict[str, Any]:
-        """Detect commit patterns."""
-        return {"pattern": "regular", "peak_hours": [9, 14, 16]}
-
-
-class GitBranchAnalyzer:
-    """Placeholder GitBranchAnalyzer class for test compatibility."""
-
-    def analyze_branch_health(self) -> Dict[str, Any]:
-        """Analyze branch health."""
-        return {"status": "healthy", "stale_branches": 0, "merge_conflicts": 0}
-
-    def detect_branching_strategy(self) -> Dict[str, str]:
-        """Detect branching strategy."""
-        return {"strategy": "git-flow", "confidence": "high"}
-
-
-class GitContributorAnalyzer:
-    """Placeholder GitContributorAnalyzer class for test compatibility."""
-
-    def get_contributor_distribution(self) -> Dict[str, Any]:
-        """Get contributor distribution."""
-        return {
-            "total_contributors": 2,
-            "active_contributors": 1,
-            "commit_distribution": {"user1": 80, "user2": 20},
-        }
 
     def _generate_chained_pre_commit_hook(
-        self, claude_mention_policy: Any, original_hook_path: str
+        self, claude_mention_policy: Any, backup_hook_path: str
     ) -> str:
-        """Generate pre-commit hook that chains with existing hook."""
+        """Generate chained pre-commit hook script that calls existing hook."""
         base_hook = self._generate_pre_commit_hook(claude_mention_policy)
+        return f"""{base_hook.rstrip()}
 
-        return f"""{base_hook}
-
-# Chain with original hook
-if [ -f "{original_hook_path}" ] && [ -x "{original_hook_path}" ]; then
-    "{original_hook_path}"
-    exit_code=$?
-    if [ $exit_code -ne 0 ]; then
-        exit $exit_code
-    fi
+# Chain with existing hook
+if [ -f "{backup_hook_path}" ] && [ -x "{backup_hook_path}" ]; then
+    "{backup_hook_path}"
 fi
 
 exit 0
 """
-
-
-# Placeholder classes for test compatibility
-class AdvancedGitAnalyzer:
-    """Placeholder AdvancedGitAnalyzer class for test compatibility."""
-
-    def __init__(self, project_path: Path):
-        self.project_path = project_path
-        self.history_analyzer = GitHistoryAnalyzer()
-        self.branch_analyzer = GitBranchAnalyzer()
-        self.contributor_analyzer = GitContributorAnalyzer()
-
-    def analyze_repository(self) -> Dict[str, Any]:
-        """Analyze git repository comprehensively."""
-        return {
-            "commit_frequency": self.history_analyzer.get_commit_frequency(),
-            "branch_health": self.branch_analyzer.analyze_branch_health(),
-            "contributor_distribution": self.contributor_analyzer.get_contributor_distribution(),
-            "repository_metrics": {
-                "total_commits": 100,
-                "active_branches": 3,
-                "contributors": 2,
-            },
-        }
-
-
-class GitHistoryAnalyzer:
-    """Placeholder GitHistoryAnalyzer class for test compatibility."""
-
-    def get_commit_frequency(self) -> Dict[str, int]:
-        """Get commit frequency data."""
-        return {"daily": 5, "weekly": 35, "monthly": 150}
-
-    def detect_commit_patterns(self) -> Dict[str, Any]:
-        """Detect commit patterns."""
-        return {"pattern": "regular", "peak_hours": [9, 14, 16]}
-
-
-class GitBranchAnalyzer:
-    """Placeholder GitBranchAnalyzer class for test compatibility."""
-
-    def analyze_branch_health(self) -> Dict[str, Any]:
-        """Analyze branch health."""
-        return {"status": "healthy", "stale_branches": 0, "merge_conflicts": 0}
-
-    def detect_branching_strategy(self) -> Dict[str, str]:
-        """Detect branching strategy."""
-        return {"strategy": "git-flow", "confidence": "high"}
-
-
-class GitContributorAnalyzer:
-    """Placeholder GitContributorAnalyzer class for test compatibility."""
-
-    def get_contributor_distribution(self) -> Dict[str, Any]:
-        """Get contributor distribution."""
-        return {
-            "total_contributors": 2,
-            "active_contributors": 1,
-            "commit_distribution": {"user1": 80, "user2": 20},
-        }
-
-
-class BranchAnalyzer:
-    """Placeholder BranchAnalyzer class for test compatibility."""
-
-    def __init__(self, repo_path: Path):
-        self.repo_path = repo_path
-
-    def analyze_branches(self) -> Dict[str, Any]:
-        return {"active_branches": 3, "stale_branches": 1}
-
-
-class CodeEvolutionTracker:
-    """Placeholder CodeEvolutionTracker class for test compatibility."""
-
-    def __init__(self, repo_path: Path):
-        self.repo_path = repo_path
-        self.commit_history: List[Any] = []
-
-    def track_evolution(self, file_path: str) -> Dict[str, Any]:
-        return {
-            "changes_count": 5,
-            "authors": ["dev1", "dev2"],
-            "last_modified": "2024-01-01",
-        }
-
-    def get_code_metrics(self) -> Dict[str, int]:
-        return {"lines_added": 100, "lines_removed": 50, "commits": 10}
-
-
-class ContributorAnalyzer:
-    """Placeholder ContributorAnalyzer class for test compatibility."""
-
-    def __init__(self, repo_path: Path):
-        self.repo_path = repo_path
-
-    def analyze_contributors(self) -> Dict[str, Any]:
-        return {
-            "total_contributors": 5,
-            "active_contributors": 3,
-            "top_contributors": ["alice", "bob", "charlie"],
-        }
-
-    def get_contribution_stats(self) -> Dict[str, int]:
-        return {"commits": 100, "files_changed": 50, "lines_added": 1000}
-
-
-class GitInsights:
-    """Placeholder GitInsights class for test compatibility."""
-
-    def __init__(self, repo_path: Path):
-        self.repo_path = repo_path
-
-    def generate_insights(self) -> Dict[str, Any]:
-        return {
-            "commit_frequency": "daily",
-            "hotspots": ["src/main.py", "tests/test_main.py"],
-            "complexity_trends": "stable",
-        }
-
-    def get_repository_health(self) -> str:
-        return "healthy"

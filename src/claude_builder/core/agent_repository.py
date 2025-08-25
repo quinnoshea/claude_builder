@@ -1,6 +1,7 @@
 """Agent repository management and scanning system for Claude Builder."""
 
 import re
+
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -11,6 +12,7 @@ import yaml
 
 from claude_builder.core.models import ProjectAnalysis
 from claude_builder.utils.exceptions import ConfigError
+
 
 # Error constants
 REPOSITORY_CONFIG_NOT_FOUND = "Repository configuration file not found"
@@ -67,8 +69,6 @@ class AgentDefinition:
             object.__setattr__(
                 self, "capabilities", ("General development assistance",)
             )
-        elif isinstance(self.capabilities, list):
-            object.__setattr__(self, "capabilities", tuple(self.capabilities))
 
         # Convert other lists to tuples for immutability
         for field_name in [

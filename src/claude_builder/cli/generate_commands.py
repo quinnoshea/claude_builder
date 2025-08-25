@@ -3,16 +3,19 @@
 from __future__ import annotations
 
 import json
+
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
+
 
 try:
     import yaml
 except ImportError:
-    yaml = None
+    yaml = None  # type: ignore[assignment]
 
 import click
+
 from rich.console import Console
 from rich.panel import Panel
 
@@ -20,6 +23,7 @@ from claude_builder.core.analyzer import ProjectAnalyzer
 from claude_builder.core.generator import DocumentGenerator
 from claude_builder.core.models import ProjectAnalysis
 from claude_builder.utils.exceptions import ClaudeBuilderError
+
 
 FAILED_TO_GENERATE_DOCUMENTATION = "Failed to generate documentation"
 FAILED_TO_GENERATE_AGENTS = "Failed to generate agents"
@@ -30,22 +34,108 @@ FAILED_TO_GENERATE_AGENTS_MD = "Failed to generate AGENTS.md"
 console = Console()
 
 
+def _filter_generated_content_by_sections(
+    generated_content: Any, sections_filter: list[str]
+) -> dict[str, str]:
+    """Filter generated content by specified sections."""
+    filtered_files = {}
+
+    for section in sections_filter:
+        section_lower = section.lower()
+
+        if section_lower == "claude":
+            filtered_files.update(
+                {
+                    k: v
+                    for k, v in generated_content.files.items()
+                    if "claude" in k.lower()
+                }
+            )
+        elif section_lower == "agents":
+            filtered_files.update(
+                {
+                    k: v
+                    for k, v in generated_content.files.items()
+                    if "agent" in k.lower()
+                }
+            )
+        elif section_lower == "docs":
+            filtered_files.update(
+                {
+                    k: v
+                    for k, v in generated_content.files.items()
+                    if k.endswith(".md") and "agent" not in k.lower()
+                }
+            )
+        else:
+            # Try to match by filename
+            filtered_files.update(
+                {
+                    k: v
+                    for k, v in generated_content.files.items()
+                    if section_lower in k.lower()
+                }
+            )
+
+    return filtered_files
+
+
+def _get_project_analysis(config: GenerateConfig, path: Path) -> Any:
+    """Get project analysis from file or by analyzing the project."""
+    if config.from_analysis:
+        analysis = _load_analysis_from_file(Path(config.from_analysis))
+        if config.verbose > 0:
+            console.print(
+                f"[green]Loaded analysis from: {config.from_analysis}[/green]"
+            )
+    else:
+        if config.verbose > 0:
+            console.print("[cyan]Analyzing project...[/cyan]")
+        analyzer = ProjectAnalyzer()
+        analysis = analyzer.analyze(path)
+
+    return analysis
+
+
+def _write_agent_files(agent_files: dict[str, str], output_path: Path) -> None:
+    """Write agent files to disk."""
+    if len(agent_files) == 1 and "AGENTS.md" in agent_files:
+        # Write single file
+        with output_path.open("w", encoding="utf-8") as f:
+            f.write(agent_files["AGENTS.md"])
+        console.print(f"[green]✓ Agent configuration written to: {output_path}[/green]")
+    else:
+        # Write multiple files
+        for filename, content in agent_files.items():
+            file_path = (
+                output_path.parent / filename
+                if output_path.is_file()
+                else output_path / filename
+            )
+            file_path.parent.mkdir(parents=True, exist_ok=True)
+            with file_path.open("w", encoding="utf-8") as f:
+                f.write(content)
+        console.print(
+            f"[green]✓ Agent files written to: {output_path.parent if output_path.is_file() else output_path}[/green]"
+        )
+
+
 @dataclass
 class GenerateConfig:
     """Configuration for generation commands."""
 
-    from_analysis: Optional[str] = None
-    template: Optional[str] = None
-    partial: Optional[str] = None
-    output_dir: Optional[str] = None
+    from_analysis: str | None = None
+    template: str | None = None
+    partial: str | None = None
+    output_dir: str | None = None
     output_format: str = "files"
     backup_existing: bool = False
     dry_run: bool = False
     verbose: int = 0
 
     # Additional options for specific commands
-    agents_dir: Optional[str] = None
-    output_file: Optional[str] = None
+    agents_dir: str | None = None
+    output_file: str | None = None
 
 
 @click.group()
@@ -83,9 +173,8 @@ def generate() -> None:
     help="Show what would be generated without creating files",
 )
 @click.option("--verbose", "-v", count=True, help="Verbose output")
-def docs(project_path: str, **kwargs) -> None:
+def docs(project_path: str, **kwargs: Any) -> None:
     """Generate documentation from project analysis."""
-    # Create config from kwargs
     config = GenerateConfig(**kwargs)
 
     try:
@@ -95,81 +184,32 @@ def docs(project_path: str, **kwargs) -> None:
             console.print(f"[cyan]Generating documentation for: {path}[/cyan]")
 
         # Get project analysis
-        if config.from_analysis:
-            analysis = _load_analysis_from_file(Path(config.from_analysis))
-            if config.verbose > 0:
-                console.print(
-                    f"[green]Loaded analysis from: {config.from_analysis}[/green]"
-                )
-        else:
-            if config.verbose > 0:
-                console.print("[cyan]Analyzing project...[/cyan]")
-            analyzer = ProjectAnalyzer()
-            analysis = analyzer.analyze(path)
+        analysis = _get_project_analysis(config, path)
 
         # Configure generator
-        generator_config = {}
+        generator_config = {"output_format": config.output_format}
         if config.template:
             generator_config["preferred_template"] = config.template
-        generator_config["output_format"] = config.output_format
 
-        # Apply partial generation filter
-        sections_filter = None
+        # Generate content
+        generator = DocumentGenerator(generator_config)
+        generated_content = generator.generate(analysis, path)
+
+        # Apply partial generation filter if specified
         if config.partial:
             sections_filter = [s.strip() for s in config.partial.split(",")]
             if config.verbose > 0:
                 console.print(
                     f"[yellow]Generating only sections: {sections_filter}[/yellow]"
                 )
-
-        # Generate content
-        generator = DocumentGenerator(generator_config)
-        generated_content = generator.generate(analysis, path)
-
-        # Apply sections filter
-        if sections_filter:
-            filtered_files = {}
-            for section in sections_filter:
-                # Map section names to files
-                if section.lower() == "claude":
-                    filtered_files.update(
-                        {
-                            k: v
-                            for k, v in generated_content.files.items()
-                            if "claude" in k.lower()
-                        }
-                    )
-                elif section.lower() == "agents":
-                    filtered_files.update(
-                        {
-                            k: v
-                            for k, v in generated_content.files.items()
-                            if "agent" in k.lower()
-                        }
-                    )
-                elif section.lower() == "docs":
-                    filtered_files.update(
-                        {
-                            k: v
-                            for k, v in generated_content.files.items()
-                            if k.endswith(".md") and "agent" not in k.lower()
-                        }
-                    )
-                else:
-                    # Try to match by filename
-                    filtered_files.update(
-                        {
-                            k: v
-                            for k, v in generated_content.files.items()
-                            if section.lower() in k.lower()
-                        }
-                    )
-
+            filtered_files = _filter_generated_content_by_sections(
+                generated_content, sections_filter
+            )
             generated_content.files = filtered_files
 
         # Display what would be generated
         if config.dry_run or config.verbose > 0:
-            _display_generation_preview(generated_content, analysis)
+            _display_generation_preview(generated_content)
 
         if config.dry_run:
             console.print("[yellow]Dry run complete - no files were created[/yellow]")
@@ -188,8 +228,9 @@ def docs(project_path: str, **kwargs) -> None:
         console.print(f"Output location: {output_path}")
 
     except Exception as e:
+        error_msg = f"{FAILED_TO_GENERATE_DOCUMENTATION}: {e}"
         console.print(f"[red]Error generating documentation: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_GENERATE_DOCUMENTATION}: {e}")
+        raise click.ClickException(error_msg) from e
 
 
 @generate.command()
@@ -211,9 +252,8 @@ def docs(project_path: str, **kwargs) -> None:
     help="Show what would be generated without creating files",
 )
 @click.option("--verbose", "-v", count=True, help="Verbose output")
-def agents(project_path: str, **kwargs) -> None:
+def agents(project_path: str, **kwargs: Any) -> None:
     """Generate agent configurations."""
-    # Create config from kwargs
     config = GenerateConfig(**kwargs)
 
     try:
@@ -223,17 +263,7 @@ def agents(project_path: str, **kwargs) -> None:
             console.print(f"[cyan]Generating agent configuration for: {path}[/cyan]")
 
         # Get project analysis
-        if config.from_analysis:
-            analysis = _load_analysis_from_file(Path(config.from_analysis))
-            if config.verbose > 0:
-                console.print(
-                    f"[green]Loaded analysis from: {config.from_analysis}[/green]"
-                )
-        else:
-            if config.verbose > 0:
-                console.print("[cyan]Analyzing project...[/cyan]")
-            analyzer = ProjectAnalyzer()
-            analysis = analyzer.analyze(path)
+        analysis = _get_project_analysis(config, path)
 
         # Generate agent configuration
         from claude_builder.core.agents import UniversalAgentSystem
@@ -278,144 +308,144 @@ def agents(project_path: str, **kwargs) -> None:
         output_path = (
             Path(config.output_file) if config.output_file else path / "AGENTS.md"
         )
-
-        if len(agent_files) == 1 and "AGENTS.md" in agent_files:
-            # Write single file
-            with output_path.open("w", encoding="utf-8") as f:
-                f.write(agent_files["AGENTS.md"])
-            console.print(
-                f"[green]✓ Agent configuration written to: {output_path}[/green]"
-            )
-        else:
-            # Write multiple files
-            for filename, content in agent_files.items():
-                file_path = (
-                    output_path.parent / filename
-                    if output_path.is_file()
-                    else output_path / filename
-                )
-                file_path.parent.mkdir(parents=True, exist_ok=True)
-                with file_path.open("w", encoding="utf-8") as f:
-                    f.write(content)
-            console.print(
-                f"[green]✓ Agent files written to: {output_path.parent if output_path.is_file() else output_path}[/green]"
-            )
+        _write_agent_files(agent_files, output_path)
 
     except Exception as e:
+        error_msg = f"{FAILED_TO_GENERATE_AGENTS}: {e}"
         console.print(f"[red]Error generating agents: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_GENERATE_AGENTS}: {e}")
+        raise click.ClickException(error_msg) from e
+
+
+def _load_data_from_file(analysis_file: Path) -> dict[str, Any]:
+    """Load raw data from analysis file."""
+    with analysis_file.open(encoding="utf-8") as f:
+        if analysis_file.suffix.lower() in [".yaml", ".yml"]:
+            if yaml is None:
+                msg = "PyYAML is required for YAML support"  # type: ignore[unreachable]
+                raise ImportError(msg)
+            return yaml.safe_load(f)  # type: ignore[no-any-return]
+        return json.load(f)  # type: ignore[no-any-return]
+
+
+def _populate_basic_fields(analysis: ProjectAnalysis, data: dict[str, Any]) -> None:
+    """Populate basic analysis fields."""
+    analysis.analysis_confidence = data.get("analysis_confidence", 0.0)
+    analysis.analysis_timestamp = data.get("analysis_timestamp")
+    analysis.analyzer_version = data.get("analyzer_version")
+
+
+def _populate_info_fields(analysis: ProjectAnalysis, data: dict[str, Any]) -> None:
+    """Populate language, framework, and domain info fields."""
+    # Language info
+    lang_data = data.get("language_info", {})
+    analysis.language_info.primary = lang_data.get("primary")
+    analysis.language_info.secondary = lang_data.get("secondary", [])
+    analysis.language_info.confidence = lang_data.get("confidence", 0.0)
+    analysis.language_info.file_counts = lang_data.get("file_counts", {})
+    analysis.language_info.total_lines = lang_data.get("total_lines", {})
+
+    # Framework info
+    fw_data = data.get("framework_info", {})
+    analysis.framework_info.primary = fw_data.get("primary")
+    analysis.framework_info.secondary = fw_data.get("secondary", [])
+    analysis.framework_info.confidence = fw_data.get("confidence", 0.0)
+    analysis.framework_info.version = fw_data.get("version")
+    analysis.framework_info.config_files = fw_data.get("config_files", [])
+
+    # Domain info
+    domain_data = data.get("domain_info", {})
+    analysis.domain_info.domain = domain_data.get("domain")
+    analysis.domain_info.confidence = domain_data.get("confidence", 0.0)
+    analysis.domain_info.indicators = domain_data.get("indicators", [])
+    analysis.domain_info.specialized_patterns = domain_data.get(
+        "specialized_patterns", []
+    )
+
+
+def _populate_enum_fields(analysis: ProjectAnalysis, data: dict[str, Any]) -> None:
+    """Populate enum-based fields with proper error handling."""
+    from claude_builder.core.models import (
+        ArchitecturePattern,
+        ComplexityLevel,
+        ProjectType,
+    )
+
+    try:
+        analysis.project_type = ProjectType(data.get("project_type", "unknown"))
+    except ValueError:
+        analysis.project_type = ProjectType.UNKNOWN
+
+    try:
+        analysis.complexity_level = ComplexityLevel(
+            data.get("complexity_level", "simple")
+        )
+    except ValueError:
+        analysis.complexity_level = ComplexityLevel.SIMPLE
+
+    try:
+        analysis.architecture_pattern = ArchitecturePattern(
+            data.get("architecture_pattern", "unknown")
+        )
+    except ValueError:
+        analysis.architecture_pattern = ArchitecturePattern.UNKNOWN
+
+
+def _populate_environment_fields(
+    analysis: ProjectAnalysis, data: dict[str, Any]
+) -> None:
+    """Populate development environment and filesystem fields."""
+    # Development environment
+    dev_data = data.get("development_environment", {})
+    analysis.dev_environment.package_managers = dev_data.get("package_managers", [])
+    analysis.dev_environment.testing_frameworks = dev_data.get("testing_frameworks", [])
+    analysis.dev_environment.linting_tools = dev_data.get("linting_tools", [])
+    analysis.dev_environment.ci_cd_systems = dev_data.get("ci_cd_systems", [])
+    analysis.dev_environment.containerization = dev_data.get("containerization", [])
+    analysis.dev_environment.databases = dev_data.get("databases", [])
+    analysis.dev_environment.documentation_tools = dev_data.get(
+        "documentation_tools", []
+    )
+
+    # Filesystem info
+    fs_data = data.get("filesystem_info", {})
+    analysis.filesystem_info.total_files = fs_data.get("total_files", 0)
+    analysis.filesystem_info.total_directories = fs_data.get("total_directories", 0)
+    analysis.filesystem_info.source_files = fs_data.get("source_files", 0)
+    analysis.filesystem_info.test_files = fs_data.get("test_files", 0)
+    analysis.filesystem_info.config_files = fs_data.get("config_files", 0)
+    analysis.filesystem_info.documentation_files = fs_data.get("documentation_files", 0)
+    analysis.filesystem_info.asset_files = fs_data.get("asset_files", 0)
+    analysis.filesystem_info.ignore_patterns = fs_data.get("ignore_patterns", [])
+    analysis.filesystem_info.root_files = fs_data.get("root_files", [])
 
 
 def _load_analysis_from_file(analysis_file: Path) -> ProjectAnalysis:
     """Load project analysis from file."""
     try:
-        with analysis_file.open(encoding="utf-8") as f:
-            if analysis_file.suffix.lower() in [".yaml", ".yml"]:
-                if yaml is None:
-                    raise ImportError("PyYAML is required for YAML support")
-                data = yaml.safe_load(f)
-            else:
-                data = json.load(f)
+        # Load raw data
+        data = _load_data_from_file(analysis_file)
 
-        # Reconstruct ProjectAnalysis object from dictionary
-        # This is a simplified version - in a production this would be more robust
+        # Create analysis object
         analysis = ProjectAnalysis(project_path=Path(data["project_path"]))
 
-        # Populate basic fields
-        analysis.analysis_confidence = data.get("analysis_confidence", 0.0)
-        analysis.analysis_timestamp = data.get("analysis_timestamp")
-        analysis.analyzer_version = data.get("analyzer_version")
-
-        # Language info
-        lang_data = data.get("language_info", {})
-        analysis.language_info.primary = lang_data.get("primary")
-        analysis.language_info.secondary = lang_data.get("secondary", [])
-        analysis.language_info.confidence = lang_data.get("confidence", 0.0)
-        analysis.language_info.file_counts = lang_data.get("file_counts", {})
-        analysis.language_info.total_lines = lang_data.get("total_lines", {})
-
-        # Framework info
-        fw_data = data.get("framework_info", {})
-        analysis.framework_info.primary = fw_data.get("primary")
-        analysis.framework_info.secondary = fw_data.get("secondary", [])
-        analysis.framework_info.confidence = fw_data.get("confidence", 0.0)
-        analysis.framework_info.version = fw_data.get("version")
-        analysis.framework_info.config_files = fw_data.get("config_files", [])
-
-        # Domain info
-        domain_data = data.get("domain_info", {})
-        analysis.domain_info.domain = domain_data.get("domain")
-        analysis.domain_info.confidence = domain_data.get("confidence", 0.0)
-        analysis.domain_info.indicators = domain_data.get("indicators", [])
-        analysis.domain_info.specialized_patterns = domain_data.get(
-            "specialized_patterns", []
-        )
-
-        # Enum fields
-        from claude_builder.core.models import (
-            ArchitecturePattern,
-            ComplexityLevel,
-            ProjectType,
-        )
-
-        try:
-            analysis.project_type = ProjectType(data.get("project_type", "unknown"))
-        except ValueError:
-            analysis.project_type = ProjectType.UNKNOWN
-
-        try:
-            analysis.complexity_level = ComplexityLevel(
-                data.get("complexity_level", "simple")
-            )
-        except ValueError:
-            analysis.complexity_level = ComplexityLevel.SIMPLE
-
-        try:
-            analysis.architecture_pattern = ArchitecturePattern(
-                data.get("architecture_pattern", "unknown")
-            )
-        except ValueError:
-            analysis.architecture_pattern = ArchitecturePattern.UNKNOWN
-
-        # Development environment
-        dev_data = data.get("development_environment", {})
-        analysis.dev_environment.package_managers = dev_data.get("package_managers", [])
-        analysis.dev_environment.testing_frameworks = dev_data.get(
-            "testing_frameworks", []
-        )
-        analysis.dev_environment.linting_tools = dev_data.get("linting_tools", [])
-        analysis.dev_environment.ci_cd_systems = dev_data.get("ci_cd_systems", [])
-        analysis.dev_environment.containerization = dev_data.get("containerization", [])
-        analysis.dev_environment.databases = dev_data.get("databases", [])
-        analysis.dev_environment.documentation_tools = dev_data.get(
-            "documentation_tools", []
-        )
-
-        # Filesystem info
-        fs_data = data.get("filesystem_info", {})
-        analysis.filesystem_info.total_files = fs_data.get("total_files", 0)
-        analysis.filesystem_info.total_directories = fs_data.get("total_directories", 0)
-        analysis.filesystem_info.source_files = fs_data.get("source_files", 0)
-        analysis.filesystem_info.test_files = fs_data.get("test_files", 0)
-        analysis.filesystem_info.config_files = fs_data.get("config_files", 0)
-        analysis.filesystem_info.documentation_files = fs_data.get(
-            "documentation_files", 0
-        )
-        analysis.filesystem_info.asset_files = fs_data.get("asset_files", 0)
-        analysis.filesystem_info.ignore_patterns = fs_data.get("ignore_patterns", [])
-        analysis.filesystem_info.root_files = fs_data.get("root_files", [])
+        # Populate fields using helper functions
+        _populate_basic_fields(analysis, data)
+        _populate_info_fields(analysis, data)
+        _populate_enum_fields(analysis, data)
+        _populate_environment_fields(analysis, data)
 
         # Warnings and suggestions
         analysis.warnings = data.get("warnings", [])
         analysis.suggestions = data.get("suggestions", [])
 
+    except Exception as e:
+        error_msg = f"{FAILED_TO_LOAD_ANALYSIS} {analysis_file}: {e}"
+        raise ClaudeBuilderError(error_msg) from e
+    else:
         return analysis
 
-    except Exception as e:
-        raise ClaudeBuilderError(f"{FAILED_TO_LOAD_ANALYSIS} {analysis_file}: {e}")
 
-
-def _display_generation_preview(generated_content: Any, analysis: Any) -> None:
+def _display_generation_preview(generated_content: Any) -> None:
     """Display preview of what will be generated."""
     files_info = []
     total_size = 0
@@ -490,7 +520,7 @@ def _write_generated_files(
     help="Show what would be generated without creating files",
 )
 @click.option("--verbose", "-v", count=True, help="Verbose output")
-def claude_md(project_path: str, **kwargs) -> None:
+def claude_md(project_path: str, **kwargs: Any) -> None:
     """Generate CLAUDE.md file."""
     # Create config from kwargs
     config = GenerateConfig(**kwargs)
@@ -554,8 +584,9 @@ def claude_md(project_path: str, **kwargs) -> None:
         console.print(f"Output location: {output_path}")
 
     except Exception as e:
+        error_msg = f"{FAILED_TO_GENERATE_CLAUDE_MD}: {e}"
         console.print(f"[red]Error generating CLAUDE.md: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_GENERATE_CLAUDE_MD}: {e}")
+        raise click.ClickException(error_msg) from e
 
 
 @generate.command()
@@ -577,7 +608,7 @@ def claude_md(project_path: str, **kwargs) -> None:
     help="Show what would be generated without creating files",
 )
 @click.option("--verbose", "-v", count=True, help="Verbose output")
-def agents_md(project_path: str, **kwargs) -> None:
+def agents_md(project_path: str, **kwargs: Any) -> None:
     """Generate AGENTS.md file."""
     # Create config from kwargs
     config = GenerateConfig(**kwargs)
@@ -651,5 +682,6 @@ def agents_md(project_path: str, **kwargs) -> None:
         console.print(f"Output location: {output_path}")
 
     except Exception as e:
+        error_msg = f"{FAILED_TO_GENERATE_AGENTS_MD}: {e}"
         console.print(f"[red]Error generating AGENTS.md: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_GENERATE_AGENTS_MD}: {e}")
+        raise click.ClickException(error_msg) from e

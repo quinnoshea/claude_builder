@@ -1,6 +1,7 @@
 """Configuration management for Claude Builder."""
 
 import json
+
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -10,6 +11,7 @@ import toml
 
 from claude_builder.core.models import ClaudeMentionPolicy, GitIntegrationMode
 from claude_builder.utils.exceptions import ConfigError
+
 
 FAILED_TO_LOAD_CONFIGURATION = "Failed to load configuration"
 FAILED_TO_SAVE_CONFIGURATION = "Failed to save configuration"
@@ -245,7 +247,8 @@ class ConfigManager:
             return config
 
         except Exception as e:
-            raise ConfigError(f"{FAILED_TO_LOAD_CONFIGURATION}: {e}")
+            msg = f"{FAILED_TO_LOAD_CONFIGURATION}: {e}"
+            raise ConfigError(msg)
 
     def save_config(self, config: Config, config_path: Path) -> None:
         """Save configuration to file."""
@@ -258,16 +261,15 @@ class ConfigManager:
                 self._save_json_config(config_dict, config_path)
 
         except Exception as e:
-            raise ConfigError(f"{FAILED_TO_SAVE_CONFIGURATION}: {e}")
+            msg = f"{FAILED_TO_SAVE_CONFIGURATION}: {e}"
+            raise ConfigError(msg)
 
     def create_default_config(self, project_path: Path) -> Config:
         """Create a default configuration for a project."""
-        config = Config()
+        return Config()
 
         # Customize based on project characteristics
         # This would be enhanced with project analysis results
-
-        return config
 
     def _find_config_file(self, project_path: Path) -> Optional[Path]:
         """Find configuration file in project directory."""
@@ -280,17 +282,19 @@ class ConfigManager:
     def _load_config_file(self, config_path: Path) -> Dict[str, Any]:
         """Load configuration from file."""
         if not config_path.exists():
-            raise ConfigError(f"{CONFIGURATION_FILE_NOT_FOUND}: {config_path}")
+            msg = f"{CONFIGURATION_FILE_NOT_FOUND}: {config_path}"
+            raise ConfigError(msg)
 
         try:
             if config_path.suffix.lower() == ".toml":
-                return toml.load(config_path)
+                content = toml.load(config_path)
+                return dict(content) if content else {}
             with config_path.open(encoding="utf-8") as f:
-                return json.load(f)
+                content = json.load(f)
+                return dict(content) if content else {}
         except Exception as e:
-            raise ConfigError(
-                f"{FAILED_TO_PARSE_CONFIGURATION_FILE} {config_path}: {e}"
-            )
+            msg = f"{FAILED_TO_PARSE_CONFIGURATION_FILE} {config_path}: {e}"
+            raise ConfigError(msg)
 
     def _merge_configs(self, base: Config, override: Dict[str, Any]) -> Config:
         """Merge configuration dictionaries."""
@@ -410,7 +414,8 @@ class ConfigManager:
                 project_profiles=config_dict.get("project_profiles", {}),
             )
         except Exception as e:
-            raise ConfigError(f"{FAILED_TO_CONVERT_DICTIONARY_TO_CONFIG}: {e}")
+            msg = f"{FAILED_TO_CONVERT_DICTIONARY_TO_CONFIG}: {e}"
+            raise ConfigError(msg)
 
     def _save_json_config(self, config_dict: Dict[str, Any], config_path: Path) -> None:
         """Save configuration as JSON."""
@@ -444,7 +449,8 @@ class ConfigManager:
             config_path = Path(config_path_str).expanduser()
             if config_path.exists():
                 try:
-                    return self._load_config_file(config_path)
+                    config_data = self._load_config_file(config_path)
+                    return self._dict_to_config(config_data)
                 except (ConfigError, OSError):
                     # Skip unreadable or invalid config files
                     pass
@@ -529,7 +535,8 @@ class ConfigManager:
         profile_path = profiles_dir / f"{profile_name}.json"
 
         if not profile_path.exists():
-            raise ConfigError(f"{PROJECT_PROFILE_NOT_FOUND}: {profile_name}")
+            msg = f"{PROJECT_PROFILE_NOT_FOUND}: {profile_name}"
+            raise ConfigError(msg)
 
         try:
             with profile_path.open(encoding="utf-8") as f:
@@ -538,7 +545,8 @@ class ConfigManager:
             profile_config = profile_data["config"]
             return self._merge_configs(base_config, profile_config)
         except Exception as e:
-            raise ConfigError(f"{FAILED_TO_APPLY_PROFILE} {profile_name}: {e}")
+            msg = f"{FAILED_TO_APPLY_PROFILE} {profile_name}: {e}"
+            raise ConfigError(msg)
 
     def validate_config_compatibility(
         self, config: Config, project_analysis: Optional[Any] = None
@@ -559,7 +567,7 @@ class ConfigManager:
 
         # Check integration settings
         if config.integrations.package_managers:
-            for pm, settings in config.integrations.package_managers.items():
+            for _pm, settings in config.integrations.package_managers.items():
                 if settings.get("auto_install", False):
                     # Check if package manager is available
                     pass
@@ -570,7 +578,8 @@ class ConfigManager:
         """Validate configuration object."""
         # Validate version
         if config.version != self.schema_version:
-            raise ConfigError(f"{UNSUPPORTED_CONFIG_VERSION}: {config.version}")
+            msg = f"{UNSUPPORTED_CONFIG_VERSION}: {config.version}"
+            raise ConfigError(msg)
 
         # Validate confidence threshold
         if not 0 <= config.analysis.confidence_threshold <= 100:
@@ -603,28 +612,28 @@ class ConfigManager:
         try:
             int(config.output.file_permissions, 8)
         except ValueError:
-            raise ConfigError(
-                f"{INVALID_FILE_PERMISSIONS_FORMAT}: {config.output.file_permissions}"
-            )
+            msg = f"{INVALID_FILE_PERMISSIONS_FORMAT}: {config.output.file_permissions}"
+            raise ConfigError(msg)
 
         # Validate update check frequency
         valid_frequencies = ["never", "daily", "weekly", "monthly"]
         if config.user_preferences.update_check_frequency not in valid_frequencies:
-            raise ConfigError(
+            msg = (
                 f"{INVALID_UPDATE_CHECK_FREQUENCY}. Must be one of: {valid_frequencies}"
             )
+            raise ConfigError(msg)
 
         # Validate theme
         valid_themes = ["light", "dark", "auto"]
         if config.user_preferences.theme not in valid_themes:
-            raise ConfigError(f"{INVALID_THEME}. Must be one of: {valid_themes}")
+            msg = f"{INVALID_THEME}. Must be one of: {valid_themes}"
+            raise ConfigError(msg)
 
         # Validate agent selection algorithm
         valid_algorithms = ["intelligent", "strict", "permissive"]
         if config.agents.agent_selection_algorithm not in valid_algorithms:
-            raise ConfigError(
-                f"{INVALID_AGENT_SELECTION_ALGORITHM}. Must be one of: {valid_algorithms}"
-            )
+            msg = f"{INVALID_AGENT_SELECTION_ALGORITHM}. Must be one of: {valid_algorithms}"
+            raise ConfigError(msg)
 
 
 def load_config_from_args(args: Dict[str, Any]) -> Config:

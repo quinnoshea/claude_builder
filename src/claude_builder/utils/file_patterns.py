@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 class FilePatterns:
@@ -355,9 +355,9 @@ class FilePatterns:
         return False
 
     @classmethod
-    def detect_frameworks(cls, project_path: Path) -> Dict[str, float]:
+    def detect_frameworks(cls, project_path: Path) -> dict[str, float]:
         """Detect frameworks based on file patterns."""
-        detected: Dict[str, float] = {}
+        detected: dict[str, float] = {}
 
         for framework, patterns in cls.FRAMEWORK_PATTERNS.items():
             score = 0.0
@@ -388,7 +388,7 @@ class ConfigFileDetector:
 
     def detect_config_files(
         self, project_path: str | Path | None = None
-    ) -> Dict[str, List[str]]:
+    ) -> dict[str, list[str]]:
         """Detect configuration files in project grouped by language/category."""
         target_path = Path(project_path) if project_path else self.project_path
         if not target_path or not target_path.exists():
@@ -480,7 +480,7 @@ class ConfigFileDetector:
 class FilePatternMatcher:
     """Advanced file pattern matching system."""
 
-    def __init__(self, patterns: Optional[List[str]] = None):
+    def __init__(self, patterns: list[str] | None = None):
         # Default patterns cover common file types
         self.patterns = patterns or [
             "*.py",
@@ -505,11 +505,11 @@ class FilePatternMatcher:
         """Basic pattern matching."""
         return any(pattern in filepath for pattern in self.patterns)
 
-    def matches_extension(self, file_path: Path, extensions: List[str]) -> bool:
+    def matches_extension(self, file_path: Path, extensions: list[str]) -> bool:
         """Check if file matches any of the given extensions."""
         return file_path.suffix.lower() in [ext.lower() for ext in extensions]
 
-    def matches_filename(self, file_path: Path, patterns: List[str]) -> bool:
+    def matches_filename(self, file_path: Path, patterns: list[str]) -> bool:
         """Check if filename matches any of the given patterns."""
         filename = file_path.name
         for pattern in patterns:
@@ -604,7 +604,7 @@ class LanguageDetector:
             return max(stats.keys(), key=lambda x: stats[x])
         return "unknown"
 
-    def get_language_stats(self, project_path: str) -> Dict[str, int]:
+    def get_language_stats(self, project_path: str) -> dict[str, int]:
         """Get language statistics for a project."""
         path = Path(project_path)
         stats: dict[str, int] = {}
@@ -617,11 +617,11 @@ class LanguageDetector:
 
         return stats
 
-    def analyze_project_languages(self, project_path: Path) -> Dict[str, Any]:
+    def analyze_project_languages(self, project_path: Path) -> dict[str, Any]:
         """Analyze languages in project with detailed statistics."""
 
         stats = self.get_language_stats(str(project_path))
-        total_files = sum(stats.values())
+        sum(stats.values())
 
         # Return format expected by tests: language -> {"file_count": count}
         result = {}
@@ -635,13 +635,13 @@ class LanguageDetector:
 class AdvancedPatternRule:
     """Advanced pattern rule configuration."""
 
-    name: Optional[str] = None
-    description: Optional[str] = None
-    patterns: Optional[List[str]] = None
+    name: str | None = None
+    description: str | None = None
+    patterns: list[str] | None = None
     priority: float = 1.0
-    required_patterns: Optional[List[str]] = None
-    weight_factors: Optional[Dict[str, float]] = None
-    pattern: Optional[str] = None
+    required_patterns: list[str] | None = None
+    weight_factors: dict[str, float] | None = None
+    pattern: str | None = None
     action: str = "include"
 
 
@@ -649,7 +649,7 @@ class PatternRule:
     """Advanced pattern rule for project detection."""
 
     def __init__(
-        self, config: Optional[AdvancedPatternRule] = None, **kwargs: Any
+        self, config: AdvancedPatternRule | None = None, **kwargs: Any
     ) -> None:
         # Support both config object and individual parameters
         if config:
@@ -738,7 +738,7 @@ class ProjectTypeDetector:
     """Project type detection system."""
 
     def __init__(self) -> None:
-        self.detection_rules: List[Dict[str, Any]] = []
+        self.detection_rules: list[dict[str, Any]] = []
         self.language_detector = LanguageDetector()
 
     def detect_project_type(self, project_path: str) -> str:
@@ -785,7 +785,7 @@ class ProjectTypeDetector:
 
         return primary_lang if primary_lang != "unknown" else "unknown"
 
-    def get_project_metadata(self, project_path: str) -> Dict[str, Any]:
+    def get_project_metadata(self, project_path: str) -> dict[str, Any]:
         """Get comprehensive project metadata."""
         project_type = self.detect_project_type(project_path)
         frameworks = FilePatterns.detect_frameworks(Path(project_path))
@@ -824,7 +824,7 @@ class ProjectTypeDetector:
         """Add custom detection rule."""
         self.detection_rules.append(rule)
 
-    def get_detection_details(self, project_path: str) -> Dict[str, Any]:
+    def get_detection_details(self, project_path: str) -> dict[str, Any]:
         """Get detailed detection information."""
         path = Path(project_path)
         project_type = self.detect_project_type(project_path)
