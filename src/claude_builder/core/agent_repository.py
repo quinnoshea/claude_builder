@@ -5,7 +5,12 @@ import re
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, ClassVar, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, ClassVar, Dict, List, Optional, Tuple
+
+
+if TYPE_CHECKING:
+    from claude_builder.utils.github_client import GitHubAgentClient
+
 from urllib.parse import urlparse
 
 import yaml
@@ -903,36 +908,113 @@ class AgentCompatibilityScorer:
         return matches / len(agent_keywords)
 
 
-# Placeholder for AgentRepositoryScanner - will be implemented in Task 2.3
 class AgentRepositoryScanner:
     """Main orchestrator for agent repository operations."""
 
-    def __init__(self, config: Optional[RepositoryConfig] = None):
+    def __init__(
+        self,
+        config: Optional[RepositoryConfig] = None,
+        github_token: Optional[str] = None,
+    ):
         """Initialize the agent repository scanner."""
         self.config = config or RepositoryConfig()
         self.parser = AgentDefinitionParser()
         self.scorer = AgentCompatibilityScorer()
         self.index = CapabilityIndex()
-        # GitHub client and cache will be added in later tasks
+
+        # Initialize GitHub client - import here to avoid circular imports
+        try:
+            from claude_builder.utils.github_client import GitHubAgentClient
+
+            self.github_client: Optional["GitHubAgentClient"] = GitHubAgentClient(
+                token=github_token
+            )
+        except ImportError:
+            # Fallback if github_client is not available
+            self.github_client = None
 
     def scan_repositories(self) -> ScanResult:
         """Scan all configured repositories for agents."""
-        # Placeholder implementation - will be completed in Task 2.3
-        return ScanResult(
-            total_agents=0,
-            successful_parses=0,
-            failed_parses=0,
-            repositories_scanned=0,
-            scan_duration=0.0,
-            errors=["Implementation pending - Task 2.3"],
-        )
+        import time
+
+        start_time = time.time()
+
+        result = ScanResult()
+
+        if not self.github_client:
+            result.errors.append("GitHub client not available - check dependencies")
+            return result
+
+        enabled_repos = self.config.get_enabled_repositories()
+        result.repositories_scanned = len(enabled_repos)
+
+        for repo_config in enabled_repos:
+            try:
+                # Fetch agents from repository
+                agents_data = self.github_client.fetch_repository_agents(
+                    repo_config["url"]
+                )
+
+                for agent_data in agents_data:
+                    try:
+                        # Parse agent definition
+                        agent = self.parser.parse_agent_file(
+                            agent_data["content"], agent_data["source_url"]
+                        )
+
+                        if agent:
+                            # Index the agent
+                            self.index.index_agent(agent)
+                            result.successful_parses += 1
+                        else:
+                            result.failed_parses += 1
+
+                    except Exception as e:
+                        result.failed_parses += 1
+                        result.errors.append(
+                            f"Failed to parse {agent_data['name']}: {e}"
+                        )
+
+                result.total_agents += len(agents_data)
+
+            except Exception as e:
+                error_msg = f"Failed to scan repository {repo_config['name']}: {e}"
+                result.errors.append(error_msg)
+
+        result.scan_duration = time.time() - start_time
+        return result
 
     def find_compatible_agents(
-        self, _project: ProjectAnalysis, _limit: int = 10
+        self, project: ProjectAnalysis, limit: int = 10
     ) -> List[CompatibleAgent]:
         """Find most compatible agents for a project."""
-        # Placeholder implementation - will be completed in Task 2.3
-        return []
+        # Search for agents using the capability index
+        candidate_agents = self.index.search_agents(
+            language=project.language,
+            framework=project.framework,
+            domain=project.domain_info.domain if project.domain_info else None,
+            complexity=(
+                project.complexity_level.value if project.complexity_level else None
+            ),
+        )
+
+        # If no specific matches, get all agents
+        if not candidate_agents:
+            candidate_agents = self.index.all_agents
+
+        # Score each candidate agent
+        scored_agents = []
+        for agent in candidate_agents:
+            try:
+                compatible_agent = self.scorer.score_agent_compatibility(agent, project)
+                scored_agents.append(compatible_agent)
+            except Exception:
+                # Skip agents that fail scoring
+                continue
+
+        # Sort by compatibility score (descending) and return top matches
+        scored_agents.sort(key=lambda x: x.compatibility_score, reverse=True)
+        return scored_agents[:limit]
 
     def sync_repositories(self) -> SyncResult:
         """Synchronize with remote repositories for updates."""

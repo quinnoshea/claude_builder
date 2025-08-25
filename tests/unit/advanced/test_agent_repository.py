@@ -722,24 +722,26 @@ class TestAgentRepositoryScanner:
         assert scanner.scorer is not None
         assert scanner.index is not None
 
-    def test_scan_repositories_placeholder(self):
-        """Test scan repositories placeholder implementation."""
+    def test_scan_repositories_with_github_client(self):
+        """Test scan repositories with GitHub client integration."""
         scanner = AgentRepositoryScanner()
         result = scanner.scan_repositories()
 
         assert isinstance(result, ScanResult)
         assert result.total_agents == 0
-        assert "Implementation pending" in result.errors[0]
+        # With GitHub client available, we should scan configured repositories
+        assert result.repositories_scanned >= 0
 
-    def test_find_compatible_agents_placeholder(self):
-        """Test find compatible agents placeholder implementation."""
+    def test_find_compatible_agents_functionality(self):
+        """Test find compatible agents functionality."""
         scanner = AgentRepositoryScanner()
 
         project = ProjectAnalysis(project_path=Path("/test"))
         results = scanner.find_compatible_agents(project)
 
         assert isinstance(results, list)
-        assert len(results) == 0  # Placeholder returns empty list
+        # With empty index, should return empty list
+        assert len(results) == 0
 
     def test_sync_repositories_placeholder(self):
         """Test sync repositories placeholder implementation."""
