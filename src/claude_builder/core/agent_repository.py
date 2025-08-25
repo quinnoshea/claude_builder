@@ -56,7 +56,7 @@ class AgentDefinition:
     source_url: str = ""
     repository_name: str = ""
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Validate agent definition after creation."""
         if not self.name or not self.name.strip():
             raise ValueError(AGENT_NAME_EMPTY)
@@ -92,7 +92,7 @@ class CompatibleAgent:
     matching_criteria: List[str]
     confidence_factors: Dict[str, float]
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Validate compatibility agent after creation."""
         if not 0.0 <= self.compatibility_score <= 1.0:
             raise ValueError(COMPATIBILITY_SCORE_RANGE)
@@ -272,7 +272,7 @@ class RepositoryConfig:
             return True
         return False
 
-    def update_repository(self, name: str, **updates) -> bool:
+    def update_repository(self, name: str, **updates: Any) -> bool:
         """Update repository configuration."""
         for repo in self.repositories:
             if repo["name"] == name:
@@ -524,7 +524,7 @@ class AgentDefinitionParser:
 class CapabilityIndex:
     """Searchable index of agent capabilities."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the capability index."""
         self.agents_by_language: Dict[str, List[AgentDefinition]] = defaultdict(list)
         self.agents_by_framework: Dict[str, List[AgentDefinition]] = defaultdict(list)

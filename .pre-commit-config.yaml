@@ -3,23 +3,35 @@ repos:
     rev: v4.6.0
     hooks:
       - id: trailing-whitespace
+        exclude: ^src/claude_builder/templates/
       - id: end-of-file-fixer
+        exclude: ^src/claude_builder/templates/
       - id: check-yaml
+        exclude: ^src/claude_builder/templates/
       - id: check-added-large-files
       - id: check-merge-conflict
       - id: check-json
+        exclude: ^src/claude_builder/templates/
       - id: check-toml
+        exclude: ^src/claude_builder/templates/
+
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: [--profile=black, --line-length=88]
+        exclude: ^src/claude_builder/templates/
 
   - repo: https://github.com/psf/black
-    rev: 24.8.0
+    rev: 24.10.0
     hooks:
       - id: black
         language_version: python3
         args: [--line-length=88]
         exclude: ^src/claude_builder/templates/
 
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.6.3
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.7.2
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix, --ignore=T201,S314,S603,S607]
@@ -29,6 +41,13 @@ repos:
     rev: v1.11.2
     hooks:
       - id: mypy
-        additional_dependencies: [types-toml, types-click]
+        additional_dependencies: [types-toml, types-click, types-PyYAML]
         args: [--config-file=pyproject.toml, --ignore-missing-imports]
         exclude: ^(tests/|src/claude_builder/templates/|scripts/)
+
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.42.0
+    hooks:
+      - id: markdownlint
+        args: [--disable, MD013, --disable, MD033]
+        exclude: ^src/claude_builder/templates/

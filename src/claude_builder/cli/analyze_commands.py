@@ -1,8 +1,15 @@
 """Analysis CLI commands for Claude Builder."""
 
+from __future__ import annotations
+
 import json
 from pathlib import Path
-from typing import Optional
+from typing import Any
+
+try:
+    import yaml
+except ImportError:
+    yaml = None
 
 import click
 from rich.console import Console
@@ -18,7 +25,7 @@ console = Console()
 
 
 @click.group()
-def analyze():
+def analyze() -> None:
     """Analyze project structure and characteristics."""
 
 
@@ -46,15 +53,15 @@ def analyze():
     "--include-suggestions", is_flag=True, help="Include improvement suggestions"
 )
 @click.option("--verbose", "-v", count=True, help="Verbose output")
-def project(
-    project_path: str,
-    output: Optional[str],
-    output_format: str,
-    confidence_threshold: int,
-    include_suggestions: bool,
-    verbose: int,
-):
+def project(project_path: str, **options: Any) -> None:
     """Analyze a project directory."""
+    # Extract options
+    output = options.get("output")
+    output_format = options.get("output_format", "table")
+    confidence_threshold = options.get("confidence_threshold", 0)
+    include_suggestions = options.get("include_suggestions", False)
+    verbose = options.get("verbose", 0)
+
     try:
         path = Path(project_path).resolve()
 
@@ -75,25 +82,46 @@ def project(
 
         # Display results based on format
         if output_format == "json":
-            _display_analysis_json(analysis, include_suggestions)
+            _display_analysis_json(analysis, include_suggestions=include_suggestions)
         elif output_format == "yaml":
-            _display_analysis_yaml(analysis, include_suggestions)
+            _display_analysis_yaml(analysis, include_suggestions=include_suggestions)
         else:
-            _display_analysis_table(analysis, include_suggestions, verbose)
+            _display_analysis_table(
+                analysis, include_suggestions=include_suggestions, verbose=verbose
+            )
 
         # Save to file if requested
         if output:
-            _save_analysis_to_file(analysis, Path(output), include_suggestions)
+            _save_analysis_to_file(
+                analysis, Path(output), include_suggestions=include_suggestions
+            )
             console.print(f"[green]Analysis saved to: {output}[/green]")
 
     except Exception as e:
+        error_msg = f"{FAILED_TO_ANALYZE_PROJECT}: {e}"
         console.print(f"[red]Error analyzing project: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_ANALYZE_PROJECT}: {e}")
+        raise click.ClickException(error_msg) from e
 
 
-def _display_analysis_table(analysis, include_suggestions: bool, verbose: int):
+def _display_analysis_table(
+    analysis: Any, *, include_suggestions: bool = False, verbose: int = 0
+) -> None:
     """Display analysis in table format."""
-    # Main analysis results
+    _show_analysis_summary(analysis)
+    _show_language_table(analysis)
+    _show_framework_table(analysis, show_verbose=verbose > 0)
+    _show_characteristics_table(analysis)
+
+    if verbose > 0:
+        _show_filesystem_table(analysis)
+
+    _show_dev_environment_table(analysis, show_verbose=verbose > 0)
+    _show_domain_table(analysis)
+    _show_warnings_and_suggestions(analysis, include_suggestions=include_suggestions)
+
+
+def _show_analysis_summary(analysis: Any) -> None:
+    """Show main analysis summary panel."""
     console.print(
         Panel(
             f"[bold blue]Project Analysis Results[/bold blue]\n\n"
@@ -104,7 +132,9 @@ def _display_analysis_table(analysis, include_suggestions: bool, verbose: int):
         )
     )
 
-    # Language information
+
+def _show_language_table(analysis: Any) -> None:
+    """Show language analysis table."""
     lang_table = Table(title="Language Analysis")
     lang_table.add_column("Attribute", style="cyan")
     lang_table.add_column("Value", style="green")
@@ -123,32 +153,38 @@ def _display_analysis_table(analysis, include_suggestions: bool, verbose: int):
 
     console.print(lang_table)
 
-    # Framework information
-    if analysis.framework_info.primary or verbose > 0:
-        fw_table = Table(title="Framework Analysis")
-        fw_table.add_column("Attribute", style="cyan")
-        fw_table.add_column("Value", style="green")
-        fw_table.add_column("Confidence", style="yellow")
 
+def _show_framework_table(analysis: Any, *, show_verbose: bool) -> None:
+    """Show framework analysis table if needed."""
+    if not (analysis.framework_info.primary or show_verbose):
+        return
+
+    fw_table = Table(title="Framework Analysis")
+    fw_table.add_column("Attribute", style="cyan")
+    fw_table.add_column("Value", style="green")
+    fw_table.add_column("Confidence", style="yellow")
+
+    fw_table.add_row(
+        "Primary Framework",
+        analysis.framework_info.primary or "None detected",
+        f"{analysis.framework_info.confidence:.1f}%",
+    )
+
+    if analysis.framework_info.secondary:
         fw_table.add_row(
-            "Primary Framework",
-            analysis.framework_info.primary or "None detected",
-            f"{analysis.framework_info.confidence:.1f}%",
+            "Secondary Frameworks",
+            ", ".join(analysis.framework_info.secondary),
+            "-",
         )
 
-        if analysis.framework_info.secondary:
-            fw_table.add_row(
-                "Secondary Frameworks",
-                ", ".join(analysis.framework_info.secondary),
-                "-",
-            )
+    if analysis.framework_info.version:
+        fw_table.add_row("Version", analysis.framework_info.version, "-")
 
-        if analysis.framework_info.version:
-            fw_table.add_row("Version", analysis.framework_info.version, "-")
+    console.print(fw_table)
 
-        console.print(fw_table)
 
-    # Project characteristics
+def _show_characteristics_table(analysis: Any) -> None:
+    """Show project characteristics table."""
     char_table = Table(title="Project Characteristics")
     char_table.add_column("Characteristic", style="cyan")
     char_table.add_column("Value", style="green")
@@ -164,77 +200,86 @@ def _display_analysis_table(analysis, include_suggestions: bool, verbose: int):
 
     console.print(char_table)
 
-    # File system information
-    if verbose > 0:
-        fs_table = Table(title="File System Analysis")
-        fs_table.add_column("Metric", style="cyan")
-        fs_table.add_column("Count", style="green")
 
-        fs_info = analysis.filesystem_info
-        fs_table.add_row("Total Files", str(fs_info.total_files))
-        fs_table.add_row("Total Directories", str(fs_info.total_directories))
-        fs_table.add_row("Source Files", str(fs_info.source_files))
-        fs_table.add_row("Test Files", str(fs_info.test_files))
-        fs_table.add_row("Config Files", str(fs_info.config_files))
-        fs_table.add_row("Documentation Files", str(fs_info.documentation_files))
+def _show_filesystem_table(analysis: Any) -> None:
+    """Show file system analysis table."""
+    fs_table = Table(title="File System Analysis")
+    fs_table.add_column("Metric", style="cyan")
+    fs_table.add_column("Count", style="green")
 
-        console.print(fs_table)
+    fs_info = analysis.filesystem_info
+    fs_table.add_row("Total Files", str(fs_info.total_files))
+    fs_table.add_row("Total Directories", str(fs_info.total_directories))
+    fs_table.add_row("Source Files", str(fs_info.source_files))
+    fs_table.add_row("Test Files", str(fs_info.test_files))
+    fs_table.add_row("Config Files", str(fs_info.config_files))
+    fs_table.add_row("Documentation Files", str(fs_info.documentation_files))
 
-    # Development environment
-    if analysis.dev_environment.package_managers or verbose > 0:
-        dev_table = Table(title="Development Environment")
-        dev_table.add_column("Category", style="cyan")
-        dev_table.add_column("Detected Tools", style="green")
+    console.print(fs_table)
 
-        if analysis.dev_environment.package_managers:
-            dev_table.add_row(
-                "Package Managers", ", ".join(analysis.dev_environment.package_managers)
-            )
 
-        if analysis.dev_environment.testing_frameworks:
-            dev_table.add_row(
-                "Testing Frameworks",
-                ", ".join(analysis.dev_environment.testing_frameworks),
-            )
+def _show_dev_environment_table(analysis: Any, *, show_verbose: bool) -> None:
+    """Show development environment table if needed."""
+    if not (analysis.dev_environment.package_managers or show_verbose):
+        return
 
-        if analysis.dev_environment.ci_cd_systems:
-            dev_table.add_row(
-                "CI/CD Systems", ", ".join(analysis.dev_environment.ci_cd_systems)
-            )
+    dev_table = Table(title="Development Environment")
+    dev_table.add_column("Category", style="cyan")
+    dev_table.add_column("Detected Tools", style="green")
 
-        if analysis.dev_environment.containerization:
-            dev_table.add_row(
-                "Containerization", ", ".join(analysis.dev_environment.containerization)
-            )
-
-        if analysis.dev_environment.databases:
-            dev_table.add_row(
-                "Databases", ", ".join(analysis.dev_environment.databases)
-            )
-
-        console.print(dev_table)
-
-    # Domain information
-    if analysis.domain_info.domain:
-        domain_table = Table(title="Domain Analysis")
-        domain_table.add_column("Attribute", style="cyan")
-        domain_table.add_column("Value", style="green")
-        domain_table.add_column("Confidence", style="yellow")
-
-        domain_table.add_row(
-            "Domain",
-            analysis.domain_info.domain.replace("_", " ").title(),
-            f"{analysis.domain_info.confidence:.1f}%",
+    if analysis.dev_environment.package_managers:
+        dev_table.add_row(
+            "Package Managers", ", ".join(analysis.dev_environment.package_managers)
         )
 
-        if analysis.domain_info.indicators:
-            domain_table.add_row(
-                "Indicators", ", ".join(analysis.domain_info.indicators), "-"
-            )
+    if analysis.dev_environment.testing_frameworks:
+        dev_table.add_row(
+            "Testing Frameworks",
+            ", ".join(analysis.dev_environment.testing_frameworks),
+        )
 
-        console.print(domain_table)
+    if analysis.dev_environment.ci_cd_systems:
+        dev_table.add_row(
+            "CI/CD Systems", ", ".join(analysis.dev_environment.ci_cd_systems)
+        )
 
-    # Warnings and suggestions
+    if analysis.dev_environment.containerization:
+        dev_table.add_row(
+            "Containerization", ", ".join(analysis.dev_environment.containerization)
+        )
+
+    if analysis.dev_environment.databases:
+        dev_table.add_row("Databases", ", ".join(analysis.dev_environment.databases))
+
+    console.print(dev_table)
+
+
+def _show_domain_table(analysis: Any) -> None:
+    """Show domain analysis table if domain detected."""
+    if not analysis.domain_info.domain:
+        return
+
+    domain_table = Table(title="Domain Analysis")
+    domain_table.add_column("Attribute", style="cyan")
+    domain_table.add_column("Value", style="green")
+    domain_table.add_column("Confidence", style="yellow")
+
+    domain_table.add_row(
+        "Domain",
+        analysis.domain_info.domain.replace("_", " ").title(),
+        f"{analysis.domain_info.confidence:.1f}%",
+    )
+
+    if analysis.domain_info.indicators:
+        domain_table.add_row(
+            "Indicators", ", ".join(analysis.domain_info.indicators), "-"
+        )
+
+    console.print(domain_table)
+
+
+def _show_warnings_and_suggestions(analysis: Any, *, include_suggestions: bool) -> None:
+    """Show warnings and suggestions if present."""
     if analysis.warnings:
         console.print("[yellow]Warnings:[/yellow]")
         for warning in analysis.warnings:
@@ -246,26 +291,28 @@ def _display_analysis_table(analysis, include_suggestions: bool, verbose: int):
             console.print(f"  💡 {suggestion}")
 
 
-def _display_analysis_json(analysis, include_suggestions: bool):
+def _display_analysis_json(analysis: Any, *, include_suggestions: bool = False) -> None:
     """Display analysis in JSON format."""
-    data = _analysis_to_dict(analysis, include_suggestions)
+    data = _analysis_to_dict(analysis, include_suggestions=include_suggestions)
     console.print(json.dumps(data, indent=2))
 
 
-def _display_analysis_yaml(analysis, include_suggestions: bool):
+def _display_analysis_yaml(analysis: Any, *, include_suggestions: bool = False) -> None:
     """Display analysis in YAML format."""
-    try:
-        import yaml
-
-        data = _analysis_to_dict(analysis, include_suggestions)
-        console.print(yaml.dump(data, default_flow_style=False))
-    except ImportError:
+    if yaml is None:
         console.print("[red]YAML format requires PyYAML to be installed[/red]")
         console.print("Try: pip install PyYAML")
         raise click.ClickException(PYYAML_NOT_AVAILABLE)
 
+    data = _analysis_to_dict(analysis, include_suggestions=include_suggestions)
+    if yaml is None:
+        raise click.ClickException(PYYAML_NOT_AVAILABLE)
+    console.print(yaml.dump(data, default_flow_style=False))
 
-def _analysis_to_dict(analysis, include_suggestions: bool) -> dict:
+
+def _analysis_to_dict(
+    analysis: Any, *, include_suggestions: bool = False
+) -> dict[str, Any]:
     """Convert analysis to dictionary."""
     data = {
         "project_path": str(analysis.project_path),
@@ -324,23 +371,23 @@ def _analysis_to_dict(analysis, include_suggestions: bool) -> dict:
     return data
 
 
-def _save_analysis_to_file(analysis, output_path: Path, include_suggestions: bool):
+def _save_analysis_to_file(
+    analysis: Any, output_path: Path, *, include_suggestions: bool = False
+) -> None:
     """Save analysis to file."""
-    data = _analysis_to_dict(analysis, include_suggestions)
+    data = _analysis_to_dict(analysis, include_suggestions=include_suggestions)
 
     if output_path.suffix.lower() in [".yaml", ".yml"]:
-        try:
-            import yaml
-
-            with open(output_path, "w", encoding="utf-8") as f:
-                yaml.dump(data, f, default_flow_style=False)
-        except ImportError:
+        if yaml is None:
             # Fallback to JSON
             console.print("[yellow]YAML not available, saving as JSON instead[/yellow]")
             output_path = output_path.with_suffix(".json")
-            with open(output_path, "w", encoding="utf-8") as f:
+            with output_path.open("w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2)
+        else:
+            with output_path.open("w", encoding="utf-8") as f:
+                yaml.dump(data, f, default_flow_style=False)
     else:
         # Default to JSON
-        with open(output_path, "w", encoding="utf-8") as f:
+        with output_path.open("w", encoding="utf-8") as f:
             json.dump(data, f, indent=2)

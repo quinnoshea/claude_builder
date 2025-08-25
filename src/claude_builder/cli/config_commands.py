@@ -1,8 +1,10 @@
 """Configuration management CLI commands for Claude Builder."""
 
+from __future__ import annotations
+
 import json
 from pathlib import Path
-from typing import Optional
+from typing import Any
 
 import click
 from rich.console import Console
@@ -12,6 +14,7 @@ from rich.table import Table
 
 from claude_builder.core.analyzer import ProjectAnalyzer
 from claude_builder.core.config import Config, ConfigManager
+from claude_builder.core.models import GitIntegrationMode
 from claude_builder.utils.exceptions import ConfigError
 
 FAILED_TO_CREATE_CONFIGURATION = "Failed to create configuration"
@@ -24,12 +27,19 @@ FAILED_TO_LIST_PROFILES = "Failed to list profiles"
 FAILED_TO_SHOW_PROFILE = "Failed to show profile"
 FAILED_TO_SET_CONFIGURATION_VALUE = "Failed to set configuration value"
 FAILED_TO_RESET_CONFIGURATION = "Failed to reset configuration"
+DESCRIPTION_MAX_LENGTH = 50
 
 console = Console()
 
 
+def _raise_validation_error_strict() -> None:
+    """Raise validation error in strict mode."""
+    error_msg = f"{CONFIGURATION_VALIDATION_FAILED} (strict mode)"
+    raise click.ClickException(error_msg)
+
+
 @click.group()
-def config():
+def config() -> None:
     """Manage claude-builder configurations."""
 
 
@@ -51,7 +61,9 @@ def config():
 @click.option(
     "--from-analysis", is_flag=True, help="Generate config based on project analysis"
 )
-def init(project_path: str, output_format: str, interactive: bool, from_analysis: bool):
+def init(
+    project_path: str, output_format: str, *, interactive: bool, from_analysis: bool
+) -> None:
     """Create initial configuration file for a project."""
     try:
         project_path_obj = Path(project_path).resolve()
@@ -82,12 +94,11 @@ def init(project_path: str, output_format: str, interactive: bool, from_analysis
         config_filename = f"claude-builder.{output_format}"
         config_path = project_path_obj / config_filename
 
-        if config_path.exists():
-            if not Confirm.ask(
-                f"Configuration file {config_filename} already exists. Overwrite?"
-            ):
-                console.print("[yellow]Configuration creation cancelled[/yellow]")
-                return
+        if config_path.exists() and not Confirm.ask(
+            f"Configuration file {config_filename} already exists. Overwrite?"
+        ):
+            console.print("[yellow]Configuration creation cancelled[/yellow]")
+            return
 
         config_manager.save_config(config, config_path)
         console.print(f"[green]✓ Configuration saved to {config_path}[/green]")
@@ -107,7 +118,8 @@ def init(project_path: str, output_format: str, interactive: bool, from_analysis
 
     except Exception as e:
         console.print(f"[red]Error creating configuration: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_CREATE_CONFIGURATION}: {e}")
+        error_msg = f"{FAILED_TO_CREATE_CONFIGURATION}: {e}"
+        raise click.ClickException(error_msg) from e
 
 
 @config.command()
@@ -118,7 +130,7 @@ def init(project_path: str, output_format: str, interactive: bool, from_analysis
     type=click.Path(exists=True, file_okay=False),
     help="Validate against specific project",
 )
-def validate(config_file: str, strict: bool, project_path: Optional[str]):
+def validate(config_file: str, *, strict: bool, project_path: str | None) -> None:
     """Validate a configuration file."""
     try:
         config_manager = ConfigManager()
@@ -137,9 +149,9 @@ def validate(config_file: str, strict: bool, project_path: Optional[str]):
             warnings = config_manager.validate_config_compatibility(config, analysis)
         else:
             # Load without project context
-            config_data = config_manager._load_config_file(config_path)
-            config = config_manager._dict_to_config(config_data)
-            config_manager._validate_config(config)
+            config = config_manager.load_config(
+                project_path=config_path.parent, config_file=config_path
+            )
             warnings = []
 
         # Display results
@@ -151,19 +163,18 @@ def validate(config_file: str, strict: bool, project_path: Optional[str]):
                 console.print(f"  • {warning}")
 
             if strict:
-                raise click.ClickException(
-                    f"{CONFIGURATION_VALIDATION_FAILED} (strict mode)"
-                )
+                _raise_validation_error_strict()
 
         if not warnings:
             console.print("[green]No issues found[/green]")
 
     except ConfigError as e:
         console.print(f"[red]✗ Configuration validation failed: {e}[/red]")
-        raise click.ClickException(CONFIGURATION_VALIDATION_FAILED)
+        raise click.ClickException(CONFIGURATION_VALIDATION_FAILED) from e
     except Exception as e:
         console.print(f"[red]Error validating configuration: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_VALIDATE_CONFIGURATION}: {e}")
+        error_msg = f"{FAILED_TO_VALIDATE_CONFIGURATION}: {e}"
+        raise click.ClickException(error_msg) from e
 
 
 @config.command()
@@ -181,7 +192,7 @@ def validate(config_file: str, strict: bool, project_path: Optional[str]):
     help="Output format",
 )
 @click.option("--section", help="Show only specific configuration section")
-def show(project_path: str, output_format: str, section: Optional[str]):
+def show(project_path: str, output_format: str, section: str | None) -> None:
     """Show effective configuration for a project."""
     try:
         project_path_obj = Path(project_path).resolve()
@@ -190,7 +201,7 @@ def show(project_path: str, output_format: str, section: Optional[str]):
         config = config_manager.load_config(project_path_obj)
 
         if output_format == "json":
-            config_dict = config_manager._config_to_dict(config)
+            config_dict = config_manager._config_to_dict(config)  # noqa: SLF001
             if section and section in config_dict:
                 config_dict = {section: config_dict[section]}
             console.print(json.dumps(config_dict, indent=2, default=str))
@@ -202,7 +213,8 @@ def show(project_path: str, output_format: str, section: Optional[str]):
 
     except Exception as e:
         console.print(f"[red]Error showing configuration: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_SHOW_CONFIGURATION}: {e}")
+        error_msg = f"{FAILED_TO_SHOW_CONFIGURATION}: {e}"
+        raise click.ClickException(error_msg) from e
 
 
 @config.command()
@@ -215,7 +227,7 @@ def show(project_path: str, output_format: str, section: Optional[str]):
     default="json",
     help="Output format",
 )
-def migrate(old_config: str, output: Optional[str], output_format: str):
+def migrate(old_config: str, output: str | None, output_format: str) -> None:
     """Migrate configuration from old format."""
     try:
         old_config_path = Path(old_config)
@@ -225,8 +237,8 @@ def migrate(old_config: str, output: Optional[str], output_format: str):
 
         # For now, just copy and validate
         config_manager = ConfigManager()
-        config_data = config_manager._load_config_file(old_config_path)
-        config = config_manager._dict_to_config(config_data)
+        config_data = config_manager._load_config_file(old_config_path)  # noqa: SLF001
+        config = config_manager._dict_to_config(config_data)  # noqa: SLF001
 
         # Save migrated config
         if output:
@@ -241,7 +253,8 @@ def migrate(old_config: str, output: Optional[str], output_format: str):
 
     except Exception as e:
         console.print(f"[red]Error migrating configuration: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_MIGRATE_CONFIGURATION}: {e}")
+        error_msg = f"{FAILED_TO_MIGRATE_CONFIGURATION}: {e}"
+        raise click.ClickException(error_msg) from e
 
 
 @config.command()
@@ -259,10 +272,10 @@ def migrate(old_config: str, output: Optional[str], output_format: str):
 )
 def create_profile(
     profile_name: str,
-    description: Optional[str],
-    config_file: Optional[str],
-    project_path: Optional[str],
-):
+    description: str | None,
+    config_file: str | None,
+    project_path: str | None,
+) -> None:
     """Create a reusable project profile."""
     try:
         config_manager = ConfigManager()
@@ -270,8 +283,8 @@ def create_profile(
         if config_file:
             # Create profile from config file
             config_path = Path(config_file)
-            config_data = config_manager._load_config_file(config_path)
-            config = config_manager._dict_to_config(config_data)
+            config_data = config_manager._load_config_file(config_path)  # noqa: SLF001
+            config = config_manager._dict_to_config(config_data)  # noqa: SLF001
         elif project_path:
             # Create profile from project
             project_path_obj = Path(project_path).resolve()
@@ -302,7 +315,8 @@ def create_profile(
 
     except Exception as e:
         console.print(f"[red]Error creating profile: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_CREATE_PROFILE}: {e}")
+        error_msg = f"{FAILED_TO_CREATE_PROFILE}: {e}"
+        raise click.ClickException(error_msg) from e
 
 
 @config.command()
@@ -313,7 +327,7 @@ def create_profile(
     default="table",
     help="Output format",
 )
-def list_profiles(output_format: str):
+def list_profiles(output_format: str) -> None:
     """List available project profiles."""
     try:
         config_manager = ConfigManager()
@@ -330,12 +344,13 @@ def list_profiles(output_format: str):
 
     except Exception as e:
         console.print(f"[red]Error listing profiles: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_LIST_PROFILES}: {e}")
+        error_msg = f"{FAILED_TO_LIST_PROFILES}: {e}"
+        raise click.ClickException(error_msg) from e
 
 
 @config.command()
 @click.argument("profile_name", required=True)
-def show_profile(profile_name: str):
+def show_profile(profile_name: str) -> None:
     """Show details of a project profile."""
     try:
         config_manager = ConfigManager()
@@ -369,7 +384,8 @@ def show_profile(profile_name: str):
 
     except Exception as e:
         console.print(f"[red]Error showing profile: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_SHOW_PROFILE}: {e}")
+        error_msg = f"{FAILED_TO_SHOW_PROFILE}: {e}"
+        raise click.ClickException(error_msg) from e
 
 
 def _customize_config_from_analysis(config: Config, analysis) -> Config:
@@ -429,8 +445,6 @@ def _interactive_config_setup(config: Config) -> Config:
     git_mode = Prompt.ask(
         "Git integration mode", choices=git_modes, default=current_mode
     )
-    from claude_builder.core.models import GitIntegrationMode
-
     config.git_integration.mode = GitIntegrationMode(git_mode)
 
     # Claude mention policy
@@ -453,7 +467,7 @@ def _interactive_config_setup(config: Config) -> Config:
     return config
 
 
-def _display_config_table(config: Config, section: Optional[str] = None):
+def _display_config_table(config: Any, section: str | None = None) -> None:
     """Display configuration in table format."""
     if section:
         # Show specific section
@@ -498,7 +512,7 @@ def _display_config_table(config: Config, section: Optional[str] = None):
         console.print(table)
 
 
-def _display_profiles_table(profiles: list):
+def _display_profiles_table(profiles: list[Any]) -> None:
     """Display project profiles in table format."""
     table = Table(title="Project Profiles")
     table.add_column("Name", style="cyan")
@@ -508,8 +522,12 @@ def _display_profiles_table(profiles: list):
     for profile in profiles:
         table.add_row(
             profile["name"],
-            profile.get("description", "No description")[:50]
-            + ("..." if len(profile.get("description", "")) > 50 else ""),
+            profile.get("description", "No description")[:DESCRIPTION_MAX_LENGTH]
+            + (
+                "..."
+                if len(profile.get("description", "")) > DESCRIPTION_MAX_LENGTH
+                else ""
+            ),
             profile.get("created", "Unknown")[:10],  # Show date only
         )
 
@@ -525,7 +543,7 @@ def _display_profiles_table(profiles: list):
     default=".",
     required=False,
 )
-def set_value(key: str, value: str, project_path: str = "."):
+def set_value(key: str, value: str, project_path: str = ".") -> None:
     """Set configuration value for project."""
     try:
         project_path_obj = Path(project_path).resolve()
@@ -572,7 +590,8 @@ def set_value(key: str, value: str, project_path: str = "."):
 
     except Exception as e:
         console.print(f"[red]Error setting configuration value: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_SET_CONFIGURATION_VALUE}: {e}")
+        error_msg = f"{FAILED_TO_SET_CONFIGURATION_VALUE}: {e}"
+        raise click.ClickException(error_msg) from e
 
 
 @config.command()
@@ -583,7 +602,7 @@ def set_value(key: str, value: str, project_path: str = "."):
     required=False,
 )
 @click.option("--force", is_flag=True, help="Force reset without confirmation")
-def reset(project_path: str, force: bool):
+def reset(project_path: str, *, force: bool):
     """Reset configuration to defaults."""
     try:
         project_path_obj = Path(project_path).resolve()
@@ -607,4 +626,5 @@ def reset(project_path: str, force: bool):
 
     except Exception as e:
         console.print(f"[red]Error resetting configuration: {e}[/red]")
-        raise click.ClickException(f"{FAILED_TO_RESET_CONFIGURATION}: {e}")
+        error_msg = f"{FAILED_TO_RESET_CONFIGURATION}: {e}"
+        raise click.ClickException(error_msg) from e

@@ -1,5 +1,7 @@
 """Git integration management CLI commands for Claude Builder."""
 
+from __future__ import annotations
+
 from pathlib import Path
 from typing import Optional
 
@@ -37,7 +39,7 @@ console = Console()
 
 
 @click.group()
-def git():
+def git() -> None:
     """Manage git integration features."""
 
 
@@ -48,7 +50,7 @@ def git():
     default=".",
     required=False,
 )
-def status(project_path: str):
+def status(project_path: str) -> None:
     """Show git integration status for a project."""
     try:
         project_path_obj = Path(project_path).resolve()
@@ -66,7 +68,7 @@ def status(project_path: str):
         claude_section = False
 
         if exclude_file.exists():
-            with open(exclude_file, encoding="utf-8") as f:
+            with exclude_file.open(encoding="utf-8") as f:
                 content = f.read()
             exclude_status = f"Exists ({len(content.splitlines())} lines)"
             claude_section = "Claude Builder" in content
@@ -80,7 +82,7 @@ def status(project_path: str):
         pre_commit_status = "Not installed"
 
         if commit_msg_hook.exists():
-            with open(commit_msg_hook, encoding="utf-8") as f:
+            with commit_msg_hook.open(encoding="utf-8") as f:
                 content = f.read()
             if "Claude Builder" in content:
                 commit_msg_status = "Installed (Claude Builder)"
@@ -88,7 +90,7 @@ def status(project_path: str):
                 commit_msg_status = "Installed (Other)"
 
         if pre_commit_hook.exists():
-            with open(pre_commit_hook, encoding="utf-8") as f:
+            with pre_commit_hook.open(encoding="utf-8") as f:
                 content = f.read()
             if "Claude Builder" in content:
                 pre_commit_status = "Installed (Claude Builder)"
@@ -180,7 +182,7 @@ def status(project_path: str):
 @click.option(
     "--force", is_flag=True, help="Force exclude setup even if already configured"
 )
-def exclude(project_path: str, force: bool):
+def exclude(project_path: str, *, force: bool) -> None:
     """Add generated files to .git/info/exclude."""
     try:
         project_path_obj = Path(project_path).resolve()
@@ -198,7 +200,7 @@ def exclude(project_path: str, force: bool):
         # Check if already configured
         exclude_file = project_path_obj / ".git" / "info" / "exclude"
         if exclude_file.exists() and not force:
-            with open(exclude_file, encoding="utf-8") as f:
+            with exclude_file.open(encoding="utf-8") as f:
                 content = f.read()
             if "Claude Builder" in content:
                 console.print(
@@ -226,7 +228,7 @@ def exclude(project_path: str, force: bool):
                 console.print(f"  • {pattern}")
         else:
             console.print("[red]Failed to add excludes:[/red]")
-            for error in result.errors:
+            for error in result.errors or []:
                 console.print(f"  • {error}")
             raise click.ClickException(EXCLUDE_SETUP_FAILED)
 
@@ -242,7 +244,7 @@ def exclude(project_path: str, force: bool):
     default=".",
     required=False,
 )
-def unexclude(project_path: str):
+def unexclude(project_path: str) -> None:
     """Remove files from .git/info/exclude."""
     try:
         project_path_obj = Path(project_path).resolve()
@@ -276,7 +278,7 @@ def unexclude(project_path: str):
                 console.print(f"  {operation}")
         else:
             console.print("[red]Failed to remove excludes:[/red]")
-            for error in result.errors:
+            for error in result.errors or []:
                 console.print(f"  • {error}")
             raise click.ClickException(UNEXCLUDE_OPERATION_FAILED)
 
@@ -298,7 +300,9 @@ def unexclude(project_path: str):
     help="Claude mention policy for hooks",
 )
 @click.option("--pre-commit", is_flag=True, help="Also install pre-commit hook")
-def install_hooks(project_path: str, policy: Optional[str], pre_commit: bool):
+def install_hooks(
+    project_path: str, policy: Optional[str], *, pre_commit: bool
+) -> None:
     """Install git hooks for Claude mention control."""
     try:
         project_path_obj = Path(project_path).resolve()
@@ -334,7 +338,7 @@ def install_hooks(project_path: str, policy: Optional[str], pre_commit: bool):
                 console.print(f"  {operation}")
         else:
             console.print("[red]Failed to install commit-msg hook:[/red]")
-            for error in result.errors:
+            for error in result.errors or []:
                 console.print(f"  • {error}")
 
         # Install pre-commit hook if requested
@@ -349,7 +353,7 @@ def install_hooks(project_path: str, policy: Optional[str], pre_commit: bool):
                     console.print(f"  {operation}")
             else:
                 console.print("[red]Failed to install pre-commit hook:[/red]")
-                for error in result.errors:
+                for error in result.errors or []:
                     console.print(f"  • {error}")
 
         # Show what the hooks do
@@ -379,7 +383,7 @@ def install_hooks(project_path: str, policy: Optional[str], pre_commit: bool):
     required=False,
 )
 @click.option("--force", is_flag=True, help="Force removal without confirmation")
-def uninstall_hooks(project_path: str, force: bool):
+def uninstall_hooks(project_path: str, *, force: bool) -> None:
     """Remove git hooks installed by Claude Builder."""
     try:
         project_path_obj = Path(project_path).resolve()
@@ -404,7 +408,7 @@ def uninstall_hooks(project_path: str, force: bool):
                 console.print(f"  {operation}")
         else:
             console.print("[red]Failed to remove hooks:[/red]")
-            for error in result.errors:
+            for error in result.errors or []:
                 console.print(f"  • {error}")
             raise click.ClickException(HOOK_REMOVAL_FAILED)
 
@@ -427,7 +431,7 @@ def uninstall_hooks(project_path: str, force: bool):
     default="table",
     help="Output format",
 )
-def list_backups(project_path: str, output_format: str):
+def list_backups(project_path: str, output_format: str) -> None:
     """List available git configuration backups."""
     try:
         project_path_obj = Path(project_path).resolve()
@@ -476,7 +480,7 @@ def list_backups(project_path: str, output_format: str):
     required=False,
 )
 @click.option("--force", is_flag=True, help="Force rollback without confirmation")
-def rollback(backup_id: str, project_path: str, force: bool):
+def rollback(backup_id: str, project_path: str, *, force: bool) -> None:
     """Rollback git configuration to a previous backup."""
     try:
         project_path_obj = Path(project_path).resolve()
@@ -520,7 +524,7 @@ def rollback(backup_id: str, project_path: str, force: bool):
 )
 @click.option("--keep", type=int, default=5, help="Number of backups to keep")
 @click.option("--force", is_flag=True, help="Force cleanup without confirmation")
-def cleanup_backups(project_path: str, keep: int, force: bool):
+def cleanup_backups(project_path: str, keep: int, *, force: bool) -> None:
     """Clean up old git configuration backups."""
     try:
         project_path_obj = Path(project_path).resolve()
@@ -560,7 +564,7 @@ def cleanup_backups(project_path: str, keep: int, force: bool):
         raise click.ClickException(f"{FAILED_TO_CLEANUP_BACKUPS}: {e}")
 
 
-def setup_exclude(project_path: str):
+def setup_exclude(project_path: str) -> None:
     """Setup git exclude patterns."""
     try:
         project_path_obj = Path(project_path).resolve()
@@ -593,7 +597,7 @@ def setup_exclude(project_path: str):
                 console.print(f"  • {pattern}")
         else:
             console.print("[red]Failed to add excludes:[/red]")
-            for error in result.errors:
+            for error in result.errors or []:
                 console.print(f"  • {error}")
             raise GitError(EXCLUDE_SETUP_FAILED_ERROR)
 
@@ -602,7 +606,7 @@ def setup_exclude(project_path: str):
         raise GitError(f"{FAILED_TO_SETUP_EXCLUDES}: {e}")
 
 
-def remove_exclude(project_path: str):
+def remove_exclude(project_path: str) -> None:
     """Remove git exclude patterns."""
     try:
         project_path_obj = Path(project_path).resolve()
@@ -630,7 +634,7 @@ def remove_exclude(project_path: str):
                 console.print(f"  {operation}")
         else:
             console.print("[red]Failed to remove excludes:[/red]")
-            for error in result.errors:
+            for error in result.errors or []:
                 console.print(f"  • {error}")
             raise GitError(UNEXCLUDE_OPERATION_FAILED_ERROR)
 
@@ -639,7 +643,7 @@ def remove_exclude(project_path: str):
         raise GitError(f"{FAILED_TO_REMOVE_EXCLUDES}: {e}")
 
 
-def backup(project_path: str = "."):
+def backup(project_path: str = ".") -> None:
     """Create backup of git configuration."""
     try:
         project_path_obj = Path(project_path).resolve()
@@ -659,7 +663,7 @@ def backup(project_path: str = "."):
         raise GitError(f"{FAILED_TO_CREATE_BACKUP}: {e}")
 
 
-def restore(backup_id: str, project_path: str = "."):
+def restore(backup_id: str, project_path: str = ".") -> None:
     """Restore git configuration from backup."""
     try:
         project_path_obj = Path(project_path).resolve()

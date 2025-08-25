@@ -1,8 +1,16 @@
 """Generation CLI commands for Claude Builder."""
 
+from __future__ import annotations
+
 import json
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
+
+try:
+    import yaml
+except ImportError:
+    yaml = None
 
 import click
 from rich.console import Console
@@ -22,8 +30,26 @@ FAILED_TO_GENERATE_AGENTS_MD = "Failed to generate AGENTS.md"
 console = Console()
 
 
+@dataclass
+class GenerateConfig:
+    """Configuration for generation commands."""
+
+    from_analysis: Optional[str] = None
+    template: Optional[str] = None
+    partial: Optional[str] = None
+    output_dir: Optional[str] = None
+    output_format: str = "files"
+    backup_existing: bool = False
+    dry_run: bool = False
+    verbose: int = 0
+
+    # Additional options for specific commands
+    agents_dir: Optional[str] = None
+    output_file: Optional[str] = None
+
+
 @click.group()
-def generate():
+def generate() -> None:
     """Generate documentation and configurations."""
 
 
@@ -57,52 +83,47 @@ def generate():
     help="Show what would be generated without creating files",
 )
 @click.option("--verbose", "-v", count=True, help="Verbose output")
-def docs(
-    project_path: str,
-    from_analysis: Optional[str],
-    template: Optional[str],
-    partial: Optional[str],
-    output_dir: Optional[str],
-    output_format: str,
-    backup_existing: bool,
-    dry_run: bool,
-    verbose: int,
-):
+def docs(project_path: str, **kwargs) -> None:
     """Generate documentation from project analysis."""
+    # Create config from kwargs
+    config = GenerateConfig(**kwargs)
+
     try:
         path = Path(project_path).resolve()
 
-        if verbose > 0:
+        if config.verbose > 0:
             console.print(f"[cyan]Generating documentation for: {path}[/cyan]")
 
         # Get project analysis
-        if from_analysis:
-            analysis = _load_analysis_from_file(Path(from_analysis))
-            if verbose > 0:
-                console.print(f"[green]Loaded analysis from: {from_analysis}[/green]")
+        if config.from_analysis:
+            analysis = _load_analysis_from_file(Path(config.from_analysis))
+            if config.verbose > 0:
+                console.print(
+                    f"[green]Loaded analysis from: {config.from_analysis}[/green]"
+                )
         else:
-            if verbose > 0:
+            if config.verbose > 0:
                 console.print("[cyan]Analyzing project...[/cyan]")
             analyzer = ProjectAnalyzer()
             analysis = analyzer.analyze(path)
 
         # Configure generator
-        config = {}
-        if template:
-            config["preferred_template"] = template
-        config["output_format"] = output_format
+        generator_config = {}
+        if config.template:
+            generator_config["preferred_template"] = config.template
+        generator_config["output_format"] = config.output_format
 
         # Apply partial generation filter
         sections_filter = None
-        if partial:
-            sections_filter = [s.strip() for s in partial.split(",")]
-            if verbose > 0:
+        if config.partial:
+            sections_filter = [s.strip() for s in config.partial.split(",")]
+            if config.verbose > 0:
                 console.print(
                     f"[yellow]Generating only sections: {sections_filter}[/yellow]"
                 )
 
         # Generate content
-        generator = DocumentGenerator(config)
+        generator = DocumentGenerator(generator_config)
         generated_content = generator.generate(analysis, path)
 
         # Apply sections filter
@@ -147,16 +168,21 @@ def docs(
             generated_content.files = filtered_files
 
         # Display what would be generated
-        if dry_run or verbose > 0:
+        if config.dry_run or config.verbose > 0:
             _display_generation_preview(generated_content, analysis)
 
-        if dry_run:
+        if config.dry_run:
             console.print("[yellow]Dry run complete - no files were created[/yellow]")
             return
 
         # Write files
-        output_path = Path(output_dir) if output_dir else path
-        _write_generated_files(generated_content, output_path, backup_existing, verbose)
+        output_path = Path(config.output_dir) if config.output_dir else path
+        _write_generated_files(
+            generated_content,
+            output_path,
+            backup_existing=config.backup_existing,
+            verbose=config.verbose,
+        )
 
         console.print("[green]✓ Documentation generated successfully[/green]")
         console.print(f"Output location: {output_path}")
@@ -185,28 +211,26 @@ def docs(
     help="Show what would be generated without creating files",
 )
 @click.option("--verbose", "-v", count=True, help="Verbose output")
-def agents(
-    project_path: str,
-    from_analysis: Optional[str],
-    agents_dir: Optional[str],
-    output_file: Optional[str],
-    dry_run: bool,
-    verbose: int,
-):
+def agents(project_path: str, **kwargs) -> None:
     """Generate agent configurations."""
+    # Create config from kwargs
+    config = GenerateConfig(**kwargs)
+
     try:
         path = Path(project_path).resolve()
 
-        if verbose > 0:
+        if config.verbose > 0:
             console.print(f"[cyan]Generating agent configuration for: {path}[/cyan]")
 
         # Get project analysis
-        if from_analysis:
-            analysis = _load_analysis_from_file(Path(from_analysis))
-            if verbose > 0:
-                console.print(f"[green]Loaded analysis from: {from_analysis}[/green]")
+        if config.from_analysis:
+            analysis = _load_analysis_from_file(Path(config.from_analysis))
+            if config.verbose > 0:
+                console.print(
+                    f"[green]Loaded analysis from: {config.from_analysis}[/green]"
+                )
         else:
-            if verbose > 0:
+            if config.verbose > 0:
                 console.print("[cyan]Analyzing project...[/cyan]")
             analyzer = ProjectAnalyzer()
             analysis = analyzer.analyze(path)
@@ -217,7 +241,7 @@ def agents(
         agent_system = UniversalAgentSystem()
         agent_config = agent_system.select_agents(analysis)
 
-        if verbose > 0:
+        if config.verbose > 0:
             console.print(
                 f"[green]Selected {len(agent_config.all_agents)} agents[/green]"
             )
@@ -233,7 +257,7 @@ def agents(
             if "agent" in k.lower() or k == "AGENTS.md"
         }
 
-        if dry_run or verbose > 0:
+        if config.dry_run or config.verbose > 0:
             console.print(
                 Panel(
                     f"**Agent Configuration Preview**\n\n"
@@ -246,16 +270,18 @@ def agents(
                 )
             )
 
-        if dry_run:
+        if config.dry_run:
             console.print("[yellow]Dry run complete - no files were created[/yellow]")
             return
 
         # Write agent files
-        output_path = Path(output_file) if output_file else path / "AGENTS.md"
+        output_path = (
+            Path(config.output_file) if config.output_file else path / "AGENTS.md"
+        )
 
         if len(agent_files) == 1 and "AGENTS.md" in agent_files:
             # Write single file
-            with open(output_path, "w", encoding="utf-8") as f:
+            with output_path.open("w", encoding="utf-8") as f:
                 f.write(agent_files["AGENTS.md"])
             console.print(
                 f"[green]✓ Agent configuration written to: {output_path}[/green]"
@@ -269,7 +295,7 @@ def agents(
                     else output_path / filename
                 )
                 file_path.parent.mkdir(parents=True, exist_ok=True)
-                with open(file_path, "w", encoding="utf-8") as f:
+                with file_path.open("w", encoding="utf-8") as f:
                     f.write(content)
             console.print(
                 f"[green]✓ Agent files written to: {output_path.parent if output_path.is_file() else output_path}[/green]"
@@ -283,10 +309,10 @@ def agents(
 def _load_analysis_from_file(analysis_file: Path) -> ProjectAnalysis:
     """Load project analysis from file."""
     try:
-        with open(analysis_file, encoding="utf-8") as f:
+        with analysis_file.open(encoding="utf-8") as f:
             if analysis_file.suffix.lower() in [".yaml", ".yml"]:
-                import yaml
-
+                if yaml is None:
+                    raise ImportError("PyYAML is required for YAML support")
                 data = yaml.safe_load(f)
             else:
                 data = json.load(f)
@@ -389,7 +415,7 @@ def _load_analysis_from_file(analysis_file: Path) -> ProjectAnalysis:
         raise ClaudeBuilderError(f"{FAILED_TO_LOAD_ANALYSIS} {analysis_file}: {e}")
 
 
-def _display_generation_preview(generated_content, analysis):
+def _display_generation_preview(generated_content: Any, analysis: Any) -> None:
     """Display preview of what will be generated."""
     files_info = []
     total_size = 0
@@ -410,8 +436,8 @@ def _display_generation_preview(generated_content, analysis):
 
 
 def _write_generated_files(
-    generated_content, output_path: Path, backup_existing: bool, verbose: int
-):
+    generated_content: Any, output_path: Path, *, backup_existing: bool, verbose: int
+) -> int:
     """Write generated files to disk."""
     files_written = 0
 
@@ -431,7 +457,7 @@ def _write_generated_files(
                 )
 
         # Write file
-        with open(file_path, "w", encoding="utf-8") as f:
+        with file_path.open("w", encoding="utf-8") as f:
             f.write(content)
 
         files_written += 1
@@ -441,6 +467,8 @@ def _write_generated_files(
 
     if verbose > 0:
         console.print(f"[green]Wrote {files_written} files[/green]")
+
+    return files_written
 
 
 @generate.command()
@@ -462,39 +490,37 @@ def _write_generated_files(
     help="Show what would be generated without creating files",
 )
 @click.option("--verbose", "-v", count=True, help="Verbose output")
-def claude_md(
-    project_path: str,
-    from_analysis: Optional[str],
-    template: Optional[str],
-    output_file: Optional[str],
-    dry_run: bool,
-    verbose: int,
-):
+def claude_md(project_path: str, **kwargs) -> None:
     """Generate CLAUDE.md file."""
+    # Create config from kwargs
+    config = GenerateConfig(**kwargs)
+
     try:
         path = Path(project_path).resolve()
 
-        if verbose > 0:
+        if config.verbose > 0:
             console.print(f"[cyan]Generating CLAUDE.md for: {path}[/cyan]")
 
         # Get project analysis
-        if from_analysis:
-            analysis = _load_analysis_from_file(Path(from_analysis))
-            if verbose > 0:
-                console.print(f"[green]Loaded analysis from: {from_analysis}[/green]")
+        if config.from_analysis:
+            analysis = _load_analysis_from_file(Path(config.from_analysis))
+            if config.verbose > 0:
+                console.print(
+                    f"[green]Loaded analysis from: {config.from_analysis}[/green]"
+                )
         else:
-            if verbose > 0:
+            if config.verbose > 0:
                 console.print("[cyan]Analyzing project...[/cyan]")
             analyzer = ProjectAnalyzer()
             analysis = analyzer.analyze(path)
 
         # Configure generator
-        config = {}
-        if template:
-            config["preferred_template"] = template
+        generator_config = {}
+        if config.template:
+            generator_config["preferred_template"] = config.template
 
         # Generate CLAUDE.md content
-        generator = DocumentGenerator(config)
+        generator = DocumentGenerator(generator_config)
         generated_content = generator.generate(analysis, path)
 
         # Extract only CLAUDE.md content
@@ -503,7 +529,7 @@ def claude_md(
             console.print("[red]Failed to generate CLAUDE.md content[/red]")
             return
 
-        if dry_run or verbose > 0:
+        if config.dry_run or config.verbose > 0:
             console.print(
                 Panel(
                     f"**CLAUDE.md Preview** ({len(claude_content)} characters)\n\n"
@@ -512,14 +538,16 @@ def claude_md(
                 )
             )
 
-        if dry_run:
+        if config.dry_run:
             console.print("[yellow]Dry run complete - no files were created[/yellow]")
             return
 
         # Write CLAUDE.md file
-        output_path = Path(output_file) if output_file else path / "CLAUDE.md"
+        output_path = (
+            Path(config.output_file) if config.output_file else path / "CLAUDE.md"
+        )
 
-        with open(output_path, "w", encoding="utf-8") as f:
+        with output_path.open("w", encoding="utf-8") as f:
             f.write(claude_content)
 
         console.print("[green]✓ CLAUDE.md generated successfully[/green]")
@@ -549,28 +577,26 @@ def claude_md(
     help="Show what would be generated without creating files",
 )
 @click.option("--verbose", "-v", count=True, help="Verbose output")
-def agents_md(
-    project_path: str,
-    from_analysis: Optional[str],
-    agents_dir: Optional[str],
-    output_file: Optional[str],
-    dry_run: bool,
-    verbose: int,
-):
+def agents_md(project_path: str, **kwargs) -> None:
     """Generate AGENTS.md file."""
+    # Create config from kwargs
+    config = GenerateConfig(**kwargs)
+
     try:
         path = Path(project_path).resolve()
 
-        if verbose > 0:
+        if config.verbose > 0:
             console.print(f"[cyan]Generating AGENTS.md for: {path}[/cyan]")
 
         # Get project analysis
-        if from_analysis:
-            analysis = _load_analysis_from_file(Path(from_analysis))
-            if verbose > 0:
-                console.print(f"[green]Loaded analysis from: {from_analysis}[/green]")
+        if config.from_analysis:
+            analysis = _load_analysis_from_file(Path(config.from_analysis))
+            if config.verbose > 0:
+                console.print(
+                    f"[green]Loaded analysis from: {config.from_analysis}[/green]"
+                )
         else:
-            if verbose > 0:
+            if config.verbose > 0:
                 console.print("[cyan]Analyzing project...[/cyan]")
             analyzer = ProjectAnalyzer()
             analysis = analyzer.analyze(path)
@@ -581,7 +607,7 @@ def agents_md(
         agent_system = UniversalAgentSystem()
         agent_config = agent_system.select_agents(analysis)
 
-        if verbose > 0:
+        if config.verbose > 0:
             console.print(
                 f"[green]Selected {len(agent_config.all_agents)} agents[/green]"
             )
@@ -596,7 +622,7 @@ def agents_md(
             console.print("[red]Failed to generate AGENTS.md content[/red]")
             return
 
-        if dry_run or verbose > 0:
+        if config.dry_run or config.verbose > 0:
             console.print(
                 Panel(
                     f"**AGENTS.md Preview**\n\n"
@@ -609,14 +635,16 @@ def agents_md(
                 )
             )
 
-        if dry_run:
+        if config.dry_run:
             console.print("[yellow]Dry run complete - no files were created[/yellow]")
             return
 
         # Write AGENTS.md file
-        output_path = Path(output_file) if output_file else path / "AGENTS.md"
+        output_path = (
+            Path(config.output_file) if config.output_file else path / "AGENTS.md"
+        )
 
-        with open(output_path, "w", encoding="utf-8") as f:
+        with output_path.open("w", encoding="utf-8") as f:
             f.write(agents_content)
 
         console.print("[green]✓ AGENTS.md generated successfully[/green]")

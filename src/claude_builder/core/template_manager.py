@@ -28,7 +28,7 @@ FAILED_TO_LOAD_TEMPLATE = "Failed to load template"
 class TemplateMetadata:
     """Metadata for a template."""
 
-    def __init__(self, data: Dict[str, Any]):
+    def __init__(self, data: Dict[str, Any]) -> None:
         self.name: str = data.get("name", "")
         self.version: str = data.get("version", "1.0.0")
         self.description: str = data.get("description", "")
@@ -140,7 +140,7 @@ class CommunityTemplate:
 class TemplateValidator:
     """Validates template structure and content quality."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.required_files = [
             "template.json",  # Metadata file
             "claude_instructions.md",  # At minimum, must have Claude instructions
@@ -222,7 +222,7 @@ class TemplateValidator:
             )
 
         try:
-            with open(metadata_file, encoding="utf-8") as f:
+            with metadata_file.open(encoding="utf-8") as f:
                 metadata = json.load(f)
         except json.JSONDecodeError as e:
             return ValidationResult(
@@ -269,7 +269,7 @@ class TemplateValidator:
 
         for file_path in template_files:
             try:
-                with open(file_path, encoding="utf-8") as f:
+                with file_path.open(encoding="utf-8") as f:
                     content = f.read()
 
                 # Check for template variables (${{variable}} format)
@@ -316,7 +316,7 @@ class TemplateValidator:
         template_files = list(template_path.glob("**/*.md"))
         for file_path in template_files:
             try:
-                with open(file_path, encoding="utf-8") as f:
+                with file_path.open(encoding="utf-8") as f:
                     content = f.read().lower()
 
                 # Check for potentially dangerous patterns
@@ -353,8 +353,12 @@ class TemplateManager:
         self,
         config: Optional[Dict[str, Any]] = None,
         template_directory: Optional[str] = None,
+        **kwargs: Any,
     ):
         self.config = config or {}
+        # Accept additional config parameters via kwargs
+        self.config.update(kwargs)
+
         # Support both config and template_directory parameters for test compatibility
         if template_directory:
             self.templates_dir = Path(template_directory)
@@ -370,7 +374,7 @@ class TemplateManager:
             template_directory=str(self.templates_dir) if template_directory else None
         )
         self.renderer = TemplateRenderer()
-        self.templates = {}  # Template cache for test compatibility
+        self.templates: Dict[str, Any] = {}  # Template cache for test compatibility
 
         # Community template sources
         self.official_repository = (
@@ -381,7 +385,7 @@ class TemplateManager:
         ]
 
     def list_available_templates(
-        self, include_installed: bool = True, include_community: bool = True
+        self, *, include_installed: bool = True, include_community: bool = True
     ) -> List[CommunityTemplate]:
         """List all available templates."""
         templates = []
@@ -432,7 +436,7 @@ class TemplateManager:
         return matching_templates
 
     def install_template(
-        self, template_id: str, force: bool = False
+        self, template_id: str, *, force: bool = False
     ) -> ValidationResult:
         """Install a community template."""
         # Find template in community sources
@@ -513,7 +517,7 @@ class TemplateManager:
             }
 
             # Write metadata
-            with open(template_path / "template.json", "w", encoding="utf-8") as f:
+            with (template_path / "template.json").open("w", encoding="utf-8") as f:
                 json.dump(metadata, f, indent=2)
 
             # Generate template files from project analysis
@@ -605,7 +609,7 @@ class TemplateManager:
             return None
 
         try:
-            with open(metadata_file, encoding="utf-8") as f:
+            with metadata_file.open(encoding="utf-8") as f:
                 metadata_data = json.load(f)
 
             metadata = TemplateMetadata(metadata_data)
@@ -628,7 +632,7 @@ class TemplateManager:
 
     def _fetch_templates_from_source(self, source_url: str) -> List[CommunityTemplate]:
         """Fetch template listings from a remote source."""
-        templates = []
+        templates: List[CommunityTemplate] = []
 
         try:
             # Try to fetch template index
@@ -726,7 +730,7 @@ class TemplateManager:
         with urlopen(
             request, timeout=30
         ) as response:  # nosec B310: scheme validated above
-            with open(destination, "wb") as f:
+            with destination.open("wb") as f:
                 shutil.copyfileobj(response, f)
 
     def _find_template_root(self, extract_path: Path) -> Optional[Path]:
@@ -765,12 +769,12 @@ class TemplateManager:
             template_file_path = template_path / filename
             template_file_path.parent.mkdir(parents=True, exist_ok=True)
 
-            with open(template_file_path, "w", encoding="utf-8") as f:
+            with template_file_path.open("w", encoding="utf-8") as f:
                 f.write(template_content)
 
         # Create README for the template
         readme_content = self._generate_template_readme(config, analysis)
-        with open(template_path / "README.md", "w", encoding="utf-8") as f:
+        with (template_path / "README.md").open("w", encoding="utf-8") as f:
             f.write(readme_content)
 
     def _convert_to_template(self, content: str, analysis: ProjectAnalysis) -> str:
@@ -869,7 +873,7 @@ claude-builder /path/to/project --template={config.get('name', 'custom-template'
         template_path = self.templates_dir / template_name
 
         if template_path.exists():
-            with open(template_path, encoding="utf-8") as f:
+            with template_path.open(encoding="utf-8") as f:
                 content = f.read()
 
             # Create template object and render
@@ -934,20 +938,22 @@ class Template:
         self,
         name: str,
         content: str = "",
-        template_type: str = "markdown",
-        variables=None,
-        metadata=None,
-        parent_template=None,
         **kwargs,
     ):
         self.name = name
         self.content = content
-        self.template_type = template_type
-        self.variables = variables or []
-        self.metadata = metadata or {}
-        self.parent_template = parent_template
+        self.template_type = kwargs.get("template_type", "markdown")
+        self.variables = kwargs.get("variables", [])
+        self.metadata = kwargs.get("metadata", {})
+        self.parent_template = kwargs.get("parent_template")
+
         # Store any additional kwargs in metadata
-        self.metadata.update(kwargs)
+        remaining_kwargs = {
+            k: v
+            for k, v in kwargs.items()
+            if k not in ["template_type", "variables", "metadata", "parent_template"]
+        }
+        self.metadata.update(remaining_kwargs)
 
     def render(self, **context) -> str:
         """Render template with context."""
@@ -1021,7 +1027,7 @@ class Template:
 class TemplateBuilder:
     """Placeholder TemplateBuilder class for test compatibility."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.templates = {}
 
     def create_template(self, name: str, content: str) -> Template:
@@ -1041,13 +1047,13 @@ class TemplateBuilder:
 class TemplateContext:
     """Placeholder TemplateContext class for test compatibility."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         self.variables = kwargs
 
-    def get(self, key: str, default=None):
+    def get(self, key: str, default: Any = None) -> Any:
         return self.variables.get(key, default)
 
-    def nested_value(self, key: str, default=None):
+    def nested_value(self, key: str, default: Any = None) -> Any:
         """Get nested value using dot notation."""
         keys = key.split(".")
         value = self.variables
@@ -1058,7 +1064,7 @@ class TemplateContext:
         except (KeyError, TypeError):
             return default
 
-    def dynamic_value(self, key: str, generator_func=None):
+    def dynamic_value(self, key: str, generator_func: Any = None) -> Any:
         """Get dynamic value with optional generator function."""
         if generator_func and callable(generator_func):
             return generator_func()
@@ -1070,7 +1076,9 @@ class TemplateContext:
         merged_vars.update(other_context.variables)
         return TemplateContext(**merged_vars)
 
-    def conditional_value(self, condition: str, true_value, false_value):
+    def conditional_value(
+        self, condition: str, true_value: Any, false_value: Any
+    ) -> Any:
         """Get value based on condition."""
         # Simple condition evaluation
         condition_result = self.get(condition, False)
@@ -1082,10 +1090,10 @@ class TemplateContext:
 class TemplateEcosystem:
     """Placeholder TemplateEcosystem class for test compatibility."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.templates = {}
 
-    def load_ecosystem(self, path: str):
+    def load_ecosystem(self, path: str) -> Dict[str, Any]:
         return {"templates": 5, "loaded": True}
 
 
@@ -1093,7 +1101,11 @@ class TemplateError(Exception):
     """Placeholder TemplateError class for test compatibility."""
 
     def __init__(
-        self, message: str, template_name: str = None, line_number: int = None, **kwargs
+        self,
+        message: str,
+        template_name: Optional[str] = None,
+        line_number: Optional[int] = None,
+        **kwargs: Any,
     ):
         super().__init__(message)
         self.template_name = template_name
@@ -1106,7 +1118,7 @@ class TemplateError(Exception):
 class TemplateMarketplace:
     """Placeholder TemplateMarketplace class for test compatibility."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.templates = {}
         self.marketplace_url = "https://example.com/templates"
 
@@ -1156,7 +1168,7 @@ class TemplateLoader:
             raise FileNotFoundError(f"{TEMPLATE_NOT_FOUND}: {template_name}")
 
         try:
-            with open(template_path, encoding="utf-8") as f:
+            with template_path.open(encoding="utf-8") as f:
                 return f.read()
         except Exception as e:
             raise OSError(f"{FAILED_TO_LOAD_TEMPLATE} {template_name}: {e}")
@@ -1270,7 +1282,7 @@ class TemplateRepository:
 class TemplateRenderer:
     """Template rendering with variable substitution for Phase 2 implementation."""
 
-    def __init__(self, template_engine: str = "simple", enable_cache: bool = False):
+    def __init__(self, template_engine: str = "simple", *, enable_cache: bool = False):
         """Initialize template renderer.
 
         Args:
@@ -1333,7 +1345,7 @@ class TemplateRenderer:
         """
         try:
             # Load template content
-            with open(template_path, encoding="utf-8") as f:
+            with Path(template_path).open(encoding="utf-8") as f:
                 template_content = f.read()
 
             # Render template
@@ -1344,7 +1356,7 @@ class TemplateRenderer:
             output_path_obj.parent.mkdir(parents=True, exist_ok=True)
 
             # Write rendered content
-            with open(output_path, "w", encoding="utf-8") as f:
+            with output_path_obj.open("w", encoding="utf-8") as f:
                 f.write(rendered_content)
 
             return True

@@ -1,21 +1,25 @@
 """Validation utilities for Claude Builder."""
 
 import os
+import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional
+from typing import Any, List, Optional
 
 
 @dataclass
 class ValidationResult:
     """Result of a validation operation."""
+
     is_valid: bool
     error: Optional[str] = None
-    warnings: List[str] = None
-    suggestions: List[str] = None
-    errors: List[str] = None
+    warnings: Optional[List[str]] = None
+    suggestions: Optional[List[str]] = None
+    errors: Optional[List[str]] = None
+    project_type: Optional[str] = None
+    detected_files: Optional[List[str]] = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.warnings is None:
             self.warnings = []
         if self.suggestions is None:
@@ -27,10 +31,10 @@ class ValidationResult:
             self.errors.append(self.error)
 
     def has_errors(self) -> bool:
-        return len(self.errors) > 0
+        return len(self.errors or []) > 0
 
     def has_warnings(self) -> bool:
-        return len(self.warnings) > 0
+        return len(self.warnings or []) > 0
 
 
 def validate_project_path(project_path: Path) -> ValidationResult:
@@ -39,22 +43,19 @@ def validate_project_path(project_path: Path) -> ValidationResult:
     # Check if path exists
     if not project_path.exists():
         return ValidationResult(
-            is_valid=False,
-            error=f"Path does not exist: {project_path}"
+            is_valid=False, error=f"Path does not exist: {project_path}"
         )
 
     # Check if it's a directory
     if not project_path.is_dir():
         return ValidationResult(
-            is_valid=False,
-            error=f"Path is not a directory: {project_path}"
+            is_valid=False, error=f"Path is not a directory: {project_path}"
         )
 
     # Check if we have read permissions
     if not os.access(project_path, os.R_OK):
         return ValidationResult(
-            is_valid=False,
-            error=f"No read permission for directory: {project_path}"
+            is_valid=False, error=f"No read permission for directory: {project_path}"
         )
 
     warnings = []
@@ -67,8 +68,14 @@ def validate_project_path(project_path: Path) -> ValidationResult:
 
     # Check for common project indicators
     common_files = [
-        "package.json", "Cargo.toml", "pyproject.toml", "requirements.txt",
-        "pom.xml", "build.gradle", "go.mod", "composer.json"
+        "package.json",
+        "Cargo.toml",
+        "pyproject.toml",
+        "requirements.txt",
+        "pom.xml",
+        "build.gradle",
+        "go.mod",
+        "composer.json",
     ]
 
     has_project_indicators = any(
@@ -102,26 +109,19 @@ def validate_project_path(project_path: Path) -> ValidationResult:
     if not (project_path / ".git").exists():
         suggestions.append("Initialize git repository for better project management")
 
-    return ValidationResult(
-        is_valid=True,
-        warnings=warnings,
-        suggestions=suggestions
-    )
+    return ValidationResult(is_valid=True, warnings=warnings, suggestions=suggestions)
 
 
 def validate_template_name(template_name: str) -> ValidationResult:
     """Validate template name."""
     if not template_name:
-        return ValidationResult(
-            is_valid=False,
-            error="Template name cannot be empty"
-        )
+        return ValidationResult(is_valid=False, error="Template name cannot be empty")
 
     # Check for valid characters
     if not template_name.replace("-", "").replace("_", "").isalnum():
         return ValidationResult(
             is_valid=False,
-            error="Template name can only contain letters, numbers, hyphens, and underscores"
+            error="Template name can only contain letters, numbers, hyphens, and underscores",
         )
 
     return ValidationResult(is_valid=True)
@@ -131,14 +131,12 @@ def validate_config_file(config_path: Path) -> ValidationResult:
     """Validate configuration file."""
     if not config_path.exists():
         return ValidationResult(
-            is_valid=False,
-            error=f"Configuration file not found: {config_path}"
+            is_valid=False, error=f"Configuration file not found: {config_path}"
         )
 
     if not config_path.is_file():
         return ValidationResult(
-            is_valid=False,
-            error=f"Configuration path is not a file: {config_path}"
+            is_valid=False, error=f"Configuration path is not a file: {config_path}"
         )
 
     # Check file extension
@@ -146,20 +144,22 @@ def validate_config_file(config_path: Path) -> ValidationResult:
     if config_path.suffix.lower() not in valid_extensions:
         return ValidationResult(
             is_valid=False,
-            error=f"Configuration file must have .json or .toml extension, got: {config_path.suffix}"
+            error=f"Configuration file must have .json or .toml extension, got: {config_path.suffix}",
         )
 
     # Check if readable
     if not os.access(config_path, os.R_OK):
         return ValidationResult(
             is_valid=False,
-            error=f"No read permission for configuration file: {config_path}"
+            error=f"No read permission for configuration file: {config_path}",
         )
 
     return ValidationResult(is_valid=True)
 
 
-def validate_output_directory(output_dir: Path, create_if_missing: bool = False) -> ValidationResult:
+def validate_output_directory(
+    output_dir: Path, *, create_if_missing: bool = False
+) -> ValidationResult:
     """Validate output directory."""
     if not output_dir.exists():
         if create_if_missing:
@@ -167,32 +167,31 @@ def validate_output_directory(output_dir: Path, create_if_missing: bool = False)
                 output_dir.mkdir(parents=True, exist_ok=True)
             except OSError as e:
                 return ValidationResult(
-                    is_valid=False,
-                    error=f"Cannot create output directory: {e}"
+                    is_valid=False, error=f"Cannot create output directory: {e}"
                 )
         else:
             return ValidationResult(
-                is_valid=False,
-                error=f"Output directory does not exist: {output_dir}"
+                is_valid=False, error=f"Output directory does not exist: {output_dir}"
             )
 
     if not output_dir.is_dir():
         return ValidationResult(
-            is_valid=False,
-            error=f"Output path is not a directory: {output_dir}"
+            is_valid=False, error=f"Output path is not a directory: {output_dir}"
         )
 
     # Check write permissions
     if not os.access(output_dir, os.W_OK):
         return ValidationResult(
             is_valid=False,
-            error=f"No write permission for output directory: {output_dir}"
+            error=f"No write permission for output directory: {output_dir}",
         )
 
     return ValidationResult(is_valid=True)
 
 
-def validate_directory_structure(directory: Path, expected_structure: dict) -> ValidationResult:
+def validate_directory_structure(
+    directory: Path, expected_structure: dict
+) -> ValidationResult:
     """Validate that a directory has the expected structure.
 
     Args:
@@ -204,14 +203,12 @@ def validate_directory_structure(directory: Path, expected_structure: dict) -> V
     """
     if not directory.exists():
         return ValidationResult(
-            is_valid=False,
-            error=f"Directory does not exist: {directory}"
+            is_valid=False, error=f"Directory does not exist: {directory}"
         )
 
     if not directory.is_dir():
         return ValidationResult(
-            is_valid=False,
-            error=f"Path is not a directory: {directory}"
+            is_valid=False, error=f"Path is not a directory: {directory}"
         )
 
     warnings = []
@@ -231,8 +228,12 @@ def validate_directory_structure(directory: Path, expected_structure: dict) -> V
             else:
                 # Recursively validate subdirectory
                 sub_result = validate_directory_structure(item_path, item_info)
-                warnings.extend([f"{item_name}/{w}" for w in sub_result.warnings])
-                suggestions.extend([f"{item_name}/{s}" for s in sub_result.suggestions])
+                warnings.extend(
+                    [f"{item_name}/{w}" for w in (sub_result.warnings or [])]
+                )
+                suggestions.extend(
+                    [f"{item_name}/{s}" for s in (sub_result.suggestions or [])]
+                )
         # It's a file (item_info would be file extension or True)
         elif not item_path.exists():
             warnings.append(f"Missing file: {item_name}")
@@ -241,29 +242,24 @@ def validate_directory_structure(directory: Path, expected_structure: dict) -> V
             warnings.append(f"Expected file but found directory: {item_name}")
 
     # Structure is valid even with warnings (missing files can be created)
-    return ValidationResult(
-        is_valid=True,
-        warnings=warnings,
-        suggestions=suggestions
-    )
-
+    return ValidationResult(is_valid=True, warnings=warnings, suggestions=suggestions)
 
 
 # Placeholder classes for test compatibility
 class ConfigValidator:
     """Enhanced ConfigValidator class."""
 
-    def __init__(self):
-        self.rules = []
+    def __init__(self) -> None:
+        self.rules: list[Any] = []
 
-    def validate_project_config(self, config: dict) -> dict:
+    def validate_project_config(self, config: dict) -> ValidationResult:
         """Validate project configuration."""
         return self.validate_config(config)
 
     def validate_config(self, config: dict) -> ValidationResult:
         """Validate configuration with detailed analysis."""
-        errors = []
-        warnings = []
+        errors: list[str] = []
+        warnings: list[str] = []
 
         # Validate project section
         if "project" in config:
@@ -275,7 +271,14 @@ class ConfigValidator:
 
             # Validate project type
             if "type" in project_config:
-                valid_types = {"python", "rust", "javascript", "java", "go", "multi_language"}
+                valid_types = {
+                    "python",
+                    "rust",
+                    "javascript",
+                    "java",
+                    "go",
+                    "multi_language",
+                }
                 if project_config["type"] not in valid_types:
                     errors.append(f"Invalid project type: {project_config['type']}")
 
@@ -289,9 +292,11 @@ class ConfigValidator:
                 if analysis_config["depth"] not in valid_depths:
                     errors.append(f"Invalid analysis depth: {analysis_config['depth']}")
 
-        return ValidationResult(is_valid=len(errors) == 0, errors=errors, warnings=warnings)
+        return ValidationResult(
+            is_valid=len(errors) == 0, errors=errors, warnings=warnings
+        )
 
-    def add_validation_rule(self, rule):
+    def add_validation_rule(self, rule: Any) -> None:
         """Add validation rule."""
         self.rules.append(rule)
 
@@ -301,13 +306,11 @@ class DataValidator:
 
     def validate_version(self, version: str) -> bool:
         """Validate version string."""
-        import re
         pattern = r"^\d+\.\d+\.\d+.*$"
         return bool(re.match(pattern, version))
 
     def validate_email(self, email: str) -> bool:
         """Validate email address."""
-        import re
         pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
         return bool(re.match(pattern, email))
 
@@ -325,54 +328,57 @@ class DataValidator:
             return False
 
         # Check for valid characters (letters, numbers, hyphens, underscores)
-        import re
         pattern = r"^[a-zA-Z][a-zA-Z0-9_-]*$"
         return bool(re.match(pattern, name))
-
-
 
 
 class ValidationError:
     """Placeholder ValidationError class for test compatibility."""
 
-    def __init__(self, message: str, field: str = None, code: str = None, context: dict = None):
+    def __init__(
+        self,
+        message: str,
+        field: Optional[str] = None,
+        code: Optional[str] = None,
+        context: Optional[dict] = None,
+    ) -> None:
         self.message = message
         self.field = field
         self.code = code
         self.context = context or {}
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.message
 
 
 class PathValidator:
     """Enhanced PathValidator class."""
 
-    def __init__(self):
-        self.valid_paths = []
+    def __init__(self) -> None:
+        self.valid_paths: List[str] = []
 
     def validate_path(self, path: str) -> bool:
         return Path(path).exists()
 
-    def is_valid_file(self, file_path) -> bool:
+    def is_valid_file(self, file_path: str | Path) -> bool:
         """Check if path is a valid file."""
         if isinstance(file_path, str):
             file_path = Path(file_path)
-        return file_path.exists() and file_path.is_file()
+        return bool(file_path.exists() and file_path.is_file())
 
-    def is_valid_directory(self, dir_path) -> bool:
+    def is_valid_directory(self, dir_path: str | Path) -> bool:
         """Check if path is a valid directory."""
         if isinstance(dir_path, str):
             dir_path = Path(dir_path)
-        return dir_path.exists() and dir_path.is_dir()
+        return bool(dir_path.exists() and dir_path.is_dir())
 
-    def is_readable(self, path) -> bool:
+    def is_readable(self, path: Any) -> bool:
         """Check if path is readable."""
         if isinstance(path, str):
             path = Path(path)
         return path.exists() and os.access(path, os.R_OK)
 
-    def is_writable(self, path) -> bool:
+    def is_writable(self, path: Any) -> bool:
         """Check if path is writable."""
         if isinstance(path, str):
             path = Path(path)
@@ -386,7 +392,7 @@ class PathValidator:
             return ValidationResult(
                 is_valid=False,
                 errors=[f"Invalid project directory: {project_path}"],
-                warnings=[]
+                warnings=[],
             )
 
         return ValidationResult(is_valid=True, errors=[], warnings=[])
@@ -395,26 +401,27 @@ class PathValidator:
 class ProjectValidator:
     """Enhanced ProjectValidator class."""
 
-    def __init__(self):
-        self.validation_rules = []
+    def __init__(self) -> None:
+        self.validation_rules: List[Any] = []
         from .file_patterns import ProjectTypeDetector
+
         self.type_detector = ProjectTypeDetector()
 
-    def validate_project(self, project_path) -> ValidationResult:
+    def validate_project(self, project_path: Any) -> ValidationResult:
         """Validate project with comprehensive analysis."""
         if isinstance(project_path, str):
             project_path = Path(project_path)
 
-        errors = []
-        warnings = []
-        detected_files = []
+        errors: List[str] = []
+        warnings: List[str] = []
+        detected_files: List[str] = []
 
         # Basic path validation
         if not project_path.exists():
             return ValidationResult(
                 is_valid=False,
                 errors=[f"Project path does not exist: {project_path}"],
-                warnings=warnings
+                warnings=warnings,
             )
 
         # Detect project type
@@ -430,9 +437,29 @@ class ProjectValidator:
                 errors.append("Empty project directory")
             else:
                 # Check if it's really a software project
-                source_extensions = {".py", ".rs", ".js", ".ts", ".java", ".go", ".cpp", ".c", ".h"}
-                has_source_files = any(Path(f).suffix.lower() in source_extensions for f in project_files)
-                config_files = {"package.json", "Cargo.toml", "pyproject.toml", "requirements.txt", "pom.xml", "build.gradle", "go.mod"}
+                source_extensions = {
+                    ".py",
+                    ".rs",
+                    ".js",
+                    ".ts",
+                    ".java",
+                    ".go",
+                    ".cpp",
+                    ".c",
+                    ".h",
+                }
+                has_source_files = any(
+                    Path(f).suffix.lower() in source_extensions for f in project_files
+                )
+                config_files = {
+                    "package.json",
+                    "Cargo.toml",
+                    "pyproject.toml",
+                    "requirements.txt",
+                    "pom.xml",
+                    "build.gradle",
+                    "go.mod",
+                }
                 has_config_files = any(f in config_files for f in project_files)
 
                 if not has_source_files and not has_config_files:
@@ -445,7 +472,7 @@ class ProjectValidator:
             "python": ["setup.py", "pyproject.toml", "requirements.txt"],
             "rust": ["Cargo.toml"],
             "javascript": ["package.json"],
-            "java": ["pom.xml", "build.gradle"]
+            "java": ["pom.xml", "build.gradle"],
         }
 
         if project_type in project_indicators:
@@ -465,7 +492,7 @@ class ProjectValidator:
 
         return result
 
-    def add_validation_rule(self, rule):
+    def add_validation_rule(self, rule: Any) -> None:
         self.validation_rules.append(rule)
 
     def check_project_structure(self, project_path: str) -> bool:

@@ -1,5 +1,10 @@
 """Exception classes for Claude Builder."""
 
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
+
 
 class ClaudeBuilderError(Exception):
     """Base exception for Claude Builder."""
@@ -8,11 +13,11 @@ class ClaudeBuilderError(Exception):
         self,
         message: str,
         exit_code: int = 1,
-        context=None,
-        cause=None,
-        suggestions=None,
-        **kwargs,
-    ):
+        context: Optional[Any] = None,
+        cause: Optional[Exception] = None,
+        suggestions: Optional[List[str]] = None,
+        **kwargs: Any,
+    ) -> None:
         super().__init__(message)
         self.exit_code = exit_code
         self.context = context
@@ -27,27 +32,42 @@ class ClaudeBuilderError(Exception):
             setattr(self, key, value)
 
 
+@dataclass
+class AnalysisContext:
+    """Context information for analysis errors."""
+
+    project_path: Optional[str] = None
+    analysis_stage: Optional[str] = None
+    file_path: Optional[str] = None
+    line_number: Optional[int] = None
+    column_number: Optional[int] = None
+
+
 class AnalysisError(ClaudeBuilderError):
     """Exception raised during project analysis."""
 
     def __init__(
         self,
         message: str,
-        project_path=None,
-        analysis_stage=None,
-        file_path=None,
-        line_number=None,
-        column_number=None,
-        **kwargs,
-    ):
+        context: Optional[AnalysisContext] = None,
+        **kwargs: Any,
+    ) -> None:
+        # Extract individual fields from context if provided
+        if context:
+            kwargs.update(
+                {
+                    "project_path": context.project_path,
+                    "analysis_stage": context.analysis_stage,
+                    "file_path": context.file_path,
+                    "line_number": context.line_number,
+                    "column_number": context.column_number,
+                }
+            )
+
         super().__init__(
             message,
             exit_code=5,
-            project_path=project_path,
-            analysis_stage=analysis_stage,
-            file_path=file_path,
-            line_number=line_number,
-            column_number=column_number,
+            context=context,
             **kwargs,
         )
 
@@ -55,7 +75,13 @@ class AnalysisError(ClaudeBuilderError):
 class GenerationError(ClaudeBuilderError):
     """Exception raised during content generation."""
 
-    def __init__(self, message: str, template_name=None, output_path=None, **kwargs):
+    def __init__(
+        self,
+        message: str,
+        template_name: Optional[str] = None,
+        output_path: Optional[str] = None,
+        **kwargs: Any,
+    ) -> None:
         super().__init__(
             message,
             exit_code=6,
@@ -78,12 +104,12 @@ class GitError(ClaudeBuilderError):
     def __init__(
         self,
         message: str,
-        command=None,
-        working_directory=None,
-        git_command=None,
-        exit_code=None,
-        **kwargs,
-    ):
+        command: Optional[str] = None,
+        working_directory: Optional[str] = None,
+        git_command: Optional[str] = None,
+        exit_code: Optional[int] = None,
+        **kwargs: Any,
+    ) -> None:
         actual_exit_code = exit_code if exit_code is not None else 8
         super().__init__(
             message,
@@ -98,7 +124,13 @@ class GitError(ClaudeBuilderError):
 class ConfigError(ClaudeBuilderError):
     """Exception raised for configuration issues."""
 
-    def __init__(self, message: str, config_file=None, config_section=None, **kwargs):
+    def __init__(
+        self,
+        message: str,
+        config_file: Optional[str] = None,
+        config_section: Optional[str] = None,
+        **kwargs: Any,
+    ) -> None:
         super().__init__(
             message,
             exit_code=10,
@@ -114,11 +146,11 @@ class ValidationError(ClaudeBuilderError):
     def __init__(
         self,
         message: str,
-        field_name=None,
-        field_value=None,
-        validation_rules=None,
-        **kwargs,
-    ):
+        field_name: Optional[str] = None,
+        field_value: Optional[Any] = None,
+        validation_rules: Optional[List[str]] = None,
+        **kwargs: Any,
+    ) -> None:
         super().__init__(
             message,
             exit_code=2,
@@ -135,11 +167,11 @@ class TemplateError(ClaudeBuilderError):
     def __init__(
         self,
         message: str,
-        template_name=None,
-        template_category=None,
-        dependency=None,
-        **kwargs,
-    ):
+        template_name: Optional[str] = None,
+        template_category: Optional[str] = None,
+        dependency: Optional[str] = None,
+        **kwargs: Any,
+    ) -> None:
         super().__init__(
             message,
             exit_code=6,
@@ -157,11 +189,11 @@ class ErrorContext:
     def __init__(
         self,
         operation: str,
-        details: dict = None,
-        file_path: str = None,
-        metadata: dict = None,
-        **kwargs,
-    ):
+        details: Optional[Dict[str, Any]] = None,
+        file_path: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+        **kwargs: Any,
+    ) -> None:
         self.operation = operation
         self.details = details or {}
         self.file_path = file_path
@@ -171,7 +203,7 @@ class ErrorContext:
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         result = {
             "operation": self.operation,
@@ -188,10 +220,10 @@ class ErrorContext:
 class ErrorHandler:
     """Error handler class for test compatibility."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.error_count = 0
-        self.logged_errors = []
-        self.recovery_strategies = {}
+        self.logged_errors: List[Dict[str, Any]] = []
+        self.recovery_strategies: Dict[type[Exception], Any] = {}
 
     def handle_error(self, error: Exception) -> ErrorContext:
         self.error_count += 1
@@ -208,36 +240,39 @@ class ErrorHandler:
         }
         self.logged_errors.append(error_entry)
 
-    def register_recovery_strategy(self, error_type: type, strategy_func):
+    def register_recovery_strategy(
+        self, error_type: type[Exception], strategy_func: Any
+    ) -> None:
         """Register a recovery strategy for a specific error type."""
         self.recovery_strategies[error_type] = strategy_func
 
-    def suggest_recovery(self, error: Exception) -> str:
+    def suggest_recovery(self, error: Exception) -> Optional[str]:
         """Suggest recovery action for an error."""
         error_type = type(error)
         if error_type in self.recovery_strategies:
-            return self.recovery_strategies[error_type](error)
+            result = self.recovery_strategies[error_type](error)
+            return str(result) if result is not None else None
         return None
 
-    def get_error_count_by_type(self, error_type: type) -> int:
+    def get_error_count_by_type(self, error_type: type[Exception]) -> int:
         """Get count of errors by type."""
         return sum(
             1 for entry in self.logged_errors if isinstance(entry["error"], error_type)
         )
 
-    def get_errors_by_severity(self, severity: str) -> list:
+    def get_errors_by_severity(self, severity: str) -> List[Dict[str, Any]]:
         """Get errors filtered by severity."""
         return [entry for entry in self.logged_errors if entry["severity"] == severity]
 
-    def categorize_errors(self) -> dict:
+    def categorize_errors(self) -> Dict[str, int]:
         """Categorize errors by type."""
-        categories = {}
+        categories: Dict[str, int] = {}
         for entry in self.logged_errors:
             error_type = entry["type"]
             categories[error_type] = categories.get(error_type, 0) + 1
         return categories
 
-    def generate_error_report(self) -> dict:
+    def generate_error_report(self) -> Dict[str, Any]:
         """Generate comprehensive error report."""
         return {
             "total_errors": len(self.logged_errors),
@@ -251,7 +286,11 @@ class ErrorHandler:
             },
         }
 
-    def filter_errors(self, severity: str = None, error_type: type = None) -> list:
+    def filter_errors(
+        self,
+        severity: Optional[str] = None,
+        error_type: Optional[type[Exception]] = None,
+    ) -> List[Dict[str, Any]]:
         """Filter errors by severity and/or type."""
         filtered = self.logged_errors
 

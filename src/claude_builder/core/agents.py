@@ -4,11 +4,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from claude_builder.core.models import (
-    ComplexityLevel,
-    ProjectAnalysis,
-    ProjectType,
-)
+from claude_builder.core.models import ComplexityLevel, ProjectAnalysis, ProjectType
 
 
 class AgentRole(Enum):
@@ -58,7 +54,7 @@ class AgentConfiguration:
 class UniversalAgentSystem:
     """Universal agent selection and configuration system."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.agent_registry = AgentRegistry()
         self.selector = AgentSelector(self.agent_registry)
         self.configurator = AgentConfigurator()
@@ -94,14 +90,14 @@ class UniversalAgentSystem:
 class AgentRegistry:
     """Registry of available agents with their capabilities."""
 
-    def __init__(self):
-        self._agents = {}
+    def __init__(self) -> None:
+        self._agents: Dict[str, Agent] = {}
         self._load_standard_agents()
         self._load_language_mappings()
         self._load_framework_mappings()
         self._load_domain_mappings()
 
-    def _load_standard_agents(self):
+    def _load_standard_agents(self) -> None:
         """Load standard awesome-claude-code-subagents."""
         # Core development agents
         self._agents.update(
@@ -207,7 +203,7 @@ class AgentRegistry:
             }
         )
 
-    def _load_language_mappings(self):
+    def _load_language_mappings(self) -> None:
         """Load language-specific agent mappings."""
         self.language_mappings = {
             "python": {
@@ -253,7 +249,7 @@ class AgentRegistry:
             },
         }
 
-    def _load_framework_mappings(self):
+    def _load_framework_mappings(self) -> None:
         """Load framework-specific agent mappings."""
         self.framework_mappings = {
             # Python frameworks
@@ -287,7 +283,7 @@ class AgentRegistry:
             "warp": ["rust-engineer", "backend-developer", "api-designer"],
         }
 
-    def _load_domain_mappings(self):
+    def _load_domain_mappings(self) -> None:
         """Load domain-specific agent mappings."""
         self.domain_mappings = {
             "e_commerce": [
@@ -327,11 +323,11 @@ class AgentRegistry:
         """Get all agents with specific role."""
         return [agent for agent in self._agents.values() if agent.role == role]
 
-    def register_agent(self, agent: AgentInfo):
+    def register_agent(self, agent: AgentInfo) -> None:
         """Register a new agent."""
         self._agents[agent.name] = agent
 
-    def register(self, agent):
+    def register(self, agent: AgentInfo) -> None:
         """Register agent (compatibility method for tests)."""
         if hasattr(agent, "name"):
             self._agents[agent.name] = agent
@@ -340,7 +336,7 @@ class AgentRegistry:
 class AgentSelector:
     """Selects appropriate agents based on project analysis."""
 
-    def __init__(self, registry: Optional[AgentRegistry] = None):
+    def __init__(self, registry: Optional[AgentRegistry] = None) -> None:
         self.registry = registry or AgentRegistry()
 
     def select_core_agents(self, analysis: ProjectAnalysis) -> List[AgentInfo]:
@@ -786,7 +782,7 @@ class AgentTask:
 class Agent:
     """Placeholder Agent class for test compatibility."""
 
-    def __init__(self, name: str, role: str = None, **kwargs):
+    def __init__(self, name: str, role: Optional[str] = None, **kwargs: Any) -> None:
         self.name = name
         self.role = role
         self.description = kwargs.get("description", "")
@@ -802,26 +798,27 @@ class AgentCoordinator:
 
     def __init__(
         self,
-        registry_or_agents=None,
+        registry_or_agents: Any = None,
+        *,
         enable_monitoring: bool = False,
         max_concurrent_agents: int = 10,
     ):
         if registry_or_agents is None:
-            self.agents = []
+            self.agents: List[Agent] = []
             self.registry = None
         elif hasattr(registry_or_agents, "register"):
             # It's a registry
             self.registry = registry_or_agents
-            self.agents = []
+            self.agents: List[Agent] = []
         else:
             # It's a list of agents
             self.agents = registry_or_agents or []
             self.registry = None
-        self.coordination_patterns = {}
+        self.coordination_patterns: Dict[str, Any] = {}
         self.enable_monitoring = enable_monitoring
         self.max_concurrent_agents = max_concurrent_agents
 
-    def add_agent(self, agent: Agent):
+    def add_agent(self, agent: Agent) -> None:
         """Add an agent to coordination."""
         self.agents.append(agent)
 
@@ -833,16 +830,16 @@ class AgentCoordinator:
         """Get agent by name."""
         return next((agent for agent in self.agents if agent.name == name), None)
 
-    def execute_task(self, task: "AgentTask"):
+    def execute_task(self, task: "AgentTask") -> None:
         """Execute a task using appropriate agents."""
         try:
             from unittest.mock import Mock
         except ImportError:
             # Create a simple mock class
             class Mock:
-                def __init__(self):
+                def __init__(self) -> None:
                     self.success = True
-                    self.data = {}
+                    self.data: Dict[str, Any] = {}
 
         # Find agent with highest priority (lowest number)
         if self.agents:
@@ -869,14 +866,14 @@ class AgentCoordinator:
         }
         return result
 
-    def execute_with_fallback(self, task: "AgentTask"):
+    def execute_with_fallback(self, task: "AgentTask") -> Any:
         """Execute task with fallback support."""
         try:
             from unittest.mock import Mock
         except ImportError:
             # Create a simple mock class
             class Mock:
-                def __init__(self):
+                def __init__(self) -> None:
                     self.success = True
                     self.data = {"analysis": "fallback_result"}
 
@@ -923,9 +920,9 @@ class AgentCoordinator:
         except ImportError:
             # Create a simple mock class
             class Mock:
-                def __init__(self):
+                def __init__(self) -> None:
                     self.success = True
-                    self.data = {}
+                    self.data: Dict[str, Any] = {}
 
         results = []
         for i, task in enumerate(tasks):
@@ -968,9 +965,9 @@ class AgentCoordinator:
         except ImportError:
             # Create a simple mock class
             class Mock:
-                def __init__(self):
+                def __init__(self) -> None:
                     self.success = True
-                    self.data = {}
+                    self.data: Dict[str, Any] = {}
 
         results = []
         for i, task in enumerate(tasks):
@@ -997,9 +994,9 @@ class AgentCoordinator:
         except ImportError:
             # Create a simple mock class
             class Mock:
-                def __init__(self):
+                def __init__(self) -> None:
                     self.success = True
-                    self.data = {}
+                    self.data: Dict[str, Any] = {}
 
         results = []
         for task in tasks:
@@ -1027,9 +1024,9 @@ class AgentCoordinator:
         except ImportError:
             # Create a simple mock class
             class Mock:
-                def __init__(self):
+                def __init__(self) -> None:
                     self.success = True
-                    self.data = {}
+                    self.data: Dict[str, Any] = {}
 
         results = []
 
@@ -1068,11 +1065,11 @@ class AgentManager:
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
-        self.agents = {}
+        self.agents: Dict[str, Agent] = {}
         self.agent_selector = AgentSelector()
         self.agent_coordinator = AgentCoordinator()
 
-    def register_agent(self, agent: Agent):
+    def register_agent(self, agent: Agent) -> None:
         self.agents[agent.name] = agent
 
     def get_agent(self, name: str) -> Optional[Agent]:
@@ -1135,10 +1132,10 @@ class AgentWorkflow:
 
     def __init__(self, workflow_name: str):
         self.workflow_name = workflow_name
-        self.steps = []
-        self.agents = []
+        self.steps: List[str] = []
+        self.agents: List[Agent] = []
 
-    def add_step(self, step: str):
+    def add_step(self, step: str) -> None:
         self.steps.append(step)
 
     def execute(self) -> Dict[str, Any]:

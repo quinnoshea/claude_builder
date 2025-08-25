@@ -499,9 +499,9 @@ class LanguageDetector:
         self, project_path: Path, filesystem_info: FileSystemInfo
     ) -> LanguageInfo:
         """Detect languages used in the project."""
-        language_counts = defaultdict(int)
-        language_lines = defaultdict(int)
-        language_sizes = defaultdict(int)
+        language_counts: Dict[str, int] = defaultdict(int)
+        language_lines: Dict[str, int] = defaultdict(int)
+        language_sizes: Dict[str, int] = defaultdict(int)
 
         # Skip if no source files
         if filesystem_info.source_files == 0:
@@ -541,7 +541,7 @@ class LanguageDetector:
             return LanguageInfo(confidence=0.0)
 
         # Enhanced scoring algorithm: consider files, lines, and size
-        def calculate_language_score(lang):
+        def calculate_language_score(lang: str) -> float:
             files = language_counts[lang]
             lines = language_lines[lang]
             size = language_sizes[lang]
@@ -612,7 +612,7 @@ class LanguageDetector:
 
         return result
 
-    def _analyze_filesystem_for_language_detection(self, project_path: Path):
+    def _analyze_filesystem_for_language_detection(self, project_path: Path) -> Any:
         """Minimal filesystem analysis for language detection."""
         from claude_builder.core.models import FileSystemInfo
 
@@ -755,7 +755,7 @@ class FrameworkDetector:
         language_info: LanguageInfo,
     ) -> FrameworkInfo:
         """Detect frameworks used in the project."""
-        detected_frameworks = {}
+        detected_frameworks: Dict[str, float] = {}
 
         # Check package files
         framework_scores = self._check_package_files(
@@ -836,7 +836,7 @@ class FrameworkDetector:
 
         return result
 
-    def _analyze_filesystem_for_framework_detection(self, project_path: Path):
+    def _analyze_filesystem_for_framework_detection(self, project_path: Path) -> Any:
         """Minimal filesystem analysis for framework detection."""
         from claude_builder.core.models import FileSystemInfo
 
@@ -893,7 +893,7 @@ class FrameworkDetector:
         pyproject_file = project_path / "pyproject.toml"
         if pyproject_file.exists():
             try:
-                with open(pyproject_file) as f:
+                with pyproject_file.open() as f:
                     pyproject_data = toml.load(f)
 
                 # Check dependencies
@@ -952,7 +952,7 @@ class FrameworkDetector:
         package_file = project_path / "package.json"
         if package_file.exists():
             try:
-                with open(package_file) as f:
+                with package_file.open() as f:
                     package_data = json.load(f)
 
                 dependencies = {}
@@ -984,7 +984,7 @@ class FrameworkDetector:
         cargo_file = project_path / "Cargo.toml"
         if cargo_file.exists():
             try:
-                with open(cargo_file) as f:
+                with cargo_file.open() as f:
                     cargo_data = toml.load(f)
 
                 dependencies = cargo_data.get("dependencies", {})
@@ -1019,7 +1019,7 @@ class FrameworkDetector:
 
     def _check_source_patterns(self, project_path: Path) -> Dict[str, float]:
         """Check source code for framework patterns."""
-        scores = defaultdict(float)
+        scores: Dict[str, float] = defaultdict(float)
 
         # Check for Django patterns
         if (project_path / "manage.py").exists():
@@ -1164,8 +1164,8 @@ class DomainDetector:
         framework_info: FrameworkInfo,
     ) -> DomainInfo:
         """Detect application domain."""
-        domain_scores = defaultdict(float)
-        found_indicators = defaultdict(list)
+        domain_scores: Dict[str, float] = defaultdict(float)
+        found_indicators: Dict[str, List[str]] = defaultdict(list)
 
         # Check directory names
         for dir_name in filesystem_info.directory_structure.keys():
@@ -1460,7 +1460,7 @@ class ArchitectureAnalyzer:
 class PatternMatcher:
     """Pattern matching system for project detection."""
 
-    def __init__(self, patterns: List[str] = None):
+    def __init__(self, patterns: Optional[List[str]] = None) -> None:
         # For backwards compatibility, accept both dict and list patterns
         if patterns is None:
             self.patterns = {}
@@ -1484,7 +1484,7 @@ class PatternMatcher:
             return [f for f in file_paths if any(p in f for p in pattern_names)]
         return [f for f in file_paths if any(p in f for p in self.patterns)]
 
-    def add_pattern(self, pattern: str):
+    def add_pattern(self, pattern: str) -> None:
         if isinstance(self.patterns, dict):
             self.patterns[pattern] = {"name": pattern}
         else:
@@ -1532,7 +1532,7 @@ class PatternMatcher:
             return True
         return False
 
-    def register_pattern(self, pattern_data):
+    def register_pattern(self, pattern_data: Any) -> None:
         """Register a new pattern."""
         if isinstance(pattern_data, dict):
             pattern_name = pattern_data["name"]

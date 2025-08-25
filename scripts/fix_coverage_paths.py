@@ -7,6 +7,7 @@ the src/ prefix, while coverage.py generates paths with src/ when using src layo
 """
 import sys
 import xml.etree.ElementTree as ET
+
 from pathlib import Path
 
 

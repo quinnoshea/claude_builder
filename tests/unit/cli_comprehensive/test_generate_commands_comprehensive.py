@@ -578,7 +578,9 @@ class TestGenerateHelperFunctions:
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             output_path = Path(tmp_dir)
-            _write_generated_files(mock_content, output_path, False, 0)
+            _write_generated_files(
+                mock_content, output_path, backup_existing=False, verbose=0
+            )
 
             # Check files were created
             assert (output_path / "CLAUDE.md").exists()
@@ -597,7 +599,9 @@ class TestGenerateHelperFunctions:
             existing_file = output_path / "CLAUDE.md"
             existing_file.write_text("# Existing content")
 
-            _write_generated_files(mock_content, output_path, True, 1)
+            _write_generated_files(
+                mock_content, output_path, backup_existing=True, verbose=1
+            )
 
             # Check backup was created
             backup_file = output_path / "CLAUDE.md.bak"
@@ -620,7 +624,9 @@ class TestGenerateHelperFunctions:
             output_path = Path(tmp_dir)
 
             with patch("claude_builder.cli.generate_commands.console") as mock_console:
-                _write_generated_files(mock_content, output_path, False, 2)
+                _write_generated_files(
+                    mock_content, output_path, backup_existing=False, verbose=2
+                )
                 # Should print individual file confirmations
                 assert mock_console.print.call_count >= 3
 

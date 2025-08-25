@@ -1,6 +1,9 @@
 """Template management CLI commands for Claude Builder."""
 
+from __future__ import annotations
+
 import json
+from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional
 
@@ -45,8 +48,22 @@ class ExitCodes:
 console = Console()
 
 
+@dataclass
+class TemplateConfig:
+    """Configuration for template commands."""
+
+    project_path: Optional[str] = None
+    description: Optional[str] = None
+    author: Optional[str] = None
+    category: Optional[str] = None
+    languages: Optional[str] = None
+    frameworks: Optional[str] = None
+    project_types: Optional[str] = None
+    interactive: bool = False
+
+
 @click.group()
-def templates():
+def templates() -> None:
     """Manage templates and template sources."""
 
 
@@ -67,12 +84,13 @@ template = templates
     help="Output format",
 )
 def list(
+    *,
     installed_only: bool,
     community_only: bool,
     category: Optional[str],
     language: Optional[str],
     output_format: str,
-):
+) -> None:
     """List available templates."""
     try:
         manager = TemplateManager()
@@ -81,7 +99,7 @@ def list(
         include_community = not installed_only
 
         templates = manager.list_available_templates(
-            include_installed, include_community
+            include_installed=include_installed, include_community=include_community
         )
 
         # Apply filters
@@ -118,7 +136,7 @@ def list(
     help="Analyze project and rank templates by compatibility",
 )
 @click.option("--limit", type=int, default=10, help="Maximum number of results")
-def search(query: str, project_path: Optional[str], limit: int):
+def search(query: str, project_path: Optional[str], limit: int) -> None:
     """Search for templates matching query."""
     try:
         manager = TemplateManager()
@@ -159,7 +177,7 @@ def search(query: str, project_path: Optional[str], limit: int):
     is_flag=True,
     help="Show what would be installed without actually installing",
 )
-def install(template_id: str, force: bool, dry_run: bool):
+def install(template_id: str, *, force: bool, dry_run: bool) -> None:
     """Install a community template."""
     try:
         manager = TemplateManager()
@@ -196,7 +214,7 @@ def install(template_id: str, force: bool, dry_run: bool):
 
         # Install template
         console.print(f"[cyan]Installing template: {template_id}[/cyan]")
-        result = manager.install_template(template_id, force)
+        result = manager.install_template(template_id, force=force)
 
         if result.is_valid:
             console.print("[green]✓ Template installed successfully[/green]")
@@ -216,7 +234,7 @@ def install(template_id: str, force: bool, dry_run: bool):
 @templates.command()
 @click.argument("template_name", required=True)
 @click.option("--force", is_flag=True, help="Force uninstallation without confirmation")
-def uninstall(template_name: str, force: bool):
+def uninstall(template_name: str, *, force: bool) -> None:
     """Uninstall an installed template."""
     try:
         manager = TemplateManager()
@@ -266,33 +284,33 @@ def uninstall(template_name: str, force: bool):
 @click.option("--frameworks", help="Comma-separated list of frameworks")
 @click.option("--project-types", help="Comma-separated list of project types")
 @click.option("--interactive", is_flag=True, help="Interactive template creation")
-def create(
-    name: str,
-    project_path: Optional[str],
-    description: Optional[str],
-    author: Optional[str],
-    category: Optional[str],
-    languages: Optional[str],
-    frameworks: Optional[str],
-    project_types: Optional[str],
-    interactive: bool,
-):
+def create(name: str, **kwargs) -> None:
     """Create a custom template."""
+    # Create config from kwargs
+    config = TemplateConfig(**kwargs)
+
     try:
         # Interactive mode
-        if interactive:
-            description = description or Prompt.ask("Template description")
-            author = author or Prompt.ask("Author name", default="local-user")
-            category = category or Prompt.ask("Category", default="custom")
-            languages = languages or Prompt.ask(
+        if config.interactive:
+            description = config.description or Prompt.ask("Template description")
+            author = config.author or Prompt.ask("Author name", default="local-user")
+            category = config.category or Prompt.ask("Category", default="custom")
+            languages = config.languages or Prompt.ask(
                 "Languages (comma-separated)", default=""
             )
-            frameworks = frameworks or Prompt.ask(
+            frameworks = config.frameworks or Prompt.ask(
                 "Frameworks (comma-separated)", default=""
             )
-            project_types = project_types or Prompt.ask(
+            project_types = config.project_types or Prompt.ask(
                 "Project types (comma-separated)", default=""
             )
+        else:
+            description = config.description
+            author = config.author
+            category = config.category
+            languages = config.languages
+            frameworks = config.frameworks
+            project_types = config.project_types
 
         # Set defaults
         description = description or f"Custom template for {name}"
@@ -320,13 +338,13 @@ def create(
 
         manager = TemplateManager()
 
-        if project_path:
+        if config.project_path:
             # Create from existing project
             console.print(
-                f"[cyan]Creating template '{name}' from project: {project_path}[/cyan]"
+                f"[cyan]Creating template '{name}' from project: {config.project_path}[/cyan]"
             )
             result = manager.create_custom_template(
-                name, Path(project_path), template_config
+                name, Path(config.project_path), template_config
             )
         else:
             # Create empty template structure
@@ -370,7 +388,7 @@ def create(
     default="detailed",
     help="Output format",
 )
-def validate(template_path: str, strict: bool, output_format: str):
+def validate(template_path: str, *, strict: bool, output_format: str) -> None:
     """Validate a template directory."""
     try:
         manager = TemplateManager()
@@ -424,7 +442,7 @@ def validate(template_path: str, strict: bool, output_format: str):
 
 @templates.command()
 @click.argument("template_name", required=True)
-def info(template_name: str):
+def info(template_name: str) -> None:
     """Show detailed information about a template."""
     try:
         manager = TemplateManager()
@@ -482,8 +500,8 @@ def info(template_name: str):
 
 
 def _display_templates_table(
-    templates: List[CommunityTemplate], show_compatibility: bool = False
-):
+    templates: List[CommunityTemplate], *, show_compatibility: bool = False
+) -> None:
     """Display templates in table format."""
     if not templates:
         console.print("[yellow]No templates found[/yellow]")
@@ -526,7 +544,7 @@ def _display_templates_table(
     console.print(table)
 
 
-def _display_templates_list(templates: List[CommunityTemplate]):
+def _display_templates_list(templates: List[CommunityTemplate]) -> None:
     """Display templates in simple list format."""
     if not templates:
         console.print("[yellow]No templates found[/yellow]")
@@ -539,7 +557,7 @@ def _display_templates_list(templates: List[CommunityTemplate]):
         )
 
 
-def _display_templates_json(templates: List[CommunityTemplate]):
+def _display_templates_json(templates: List[CommunityTemplate]) -> None:
     """Display templates in JSON format."""
     template_data = []
     for template in templates:

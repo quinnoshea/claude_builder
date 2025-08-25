@@ -184,23 +184,7 @@ class ProjectAnalysis:
         """Check if project uses a database."""
         return len(self.dev_environment.databases) > 0
 
-    @property
-    def has_tests(self) -> bool:
-        """Check if project has testing setup."""
-        return (
-            len(self.dev_environment.testing_frameworks) > 0
-            or self.filesystem_info.test_files > 0
-        )
-
-    @property
-    def has_ci_cd(self) -> bool:
-        """Check if project has CI/CD setup."""
-        return len(self.dev_environment.ci_cd_systems) > 0
-
-    @property
-    def is_containerized(self) -> bool:
-        """Check if project uses containerization."""
-        return len(self.dev_environment.containerization) > 0
+    # Removed duplicate properties - they already exist above
 
 
 class ClaudeMentionPolicy(Enum):
@@ -320,7 +304,7 @@ class AnalysisResult:
     errors: List[str] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Process nested dictionaries into proper objects."""
         from datetime import datetime
 
@@ -334,11 +318,15 @@ class AnalysisResult:
 
         # Handle frameworks list of dictionaries
         if self.frameworks and isinstance(self.frameworks[0], dict):
-            self.frameworks = [TestFrameworkInfo(**f) for f in self.frameworks]
+            self.frameworks = [
+                TestFrameworkInfo(**f) for f in self.frameworks if isinstance(f, dict)
+            ]
 
         # Handle dependencies list of dictionaries
         if self.dependencies and isinstance(self.dependencies[0], dict):
-            self.dependencies = [DependencyInfo(**d) for d in self.dependencies]
+            self.dependencies = [
+                DependencyInfo(**d) for d in self.dependencies if isinstance(d, dict)
+            ]
 
         # Handle file_structure dictionary
         if isinstance(self.file_structure, dict):
@@ -385,7 +373,7 @@ class DependencyInfo:
 
     VALID_DEPENDENCY_TYPES = {"runtime", "development", "test", "build", "optional"}
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Validate fields after initialization."""
         if not self.name or not self.name.strip():
             raise ValueError(DEPENDENCY_NAME_CANNOT_BE_EMPTY)
@@ -428,7 +416,7 @@ class FileStructure:
 
     VALID_FILE_TYPES = {"file", "directory", "symlink"}
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Validate fields after initialization."""
         if not self.path:
             raise ValueError(PATH_CANNOT_BE_EMPTY)
@@ -479,7 +467,7 @@ class GenerationConfig:
     VALID_OUTPUT_FORMATS = {"markdown", "html", "json", "yaml"}
     VALID_TEMPLATE_VARIANTS = {"comprehensive", "minimal", "basic", "advanced"}
 
-    def validate(self):
+    def validate(self) -> None:
         """Validate the configuration."""
         if self.output_format not in self.VALID_OUTPUT_FORMATS:
             raise ValueError(
@@ -534,7 +522,7 @@ class ProjectInfo:
         "unknown",
     }
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Validate fields after initialization."""
         if not self.name or not self.name.strip():
             raise ValueError(PROJECT_NAME_CANNOT_BE_EMPTY)

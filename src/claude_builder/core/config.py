@@ -33,10 +33,21 @@ INVALID_AGENT_SELECTION_ALGORITHM = "Invalid agent_selection_algorithm"
 @dataclass
 class AnalysisConfig:
     """Configuration for project analysis."""
-    ignore_patterns: List[str] = field(default_factory=lambda: [
-        ".git/", "node_modules/", "__pycache__/", "target/", "dist/",
-        "build/", ".venv/", "venv/", ".tox/", ".coverage"
-    ])
+
+    ignore_patterns: List[str] = field(
+        default_factory=lambda: [
+            ".git/",
+            "node_modules/",
+            "__pycache__/",
+            "target/",
+            "dist/",
+            "build/",
+            ".venv/",
+            "venv/",
+            ".tox/",
+            ".coverage",
+        ]
+    )
     cache_enabled: bool = True
     parallel_processing: bool = True
     confidence_threshold: int = 80
@@ -50,9 +61,10 @@ class AnalysisConfig:
 @dataclass
 class TemplateConfig:
     """Configuration for template system."""
-    search_paths: List[str] = field(default_factory=lambda: [
-        "./templates/", "~/.claude-builder/templates/"
-    ])
+
+    search_paths: List[str] = field(
+        default_factory=lambda: ["./templates/", "~/.claude-builder/templates/"]
+    )
     preferred_templates: List[str] = field(default_factory=list)
     template_overrides: Dict[str, Dict[str, Any]] = field(default_factory=dict)
     auto_update_templates: bool = False
@@ -65,15 +77,26 @@ class TemplateConfig:
 @dataclass
 class AgentConfig:
     """Configuration for agent system."""
+
     install_automatically: bool = True
     exclude_agents: List[str] = field(default_factory=list)
     priority_agents: List[str] = field(default_factory=list)
     custom_agent_paths: List[str] = field(default_factory=list)
-    workflows: Dict[str, List[str]] = field(default_factory=lambda: {
-        "feature_development": ["research", "design", "implement", "test", "deploy"],
-        "bug_fixing": ["investigate", "fix", "test", "document"]
-    })
-    agent_selection_algorithm: str = "intelligent"  # 'intelligent', 'strict', 'permissive'
+    workflows: Dict[str, List[str]] = field(
+        default_factory=lambda: {
+            "feature_development": [
+                "research",
+                "design",
+                "implement",
+                "test",
+                "deploy",
+            ],
+            "bug_fixing": ["investigate", "fix", "test", "document"],
+        }
+    )
+    agent_selection_algorithm: str = (
+        "intelligent"  # 'intelligent', 'strict', 'permissive'
+    )
     max_concurrent_agents: int = 5
     agent_timeout: int = 300  # 5 minutes
     auto_install_dependencies: bool = True
@@ -83,18 +106,20 @@ class AgentConfig:
 @dataclass
 class GitIntegrationConfig:
     """Configuration for git integration."""
+
     enabled: bool = True
     mode: GitIntegrationMode = GitIntegrationMode.NO_INTEGRATION
     claude_mention_policy: ClaudeMentionPolicy = ClaudeMentionPolicy.MINIMAL
     backup_before_changes: bool = True
-    files_to_exclude: List[str] = field(default_factory=lambda: [
-        "CLAUDE.md", "AGENTS.md", ".claude/", "docs/claude-*"
-    ])
+    files_to_exclude: List[str] = field(
+        default_factory=lambda: ["CLAUDE.md", "AGENTS.md", ".claude/", "docs/claude-*"]
+    )
 
 
 @dataclass
 class OutputConfig:
     """Configuration for output generation."""
+
     format: str = "files"
     backup_existing: bool = True
     create_directories: bool = True
@@ -105,6 +130,7 @@ class OutputConfig:
 @dataclass
 class UserPreferences:
     """User preferences and settings."""
+
     default_editor: str = "code"
     prefer_verbose_output: bool = False
     auto_open_generated_files: bool = False
@@ -116,38 +142,44 @@ class UserPreferences:
     update_check_frequency: str = "weekly"  # 'never', 'daily', 'weekly', 'monthly'
     workspace_memory: bool = True  # Remember workspace-specific settings
     keyboard_shortcuts: Dict[str, str] = field(default_factory=dict)
-    notification_preferences: Dict[str, bool] = field(default_factory=lambda: {
-        "template_updates": True,
-        "agent_updates": True,
-        "security_alerts": True,
-        "feature_announcements": False
-    })
+    notification_preferences: Dict[str, bool] = field(
+        default_factory=lambda: {
+            "template_updates": True,
+            "agent_updates": True,
+            "security_alerts": True,
+            "feature_announcements": False,
+        }
+    )
 
 
 @dataclass
 class IntegrationConfig:
     """Configuration for external integrations."""
-    ide_integrations: Dict[str, bool] = field(default_factory=lambda: {
-        "vscode": True,
-        "jetbrains": False,
-        "vim": False
-    })
-    package_managers: Dict[str, Dict[str, Any]] = field(default_factory=lambda: {
-        "npm": {"auto_install": False, "registry": "https://registry.npmjs.org/"},
-        "pip": {"auto_install": False, "index_url": "https://pypi.org/simple/"},
-        "cargo": {"auto_install": False, "registry": "https://crates.io/"}
-    })
-    ci_cd_platforms: Dict[str, bool] = field(default_factory=lambda: {
-        "github_actions": True,
-        "gitlab_ci": False,
-        "jenkins": False
-    })
+
+    ide_integrations: Dict[str, bool] = field(
+        default_factory=lambda: {"vscode": True, "jetbrains": False, "vim": False}
+    )
+    package_managers: Dict[str, Dict[str, Any]] = field(
+        default_factory=lambda: {
+            "npm": {"auto_install": False, "registry": "https://registry.npmjs.org/"},
+            "pip": {"auto_install": False, "index_url": "https://pypi.org/simple/"},
+            "cargo": {"auto_install": False, "registry": "https://crates.io/"},
+        }
+    )
+    ci_cd_platforms: Dict[str, bool] = field(
+        default_factory=lambda: {
+            "github_actions": True,
+            "gitlab_ci": False,
+            "jenkins": False,
+        }
+    )
     cloud_platforms: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 
 
 @dataclass
 class Config:
     """Main configuration object."""
+
     version: str = "1.0"
     analysis: AnalysisConfig = field(default_factory=AnalysisConfig)
     templates: TemplateConfig = field(default_factory=TemplateConfig)
@@ -167,25 +199,25 @@ class ConfigManager:
         "claude-builder.json",
         "claude-builder.toml",
         ".claude-builder.json",
-        ".claude-builder.toml"
+        ".claude-builder.toml",
     ]
 
     GLOBAL_CONFIG_NAMES = [
         "~/.config/claude-builder/config.json",
         "~/.config/claude-builder/config.toml",
         "~/.claude-builder/config.json",
-        "~/.claude-builder/config.toml"
+        "~/.claude-builder/config.toml",
     ]
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.schema_version = "1.0"
-        self.workspace_cache = {}  # In-memory workspace settings cache
+        self.workspace_cache: Dict[str, Any] = {}  # In-memory workspace settings cache
 
     def load_config(
         self,
         project_path: Path,
         config_file: Optional[Path] = None,
-        cli_overrides: Optional[Dict[str, Any]] = None
+        cli_overrides: Optional[Dict[str, Any]] = None,
     ) -> Config:
         """Load configuration with proper precedence."""
         try:
@@ -253,10 +285,12 @@ class ConfigManager:
         try:
             if config_path.suffix.lower() == ".toml":
                 return toml.load(config_path)
-            with open(config_path, encoding="utf-8") as f:
+            with config_path.open(encoding="utf-8") as f:
                 return json.load(f)
         except Exception as e:
-            raise ConfigError(f"{FAILED_TO_PARSE_CONFIGURATION_FILE} {config_path}: {e}")
+            raise ConfigError(
+                f"{FAILED_TO_PARSE_CONFIGURATION_FILE} {config_path}: {e}"
+            )
 
     def _merge_configs(self, base: Config, override: Dict[str, Any]) -> Config:
         """Merge configuration dictionaries."""
@@ -269,7 +303,9 @@ class ConfigManager:
         # Convert back to Config object
         return self._dict_to_config(merged)
 
-    def _apply_cli_overrides(self, config: Config, cli_overrides: Dict[str, Any]) -> Config:
+    def _apply_cli_overrides(
+        self, config: Config, cli_overrides: Dict[str, Any]
+    ) -> Config:
         """Apply CLI overrides to configuration."""
         # Map CLI options to config paths
         cli_mapping = {
@@ -311,12 +347,18 @@ class ConfigManager:
 
         return self._dict_to_config(config_dict)
 
-    def _deep_merge(self, base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
+    def _deep_merge(
+        self, base: Dict[str, Any], override: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Deep merge two dictionaries."""
         result = base.copy()
 
         for key, value in override.items():
-            if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            if (
+                key in result
+                and isinstance(result[key], dict)
+                and isinstance(value, dict)
+            ):
                 result[key] = self._deep_merge(result[key], value)
             else:
                 result[key] = value
@@ -339,13 +381,21 @@ class ConfigManager:
             git_config_dict = config_dict.get("git_integration", {})
             if "mode" in git_config_dict and isinstance(git_config_dict["mode"], str):
                 git_config_dict["mode"] = GitIntegrationMode(git_config_dict["mode"])
-            if "claude_mention_policy" in git_config_dict and isinstance(git_config_dict["claude_mention_policy"], str):
-                git_config_dict["claude_mention_policy"] = ClaudeMentionPolicy(git_config_dict["claude_mention_policy"])
+            if "claude_mention_policy" in git_config_dict and isinstance(
+                git_config_dict["claude_mention_policy"], str
+            ):
+                git_config_dict["claude_mention_policy"] = ClaudeMentionPolicy(
+                    git_config_dict["claude_mention_policy"]
+                )
 
             git_integration_config = GitIntegrationConfig(**git_config_dict)
             output_config = OutputConfig(**config_dict.get("output", {}))
-            user_preferences = UserPreferences(**config_dict.get("user_preferences", {}))
-            integration_config = IntegrationConfig(**config_dict.get("integrations", {}))
+            user_preferences = UserPreferences(
+                **config_dict.get("user_preferences", {})
+            )
+            integration_config = IntegrationConfig(
+                **config_dict.get("integrations", {})
+            )
 
             return Config(
                 version=config_dict.get("version", "1.0"),
@@ -357,7 +407,7 @@ class ConfigManager:
                 user_preferences=user_preferences,
                 integrations=integration_config,
                 workspace_settings=config_dict.get("workspace_settings", {}),
-                project_profiles=config_dict.get("project_profiles", {})
+                project_profiles=config_dict.get("project_profiles", {}),
             )
         except Exception as e:
             raise ConfigError(f"{FAILED_TO_CONVERT_DICTIONARY_TO_CONFIG}: {e}")
@@ -367,7 +417,7 @@ class ConfigManager:
         # Convert enums to strings for serialization
         serializable_dict = self._prepare_for_serialization(config_dict)
 
-        with open(config_path, "w", encoding="utf-8") as f:
+        with config_path.open("w", encoding="utf-8") as f:
             json.dump(serializable_dict, f, indent=2, sort_keys=True)
 
     def _save_toml_config(self, config_dict: Dict[str, Any], config_path: Path) -> None:
@@ -375,7 +425,7 @@ class ConfigManager:
         # Convert enums to strings for serialization
         serializable_dict = self._prepare_for_serialization(config_dict)
 
-        with open(config_path, "w", encoding="utf-8") as f:
+        with config_path.open("w", encoding="utf-8") as f:
             toml.dump(serializable_dict, f)
 
     def _prepare_for_serialization(self, obj: Any) -> Any:
@@ -411,10 +461,12 @@ class ConfigManager:
         workspace_config_path = project_path / ".claude-builder" / "workspace.json"
         workspace_config_path.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(workspace_config_path, "w", encoding="utf-8") as f:
+        with workspace_config_path.open("w", encoding="utf-8") as f:
             json.dump(self.workspace_cache[workspace_id], f, indent=2)
 
-    def get_workspace_setting(self, project_path: Path, key: str, default: Any = None) -> Any:
+    def get_workspace_setting(
+        self, project_path: Path, key: str, default: Any = None
+    ) -> Any:
         """Get a workspace-specific setting."""
         workspace_id = str(project_path.resolve())
 
@@ -426,7 +478,7 @@ class ConfigManager:
         workspace_config_path = project_path / ".claude-builder" / "workspace.json"
         if workspace_config_path.exists():
             try:
-                with open(workspace_config_path, encoding="utf-8") as f:
+                with workspace_config_path.open(encoding="utf-8") as f:
                     workspace_settings = json.load(f)
                 self.workspace_cache[workspace_id] = workspace_settings
                 return workspace_settings.get(key, default)
@@ -435,20 +487,21 @@ class ConfigManager:
 
         return default
 
-    def create_project_profile(self, profile_name: str, config: Config,
-                             description: str = "") -> None:
+    def create_project_profile(
+        self, profile_name: str, config: Config, description: str = ""
+    ) -> None:
         """Create a project profile for reuse."""
         profile_data = {
             "description": description,
             "created": json.JSONEncoder().encode(datetime.now().isoformat()),
-            "config": self._config_to_dict(config)
+            "config": self._config_to_dict(config),
         }
 
         profiles_dir = Path.home() / ".claude-builder" / "profiles"
         profiles_dir.mkdir(parents=True, exist_ok=True)
 
         profile_path = profiles_dir / f"{profile_name}.json"
-        with open(profile_path, "w", encoding="utf-8") as f:
+        with profile_path.open("w", encoding="utf-8") as f:
             json.dump(profile_data, f, indent=2)
 
     def list_project_profiles(self) -> List[Dict[str, Any]]:
@@ -460,7 +513,7 @@ class ConfigManager:
         profiles = []
         for profile_file in profiles_dir.glob("*.json"):
             try:
-                with open(profile_file, encoding="utf-8") as f:
+                with profile_file.open(encoding="utf-8") as f:
                     profile_data = json.load(f)
                 profile_data["name"] = profile_file.stem
                 profiles.append(profile_data)
@@ -479,7 +532,7 @@ class ConfigManager:
             raise ConfigError(f"{PROJECT_PROFILE_NOT_FOUND}: {profile_name}")
 
         try:
-            with open(profile_path, encoding="utf-8") as f:
+            with profile_path.open(encoding="utf-8") as f:
                 profile_data = json.load(f)
 
             profile_config = profile_data["config"]
@@ -487,8 +540,9 @@ class ConfigManager:
         except Exception as e:
             raise ConfigError(f"{FAILED_TO_APPLY_PROFILE} {profile_name}: {e}")
 
-    def validate_config_compatibility(self, config: Config,
-                                    project_analysis: Optional[Any] = None) -> List[str]:
+    def validate_config_compatibility(
+        self, config: Config, project_analysis: Optional[Any] = None
+    ) -> List[str]:
         """Validate configuration compatibility with project."""
         warnings = []
 
@@ -549,12 +603,16 @@ class ConfigManager:
         try:
             int(config.output.file_permissions, 8)
         except ValueError:
-            raise ConfigError(f"{INVALID_FILE_PERMISSIONS_FORMAT}: {config.output.file_permissions}")
+            raise ConfigError(
+                f"{INVALID_FILE_PERMISSIONS_FORMAT}: {config.output.file_permissions}"
+            )
 
         # Validate update check frequency
         valid_frequencies = ["never", "daily", "weekly", "monthly"]
         if config.user_preferences.update_check_frequency not in valid_frequencies:
-            raise ConfigError(f"{INVALID_UPDATE_CHECK_FREQUENCY}. Must be one of: {valid_frequencies}")
+            raise ConfigError(
+                f"{INVALID_UPDATE_CHECK_FREQUENCY}. Must be one of: {valid_frequencies}"
+            )
 
         # Validate theme
         valid_themes = ["light", "dark", "auto"]
@@ -564,7 +622,9 @@ class ConfigManager:
         # Validate agent selection algorithm
         valid_algorithms = ["intelligent", "strict", "permissive"]
         if config.agents.agent_selection_algorithm not in valid_algorithms:
-            raise ConfigError(f"{INVALID_AGENT_SELECTION_ALGORITHM}. Must be one of: {valid_algorithms}")
+            raise ConfigError(
+                f"{INVALID_AGENT_SELECTION_ALGORITHM}. Must be one of: {valid_algorithms}"
+            )
 
 
 def load_config_from_args(args: Dict[str, Any]) -> Config:
@@ -575,20 +635,17 @@ def load_config_from_args(args: Dict[str, Any]) -> Config:
     config_file = Path(args["config_file"]) if args.get("config_file") else None
 
     return config_manager.load_config(
-        project_path=project_path,
-        config_file=config_file,
-        cli_overrides=args
+        project_path=project_path, config_file=config_file, cli_overrides=args
     )
-
 
 
 # Placeholder classes for test compatibility
 class AdvancedConfigManager:
     """Placeholder AdvancedConfigManager class for test compatibility."""
 
-    def __init__(self, config_path: str = None):
+    def __init__(self, config_path: Optional[str] = None) -> None:
         self.config_path = config_path
-        self.config = {}
+        self.config: Dict[str, Any] = {}
 
     def load_advanced_config(self) -> dict:
         """Load advanced configuration."""
@@ -598,7 +655,7 @@ class AdvancedConfigManager:
         """Validate configuration."""
         return True
 
-    def merge_configs(self, *configs) -> dict:
+    def merge_configs(self, *configs: Any) -> dict:
         """Merge multiple configurations."""
         result = {}
         for config in configs:
@@ -611,7 +668,7 @@ class ConfigEnvironment:
 
     def __init__(self, env_name: str = "development"):
         self.env_name = env_name
-        self.variables = {}
+        self.variables: Dict[str, Any] = {}
 
     def get_environment_config(self) -> Dict[str, Any]:
         return {"environment": self.env_name, "debug": True}
@@ -620,7 +677,7 @@ class ConfigEnvironment:
 class ConfigSchema:
     """Placeholder ConfigSchema class for test compatibility."""
 
-    def __init__(self, schema_dict: Dict[str, Any] = None):
+    def __init__(self, schema_dict: Optional[Dict[str, Any]] = None) -> None:
         self.schema = schema_dict or {}
 
     def validate(self, config: Dict[str, Any]) -> bool:
@@ -633,18 +690,14 @@ class ConfigSchema:
 class ConfigValidator:
     """Placeholder ConfigValidator class for test compatibility."""
 
-    def __init__(self):
-        self.rules = []
+    def __init__(self) -> None:
+        self.rules: List[Any] = []
 
     def validate_project_config(self, config: dict) -> dict:
         """Validate project configuration."""
-        return {
-            "is_valid": True,
-            "errors": [],
-            "warnings": []
-        }
+        return {"is_valid": True, "errors": [], "warnings": []}
 
-    def add_validation_rule(self, rule):
+    def add_validation_rule(self, rule: Any) -> None:
         """Add validation rule."""
         self.rules.append(rule)
 
@@ -664,14 +717,14 @@ class ConfigWatcher:
         self.is_watching = False
         return True
 
-    def on_config_changed(self, callback):
+    def on_config_changed(self, callback: Any) -> None:
         pass
 
 
 class SecureConfigHandler:
     """Placeholder SecureConfigHandler class for test compatibility."""
 
-    def __init__(self, encryption_key: str = None):
+    def __init__(self, encryption_key: Optional[str] = None) -> None:
         self.encryption_key = encryption_key
 
     def encrypt_config(self, config: Dict[str, Any]) -> str:

@@ -23,10 +23,10 @@ class GitIntegrationResult:
     success: bool
     operations_performed: List[str]
     backup_id: Optional[str] = None
-    errors: List[str] = None
-    warnings: List[str] = None
+    errors: Optional[List[str]] = None
+    warnings: Optional[List[str]] = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.errors is None:
             self.errors = []
         if self.warnings is None:
@@ -36,7 +36,7 @@ class GitIntegrationResult:
 class GitIntegrationManager:
     """Manages git integration features safely."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.backup_manager = GitBackupManager()
         self.exclude_manager = GitExcludeManager()
         self.hook_manager = GitHookManager()
@@ -74,7 +74,7 @@ class GitIntegrationManager:
                     if result.success:
                         operations.append("Added files to .git/info/exclude")
                     else:
-                        raise GitError(f"{FAILED_TO_ADD_EXCLUDES}: {result.error}")
+                        raise GitError(f"{FAILED_TO_ADD_EXCLUDES}: {result.errors}")
 
                 elif config.mode.value == "track_generated":
                     # Remove from excludes if present
@@ -134,7 +134,7 @@ class GitExcludeManager:
     CLAUDE_MARKER_START = "# === Claude Builder Generated Files (START) ==="
     CLAUDE_MARKER_END = "# === Claude Builder Generated Files (END) ==="
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     def add_excludes(
@@ -150,7 +150,7 @@ class GitExcludeManager:
             # Read existing content
             existing_content = []
             if exclude_file.exists():
-                with open(exclude_file, encoding="utf-8") as f:
+                with exclude_file.open(encoding="utf-8") as f:
                     existing_content = f.read().splitlines()
 
             # Check if Claude section already exists
@@ -169,7 +169,7 @@ class GitExcludeManager:
             )
 
             # Write back
-            with open(exclude_file, "w", encoding="utf-8") as f:
+            with exclude_file.open("w", encoding="utf-8") as f:
                 f.write("\n".join(new_content) + "\n")
 
             return GitIntegrationResult(
@@ -200,7 +200,7 @@ class GitExcludeManager:
                 )
 
             # Read existing content
-            with open(exclude_file, encoding="utf-8") as f:
+            with exclude_file.open(encoding="utf-8") as f:
                 lines = f.read().splitlines()
 
             # Remove Claude section
@@ -213,7 +213,7 @@ class GitExcludeManager:
                 )
 
             # Write back
-            with open(exclude_file, "w", encoding="utf-8") as f:
+            with exclude_file.open("w", encoding="utf-8") as f:
                 f.write("\n".join(new_lines) + "\n")
 
             return GitIntegrationResult(
@@ -274,7 +274,7 @@ class GitExcludeManager:
 class GitBackupManager:
     """Manages backup and restore of git configurations."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     def create_backup(self, project_path: Path) -> str:
@@ -313,7 +313,7 @@ class GitBackupManager:
 
             import json
 
-            with open(backup_dir / "metadata.json", "w") as f:
+            with (backup_dir / "metadata.json").open("w") as f:
                 json.dump(metadata, f, indent=2)
 
             return backup_id
@@ -336,7 +336,7 @@ class GitBackupManager:
 
             import json
 
-            with open(metadata_file) as f:
+            with metadata_file.open() as f:
                 metadata = json.load(f)
 
             # Restore files
@@ -367,7 +367,7 @@ class GitBackupManager:
                 metadata_file = backup_dir / "metadata.json"
                 if metadata_file.exists():
                     try:
-                        with open(metadata_file) as f:
+                        with metadata_file.open() as f:
                             metadata = json.load(f)
                         backups.append(metadata)
                     except (OSError, json.JSONDecodeError):
@@ -404,11 +404,11 @@ class GitBackupManager:
 class GitHookManager:
     """Manages git hooks for Claude mention control."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     def install_commit_msg_hook(
-        self, project_path: Path, claude_mention_policy
+        self, project_path: Path, claude_mention_policy: Any
     ) -> GitIntegrationResult:
         """Install commit-msg hook to filter Claude mentions."""
         try:
@@ -421,7 +421,7 @@ class GitHookManager:
             # Check if hook already exists
             if commit_msg_hook.exists():
                 # Check if it's our hook or a different one
-                with open(commit_msg_hook, encoding="utf-8") as f:
+                with commit_msg_hook.open(encoding="utf-8") as f:
                     content = f.read()
 
                 if "Claude Builder" in content:
@@ -442,7 +442,7 @@ class GitHookManager:
                 hook_content = self._generate_commit_msg_hook(claude_mention_policy)
 
             # Write hook
-            with open(commit_msg_hook, "w", encoding="utf-8") as f:
+            with commit_msg_hook.open("w", encoding="utf-8") as f:
                 f.write(hook_content)
 
             # Make executable
@@ -463,7 +463,7 @@ class GitHookManager:
             )
 
     def install_pre_commit_hook(
-        self, project_path: Path, claude_mention_policy
+        self, project_path: Path, claude_mention_policy: Any
     ) -> GitIntegrationResult:
         """Install pre-commit hook for additional Claude mention filtering."""
         try:
@@ -475,7 +475,7 @@ class GitHookManager:
 
             # Check if hook already exists
             if pre_commit_hook.exists():
-                with open(pre_commit_hook, encoding="utf-8") as f:
+                with pre_commit_hook.open(encoding="utf-8") as f:
                     content = f.read()
 
                 if "Claude Builder" in content:
@@ -496,7 +496,7 @@ class GitHookManager:
                 hook_content = self._generate_pre_commit_hook(claude_mention_policy)
 
             # Write hook
-            with open(pre_commit_hook, "w", encoding="utf-8") as f:
+            with pre_commit_hook.open("w", encoding="utf-8") as f:
                 f.write(hook_content)
 
             # Make executable
@@ -527,7 +527,7 @@ class GitHookManager:
             commit_msg_backup = hooks_dir / "commit-msg.pre-claude-builder"
 
             if commit_msg_hook.exists():
-                with open(commit_msg_hook, encoding="utf-8") as f:
+                with commit_msg_hook.open(encoding="utf-8") as f:
                     content = f.read()
 
                 if "Claude Builder" in content:
@@ -545,7 +545,7 @@ class GitHookManager:
             pre_commit_backup = hooks_dir / "pre-commit.pre-claude-builder"
 
             if pre_commit_hook.exists():
-                with open(pre_commit_hook, encoding="utf-8") as f:
+                with pre_commit_hook.open(encoding="utf-8") as f:
                     content = f.read()
 
                 if "Claude Builder" in content:
@@ -570,7 +570,7 @@ class GitHookManager:
                 errors=[f"Failed to uninstall hooks: {e}"],
             )
 
-    def _generate_commit_msg_hook(self, claude_mention_policy) -> str:
+    def _generate_commit_msg_hook(self, claude_mention_policy: Any) -> str:
         """Generate commit-msg hook script."""
         policy_value = claude_mention_policy.value
 
@@ -674,7 +674,7 @@ class GitContributorAnalyzer:
         }
 
     def _generate_chained_commit_msg_hook(
-        self, claude_mention_policy, original_hook_path: str
+        self, claude_mention_policy: Any, original_hook_path: str
     ) -> str:
         """Generate commit-msg hook that chains with existing hook."""
         base_hook = self._generate_commit_msg_hook(claude_mention_policy)
@@ -753,7 +753,7 @@ class GitContributorAnalyzer:
             "commit_distribution": {"user1": 80, "user2": 20},
         }
 
-    def _generate_pre_commit_hook(self, claude_mention_policy) -> str:
+    def _generate_pre_commit_hook(self, claude_mention_policy: Any) -> str:
         """Generate pre-commit hook script."""
         policy_value = claude_mention_policy.value
 
@@ -861,7 +861,7 @@ class GitContributorAnalyzer:
         }
 
     def _generate_chained_pre_commit_hook(
-        self, claude_mention_policy, original_hook_path: str
+        self, claude_mention_policy: Any, original_hook_path: str
     ) -> str:
         """Generate pre-commit hook that chains with existing hook."""
         base_hook = self._generate_pre_commit_hook(claude_mention_policy)
@@ -956,7 +956,7 @@ class CodeEvolutionTracker:
 
     def __init__(self, repo_path: Path):
         self.repo_path = repo_path
-        self.commit_history = []
+        self.commit_history: List[Any] = []
 
     def track_evolution(self, file_path: str) -> Dict[str, Any]:
         return {
