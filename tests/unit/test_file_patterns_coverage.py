@@ -1,6 +1,7 @@
 """Comprehensive tests for utils.file_patterns module to increase coverage."""
 
 import tempfile
+
 from pathlib import Path
 
 import pytest

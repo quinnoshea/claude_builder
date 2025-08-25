@@ -1,6 +1,7 @@
 """Additional tests for core.generator module to boost coverage to 60%+."""
 
 import tempfile
+
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 

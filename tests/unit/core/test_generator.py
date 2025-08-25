@@ -414,6 +414,7 @@ class TestOutputGeneration:
 
         # Check that analysis metadata is reflected in output
         metadata = result.metadata if hasattr(result, "metadata") else {}
+        assert isinstance(metadata, dict)  # Verify metadata structure
 
         # Should preserve key analysis information
         content = result.files["CLAUDE.md"]

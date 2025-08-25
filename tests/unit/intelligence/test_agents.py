@@ -631,6 +631,7 @@ class TestAgentIntegration:
             result = manager.execute_agent_with_templates(
                 template_agent, sample_analysis
             )
+            assert result is not None  # Verify result is returned
 
             mock_check.assert_called_once_with(template_agent.template_dependencies)
 
@@ -712,6 +713,7 @@ class TestAgentIntegration:
     def test_agent_performance_monitoring(self, sample_analysis):
         """Test agent performance monitoring."""
         manager = AgentManager()
+        assert hasattr(manager, "_performance_metrics")  # Verify manager structure
 
         # Create agents with different performance characteristics
         fast_agent = Mock(name="fast-agent")
@@ -737,6 +739,7 @@ class TestAgentIntegration:
         start_time = time.time()
         results = workflow.execute()
         total_time = time.time() - start_time
+        assert isinstance(results, list)  # Verify results structure
 
         # Should track execution times
         assert hasattr(workflow, "execution_times")

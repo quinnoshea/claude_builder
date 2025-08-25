@@ -15,6 +15,7 @@ from claude_builder.core.models import (
     ProjectType,
 )
 
+
 __all__ = [
     "ArchitecturePattern",
     "ClaudeMentionPolicy",

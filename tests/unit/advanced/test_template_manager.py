@@ -9,7 +9,7 @@ Tests the sophisticated template system including:
 - Template performance optimization
 """
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import ANY, MagicMock, patch
 
 import pytest
 
@@ -594,9 +594,7 @@ My custom template content
 
             assert result["success"] is True
             assert result["template_id"] == "12345"
-            mock_request.assert_called_with(
-                "POST", "/templates", data=mock.ANY, files=mock.ANY
-            )
+            mock_request.assert_called_with("POST", "/templates", data=ANY, files=ANY)
 
     def test_template_ratings_and_reviews(self):
         """Test template ratings and reviews functionality."""

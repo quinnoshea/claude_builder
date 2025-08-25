@@ -1,6 +1,7 @@
 """Comprehensive tests for cli.main module to increase coverage."""
 
 import tempfile
+
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -230,6 +231,7 @@ def test_write_generated_files_basic(temp_dir):
 
     with patch("claude_builder.cli.main.console") as mock_console:
         _write_generated_files(generated_content, temp_dir, kwargs)
+        mock_console.print.assert_called()  # Verify console output
 
     # Check that files were created
     assert (temp_dir / "CLAUDE.md").exists()

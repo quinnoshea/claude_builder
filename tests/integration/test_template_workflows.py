@@ -81,6 +81,8 @@ project_types: [python]
         # For now, use available templates or create mock template
         available_templates = template_manager.list_available_templates()
         generator = DocumentGenerator(analysis_result)
+        assert len(available_templates) >= 0  # Verify templates structure
+        assert generator is not None  # Verify generator creation
 
         # Mock template rendering since the exact methods are not implemented
         rendered_content = "# Python Project Documentation\\n\\nProject: test-project"

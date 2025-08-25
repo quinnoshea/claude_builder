@@ -1,6 +1,7 @@
 """Comprehensive tests for CLI config commands - focusing on coverage gaps."""
 
 import tempfile
+
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -505,6 +506,7 @@ class TestConfigHelperFunctions:
         with patch("claude_builder.cli.config_commands.console") as mock_console:
             _display_config_table(config, "nonexistent")
             # Should print error message
+            mock_console.print.assert_called()
 
     def test_display_config_table_overview(self):
         """Test _display_config_table overview."""

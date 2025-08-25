@@ -9,14 +9,15 @@ Tests the complete git integration including:
 - Git history integration with documentation generation
 """
 
+import time
+
 from unittest.mock import Mock, patch
 
 import pytest
 
 from claude_builder.core.analyzer import ProjectAnalyzer
 from claude_builder.core.generator import DocumentGenerator
-
-# from claude_builder.utils.git import AdvancedGitAnalyzer  # Not yet implemented
+from claude_builder.utils.git import AdvancedGitAnalyzer
 
 
 class TestGitAnalysisIntegration:

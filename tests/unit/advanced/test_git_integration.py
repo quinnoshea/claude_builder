@@ -14,14 +14,14 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-# from claude_builder.utils.git import (  # Not yet implemented
-#     AdvancedGitAnalyzer,
-#     BranchAnalyzer,
-#     CodeEvolutionTracker,
-#     ContributorAnalyzer,
-#     GitHistoryAnalyzer,
-#     GitInsights,
-# )
+from claude_builder.utils.git import (
+    AdvancedGitAnalyzer,
+    BranchAnalyzer,
+    CodeEvolutionTracker,
+    ContributorAnalyzer,
+    GitHistoryAnalyzer,
+    GitInsights,
+)
 
 
 @pytest.mark.skip(reason="Advanced git integration features not yet implemented")
