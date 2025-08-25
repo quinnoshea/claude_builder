@@ -16,6 +16,7 @@
 <!-- Describe the specific changes made -->
 
 ### 🔧 Code Changes
+
 - [ ] Core functionality changes
 - [ ] CLI interface modifications
 - [ ] Template additions/modifications
@@ -24,12 +25,14 @@
 - [ ] Performance improvements
 
 ### 📚 Documentation Changes
+
 - [ ] README updates
 - [ ] Code documentation (docstrings)
 - [ ] Examples or guides
 - [ ] Configuration documentation
 
 ### 🧪 Testing Changes
+
 - [ ] New tests added
 - [ ] Existing tests modified
 - [ ] Test coverage improved
@@ -41,7 +44,8 @@
 
 - [ ] 🐛 Bug fix (non-breaking change that fixes an issue)
 - [ ] ✨ New feature (non-breaking change that adds functionality)
-- [ ] 💥 Breaking change (fix or feature that would cause existing functionality to not work as expected)
+- [ ] 💥 Breaking change (fix or feature that would cause existing
+  functionality to not work as expected)
 - [ ] 📚 Documentation only changes
 - [ ] 🧪 Test only changes
 - [ ] 🔧 Refactoring (no functional changes)
@@ -53,6 +57,7 @@
 <!-- Describe how you tested these changes -->
 
 ### Testing Checklist
+
 - [ ] All existing tests pass
 - [ ] New tests added for new functionality
 - [ ] Manual testing completed
@@ -60,6 +65,7 @@
 - [ ] Cross-platform testing (if applicable)
 
 ### Test Commands Run
+
 ```bash
 # List the test commands you ran
 pytest
@@ -70,6 +76,7 @@ mypy claude_builder
 ```
 
 ### Test Results
+
 <!-- Describe the results of your testing -->
 
 ## 🏗️ Implementation Details
@@ -91,11 +98,13 @@ mypy claude_builder
 <!-- If applicable, add screenshots or code examples -->
 
 ### Before
+
 ```python
 # Show code before changes
 ```
 
 ### After
+
 ```python
 # Show code after changes
 ```
@@ -103,6 +112,7 @@ mypy claude_builder
 ## 🎨 Code Quality
 
 ### Code Quality Checklist
+
 - [ ] Code follows project style guidelines
 - [ ] Self-review completed
 - [ ] Comments added for complex logic
@@ -111,6 +121,7 @@ mypy claude_builder
 - [ ] Logging added where appropriate
 
 ### Security Considerations
+
 - [ ] No sensitive information exposed
 - [ ] Input validation implemented
 - [ ] Security best practices followed
@@ -147,30 +158,35 @@ mypy claude_builder
 <!-- Verify all items before submitting -->
 
 ### Code Quality
+
 - [ ] Code has been self-reviewed
 - [ ] Code follows the project's style guidelines
 - [ ] Comments have been added for complex logic
 - [ ] No debug code or console.log statements left in
 
 ### Testing
+
 - [ ] All tests pass locally
 - [ ] New tests have been added for new functionality
 - [ ] Test coverage maintained or improved
 - [ ] Manual testing completed
 
 ### Documentation
+
 - [ ] Documentation has been updated (if applicable)
 - [ ] Docstrings added/updated for new functions
 - [ ] README updated (if applicable)
 - [ ] Examples updated (if applicable)
 
 ### Git
+
 - [ ] Meaningful commit messages used
 - [ ] Commits are logically organized
 - [ ] No merge commits in feature branch
 - [ ] Branch is up to date with main
 
-### Dependencies
+### Dependency Management
+
 - [ ] No unnecessary dependencies added
 - [ ] All new dependencies documented
 - [ ] License compatibility verified
@@ -178,6 +194,7 @@ mypy claude_builder
 ## 🤝 Review Guidelines
 
 ### For Reviewers
+
 - Focus on code quality, security, and maintainability
 - Check for proper error handling and edge cases
 - Verify test coverage for new functionality
@@ -188,4 +205,4 @@ mypy claude_builder
 
 ---
 
-**Thank you for contributing to Claude Builder! 🚀**
+## Thank you for contributing to Claude Builder! 🚀
