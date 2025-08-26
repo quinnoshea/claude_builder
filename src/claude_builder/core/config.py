@@ -155,6 +155,44 @@ class UserPreferences:
 
 
 @dataclass
+class HealthConfig:
+    """Configuration for health monitoring system."""
+
+    enabled: bool = True
+    check_interval: int = 60  # seconds
+    alert_threshold: int = 3  # consecutive failures before alert
+    timeout: int = 60  # health check timeout in seconds
+    export_reports: bool = True
+    report_directory: str = "./health-reports"
+    enabled_checks: List[str] = field(
+        default_factory=lambda: [
+            "application",
+            "dependency",
+            "security",
+            "performance",
+            "configuration",
+        ]
+    )
+    performance_thresholds: Dict[str, Any] = field(
+        default_factory=lambda: {
+            "memory_usage_warning": 80,  # percent
+            "memory_usage_critical": 90,  # percent
+            "cpu_usage_warning": 80,  # percent
+            "cpu_usage_critical": 90,  # percent
+            "disk_usage_warning": 85,  # percent
+            "disk_usage_critical": 95,  # percent
+        }
+    )
+    notification_settings: Dict[str, Any] = field(
+        default_factory=lambda: {
+            "enable_console_alerts": True,
+            "enable_file_logging": True,
+            "log_file": "health.log",
+        }
+    )
+
+
+@dataclass
 class IntegrationConfig:
     """Configuration for external integrations."""
 
@@ -190,6 +228,7 @@ class Config:
     output: OutputConfig = field(default_factory=OutputConfig)
     user_preferences: UserPreferences = field(default_factory=UserPreferences)
     integrations: IntegrationConfig = field(default_factory=IntegrationConfig)
+    health: HealthConfig = field(default_factory=HealthConfig)
     workspace_settings: Dict[str, Any] = field(default_factory=dict)
     project_profiles: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 
@@ -400,6 +439,7 @@ class ConfigManager:
             integration_config = IntegrationConfig(
                 **config_dict.get("integrations", {})
             )
+            health_config = HealthConfig(**config_dict.get("health", {}))
 
             return Config(
                 version=config_dict.get("version", "1.0"),
@@ -410,6 +450,7 @@ class ConfigManager:
                 output=output_config,
                 user_preferences=user_preferences,
                 integrations=integration_config,
+                health=health_config,
                 workspace_settings=config_dict.get("workspace_settings", {}),
                 project_profiles=config_dict.get("project_profiles", {}),
             )

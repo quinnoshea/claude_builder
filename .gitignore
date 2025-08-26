@@ -59,6 +59,7 @@ cover/
 # Security and analysis reports
 bandit-report.json
 safety-report.json
+*-health-report.json
 
 # Translations
 *.mo

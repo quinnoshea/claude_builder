@@ -26,6 +26,7 @@ from .analyze_commands import analyze
 from .config_commands import config
 from .generate_commands import generate
 from .git_commands import git
+from .health_commands import health
 from .template_commands import templates
 
 
@@ -428,6 +429,7 @@ cli.add_command(analyze)
 cli.add_command(generate)
 cli.add_command(config)
 cli.add_command(git)
+cli.add_command(health)
 
 
 def main() -> None:
