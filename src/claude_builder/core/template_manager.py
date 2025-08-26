@@ -8,18 +8,20 @@ This module implements the Phase 3 template ecosystem features including:
 """
 
 import json
+import logging
 import shutil
 import tempfile
-import zipfile
 
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 from urllib.error import HTTPError, URLError
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin
 from urllib.request import Request, urlopen
 
 from claude_builder.core.models import ProjectAnalysis, ValidationResult
+from claude_builder.utils.exceptions import SecurityError
+from claude_builder.utils.security import security_validator
 
 
 UNSUPPORTED_URL_SCHEME = "Unsupported URL scheme for download"
@@ -644,33 +646,73 @@ class TemplateManager:
         """Fetch template listings from a remote source."""
         templates: List[CommunityTemplate] = []
 
+        logger = logging.getLogger(__name__)
+
         try:
-            # Try to fetch template index
+            # Try to fetch template index with security validation
             index_url = urljoin(source_url, "index.json")
-            # Allow only http/https schemes
-            if urlparse(index_url).scheme not in ("http", "https"):
-                return templates
+
+            # SECURITY FIX: Comprehensive URL validation
+            security_validator.validate_url(index_url)
+
             request = Request(index_url, headers={"User-Agent": "Claude-Builder/0.1.0"})
 
-            with urlopen(
-                request, timeout=10
-            ) as response:  # nosec B310: scheme validated above
-                index_data = json.loads(response.read().decode("utf-8"))
+            logger.info(f"Fetching template index from validated URL: {index_url}")
+            with urlopen(request, timeout=10) as response:
+                # SECURITY FIX: Limit response size
+                content = response.read(1024 * 1024)  # 1MB limit for index
+                if len(content) >= 1024 * 1024:
+                    raise SecurityError("Template index too large (>1MB)")
 
-            # Parse template entries
+                index_data = json.loads(content.decode("utf-8"))
+
+            # Parse template entries with security validation
             for template_data in index_data.get("templates", []):
                 try:
-                    metadata = TemplateMetadata(template_data)
+                    # SECURITY FIX: Validate and sanitize metadata
+                    safe_metadata = security_validator.validate_template_metadata(
+                        template_data
+                    )
+                    metadata = TemplateMetadata(safe_metadata)
+
+                    # SECURITY FIX: Validate template URL
                     template_url = urljoin(source_url, f"templates/{metadata.name}.zip")
+                    security_validator.validate_url(template_url)
+
                     template = CommunityTemplate(metadata, source_url=template_url)
                     templates.append(template)
+                except SecurityError as e:
+                    # SECURITY FIX: Log security violations
+                    logger.warning(f"Security violation in template metadata: {e}")
+                    continue
+                except (ValueError, KeyError) as e:
+                    # SECURITY FIX: Log validation errors
+                    logger.warning(f"Invalid template metadata: {e}")
+                    continue
                 except Exception as e:
-                    # Skip invalid template entries but record locally
-                    _ = e
+                    # SECURITY FIX: Log unexpected errors with context
+                    logger.error(
+                        f"Unexpected error parsing template metadata: {e}",
+                        exc_info=True,
+                    )
+                    continue
 
-        except (URLError, HTTPError, json.JSONDecodeError, Exception):
-            # Silently fail for network issues - community features are optional
-            pass
+        except SecurityError as e:
+            # SECURITY FIX: Log security violations in template source
+            logger.error(
+                f"Security violation accessing template source {source_url}: {e}"
+            )
+        except (URLError, HTTPError) as e:
+            # SECURITY FIX: Log network errors properly
+            logger.warning(f"Network error accessing template source {source_url}: {e}")
+        except json.JSONDecodeError as e:
+            # SECURITY FIX: Log malformed JSON
+            logger.warning(f"Invalid JSON from template source {source_url}: {e}")
+        except Exception as e:
+            # SECURITY FIX: Log unexpected errors with full context
+            logger.error(
+                f"Unexpected error fetching from {source_url}: {e}", exc_info=True
+            )
 
         return templates
 
@@ -701,10 +743,9 @@ class TemplateManager:
             zip_path = temp_path / f"{template.metadata.name}.zip"
             self._download_file(template.source_url, zip_path)
 
-            # Extract template
+            # SECURITY FIX: Safe zip extraction with path traversal protection
             extract_path = temp_path / "extracted"
-            with zipfile.ZipFile(zip_path, "r") as zip_file:
-                zip_file.extractall(extract_path)
+            security_validator.safe_extract_zip(zip_path, extract_path)
 
             # Find template root (may be in subdirectory)
             template_root = self._find_template_root(extract_path)
@@ -731,17 +772,60 @@ class TemplateManager:
             return validation_result
 
     def _download_file(self, url: str, destination: Path) -> None:
-        """Download file from URL."""
-        # Allow only http/https schemes
-        if urlparse(url).scheme not in ("http", "https"):
-            raise ValueError(UNSUPPORTED_URL_SCHEME)
-        request = Request(url, headers={"User-Agent": "Claude-Builder/0.1.0"})
+        """Download file from URL with comprehensive security validation."""
+        logger = logging.getLogger(__name__)
 
-        with urlopen(
-            request, timeout=30
-        ) as response:  # nosec B310: scheme validated above
-            with destination.open("wb") as f:
-                shutil.copyfileobj(response, f)
+        try:
+            # SECURITY FIX: Comprehensive URL validation with whitelist
+            security_validator.validate_url(url)
+
+            # SECURITY FIX: Validate destination path against traversal
+            security_validator.validate_file_path(str(destination.name))
+
+            request = Request(url, headers={"User-Agent": "Claude-Builder/0.1.0"})
+
+            logger.info(f"Downloading file from validated URL: {url}")
+            with urlopen(request, timeout=30) as response:
+                # SECURITY FIX: Check content length to prevent large downloads
+                content_length = response.headers.get("Content-Length")
+                if content_length:
+                    size = int(content_length)
+                    max_size = 50 * 1024 * 1024  # 50MB limit
+                    if size > max_size:
+                        raise SecurityError(
+                            f"File too large: {size} bytes > {max_size} bytes"
+                        )
+
+                # SECURITY FIX: Read with size limit to prevent zip bombs
+                with destination.open("wb") as f:
+                    downloaded = 0
+                    chunk_size = 8192
+                    max_download = 50 * 1024 * 1024  # 50MB
+
+                    while True:
+                        chunk = response.read(chunk_size)
+                        if not chunk:
+                            break
+
+                        downloaded += len(chunk)
+                        if downloaded > max_download:
+                            raise SecurityError(
+                                f"Download exceeded size limit: {downloaded} bytes"
+                            )
+
+                        f.write(chunk)
+
+            logger.info(f"Successfully downloaded {downloaded} bytes to {destination}")
+
+        except SecurityError:
+            # Re-raise security errors as-is
+            raise
+        except (HTTPError, URLError) as e:
+            logger.error(f"Failed to download {url}: {e}")
+            raise SecurityError(f"Download failed: {e}") from e
+        except Exception as e:
+            logger.error(f"Unexpected error downloading {url}: {e}")
+            raise SecurityError(f"Download error: {e}") from e
 
     def _find_template_root(self, extract_path: Path) -> Optional[Path]:
         """Find the root directory of an extracted template."""
@@ -1239,8 +1323,12 @@ class TemplateLoader:
                     try:
                         metadata = yaml.safe_load(parts[1]) or {}
                         content = parts[2].strip()
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        # SECURITY FIX: Log YAML parsing errors
+                        template_logger = logging.getLogger(__name__)
+                        template_logger.warning(
+                            f"Failed to parse YAML metadata in {template_name}: {e}"
+                        )
 
             template = Template(
                 name=template_name,

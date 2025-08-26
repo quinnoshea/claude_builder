@@ -161,6 +161,25 @@ class ValidationError(ClaudeBuilderError):
         )
 
 
+class SecurityError(ClaudeBuilderError):
+    """Exception raised for security violations."""
+
+    def __init__(
+        self,
+        message: str,
+        threat_type: str | None = None,
+        severity: str = "high",
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            message,
+            exit_code=3,
+            threat_type=threat_type,
+            severity=severity,
+            **kwargs,
+        )
+
+
 class TemplateError(ClaudeBuilderError):
     """Exception raised for template system issues."""
 
