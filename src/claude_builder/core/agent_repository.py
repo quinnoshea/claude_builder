@@ -1,6 +1,10 @@
 """Agent repository management and scanning system for Claude Builder."""
 
+import concurrent.futures
+import logging
 import re
+import threading
+import time
 
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -27,6 +31,9 @@ REPOSITORY_NOT_ACCESSIBLE = "Repository is not accessible"
 AGENT_DEFINITION_PARSE_ERROR = "Failed to parse agent definition"
 CAPABILITY_INDEX_ERROR = "Error in capability indexing"
 GITHUB_API_ERROR = "GitHub API error"
+AGENT_CACHE_ERROR = "Agent cache error"
+PARALLEL_SCAN_ERROR = "Parallel scanning error"
+SYNC_OPERATION_ERROR = "Repository synchronization error"
 
 # Magic number constants
 DEFAULT_CONFIDENCE_THRESHOLD = 0.5
@@ -39,6 +46,12 @@ NEUTRAL_SCORE = 0.5
 HIGH_COMPATIBILITY_SCORE = 0.8
 MODERATE_COMPATIBILITY_SCORE = 0.7
 LOW_COMPATIBILITY_SCORE = 0.3
+
+# Performance constants
+MAX_WORKER_THREADS = 4
+AGENT_CACHE_EXPIRY_HOURS = 6
+REPOSITORY_SYNC_TIMEOUT_SECONDS = 30
+PARSE_TIMEOUT_SECONDS = 5
 
 # Validation error messages
 AGENT_NAME_EMPTY = "Agent name cannot be empty"
@@ -126,6 +139,108 @@ class SyncResult:
     removed_agents: int = 0
     sync_duration: float = 0.0
     errors: List[str] = field(default_factory=list)
+
+
+@dataclass
+class AgentCacheEntry:
+    """Cached agent definition with metadata."""
+
+    agent: AgentDefinition
+    cached_at: float
+    source_etag: Optional[str] = None
+    source_last_modified: Optional[str] = None
+
+    def is_expired(self) -> bool:
+        """Check if cache entry is expired."""
+        age_hours = (time.time() - self.cached_at) / 3600
+        return age_hours > AGENT_CACHE_EXPIRY_HOURS
+
+
+class AgentCache:
+    """High-performance agent cache with intelligent invalidation."""
+
+    def __init__(self) -> None:
+        """Initialize the agent cache."""
+        self._cache: Dict[str, AgentCacheEntry] = {}
+        self._lock = threading.RLock()
+        self._logger = logging.getLogger(__name__)
+
+    def get(self, source_url: str) -> Optional[AgentDefinition]:
+        """Get cached agent by source URL."""
+        with self._lock:
+            entry = self._cache.get(source_url)
+            if entry and not entry.is_expired():
+                self._logger.debug(f"Cache hit for {source_url}")
+                return entry.agent
+            elif entry and entry.is_expired():
+                self._logger.debug(f"Cache expired for {source_url}")
+                del self._cache[source_url]
+            return None
+
+    def set(
+        self,
+        source_url: str,
+        agent: AgentDefinition,
+        etag: Optional[str] = None,
+        last_modified: Optional[str] = None,
+    ) -> None:
+        """Cache an agent with metadata."""
+        with self._lock:
+            entry = AgentCacheEntry(
+                agent=agent,
+                cached_at=time.time(),
+                source_etag=etag,
+                source_last_modified=last_modified,
+            )
+            self._cache[source_url] = entry
+            self._logger.debug(f"Cached agent {agent.name} from {source_url}")
+
+    def invalidate(self, source_url: str) -> bool:
+        """Invalidate cached agent."""
+        with self._lock:
+            if source_url in self._cache:
+                del self._cache[source_url]
+                self._logger.debug(f"Invalidated cache for {source_url}")
+                return True
+            return False
+
+    def clear(self) -> int:
+        """Clear all cached agents."""
+        with self._lock:
+            count = len(self._cache)
+            self._cache.clear()
+            self._logger.info(f"Cleared {count} cached agents")
+            return count
+
+    def cleanup_expired(self) -> int:
+        """Remove expired cache entries."""
+        with self._lock:
+            expired_urls = [
+                url for url, entry in self._cache.items() if entry.is_expired()
+            ]
+            for url in expired_urls:
+                del self._cache[url]
+
+            if expired_urls:
+                self._logger.info(
+                    f"Cleaned up {len(expired_urls)} expired cache entries"
+                )
+            return len(expired_urls)
+
+    def get_stats(self) -> Dict[str, Any]:
+        """Get cache statistics."""
+        with self._lock:
+            total_entries = len(self._cache)
+            expired_count = sum(
+                1 for entry in self._cache.values() if entry.is_expired()
+            )
+
+            return {
+                "total_entries": total_entries,
+                "expired_entries": expired_count,
+                "active_entries": total_entries - expired_count,
+                "cache_hit_ratio": getattr(self, "_hit_ratio", 0.0),
+            }
 
 
 class RepositoryConfig:
@@ -908,6 +1023,12 @@ class AgentCompatibilityScorer:
         return matches / len(agent_keywords)
 
 
+# Configure logging for the module
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+
+
 class AgentRepositoryScanner:
     """Main orchestrator for agent repository operations."""
 
@@ -915,12 +1036,17 @@ class AgentRepositoryScanner:
         self,
         config: Optional[RepositoryConfig] = None,
         github_token: Optional[str] = None,
+        max_workers: int = MAX_WORKER_THREADS,
     ):
         """Initialize the agent repository scanner."""
         self.config = config or RepositoryConfig()
         self.parser = AgentDefinitionParser()
         self.scorer = AgentCompatibilityScorer()
         self.index = CapabilityIndex()
+        self.cache = AgentCache()
+        self.max_workers = max_workers
+        self._logger = logging.getLogger(__name__)
+        self._scan_lock = threading.RLock()
 
         # Initialize GitHub client - import here to avoid circular imports
         try:
@@ -932,36 +1058,117 @@ class AgentRepositoryScanner:
         except ImportError:
             # Fallback if github_client is not available
             self.github_client = None
+            self._logger.warning(
+                "GitHub client not available - repository scanning disabled"
+            )
 
-    def scan_repositories(self) -> ScanResult:
-        """Scan all configured repositories for agents."""
-        import time
-
+    def scan_repositories(self, force_refresh: bool = False) -> ScanResult:
+        """Scan all configured repositories for agents with parallel processing."""
         start_time = time.time()
 
-        result = ScanResult()
+        with self._scan_lock:
+            result = ScanResult()
 
-        if not self.github_client:
-            result.errors.append("GitHub client not available - check dependencies")
+            if not self.github_client:
+                result.errors.append("GitHub client not available - check dependencies")
+                return result
+
+            # Clean up expired cache entries
+            expired_cleaned = self.cache.cleanup_expired()
+            if expired_cleaned > 0:
+                self._logger.info(f"Cleaned up {expired_cleaned} expired cache entries")
+
+            enabled_repos = self.config.get_enabled_repositories()
+            result.repositories_scanned = len(enabled_repos)
+
+            if not enabled_repos:
+                self._logger.warning("No enabled repositories found for scanning")
+                result.scan_duration = time.time() - start_time
+                return result
+
+            # Parallel repository scanning
+            with concurrent.futures.ThreadPoolExecutor(
+                max_workers=self.max_workers
+            ) as executor:
+                # Submit repository scan tasks
+                future_to_repo = {
+                    executor.submit(
+                        self._scan_single_repository, repo_config, force_refresh
+                    ): repo_config
+                    for repo_config in enabled_repos
+                }
+
+                # Collect results
+                for future in concurrent.futures.as_completed(
+                    future_to_repo, timeout=REPOSITORY_SYNC_TIMEOUT_SECONDS
+                ):
+                    repo_config = future_to_repo[future]
+                    try:
+                        repo_result = future.result()
+                        # Merge repository result into overall result
+                        result.total_agents += repo_result.total_agents
+                        result.successful_parses += repo_result.successful_parses
+                        result.failed_parses += repo_result.failed_parses
+                        result.errors.extend(repo_result.errors)
+                        result.warnings.extend(repo_result.warnings)
+
+                    except concurrent.futures.TimeoutError:
+                        error_msg = f"Repository scan timeout for {repo_config['name']}"
+                        result.errors.append(error_msg)
+                        self._logger.error(error_msg)
+                    except Exception as e:
+                        error_msg = (
+                            f"Failed to scan repository {repo_config['name']}: {e}"
+                        )
+                        result.errors.append(error_msg)
+                        self._logger.error(error_msg)
+
+            result.scan_duration = time.time() - start_time
+            self._logger.info(
+                f"Scan completed in {result.scan_duration:.2f}s: "
+                f"{result.successful_parses} successful, {result.failed_parses} failed"
+            )
+
             return result
 
-        enabled_repos = self.config.get_enabled_repositories()
-        result.repositories_scanned = len(enabled_repos)
+    def _scan_single_repository(
+        self, repo_config: Dict[str, Any], force_refresh: bool
+    ) -> ScanResult:
+        """Scan a single repository for agents."""
+        result = ScanResult()
+        repo_name = repo_config["name"]
+        repo_url = repo_config["url"]
 
-        for repo_config in enabled_repos:
-            try:
-                # Fetch agents from repository
-                agents_data = self.github_client.fetch_repository_agents(
-                    repo_config["url"]
+        try:
+            self._logger.info(f"Scanning repository: {repo_name}")
+
+            # Fetch agents from repository
+            if self.github_client is None:
+                raise RuntimeError("GitHub client not available")
+            agents_data = self.github_client.fetch_repository_agents(repo_url)
+            result.total_agents = len(agents_data)
+
+            if not agents_data:
+                result.warnings.append(
+                    f"No agent files found in repository {repo_name}"
                 )
+                return result
 
-                for agent_data in agents_data:
+            # Process agents in parallel batches
+            with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+                future_to_agent = {
+                    executor.submit(
+                        self._process_single_agent, agent_data, force_refresh
+                    ): agent_data
+                    for agent_data in agents_data
+                }
+
+                for future in concurrent.futures.as_completed(
+                    future_to_agent, timeout=PARSE_TIMEOUT_SECONDS
+                ):
+                    agent_data = future_to_agent[future]
                     try:
-                        # Parse agent definition
-                        agent = self.parser.parse_agent_file(
-                            agent_data["content"], agent_data["source_url"]
-                        )
-
+                        agent = future.result()
                         if agent:
                             # Index the agent
                             self.index.index_agent(agent)
@@ -969,20 +1176,46 @@ class AgentRepositoryScanner:
                         else:
                             result.failed_parses += 1
 
+                    except concurrent.futures.TimeoutError:
+                        result.failed_parses += 1
+                        result.errors.append(f"Parse timeout for {agent_data['name']}")
                     except Exception as e:
                         result.failed_parses += 1
                         result.errors.append(
                             f"Failed to parse {agent_data['name']}: {e}"
                         )
 
-                result.total_agents += len(agents_data)
+        except Exception as e:
+            result.errors.append(f"Repository scan failed for {repo_name}: {e}")
+            self._logger.error(f"Repository scan failed for {repo_name}: {e}")
 
-            except Exception as e:
-                error_msg = f"Failed to scan repository {repo_config['name']}: {e}"
-                result.errors.append(error_msg)
-
-        result.scan_duration = time.time() - start_time
         return result
+
+    def _process_single_agent(
+        self, agent_data: Dict[str, Any], force_refresh: bool
+    ) -> Optional[AgentDefinition]:
+        """Process a single agent definition with caching."""
+        source_url = agent_data["source_url"]
+
+        # Check cache first (unless force refresh)
+        if not force_refresh:
+            cached_agent = self.cache.get(source_url)
+            if cached_agent:
+                return cached_agent
+
+        # Parse agent definition
+        agent = self.parser.parse_agent_file(agent_data["content"], source_url)
+
+        # Cache the result if successful
+        if agent:
+            self.cache.set(
+                source_url,
+                agent,
+                etag=agent_data.get("etag"),
+                last_modified=agent_data.get("last_modified"),
+            )
+
+        return agent
 
     def find_compatible_agents(
         self, project: ProjectAnalysis, limit: int = 10
@@ -1018,12 +1251,84 @@ class AgentRepositoryScanner:
 
     def sync_repositories(self) -> SyncResult:
         """Synchronize with remote repositories for updates."""
-        # Placeholder implementation - will be completed in Task 2.3
-        return SyncResult(
-            updated_repositories=0,
-            new_agents=0,
-            updated_agents=0,
-            removed_agents=0,
-            sync_duration=0.0,
-            errors=["Implementation pending - Task 2.3"],
-        )
+        start_time = time.time()
+
+        with self._scan_lock:
+            result = SyncResult()
+
+            if not self.github_client:
+                result.errors.append("GitHub client not available - sync disabled")
+                return result
+
+            self._logger.info("Starting repository synchronization")
+
+            enabled_repos = self.config.get_enabled_repositories()
+
+            for repo_config in enabled_repos:
+                try:
+                    repo_name = repo_config["name"]
+                    repo_url = repo_config["url"]
+
+                    self._logger.info(f"Syncing repository: {repo_name}")
+
+                    # Get current repository information
+                    repo_info = self.github_client.get_repository_info(repo_url)
+
+                    if not repo_info:
+                        result.errors.append(
+                            f"Could not fetch repository info for {repo_name}"
+                        )
+                        continue
+
+                    # Check if repository has been updated since last scan
+                    # This is a simplified check - in production, you'd want to compare
+                    # with stored metadata about last sync time
+
+                    # Force refresh agents from this repository
+                    repo_scan_result = self._scan_single_repository(
+                        repo_config, force_refresh=True
+                    )
+
+                    # Update sync statistics
+                    result.updated_repositories += 1
+                    result.new_agents += repo_scan_result.successful_parses
+
+                    if repo_scan_result.errors:
+                        result.errors.extend(repo_scan_result.errors)
+
+                except Exception as e:
+                    error_msg = f"Failed to sync repository {repo_config['name']}: {e}"
+                    result.errors.append(error_msg)
+                    self._logger.error(error_msg)
+
+            result.sync_duration = time.time() - start_time
+
+            self._logger.info(
+                f"Sync completed in {result.sync_duration:.2f}s: "
+                f"{result.updated_repositories} repos, {result.new_agents} agents"
+            )
+
+            return result
+
+    def get_cache_stats(self) -> Dict[str, Any]:
+        """Get comprehensive cache statistics."""
+        cache_stats = self.cache.get_stats()
+        index_stats = self.index.get_stats()
+
+        return {
+            "cache": cache_stats,
+            "index": index_stats,
+            "scanner": {
+                "max_workers": self.max_workers,
+                "github_client_available": self.github_client is not None,
+            },
+        }
+
+    def clear_caches(self) -> Dict[str, int]:
+        """Clear all caches and return counts."""
+        agent_cache_cleared = self.cache.clear()
+
+        # Note: Index is not cleared as it contains actively used data
+        # In production, you might want to add index.clear() method
+
+        return {"agent_cache_cleared": agent_cache_cleared}

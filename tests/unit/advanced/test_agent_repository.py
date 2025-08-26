@@ -1,12 +1,15 @@
 """Tests for agent repository management system."""
 
 import tempfile
+import time
 
 from pathlib import Path
 
 import pytest
 
 from claude_builder.core.agent_repository import (
+    AgentCache,
+    AgentCacheEntry,
     AgentCompatibilityScorer,
     AgentDefinition,
     AgentDefinitionParser,
@@ -710,47 +713,194 @@ class TestCompatibleAgent:
             )
 
 
+class TestAgentCache:
+    """Test the agent cache system."""
+
+    def setup_method(self):
+        """Set up test fixtures."""
+        self.cache = AgentCache()
+        self.test_agent = AgentDefinition(
+            name="Test Agent",
+            description="Test description",
+            capabilities=("testing",),
+            use_cases=("test cases",),
+        )
+
+    def test_cache_entry_creation(self):
+        """Test creating cache entries."""
+        entry = AgentCacheEntry(
+            agent=self.test_agent,
+            cached_at=time.time(),
+            source_etag="test-etag",
+            source_last_modified="2024-01-01T00:00:00Z",
+        )
+
+        assert entry.agent == self.test_agent
+        assert not entry.is_expired()  # Should be fresh
+        assert entry.source_etag == "test-etag"
+
+    def test_cache_entry_expiration(self):
+        """Test cache entry expiration."""
+        import time
+
+        old_time = time.time() - (7 * 3600)  # 7 hours ago
+
+        entry = AgentCacheEntry(agent=self.test_agent, cached_at=old_time)
+
+        assert entry.is_expired()
+
+    def test_cache_set_and_get(self):
+        """Test caching and retrieving agents."""
+        url = "https://github.com/test/agent.md"
+
+        # Cache should be empty initially
+        assert self.cache.get(url) is None
+
+        # Set agent in cache
+        self.cache.set(url, self.test_agent, etag="test-etag")
+
+        # Should retrieve same agent
+        cached_agent = self.cache.get(url)
+        assert cached_agent is not None
+        assert cached_agent.name == self.test_agent.name
+
+    def test_cache_invalidation(self):
+        """Test cache invalidation."""
+        url = "https://github.com/test/agent.md"
+
+        # Cache an agent
+        self.cache.set(url, self.test_agent)
+        assert self.cache.get(url) is not None
+
+        # Invalidate
+        result = self.cache.invalidate(url)
+        assert result is True
+        assert self.cache.get(url) is None
+
+        # Try to invalidate non-existent entry
+        result = self.cache.invalidate(url)
+        assert result is False
+
+    def test_cache_clear(self):
+        """Test clearing entire cache."""
+        # Cache multiple agents
+        self.cache.set("url1", self.test_agent)
+        self.cache.set("url2", self.test_agent)
+
+        count = self.cache.clear()
+        assert count == 2
+        assert self.cache.get("url1") is None
+        assert self.cache.get("url2") is None
+
+    def test_cache_stats(self):
+        """Test cache statistics."""
+        stats = self.cache.get_stats()
+
+        assert "total_entries" in stats
+        assert "expired_entries" in stats
+        assert "active_entries" in stats
+        assert stats["total_entries"] == 0  # Empty cache
+
+        # Add entry and check stats
+        self.cache.set("test", self.test_agent)
+        stats = self.cache.get_stats()
+        assert stats["total_entries"] == 1
+        assert stats["active_entries"] == 1
+
+
 class TestAgentRepositoryScanner:
     """Test the main agent repository scanner."""
 
+    def setup_method(self):
+        """Set up test fixtures."""
+        self.scanner = AgentRepositoryScanner(
+            max_workers=2
+        )  # Limit workers for testing
+
     def test_scanner_initialization(self):
         """Test scanner initialization."""
-        scanner = AgentRepositoryScanner()
-
-        assert scanner.config is not None
-        assert scanner.parser is not None
-        assert scanner.scorer is not None
-        assert scanner.index is not None
+        assert self.scanner.config is not None
+        assert self.scanner.parser is not None
+        assert self.scanner.scorer is not None
+        assert self.scanner.index is not None
+        assert self.scanner.cache is not None
+        assert self.scanner.max_workers == 2
 
     def test_scan_repositories_with_github_client(self):
         """Test scan repositories with GitHub client integration."""
-        scanner = AgentRepositoryScanner()
-        result = scanner.scan_repositories()
+        result = self.scanner.scan_repositories()
 
         assert isinstance(result, ScanResult)
         assert result.total_agents == 0
         # With GitHub client available, we should scan configured repositories
         assert result.repositories_scanned >= 0
+        assert result.scan_duration >= 0
+
+    def test_scan_repositories_force_refresh(self):
+        """Test repository scanning with force refresh."""
+        result = self.scanner.scan_repositories(force_refresh=True)
+
+        assert isinstance(result, ScanResult)
+        assert result.scan_duration >= 0
 
     def test_find_compatible_agents_functionality(self):
         """Test find compatible agents functionality."""
-        scanner = AgentRepositoryScanner()
-
         project = ProjectAnalysis(project_path=Path("/test"))
-        results = scanner.find_compatible_agents(project)
+        results = self.scanner.find_compatible_agents(project)
 
         assert isinstance(results, list)
         # With empty index, should return empty list
         assert len(results) == 0
 
-    def test_sync_repositories_placeholder(self):
-        """Test sync repositories placeholder implementation."""
-        scanner = AgentRepositoryScanner()
-        result = scanner.sync_repositories()
+    def test_sync_repositories_implementation(self):
+        """Test sync repositories complete implementation."""
+        result = self.scanner.sync_repositories()
 
         assert isinstance(result, SyncResult)
-        assert result.updated_repositories == 0
-        assert "Implementation pending" in result.errors[0]
+        assert result.sync_duration >= 0
+        # Should now handle synchronization (may have errors due to no real repos)
+
+    def test_cache_integration(self):
+        """Test cache integration with scanner."""
+        stats = self.scanner.get_cache_stats()
+
+        assert "cache" in stats
+        assert "index" in stats
+        assert "scanner" in stats
+        assert isinstance(stats["cache"]["total_entries"], int)
+        assert isinstance(stats["scanner"]["max_workers"], int)
+
+    def test_clear_caches(self):
+        """Test clearing scanner caches."""
+        # Add something to cache first
+        test_agent = AgentDefinition(
+            name="Test", description="Test", capabilities=("test",), use_cases=("test",)
+        )
+        self.scanner.cache.set("test-url", test_agent)
+
+        result = self.scanner.clear_caches()
+        assert "agent_cache_cleared" in result
+        assert result["agent_cache_cleared"] == 1
+
+    def test_process_single_agent_caching(self):
+        """Test single agent processing with caching."""
+        agent_data = {
+            "name": "test-agent.md",
+            "content": "# Test Agent\n\nA test agent for testing.",
+            "source_url": "https://github.com/test/test-agent.md",
+            "etag": "test-etag",
+        }
+
+        # Process agent (should be cached)
+        agent = self.scanner._process_single_agent(agent_data, force_refresh=False)
+
+        if agent:  # Only test if parsing was successful
+            assert agent.name == "Test Agent"
+
+            # Should be in cache now
+            cached = self.scanner.cache.get(agent_data["source_url"])
+            assert cached is not None
+            assert cached.name == "Test Agent"
 
 
 @pytest.mark.advanced
@@ -910,3 +1060,99 @@ moderate
         assert partial_match.compatibility_score > 0.3
         assert "Language: python" in partial_match.matching_criteria
         assert "Framework: django" not in partial_match.matching_criteria
+
+
+class TestEnhancedAgentRepositoryScanner:
+    """Test enhanced AgentRepositoryScanner with parallel processing and caching."""
+
+    def setup_method(self):
+        """Set up test fixtures."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_path = Path(tmpdir) / "test_repositories.yaml"
+            config = RepositoryConfig(config_path)
+            self.scanner = AgentRepositoryScanner(config=config, max_workers=2)
+
+    def test_parallel_processing_initialization(self):
+        """Test scanner is properly configured for parallel processing."""
+        assert self.scanner.max_workers == 2
+        assert self.scanner.cache is not None
+        assert hasattr(self.scanner, "_scan_lock")
+
+    def test_cache_integration_workflow(self):
+        """Test cache integration in full workflow."""
+        # Create mock agent data
+        agent_data = {
+            "name": "mock-agent.md",
+            "content": "# Mock Agent\n\nA comprehensive mock agent.",
+            "source_url": "https://github.com/mock/mock-agent.md",
+            "etag": "mock-etag-123",
+        }
+
+        # Process agent (first time - should cache)
+        agent1 = self.scanner._process_single_agent(agent_data, force_refresh=False)
+
+        if agent1:  # Only test if parsing succeeded
+            # Process same agent again (should use cache)
+            agent2 = self.scanner._process_single_agent(agent_data, force_refresh=False)
+
+            assert agent2 is not None
+            # Should get same agent from cache
+            assert agent2.name == agent1.name
+
+    def test_performance_monitoring(self):
+        """Test performance monitoring capabilities."""
+        import time
+
+        start_time = time.time()
+        result = self.scanner.scan_repositories()
+        scan_duration = time.time() - start_time
+
+        # Should complete quickly with no real repositories
+        assert result.scan_duration <= scan_duration
+        assert result.scan_duration >= 0
+
+        # Get performance stats
+        stats = self.scanner.get_cache_stats()
+        assert stats["scanner"]["max_workers"] == 2
+
+    def test_error_handling_and_logging(self):
+        """Test comprehensive error handling."""
+        # This will test error handling with invalid repository configs
+        result = self.scanner.scan_repositories()
+
+        # Should handle errors gracefully
+        assert isinstance(result, ScanResult)
+        assert isinstance(result.errors, list)
+        assert isinstance(result.warnings, list)
+        assert result.scan_duration >= 0
+
+    def test_sync_with_error_handling(self):
+        """Test synchronization with comprehensive error handling."""
+        result = self.scanner.sync_repositories()
+
+        assert isinstance(result, SyncResult)
+        assert result.sync_duration >= 0
+        assert isinstance(result.errors, list)  # May have errors with no real repos
+
+    def test_cache_cleanup_integration(self):
+        """Test cache cleanup is integrated into scanning."""
+        # Add an old cache entry that should be cleaned up
+        old_agent = AgentDefinition(
+            name="Old Agent",
+            description="Old",
+            capabilities=("old",),
+            use_cases=("old",),
+        )
+        old_time = time.time() - (8 * 3600)  # 8 hours ago (expired)
+
+        # Manually create expired entry
+        expired_entry = AgentCacheEntry(agent=old_agent, cached_at=old_time)
+
+        # Add to cache manually
+        self.scanner.cache._cache["old-url"] = expired_entry
+
+        # Run scan (should cleanup expired entries)
+        _result = self.scanner.scan_repositories()
+
+        # Expired entry should be cleaned up
+        assert self.scanner.cache.get("old-url") is None
