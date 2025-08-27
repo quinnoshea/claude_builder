@@ -69,7 +69,16 @@ class TemplateMetadata:
         # Simple version comparison - in production this would be more sophisticated
         try:
             current_version = "0.1.0"  # Would be imported from version module
-            return self.min_builder_version <= current_version
+            # Simple semantic version comparison (just for testing)
+            current_parts = [int(x) for x in current_version.split(".")]
+            required_parts = [int(x) for x in self.min_builder_version.split(".")]
+
+            # Pad to same length
+            max_len = max(len(current_parts), len(required_parts))
+            current_parts.extend([0] * (max_len - len(current_parts)))
+            required_parts.extend([0] * (max_len - len(required_parts)))
+
+            return current_parts >= required_parts
         except Exception:
             return True  # Default to compatible if comparison fails
 

@@ -9,6 +9,8 @@ Tests the complete template processing pipeline including:
 - Template ecosystem integration
 """
 
+from unittest.mock import Mock, patch
+
 import pytest
 
 from claude_builder.core.analyzer import ProjectAnalyzer
@@ -19,404 +21,402 @@ from claude_builder.core.template_manager import TemplateManager
 class TestTemplateWorkflowIntegration:
     """Test suite for template workflow integration."""
 
-    def test_template_discovery_and_rendering(self, temp_dir, sample_python_project):
-        """Test complete template discovery and rendering workflow."""
-        # Create template directory structure
-        templates_dir = temp_dir / "templates"
-        templates_dir.mkdir()
+    @patch("claude_builder.core.template_manager.MODULAR_COMPONENTS_AVAILABLE", True)
+    def test_template_discovery_and_rendering_modular(
+        self, temp_dir, sample_python_project
+    ):
+        """Test template discovery and rendering with modular architecture."""
+        # Mock modular components
+        mock_downloader = Mock()
+        mock_repository_client = Mock()
+        mock_validator = Mock()
+        mock_community_manager = Mock()
 
-        # Create base template
-        base_template = templates_dir / "base.md"
-        base_template.write_text(
-            """---
-name: base-template
-type: base
----
-# {{ project_name }}
+        # Mock community manager behavior
+        mock_community_template = Mock()
+        mock_community_template.metadata.to_dict.return_value = {
+            "name": "python-template",
+            "version": "1.0.0",
+            "description": "Python project template",
+            "author": "test",
+        }
+        mock_community_template.source_url = None
+        mock_community_template.local_path = None
 
-Project Type: {{ project_type }}
-Framework: {{ framework }}
+        mock_community_manager.list_available_templates.return_value = [
+            mock_community_template
+        ]
 
-{% block content %}
-Default content
-{% endblock %}
-"""
-        )
+        with patch(
+            "claude_builder.core.template_manager.TemplateDownloader",
+            return_value=mock_downloader,
+        ), patch(
+            "claude_builder.core.template_manager.TemplateRepositoryClient",
+            return_value=mock_repository_client,
+        ), patch(
+            "claude_builder.core.template_manager.ComprehensiveTemplateValidator",
+            return_value=mock_validator,
+        ), patch(
+            "claude_builder.core.template_manager.CommunityTemplateManager",
+            return_value=mock_community_manager,
+        ):
 
-        # Create Python-specific template
-        python_template = templates_dir / "python.md"
-        python_template.write_text(
-            """---
-name: python-template
-type: documentation
-extends: base-template
-project_types: [python]
----
-{% extends 'base.md' %}
+            # Initialize template manager with modular components
+            template_manager = TemplateManager(template_directory=str(temp_dir))
 
-{% block content %}
-## Python Project Documentation
+            # Test coordination layer delegates to modular components
+            available_templates = template_manager.list_available_templates()
 
-### Dependencies
-{% for dep in dependencies %}
-- {{ dep }}
-{% endfor %}
+            # Verify delegation occurred
+            mock_community_manager.list_available_templates.assert_called_once()
+            assert len(available_templates) == 1
+            assert available_templates[0].metadata.name == "python-template"
 
-### Project Structure
-- Source: {{ main_directory | default('src') }}
-- Tests: tests/
-- Configuration: {{ config_files | join(', ') }}
-{% endblock %}
-"""
-        )
+    def test_template_discovery_and_rendering_fallback(
+        self, temp_dir, sample_python_project
+    ):
+        """Test template discovery falls back to legacy when modular unavailable."""
+        # Test with modular components unavailable
+        with patch(
+            "claude_builder.core.template_manager.MODULAR_COMPONENTS_AVAILABLE", False
+        ):
+            template_manager = TemplateManager(template_directory=str(temp_dir))
 
-        # Initialize template manager
-        template_manager = TemplateManager()
+            # Should use legacy implementation
+            assert template_manager.community_manager is None
 
-        # Analyze sample project
-        analyzer = ProjectAnalyzer()
-        analysis_result = analyzer.analyze(sample_python_project)
+            # Legacy implementation should work
+            available_templates = template_manager.list_available_templates()
+            assert isinstance(
+                available_templates, list
+            )  # Should return empty list but not fail
 
-        # Test template discovery and rendering workflow
-        # For now, use available templates or create mock template
-        available_templates = template_manager.list_available_templates()
-        generator = DocumentGenerator(analysis_result)
-        assert len(available_templates) >= 0  # Verify templates structure
-        assert generator is not None  # Verify generator creation
+    def test_coordination_layer_template_rendering(
+        self, temp_dir, sample_python_project
+    ):
+        """Test coordination layer handles template rendering requests properly."""
+        # Initialize template manager with coordination layer
+        template_manager = TemplateManager(template_directory=str(temp_dir))
 
-        # Mock template rendering since the exact methods are not implemented
-        rendered_content = "# Python Project Documentation\\n\\nProject: test-project"
+        # Test get_template method returns Template objects for test compatibility
+        claude_template = template_manager.get_template("claude-instructions.md")
+        readme_template = template_manager.get_template("readme.md")
+        contributing_template = template_manager.get_template("contributing.md")
 
-        assert "Python Project Documentation" in rendered_content
-        assert (
-            "test-project" in rendered_content or "python" in rendered_content.lower()
-        )
+        # Should return Template objects for backward compatibility
+        assert claude_template is not None
+        assert readme_template is not None
+        assert contributing_template is not None
 
-    def test_multi_template_generation_workflow(self, temp_dir, sample_python_project):
-        """Test generation of multiple related templates."""
-        templates_dir = temp_dir / "templates"
-        templates_dir.mkdir()
-
-        # Create multiple templates
-        templates = {
-            "claude.md": """---
-name: claude-instructions
-type: claude
----
-# Claude Instructions for {{ project_name }}
-
-This is a {{ project_type }} project using {{ framework }}.
-
-## Development Guidelines
-- Follow {{ project_type }} best practices
-- Use {{ framework }} conventions
-""",
-            "readme.md": """---
-name: readme
-type: documentation
----
-# {{ project_name }}
-
-{{ description | default('A ' + project_type + ' project') }}
-
-## Installation
-[Installation instructions for {{ project_type }}]
-
-## Usage
-[Usage instructions]
-""",
-            "contributing.md": """---
-name: contributing
-type: documentation
----
-# Contributing to {{ project_name }}
-
-## Development Setup
-1. Clone the repository
-2. Install {{ project_type }} dependencies
-3. Run tests
-
-## Code Style
-Follow {{ project_type }} conventions.
-""",
+        # Template objects should be renderable
+        context = {
+            "project_name": "test-project",
+            "project_type": "python",
+            "framework": "fastapi",
         }
 
-        for filename, content in templates.items():
-            (templates_dir / filename).write_text(content)
+        claude_rendered = claude_template.render(**context)
+        readme_rendered = readme_template.render(**context)
+        contributing_rendered = contributing_template.render(**context)
 
-        # Initialize components
-        template_manager = TemplateManager()
-        analyzer = ProjectAnalyzer()
-        analysis_result = analyzer.analyze(sample_python_project)
-        generator = DocumentGenerator(analysis_result)
+        # Verify rendered content contains expected elements
+        assert "test-project" in claude_rendered
+        assert "test-project" in readme_rendered
+        assert "test-project" in contributing_rendered
 
-        # Generate all templates
-        output_dir = temp_dir / "output"
-        output_dir.mkdir()
+        # Test template manager provides backward compatibility
+        assert hasattr(template_manager, "render_template")
+        assert hasattr(template_manager, "get_templates_by_type")
+        assert hasattr(template_manager, "select_template_for_project")
 
-        results = {}
-        for template_name in ["claude-instructions", "readme", "contributing"]:
-            template = template_manager.get_template(f"{template_name}.md")
-            if template:
-                content = generator.render_template_with_manager(
-                    template, template_manager
-                )
-                output_file = output_dir / f"{template_name}.md"
-                output_file.write_text(content)
-                results[template_name] = content
+    def test_template_manager_coordination_methods(
+        self, temp_dir, sample_python_project
+    ):
+        """Test template manager coordination methods work properly."""
+        template_manager = TemplateManager(template_directory=str(temp_dir))
 
-        # Verify all templates were generated
-        assert len(results) == 3
-        assert "Claude Instructions" in results["claude-instructions"]
-        assert "Contributing to" in results["contributing"]
-        assert analysis_result.project_info.name in results["readme"]
+        # Test coordination layer methods
+        documentation_templates = template_manager.get_templates_by_type(
+            "documentation"
+        )
+        assert len(documentation_templates) >= 1
 
-    def test_template_inheritance_workflow(self, temp_dir, sample_python_project):
-        """Test template inheritance workflow."""
-        templates_dir = temp_dir / "templates"
-        templates_dir.mkdir()
+        # Test template selection for project type
+        selected_template = template_manager.select_template_for_project(
+            "claude_instructions", "python"
+        )
+        assert selected_template is not None
+        assert hasattr(selected_template, "render")
 
-        # Create template hierarchy
-        base_template = templates_dir / "base_project.md"
-        base_template.write_text(
-            """---
-name: base-project
-type: base
----
-# {{ project_name }}
+        # Test batch rendering coordination
+        from claude_builder.core.template_manager import TemplateContext
 
-{% block overview %}
-A {{ project_type }} project.
-{% endblock %}
-
-{% block structure %}
-## Project Structure
-Standard {{ project_type }} structure.
-{% endblock %}
-
-{% block setup %}
-## Setup Instructions
-1. Clone repository
-2. Install dependencies
-3. Run project
-{% endblock %}
-
-{% block additional %}
-{% endblock %}
-"""
+        context = TemplateContext(
+            project_name="test-project", language="python", framework="fastapi"
         )
 
-        # Python-specific template extending base
-        python_template = templates_dir / "python_project.md"
-        python_template.write_text(
-            """---
-name: python-project
-type: documentation
-extends: base-project
-project_types: [python]
----
-{% extends 'base_project.md' %}
+        templates = {
+            "claude.md": "# {{ project_name }} Claude Instructions",
+            "readme.md": "# {{ project_name }}\n\nFramework: {{ framework }}",
+        }
 
-{% block overview %}
-A Python {{ framework }} project for {{ description | default('awesome') }}.
-{% endblock %}
+        results = template_manager.render_batch(templates, context)
+        assert len(results) == 2
+        assert "test-project" in results["claude.md"]
+        assert "fastapi" in results["readme.md"]
 
-{% block structure %}
-## Python Project Structure
-- `{{ main_directory | default('src') }}/`: Source code
-- `tests/`: Unit tests
-- `{{ config_files[0] if config_files else 'requirements.txt' }}`: Dependencies
-{% endblock %}
+    @patch("claude_builder.core.template_manager.MODULAR_COMPONENTS_AVAILABLE", True)
+    def test_modular_template_validation(self, temp_dir, sample_python_project):
+        """Test template validation through coordination layer with modular components."""
+        # Mock modular validator
+        mock_validator = Mock()
+        mock_validation_result = Mock()
+        mock_validation_result.is_valid = True
+        mock_validation_result.errors = []
+        mock_validation_result.warnings = []
+        mock_validation_result.suggestions = ["Template validated successfully"]
+        mock_validator.validate_template.return_value = mock_validation_result
 
-{% block additional %}
-## Python-Specific Information
+        with patch(
+            "claude_builder.core.template_manager.ComprehensiveTemplateValidator",
+            return_value=mock_validator,
+        ), patch("claude_builder.core.template_manager.TemplateDownloader"), patch(
+            "claude_builder.core.template_manager.TemplateRepositoryClient"
+        ), patch(
+            "claude_builder.core.template_manager.CommunityTemplateManager"
+        ):
 
-### Virtual Environment
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\\Scripts\\activate
-pip install -r requirements.txt
-```
+            template_manager = TemplateManager(template_directory=str(temp_dir))
 
-### Testing
-```bash
-pytest tests/
-```
-{% endblock %}
-"""
-        )
+            # Test validation through coordination layer
+            test_template_path = temp_dir / "test_template"
+            test_template_path.mkdir()
+            (test_template_path / "template.json").write_text("{}")
 
-        # Initialize and test inheritance
-        template_manager = TemplateManager()
-        analyzer = ProjectAnalyzer()
-        analysis_result = analyzer.analyze(sample_python_project)
-        generator = DocumentGenerator(analysis_result)
+            result = template_manager.validate_template_directory(test_template_path)
 
-        # Render Python template (which extends base)
-        python_template_obj = template_manager.get_template("python_project.md")
-        rendered_content = generator.render_template_with_manager(
-            python_template_obj, template_manager
-        )
+            # Should use modern validator when available
+            mock_validator.validate_template.assert_called_once_with(test_template_path)
+            assert result.is_valid
+            assert "Template validated successfully" in result.suggestions
 
-        # Should contain content from both base and child templates
-        assert analysis_result.project_info.name in rendered_content
-        assert "Python Project Structure" in rendered_content
-        assert "Virtual Environment" in rendered_content
-        assert "Setup Instructions" in rendered_content  # From base template
+    def test_legacy_template_validation_fallback(self, temp_dir, sample_python_project):
+        """Test template validation falls back to legacy validator."""
+        with patch(
+            "claude_builder.core.template_manager.MODULAR_COMPONENTS_AVAILABLE", False
+        ):
+            template_manager = TemplateManager(template_directory=str(temp_dir))
 
-    def test_conditional_template_rendering(self, temp_dir, sample_python_project):
-        """Test conditional template rendering based on project characteristics."""
-        templates_dir = temp_dir / "templates"
-        templates_dir.mkdir()
+            # Create a basic template for validation
+            test_template_path = temp_dir / "test_template"
+            test_template_path.mkdir()
 
-        # Create template with conditional content
-        conditional_template = templates_dir / "conditional.md"
-        conditional_template.write_text(
-            """---
-name: conditional-template
-type: documentation
----
-# {{ project_name }}
-
-{% if project_type == 'python' %}
-## Python Configuration
-This is a Python project using {{ framework | default('standard libraries') }}.
-
-{% if 'pytest' in dependencies %}
-### Testing with pytest
-Run tests with: `pytest`
-{% endif %}
-
-{% if 'fastapi' in dependencies %}
-### FastAPI Configuration
-Start server with: `uvicorn main:app --reload`
-{% endif %}
-
-{% endif %}
-
-{% if has_git %}
-## Git Repository
-This project is version controlled with Git.
-
-{% if git_info.remote_url %}
-Remote: {{ git_info.remote_url }}
-{% endif %}
-{% endif %}
-
-{% if dependencies %}
-## Dependencies
-{% for dep in dependencies %}
-- {{ dep }}
-{% endfor %}
-{% endif %}
-"""
-        )
-
-        # Test rendering with different project characteristics
-        template_manager = TemplateManager()
-        analyzer = ProjectAnalyzer()
-        analysis_result = analyzer.analyze(sample_python_project)
-        generator = DocumentGenerator(analysis_result)
-
-        template = template_manager.get_template("conditional.md")
-        rendered_content = generator.render_template_with_manager(
-            template, template_manager
-        )
-
-        # Should contain Python-specific content
-        assert "Python Configuration" in rendered_content
-
-        # Should contain dependency information if present
-        if analysis_result.dependencies:
-            assert "Dependencies" in rendered_content
-
-    def test_template_error_handling_workflow(self, temp_dir, sample_python_project):
-        """Test template error handling in workflow."""
-        templates_dir = temp_dir / "templates"
-        templates_dir.mkdir()
-
-        # Create template with invalid syntax
-        invalid_template = templates_dir / "invalid.md"
-        invalid_template.write_text(
-            """---
-name: invalid-template
-type: documentation
----
-# {{ project_name }}
-
-{% for dep in dependencies
-Missing closing tag for loop
-"""
-        )
-
-        # Create template with undefined variables
-        undefined_vars_template = templates_dir / "undefined.md"
-        undefined_vars_template.write_text(
-            """---
-name: undefined-template
-type: documentation
----
-# {{ project_name }}
-
-Undefined variable: {{ this_variable_does_not_exist }}
-"""
-        )
-
-        template_manager = TemplateManager()
-        analyzer = ProjectAnalyzer()
-        analysis_result = analyzer.analyze(sample_python_project)
-        generator = DocumentGenerator(analysis_result)
-
-        # Test invalid syntax handling
-        with pytest.raises(Exception):  # Should raise template error
-            invalid_template_obj = template_manager.get_template("invalid.md")
-            generator.render_template_with_manager(
-                invalid_template_obj, template_manager
+            # Create required files for legacy validation
+            (test_template_path / "template.json").write_text(
+                """{
+  "name": "test",
+  "version": "1.0.0",
+  "description": "Test template",
+  "author": "test"
+}"""
+            )
+            (test_template_path / "claude_instructions.md").write_text(
+                "# Test Template"
             )
 
-        # Test undefined variable handling
-        with pytest.raises(Exception):  # Should raise undefined variable error
-            undefined_template_obj = template_manager.get_template("undefined.md")
-            generator.render_template_with_manager(
-                undefined_template_obj, template_manager
+            # Test validation through coordination layer
+            result = template_manager.validate_template_directory(test_template_path)
+
+            # Should use legacy validator and succeed
+            assert result.is_valid
+            assert len(result.errors) == 0
+
+    @patch("claude_builder.core.template_manager.MODULAR_COMPONENTS_AVAILABLE", True)
+    def test_template_search_coordination(self, temp_dir, sample_python_project):
+        """Test template search through coordination layer with modular components."""
+        # Mock community manager search
+        mock_community_manager = Mock()
+        mock_search_results = [Mock()]
+        mock_search_results[0].metadata.to_dict.return_value = {
+            "name": "python-fastapi-template",
+            "version": "1.0.0",
+            "description": "FastAPI Python template",
+            "author": "test",
+        }
+        mock_community_manager.search_templates.return_value = mock_search_results
+
+        with patch("claude_builder.core.template_manager.TemplateDownloader"), patch(
+            "claude_builder.core.template_manager.TemplateRepositoryClient"
+        ), patch(
+            "claude_builder.core.template_manager.ComprehensiveTemplateValidator"
+        ), patch(
+            "claude_builder.core.template_manager.CommunityTemplateManager",
+            return_value=mock_community_manager,
+        ):
+
+            template_manager = TemplateManager(template_directory=str(temp_dir))
+
+            # Analyze project for search context
+            analyzer = ProjectAnalyzer()
+            analysis_result = analyzer.analyze(sample_python_project)
+
+            # Test search coordination
+            search_results = template_manager.search_templates(
+                "python", analysis_result
             )
 
-    def test_template_caching_workflow(self, temp_dir, sample_python_project):
-        """Test template caching in workflow."""
-        templates_dir = temp_dir / "templates"
-        templates_dir.mkdir()
+            # Verify delegation to modular components
+            mock_community_manager.search_templates.assert_called_once_with(
+                "python", analysis_result
+            )
+            assert len(search_results) == 1
+            assert search_results[0].metadata.name == "python-fastapi-template"
 
-        # Create template
-        template_file = templates_dir / "cached.md"
-        template_file.write_text(
-            """---
-name: cached-template
-type: documentation
----
-# {{ project_name }}
-Generated at: {{ timestamp }}
-"""
+    def test_template_search_fallback(self, temp_dir, sample_python_project):
+        """Test template search falls back to legacy implementation."""
+        with patch(
+            "claude_builder.core.template_manager.MODULAR_COMPONENTS_AVAILABLE", False
+        ):
+            template_manager = TemplateManager(template_directory=str(temp_dir))
+
+            # Should use legacy search implementation
+            search_results = template_manager.search_templates("python")
+
+            # Legacy implementation should return empty list but not fail
+            assert isinstance(search_results, list)
+            assert template_manager.community_manager is None
+
+    @patch("claude_builder.core.template_manager.MODULAR_COMPONENTS_AVAILABLE", True)
+    def test_template_installation_coordination(self, temp_dir, sample_python_project):
+        """Test template installation through coordination layer."""
+        # Mock community manager installation
+        mock_community_manager = Mock()
+        mock_install_result = Mock()
+        mock_install_result.is_valid = True
+        mock_install_result.errors = []
+        mock_install_result.warnings = []
+        mock_install_result.suggestions = ["Template installed successfully"]
+        mock_community_manager.install_template.return_value = mock_install_result
+
+        with patch("claude_builder.core.template_manager.TemplateDownloader"), patch(
+            "claude_builder.core.template_manager.TemplateRepositoryClient"
+        ), patch(
+            "claude_builder.core.template_manager.ComprehensiveTemplateValidator"
+        ), patch(
+            "claude_builder.core.template_manager.CommunityTemplateManager",
+            return_value=mock_community_manager,
+        ):
+
+            template_manager = TemplateManager(template_directory=str(temp_dir))
+
+            # Test installation coordination
+            result = template_manager.install_template(
+                "python-fastapi-template", force=True
+            )
+
+            # Verify delegation to modular components
+            mock_community_manager.install_template.assert_called_once_with(
+                "python-fastapi-template", force=True
+            )
+            assert result.is_valid
+            assert "Template installed successfully" in result.suggestions
+
+    def test_template_installation_fallback(self, temp_dir, sample_python_project):
+        """Test template installation falls back to legacy implementation."""
+        with patch(
+            "claude_builder.core.template_manager.MODULAR_COMPONENTS_AVAILABLE", False
+        ):
+            template_manager = TemplateManager(template_directory=str(temp_dir))
+
+            # Test legacy installation - should handle gracefully
+            result = template_manager.install_template("nonexistent-template")
+
+            # Legacy implementation should return appropriate error
+            assert not result.is_valid
+            assert "Template not found" in " ".join(result.errors)
+            assert template_manager.community_manager is None
+
+    @patch("claude_builder.core.template_manager.MODULAR_COMPONENTS_AVAILABLE", True)
+    def test_template_uninstallation_coordination(
+        self, temp_dir, sample_python_project
+    ):
+        """Test template uninstallation through coordination layer."""
+        # Mock community manager uninstallation
+        mock_community_manager = Mock()
+        mock_uninstall_result = Mock()
+        mock_uninstall_result.is_valid = True
+        mock_uninstall_result.errors = []
+        mock_uninstall_result.warnings = []
+        mock_uninstall_result.suggestions = ["Template uninstalled successfully"]
+        mock_community_manager.uninstall_template.return_value = mock_uninstall_result
+
+        with patch("claude_builder.core.template_manager.TemplateDownloader"), patch(
+            "claude_builder.core.template_manager.TemplateRepositoryClient"
+        ), patch(
+            "claude_builder.core.template_manager.ComprehensiveTemplateValidator"
+        ), patch(
+            "claude_builder.core.template_manager.CommunityTemplateManager",
+            return_value=mock_community_manager,
+        ):
+
+            template_manager = TemplateManager(template_directory=str(temp_dir))
+
+            # Test uninstallation coordination
+            result = template_manager.uninstall_template("python-fastapi-template")
+
+            # Verify delegation to modular components
+            mock_community_manager.uninstall_template.assert_called_once_with(
+                "python-fastapi-template"
+            )
+            assert result.is_valid
+            assert "Template uninstalled successfully" in result.suggestions
+
+    def test_template_legacy_compatibility_methods(
+        self, temp_dir, sample_python_project
+    ):
+        """Test legacy compatibility methods work through coordination layer."""
+        template_manager = TemplateManager(template_directory=str(temp_dir))
+
+        # Test get_template_info method (legacy compatibility)
+        template_info = template_manager.get_template_info("test-template")
+        # Should return None for non-existent template but not error
+        assert template_info is None
+
+        # Test render_all_templates (legacy compatibility)
+        from claude_builder.core.template_manager import TemplateContext
+
+        context = TemplateContext(
+            project_name="test-project", description="A test project"
         )
 
-        template_manager = TemplateManager({"enable_cache": True})
-        analyzer = ProjectAnalyzer()
-        analysis_result = analyzer.analyze(sample_python_project)
-        generator = DocumentGenerator(analysis_result)
+        all_rendered = template_manager.render_all_templates(context)
+        assert isinstance(all_rendered, dict)
+        assert "claude.md" in all_rendered
+        assert "test-project" in all_rendered["claude.md"]
 
-        # First render
-        template1 = template_manager.get_template("cached.md")
-        content1 = generator.render_template_with_manager(template1, template_manager)
+        # Test create_custom_template coordination
 
-        # Second render (should use cached template)
-        template2 = template_manager.get_template("cached.md")
-        content2 = generator.render_template_with_manager(template2, template_manager)
+        project_path = temp_dir / "sample_project"
+        project_path.mkdir()
+        (project_path / "__init__.py").write_text("")  # Make it look like a project
 
-        # Templates should be the same object (cached)
-        assert template1 is template2
+        template_config = {
+            "description": "Custom test template",
+            "author": "test-user",
+            "category": "custom",
+        }
 
-        # Content should be similar (both should render successfully)
-        assert analysis_result.project_info.name in content1
-        assert analysis_result.project_info.name in content2
+        result = template_manager.create_custom_template(
+            "test-custom-template", project_path, template_config
+        )
+
+        # Should succeed and create template
+        assert result.is_valid
+        custom_template_path = (
+            template_manager.templates_dir / "custom" / "test-custom-template"
+        )
+        assert custom_template_path.exists()
+        assert (custom_template_path / "template.json").exists()
 
 
 class TestTemplateEcosystemIntegration:

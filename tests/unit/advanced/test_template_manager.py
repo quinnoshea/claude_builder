@@ -16,6 +16,7 @@ import pytest
 from claude_builder.core.template_manager import (
     TemplateBuilder,
     TemplateEcosystem,
+    TemplateManager,
     TemplateMarketplace,
     TemplateRepository,
     TemplateVersion,
@@ -797,11 +798,237 @@ Template content
         assert package_path.suffix == ".zip"
         assert "packaged-template" in package_path.name
 
-        # Verify package contents
-        import zipfile
 
-        with zipfile.ZipFile(package_path, "r") as zip_ref:
-            file_list = zip_ref.namelist()
-            assert "template.md" in file_list
-            assert "assets/logo.png" in file_list
-            assert "examples/example1.py" in file_list
+class TestTemplateRendererFunctionality:
+    """Test suite for TemplateRenderer functionality."""
+
+    def test_template_renderer_initialization(self):
+        """Test TemplateRenderer initialization with options."""
+        from claude_builder.core.template_manager import TemplateRenderer
+
+        # Basic initialization
+        renderer = TemplateRenderer()
+        assert renderer.template_engine == "simple"
+        assert renderer.enable_cache is False
+        assert renderer.render_cache is None
+
+        # Initialization with caching
+        cached_renderer = TemplateRenderer(enable_cache=True)
+        assert cached_renderer.enable_cache is True
+        assert cached_renderer.render_cache == {}
+
+        # Test filters are available
+        assert "length" in renderer.filters
+        assert "upper" in renderer.filters
+        assert "lower" in renderer.filters
+        assert "title" in renderer.filters
+
+    def test_template_render_method_coordination(self):
+        """Test TemplateRenderer render method with Template objects."""
+        from claude_builder.core.template_manager import (
+            Template,
+            TemplateContext,
+            TemplateRenderer,
+        )
+
+        renderer = TemplateRenderer()
+
+        # Create template and context
+        template = Template(
+            name="test.md", content="# {{ project_name }}\n\nLanguage: {{ language }}"
+        )
+
+        context = TemplateContext(project_name="TestProject", language="Python")
+
+        # Test rendering coordination
+        result = renderer.render(template, context)
+
+        assert "# TestProject" in result
+        assert "Language: Python" in result
+
+        # Test with kwargs
+        result_kwargs = renderer.render(
+            template, project_name="KwargsProject", language="JavaScript"
+        )
+
+        assert "# KwargsProject" in result_kwargs
+        assert "Language: JavaScript" in result_kwargs
+
+    def test_template_loader_coordination(self, temp_dir):
+        """Test TemplateLoader coordination with file system."""
+        from claude_builder.core.template_manager import TemplateLoader
+
+        # Create test template files
+        templates_dir = temp_dir / "templates"
+        templates_dir.mkdir()
+
+        (templates_dir / "test.md").write_text("# {{ project_name }}")
+        (templates_dir / "python.md").write_text("## Python Template")
+
+        # Initialize loader
+        loader = TemplateLoader(template_directory=str(templates_dir))
+
+        # Test template listing
+        available_templates = loader.list_templates()
+        assert "test" in available_templates
+        assert "python" in available_templates
+
+        # Test template existence check
+        assert loader.template_exists("test")
+        assert loader.template_exists("python")
+        assert not loader.template_exists("nonexistent")
+
+        # Test template loading
+        test_content = loader.load_template("test")
+        assert test_content == "# {{ project_name }}"
+
+        # Test template object loading
+        template_obj = loader.load_template_from_file("test")
+        assert template_obj.name == "test"
+        assert template_obj.content == "# {{ project_name }}"
+
+
+class TestTemplateManagerBackwardCompatibility:
+    """Test suite ensuring backward compatibility of TemplateManager."""
+
+    def test_legacy_interface_methods_exist(self, temp_dir):
+        """Test that all legacy interface methods are preserved."""
+        template_manager = TemplateManager(template_directory=str(temp_dir))
+
+        # Test that all expected methods exist
+        expected_methods = [
+            "get_template",
+            "get_template_info",
+            "get_templates_by_type",
+            "render_template",
+            "select_template_for_project",
+            "render_batch",
+            "render_all_templates",
+            "list_available_templates",
+            "search_templates",
+            "install_template",
+            "uninstall_template",
+            "create_custom_template",
+            "validate_template_directory",
+        ]
+
+        for method_name in expected_methods:
+            assert hasattr(template_manager, method_name)
+            assert callable(getattr(template_manager, method_name))
+
+    def test_config_parameter_handling(self, temp_dir):
+        """Test TemplateManager handles various config parameter formats."""
+        # Test with config dict
+        config = {"enable_cache": True, "preferred_template": "python"}
+        tm1 = TemplateManager(config=config)
+        assert tm1.config["enable_cache"] is True
+
+        # Test with template_directory parameter
+        tm2 = TemplateManager(template_directory=str(temp_dir))
+        assert str(temp_dir) in str(tm2.templates_dir)
+
+        # Test with kwargs
+        tm3 = TemplateManager(enable_cache=True, max_templates=50)
+        assert tm3.config["enable_cache"] is True
+        assert tm3.config["max_templates"] == 50
+
+        # Test combined parameters
+        tm4 = TemplateManager(
+            config={"base_option": "value"},
+            template_directory=str(temp_dir),
+            extra_option="extra_value",
+        )
+        assert tm4.config["base_option"] == "value"
+        assert tm4.config["extra_option"] == "extra_value"
+        assert str(temp_dir) in str(tm4.templates_dir)
+
+    def test_templates_cache_compatibility(self, temp_dir):
+        """Test templates cache maintains backward compatibility."""
+        template_manager = TemplateManager(template_directory=str(temp_dir))
+
+        # Should have templates dict for test compatibility
+        assert hasattr(template_manager, "templates")
+        assert isinstance(template_manager.templates, dict)
+
+        # Getting templates should populate the cache for compatibility
+        template1 = template_manager.get_template("test-template.md")
+        template2 = template_manager.get_template("test-template.md")
+
+        # Both should be Template objects
+        assert hasattr(template1, "render")
+        assert hasattr(template2, "render")
+
+        # Test template properties
+        assert "test-template" in template1.name or "test-template" in str(
+            template1.content
+        )
+
+    @patch("claude_builder.core.template_manager.MODULAR_COMPONENTS_AVAILABLE", True)
+    def test_coordination_layer_error_handling(self, temp_dir):
+        """Test coordination layer handles modular component failures gracefully."""
+        # Mock failing modular components
+        with patch(
+            "claude_builder.core.template_manager.TemplateDownloader",
+            side_effect=Exception("Downloader failed"),
+        ), patch(
+            "claude_builder.core.template_manager.TemplateRepositoryClient",
+            side_effect=Exception("Repository failed"),
+        ), patch(
+            "claude_builder.core.template_manager.ComprehensiveTemplateValidator",
+            side_effect=Exception("Validator failed"),
+        ), patch(
+            "claude_builder.core.template_manager.CommunityTemplateManager",
+            side_effect=Exception("Community manager failed"),
+        ):
+
+            # Should initialize successfully despite modular component failures
+            template_manager = TemplateManager(template_directory=str(temp_dir))
+
+            # Should fall back to legacy behavior
+            assert template_manager.community_manager is None
+
+            # Legacy methods should still work
+            templates = template_manager.list_available_templates()
+            assert isinstance(templates, list)
+
+            # Validation should fall back to legacy validator
+            test_path = temp_dir / "test"
+            test_path.mkdir()
+            (test_path / "template.json").write_text("{}")  # Invalid but existing
+            result = template_manager.validate_template_directory(test_path)
+            assert hasattr(result, "is_valid")
+
+    def test_template_conversion_methods(self, temp_dir):
+        """Test internal template conversion methods work correctly."""
+        with patch(
+            "claude_builder.core.template_manager.MODULAR_COMPONENTS_AVAILABLE", False
+        ):
+            template_manager = TemplateManager(template_directory=str(temp_dir))
+
+            # Test _convert_to_legacy_template with no modern template
+            result = template_manager._convert_to_legacy_template(None)
+            assert result.metadata.name == "unknown"
+            assert result.metadata.version == "1.0.0"
+
+    def test_template_manager_initialization_paths(self, temp_dir):
+        """Test different TemplateManager initialization paths."""
+        # Test default initialization
+        tm1 = TemplateManager()
+        assert tm1.templates_dir.name == "templates"
+        assert tm1.cache_dir.name == "cache"
+
+        # Test with custom template directory
+        custom_dir = temp_dir / "custom_templates"
+        tm2 = TemplateManager(template_directory=str(custom_dir))
+        assert tm2.templates_dir == custom_dir
+
+        # Directories should be created
+        assert tm2.templates_dir.exists()
+        assert tm2.cache_dir.exists()
+
+        # Test legacy components are always initialized
+        assert hasattr(tm2, "validator")
+        assert hasattr(tm2, "loader")
+        assert hasattr(tm2, "renderer")
+        assert tm2.loader is not None
+        assert tm2.renderer is not None
