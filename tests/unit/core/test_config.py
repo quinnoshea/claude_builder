@@ -337,7 +337,7 @@ class TestConfigManager:
             },
         }
 
-        config_file = temp_dir / "enum-test.json"
+        config_file = temp_dir / "claude-builder.json"
         with open(config_file, "w") as f:
             json.dump(config_data, f)
 
