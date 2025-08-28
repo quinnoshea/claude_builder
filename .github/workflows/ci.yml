@@ -7,6 +7,13 @@ on:
     branches: [ main, develop ]
   release:
     types: [ published ]
+  workflow_dispatch:
+    inputs:
+      debug_coverage:
+        description: 'Enable detailed coverage debugging'
+        required: false
+        default: true
+        type: boolean
 
 jobs:
   test:
@@ -93,22 +100,81 @@ jobs:
         fail_ci_if_error: false
         verbose: true
 
+    - name: Pre-upload coverage verification
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      run: |
+        echo "=== Pre-Upload Coverage Verification ==="
+        echo "Working directory: $(pwd)"
+        echo "Looking for coverage.xml file..."
+
+        # Check if coverage.xml exists and get details
+        if [ -f coverage.xml ]; then
+          echo "✅ coverage.xml found"
+          echo "File size: $(stat -c%s coverage.xml) bytes"
+          echo "File permissions: $(stat -c%A coverage.xml)"
+          echo "File owner: $(stat -c%U:%G coverage.xml)"
+          echo "Last modified: $(stat -c%y coverage.xml)"
+
+          # Validate XML structure
+          echo "Validating XML structure..."
+          if xmllint --noout coverage.xml 2>/dev/null; then
+            echo "✅ XML is well-formed"
+          else
+            echo "❌ XML validation failed"
+            xmllint --noout coverage.xml || true
+          fi
+
+          # Show first few lines
+          echo "First 10 lines of coverage.xml:"
+          head -10 coverage.xml
+
+          # Show coverage summary
+          echo "Coverage summary from XML:"
+          grep -o 'line-rate="[^"]*"' coverage.xml | head -1 || echo "No line-rate found"
+
+        else
+          echo "❌ coverage.xml not found"
+          echo "Files in current directory:"
+          ls -la
+          echo "Searching for any .xml files:"
+          find . -name "*.xml" -type f 2>/dev/null || echo "No .xml files found"
+        fi
+
+        # Check environment
+        echo "GitHub context:"
+        echo "GITHUB_SHA: $GITHUB_SHA"
+        echo "GITHUB_REF: $GITHUB_REF"
+        echo "GITHUB_REPOSITORY: $GITHUB_REPOSITORY"
+
     - name: Upload coverage to Codacy
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
-      continue-on-error: true
+      continue-on-error: false
       uses: codacy/codacy-coverage-reporter-action@v1
       with:
         project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
         coverage-reports: coverage.xml
         force-coverage-parser: cobertura
+      env:
+        CODACY_API_BASE_URL: https://api.codacy.com
 
-    - name: Upload test results
+    - name: Post-upload Codacy verification
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      continue-on-error: true
+      run: |
+        echo "=== Post-Upload Verification ==="
+        echo "Coverage upload completed"
+        echo "Commit SHA: $GITHUB_SHA"
+        echo "If upload succeeded, coverage should be visible at:"
+        echo "https://app.codacy.com/gh/$GITHUB_REPOSITORY/coverage"
+
+    - name: Upload test results and coverage
       if: always()
       uses: actions/upload-artifact@v4
       with:
         name: test-results-${{ matrix.os }}-${{ matrix.python-version }}
         path: |
           junit.xml
+          coverage.xml
           htmlcov/
           bandit-report.json
 
