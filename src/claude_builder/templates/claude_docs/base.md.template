@@ -1,0 +1,27 @@
+# ${project_name} Development Environment
+
+## Project Overview
+${project_description}
+
+## Development Standards
+${development_standards}
+
+## Agent Team
+This project includes specialized subagents for optimal development:
+${#agents}
+- **${name}**: ${short_description}
+${/agents}
+
+See AGENTS.md for detailed usage instructions.
+
+## Development Commands
+${development_commands}
+
+## Architecture Patterns
+${architecture_patterns}
+
+## Quality Standards
+${quality_standards}
+
+## Integration Guidelines
+${integration_guidelines}

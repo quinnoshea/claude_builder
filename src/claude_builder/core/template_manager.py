@@ -15,7 +15,13 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from claude_builder.core.models import ProjectAnalysis, ValidationResult
+from claude_builder.core.models import (
+    AgentDefinition,
+    EnvironmentBundle,
+    ProjectAnalysis,
+    SubagentFile,
+    ValidationResult,
+)
 from claude_builder.core.template_management.community.template_repository import (
     CommunityTemplate,
     CommunityTemplateManager,
@@ -280,6 +286,417 @@ class ModernTemplateManager:
         """Check if template exists."""
         return self.loader.template_exists(template_name)
 
+    # New multi-output generation methods for YAML subagent architecture
+
+    def generate_complete_environment(
+        self, analysis: ProjectAnalysis
+    ) -> EnvironmentBundle:
+        """Generate complete development environment - CLAUDE.md + individual subagents + AGENTS.md"""
+        from datetime import datetime
+
+        # Import agent system to generate project agents
+        from claude_builder.core.agents import UniversalAgentSystem
+
+        # Generate agent team configuration
+        agent_system = UniversalAgentSystem()
+        agent_config = agent_system.select_agents(analysis)
+
+        # Convert agent selection to agent definitions
+        agent_definitions = self._create_agent_definitions(agent_config, analysis)
+
+        # Create context for all three output types
+        context = self._create_environment_context(analysis, agent_definitions)
+
+        # Generate three distinct outputs
+        claude_md = self._generate_claude_documentation(context, analysis)
+        subagent_files = self._generate_individual_subagents(context, agent_definitions)
+        agents_md = self._generate_user_documentation(context, agent_definitions)
+
+        return EnvironmentBundle(
+            claude_md=claude_md,
+            subagent_files=subagent_files,
+            agents_md=agents_md,
+            metadata={
+                "analysis_confidence": analysis.analysis_confidence,
+                "project_type": analysis.project_type.value,
+                "language": analysis.language,
+                "framework": analysis.framework,
+                "agent_count": len(agent_definitions),
+            },
+            generation_timestamp=datetime.now().isoformat(),
+        )
+
+    def _create_agent_definitions(
+        self, agent_config: Any, analysis: ProjectAnalysis
+    ) -> List[AgentDefinition]:
+        """Convert agent selection to enhanced agent definitions."""
+        agent_definitions = []
+
+        # Get all agents from the configuration
+        all_agents = getattr(agent_config, "all_agents", [])
+
+        for agent in all_agents:
+            # Determine tools based on project context
+            tools = self._determine_agent_tools(agent, analysis)
+
+            # Generate enhanced system prompt
+            system_prompt = self._generate_agent_system_prompt(agent, analysis)
+
+            agent_def = AgentDefinition(
+                name=self._generate_agent_name(agent.name, analysis),
+                description=agent.description,
+                tools=tools,
+                system_prompt=system_prompt,
+                specialization=getattr(agent, "category", "general"),
+                category=getattr(agent, "category", "general"),
+                confidence=getattr(agent, "confidence", 1.0),
+                project_context={
+                    "project_name": analysis.project_path.name,
+                    "language": analysis.language,
+                    "framework": analysis.framework,
+                    "complexity": analysis.complexity_level.value,
+                },
+            )
+            agent_definitions.append(agent_def)
+
+        return agent_definitions
+
+    def _determine_agent_tools(
+        self, agent: Any, analysis: ProjectAnalysis
+    ) -> List[str]:
+        """Determine appropriate tools based on project context."""
+        base_tools = ["Read", "Write", "MultiEdit", "Bash"]
+
+        # Add language-specific tools
+        if analysis.language == "python":
+            base_tools.extend(["pytest", "black", "mypy", "ruff"])
+        elif analysis.language == "rust":
+            base_tools.extend(["cargo", "rustfmt", "clippy"])
+        elif analysis.language == "javascript":
+            base_tools.extend(["npm", "jest", "eslint"])
+
+        # Add agent-specific tools based on specialization
+        specialization = getattr(agent, "category", "general").lower()
+        if "test" in specialization:
+            base_tools.extend(["coverage", "pytest-cov"])
+        elif "performance" in specialization:
+            base_tools.extend(["profiler", "benchmark"])
+        elif "backend" in specialization:
+            base_tools.extend(["git", "docker"])
+
+        return list(set(base_tools))  # Remove duplicates
+
+    def _generate_agent_name(self, base_name: str, analysis: ProjectAnalysis) -> str:
+        """Generate project-specific agent names."""
+        project_prefix = analysis.project_path.name.lower().replace("-", "_")
+        clean_base = base_name.lower().replace(" ", "_").replace("-", "_")
+        return f"{project_prefix}_{clean_base}"
+
+    def _generate_agent_system_prompt(
+        self, agent: Any, analysis: ProjectAnalysis
+    ) -> str:
+        """Generate enhanced system prompt with project context."""
+        base_prompt = (
+            f"You are a {agent.name} specialized for {analysis.project_path.name}."
+        )
+
+        context_lines = [
+            "## Project Context",
+            f"- Language: {analysis.language or 'Unknown'}",
+            f"- Framework: {analysis.framework or 'None detected'}",
+            f"- Type: {analysis.project_type.value}",
+            f"- Complexity: {analysis.complexity_level.value}",
+            "",
+            "## Core Responsibilities",
+            agent.description or f"Specialized assistance for {agent.name} tasks.",
+            "",
+            "## Best Practices",
+            "Follow the project's existing patterns and conventions.",
+            "Maintain code quality and consistency.",
+            "Consider performance and maintainability in all recommendations.",
+        ]
+
+        return base_prompt + "\n\n" + "\n".join(context_lines)
+
+    def _create_environment_context(
+        self, analysis: ProjectAnalysis, agent_definitions: List[AgentDefinition]
+    ) -> Dict[str, Any]:
+        """Create comprehensive context for template rendering."""
+        return {
+            "project_name": analysis.project_path.name,
+            "project_description": f"A {analysis.language or 'multi-language'} {analysis.project_type.value} project",
+            "primary_language": analysis.language or "Unknown",
+            "primary_framework": analysis.framework or "None detected",
+            "complexity_level": analysis.complexity_level.value,
+            "project_type": analysis.project_type.value,
+            "agent_count": len(agent_definitions),
+            "agents": [
+                {
+                    "name": agent.yaml_name,
+                    "description": agent.description,
+                    "short_description": (
+                        agent.description.split(".")[0] + "."
+                        if "." in agent.description
+                        else agent.description
+                    ),
+                    "specialization": agent.specialization,
+                    "tools": agent.get_yaml_tools(),
+                }
+                for agent in agent_definitions
+            ],
+            "development_commands": self._generate_development_commands(analysis),
+            "development_standards": self._generate_development_standards(analysis),
+        }
+
+    def _generate_development_commands(self, analysis: ProjectAnalysis) -> str:
+        """Generate language-specific development commands."""
+        commands = []
+
+        if analysis.language == "python":
+            commands.extend(
+                [
+                    "# Python Development",
+                    "uv run pytest --cov=src --cov-report=term-missing",
+                    "uv run black . && uv run ruff check .",
+                    "uv run mypy src/",
+                ]
+            )
+        elif analysis.language == "rust":
+            commands.extend(
+                [
+                    "# Rust Development",
+                    "cargo test",
+                    "cargo fmt --all",
+                    "cargo clippy -- -D warnings",
+                ]
+            )
+        elif analysis.language == "javascript":
+            commands.extend(
+                [
+                    "# JavaScript Development",
+                    "npm test",
+                    "npm run lint",
+                    "npm run build",
+                ]
+            )
+        else:
+            commands.extend(
+                ["# Development Commands", "# Add project-specific commands here"]
+            )
+
+        return "\n".join(commands)
+
+    def _generate_development_standards(self, analysis: ProjectAnalysis) -> str:
+        """Generate language-specific development standards."""
+        standards = [
+            "## Code Quality Standards",
+            "- Follow existing project patterns and conventions",
+            "- Write clear, self-documenting code",
+            "- Include appropriate error handling",
+            "- Add tests for new functionality",
+        ]
+
+        if analysis.language == "python":
+            standards.extend(
+                [
+                    "- Follow PEP 8 style guidelines",
+                    "- Use type hints for function signatures",
+                    "- Document modules, classes, and functions",
+                ]
+            )
+        elif analysis.language == "rust":
+            standards.extend(
+                [
+                    "- Follow Rust idioms and conventions",
+                    "- Use Result<T, E> for error handling",
+                    "- Document public APIs with rustdoc",
+                ]
+            )
+
+        return "\n".join(standards)
+
+    def _generate_individual_subagents(
+        self, context: Dict[str, Any], agent_definitions: List[AgentDefinition]
+    ) -> List[SubagentFile]:
+        """Generate individual subagent files with YAML front matter."""
+        subagent_files = []
+
+        for agent in agent_definitions:
+            # Generate YAML front matter
+            yaml_header = self._generate_yaml_front_matter(agent)
+
+            # Generate agent system prompt
+            agent_prompt = agent.system_prompt
+
+            # Combine YAML + content
+            content = f"---\n{yaml_header}\n---\n\n{agent_prompt}"
+
+            subagent_files.append(
+                SubagentFile(
+                    name=f"{agent.yaml_name}.md",
+                    content=content,
+                    path=f".claude/agents/{agent.yaml_name}.md",
+                )
+            )
+
+        return subagent_files
+
+    def _generate_yaml_front_matter(self, agent: AgentDefinition) -> str:
+        """Generate proper YAML front matter for subagent."""
+        return f"""name: {agent.yaml_name}
+description: {agent.description}
+tools: {agent.get_yaml_tools()}"""
+
+    def _generate_claude_documentation(
+        self, context: Dict[str, Any], analysis: ProjectAnalysis
+    ) -> str:
+        """Generate regular CLAUDE.md project documentation (NO YAML)."""
+        template_content = (
+            f"""# {context['project_name']} Development Environment
+
+## Project Overview
+{context['project_description']}
+
+**Language**: {context['primary_language']}
+**Framework**: {context['primary_framework']}
+**Type**: {context['project_type']}
+**Complexity**: {context['complexity_level']}
+
+## Development Standards
+{context['development_standards']}
+
+## Agent Team
+This project includes {context['agent_count']} specialized subagents for optimal development:
+
+"""
+            + "\n".join(
+                [
+                    f"- **{agent['name']}**: {agent['short_description']}"
+                    for agent in context["agents"]
+                ]
+            )
+            + f"""
+
+See AGENTS.md for detailed usage instructions and coordination patterns.
+
+## Development Commands
+{context['development_commands']}
+
+## Architecture Notes
+- Follow existing project patterns and conventions
+- Maintain consistency in code style and structure
+- Consider performance and maintainability in all changes
+- Use the specialized agents for domain-specific tasks
+"""
+        )
+        return template_content
+
+    def _generate_user_documentation(
+        self, context: Dict[str, Any], agent_definitions: List[AgentDefinition]
+    ) -> str:
+        """Generate user-friendly AGENTS.md documentation."""
+
+        # Group agents by category
+        agents_by_category: Dict[str, List[AgentDefinition]] = {}
+        for agent in agent_definitions:
+            category = agent.category.title()
+            if category not in agents_by_category:
+                agents_by_category[category] = []
+            agents_by_category[category].append(agent)
+
+        content_parts = [
+            f"# {context['project_name']} - Development Agent Team",
+            "",
+            "## Quick Reference",
+            f"This project has **{len(agent_definitions)} specialized agents** ready to assist with development tasks.",
+            "",
+            "### How to Use",
+            "Simply describe your task naturally - agents will be selected automatically based on context:",
+            "",
+            '- *"Fix the failing tests"* → test specialist agent',
+            '- *"Optimize this database query"* → backend architect agent',
+            '- *"Review this code for security issues"* → code review agent',
+            "",
+            "## Agent Team Composition",
+            "",
+        ]
+
+        # Add agents grouped by category
+        for category, agents in agents_by_category.items():
+            content_parts.extend([f"### {category} Agents", ""])
+
+            for agent in agents:
+                content_parts.extend(
+                    [
+                        f"#### {agent.yaml_name}",
+                        agent.description,
+                        "",
+                        f"**Specialization**: {agent.specialization}",
+                        f"**Tools**: {agent.get_yaml_tools()}",
+                        "",
+                    ]
+                )
+
+        content_parts.extend(
+            [
+                "## Usage Patterns",
+                "",
+                "### Natural Language Triggers",
+                "Agents respond to natural language that matches their specialization:",
+                "",
+            ]
+        )
+
+        # Add usage examples
+        for agent in agent_definitions[:3]:  # Show first 3 as examples
+            example_request = self._generate_usage_example(agent)
+            content_parts.extend(
+                [
+                    f'- **{agent.yaml_name}**: "{example_request}"',
+                ]
+            )
+
+        content_parts.extend(
+            [
+                "",
+                "### Multi-Agent Coordination",
+                "Complex tasks automatically coordinate multiple agents:",
+                "",
+                '- *"Refactor this module and add comprehensive tests"* → backend + testing agents',
+                '- *"Set up CI/CD with security scanning"* → devops + security agents',
+                "",
+                "## Best Practices",
+                "- Be specific about your requirements and constraints",
+                "- Mention relevant files, functions, or components when applicable",
+                "- Ask for explanations when you need to understand the reasoning",
+                "- Request multiple approaches when exploring solutions",
+                "",
+                "---",
+                f"*Generated for {context['project_name']} - {context['primary_language']} {context['project_type']}*",
+            ]
+        )
+
+        return "\n".join(content_parts)
+
+    def _generate_usage_example(self, agent: AgentDefinition) -> str:
+        """Generate a natural usage example for an agent."""
+        examples = {
+            "backend": "Optimize this API endpoint for better performance",
+            "test": "Add comprehensive tests for the user authentication module",
+            "frontend": "Improve the responsive design of this component",
+            "security": "Review this code for potential security vulnerabilities",
+            "performance": "Analyze and optimize the database queries in this module",
+            "devops": "Set up automated deployment for this service",
+        }
+
+        # Try to match agent specialization to examples
+        for key, example in examples.items():
+            if key.lower() in agent.specialization.lower():
+                return example
+
+        # Default example
+        return f"Help me improve the {agent.specialization} aspects of this project"
+
 
 # Backward compatibility - use ModernTemplateManager as TemplateManager
 TemplateManager = ModernTemplateManager
@@ -295,6 +712,10 @@ __all__ = [
     "TemplateMetadata",
     # Validation
     "ValidationResult",
+    # New YAML subagent classes
+    "SubagentFile",
+    "EnvironmentBundle",
+    "AgentDefinition",
     # Legacy compatibility classes
     "Template",
     "TemplateBuilder",

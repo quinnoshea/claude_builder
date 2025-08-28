@@ -1,0 +1,48 @@
+# ${project_name} Rust Development Environment
+
+## Project Overview
+${project_description}
+
+## Rust Standards
+- **rustfmt**: Automatic code formatting
+- **clippy**: Comprehensive linting
+- **cargo**: Package and build management
+- **Documentation**: Required for all public APIs
+- **Testing**: Unit and integration tests
+
+## Development Standards
+${development_standards}
+
+## Agent Team
+This project includes specialized Rust subagents:
+${#agents}
+- **${name}**: ${short_description}
+${/agents}
+
+See AGENTS.md for detailed usage instructions.
+
+## Development Commands
+```bash
+# Build and development
+${build_commands}
+
+# Code quality
+cargo fmt
+cargo clippy -- -D warnings
+cargo audit
+
+# Testing
+${test_commands}
+
+# Documentation
+cargo doc --open
+```
+
+## Rust Architecture Patterns
+- **Ownership**: Proper memory management and borrowing
+- **Error Handling**: Result<T, E> for all fallible operations
+- **Traits**: Interface segregation and composition
+- **Modules**: Clear separation of concerns
+
+## Quality Standards
+${quality_standards}

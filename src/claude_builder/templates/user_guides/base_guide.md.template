@@ -1,0 +1,53 @@
+# Your Development Agent Team
+
+## Project Context
+- **Project**: ${project_name}
+- **Language**: ${primary_language}
+- **Framework**: ${primary_framework}
+- **Team Size**: ${agent_count} specialized agents
+
+## Agent Team Composition
+${#agents}
+### ${name}
+${description}
+
+**When to use**: ${usage_trigger}
+**Natural language**: "${example_request}"
+**Specializations**: ${specializations}
+
+${/agents}
+
+## Usage Patterns
+
+### Single Agent Tasks
+Use direct agent invocation for focused, domain-specific work:
+- *"Have backend-architect design the user authentication API"*
+- *"Let test-specialist create integration tests for the payment system"*
+
+### Multi-Agent Workflows
+For complex features requiring coordination:
+1. **Analysis Phase**: Have relevant specialists analyze requirements
+2. **Design Phase**: Architecture and design agents create blueprints
+3. **Implementation Phase**: Development agents build features
+4. **Quality Phase**: Testing and optimization agents ensure quality
+
+### Coordination Workflows
+${coordination_workflows}
+
+## Natural Language Examples
+
+### Direct Requests
+${#direct_examples}
+- **${agent_name}**: *"${example_request}"*
+${/direct_examples}
+
+### Workflow Requests
+${#workflow_examples}
+- **${workflow_name}**: *"${example_request}"*
+${/workflow_examples}
+
+## Agent Communication Patterns
+- **Context Handoffs**: Each agent provides context for the next
+- **Progress Updates**: Agents report completion status and next steps
+- **Dependency Management**: Agents identify blockers and prerequisites
+- **Quality Gates**: Testing agents validate work from development agents

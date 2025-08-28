@@ -567,3 +567,78 @@ class ProjectInfo:
             "language": self.language,
             "dependencies": self.dependencies,
         }
+
+
+# New data classes for YAML subagent architecture
+@dataclass
+class SubagentFile:
+    """Individual subagent file with YAML front matter."""
+
+    name: str
+    content: str  # Includes YAML front matter + system prompt
+    path: str  # Relative path like .claude/agents/agent-name.md
+
+    def __post_init__(self) -> None:
+        """Validate fields after initialization."""
+        if not self.name or not self.name.strip():
+            raise ValueError("Subagent name cannot be empty")
+        if not self.content:
+            raise ValueError("Subagent content cannot be empty")
+        if not self.path:
+            raise ValueError("Subagent path cannot be empty")
+
+
+@dataclass
+class EnvironmentBundle:
+    """Complete development environment bundle."""
+
+    claude_md: str  # Project documentation content
+    subagent_files: List[SubagentFile]  # Individual agent files with YAML
+    agents_md: str  # User guide content
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    generation_timestamp: Optional[str] = None
+
+    @property
+    def total_files(self) -> int:
+        """Total number of files in the bundle."""
+        return len(self.subagent_files) + 2  # +2 for CLAUDE.md and AGENTS.md
+
+    def get_all_file_paths(self) -> List[str]:
+        """Get all file paths that will be generated."""
+        paths = ["CLAUDE.md", "AGENTS.md"]
+        paths.extend([sf.path for sf in self.subagent_files])
+        return paths
+
+
+@dataclass
+class AgentDefinition:
+    """Enhanced agent definition for YAML front matter generation."""
+
+    name: str
+    description: str
+    tools: List[str]
+    system_prompt: str
+    specialization: str
+    category: str = "general"
+    confidence: float = 1.0
+    project_context: Optional[Dict[str, Any]] = None
+
+    def __post_init__(self) -> None:
+        """Validate fields after initialization."""
+        if not self.name or not self.name.strip():
+            raise ValueError("Agent name cannot be empty")
+        if not self.description:
+            raise ValueError("Agent description cannot be empty")
+        if not self.tools:
+            raise ValueError("Agent tools cannot be empty")
+        if not self.system_prompt:
+            raise ValueError("Agent system prompt cannot be empty")
+
+    @property
+    def yaml_name(self) -> str:
+        """Generate proper agent name for YAML (kebab-case)."""
+        return self.name.lower().replace("_", "-").replace(" ", "-")
+
+    def get_yaml_tools(self) -> str:
+        """Format tools for YAML front matter."""
+        return ", ".join(self.tools)

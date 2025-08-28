@@ -1,0 +1,46 @@
+# ${project_name} Python Development Environment
+
+## Project Overview
+${project_description}
+
+## Python Standards
+- **PEP 8**: Code style and formatting
+- **PEP 20**: The Zen of Python principles
+- **PEP 484**: Type hints required for all code
+- **Line length**: 88 characters maximum
+- **Testing**: pytest with coverage requirements
+
+## Development Standards
+${development_standards}
+
+## Agent Team
+This project includes specialized Python subagents:
+${#agents}
+- **${name}**: ${short_description}
+${/agents}
+
+See AGENTS.md for detailed usage instructions.
+
+## Development Commands
+```bash
+# Development environment setup
+${virtual_env_setup}
+
+# Code quality
+${code_quality_commands}
+
+# Testing
+${test_commands}
+
+# Package management
+${package_commands}
+```
+
+## Python Architecture Patterns
+- **Type Hints**: Required for all public APIs
+- **Docstrings**: Required for all public functions/classes
+- **Error Handling**: Explicit exception handling with context
+- **Testing**: Unit tests for all new features
+
+## Quality Standards
+${quality_standards}

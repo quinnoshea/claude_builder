@@ -1,0 +1,69 @@
+# Agent Team Composition for ${project_name}
+
+## Team Overview
+This project includes ${agent_count} specialized agents optimized for ${project_type} development.
+
+## Core Development Team
+${#core_agents}
+### ${name} - ${role}
+**Primary Focus**: ${primary_focus}
+**Triggers**: ${trigger_keywords}
+**Coordinates With**: ${coordination_partners}
+
+**Capabilities**:
+${#capabilities}
+- ${capability}
+${/capabilities}
+
+**Example Usage**: *"${example_usage}"*
+
+---
+${/core_agents}
+
+## Specialized Support Team
+${#support_agents}
+### ${name} - ${role}
+**Primary Focus**: ${primary_focus}
+**Auto-Triggers**: ${auto_trigger_conditions}
+**Dependencies**: ${dependencies}
+
+**When to Use**: ${usage_conditions}
+**Example Usage**: *"${example_usage}"*
+
+---
+${/support_agents}
+
+## Team Coordination Matrix
+
+| Primary Agent | Secondary Agent | Handoff Trigger | Context Shared |
+|---------------|-----------------|-----------------|----------------|
+${#coordination_matrix}
+| ${primary} | ${secondary} | ${trigger} | ${context} |
+${/coordination_matrix}
+
+## Workflow Patterns
+
+### Feature Development Workflow
+1. **${requirements_agent}** - Analyze and clarify requirements
+2. **${architecture_agent}** - Design system architecture
+3. **${implementation_agent}** - Build core functionality
+4. **${testing_agent}** - Create comprehensive tests
+5. **${optimization_agent}** - Optimize performance and quality
+
+### Bug Fix Workflow
+1. **${debugging_agent}** - Identify root cause
+2. **${fix_agent}** - Implement solution
+3. **${testing_agent}** - Validate fix and prevent regression
+4. **${integration_agent}** - Ensure system integration
+
+### Code Review Workflow
+1. **${review_agent}** - Analyze code quality and standards
+2. **${security_agent}** - Review security implications
+3. **${performance_agent}** - Assess performance impact
+4. **${documentation_agent}** - Update documentation
+
+## Success Metrics
+- **Coverage**: All major development areas have dedicated agents
+- **Coordination**: Smooth handoffs between agents with preserved context
+- **Efficiency**: Reduced development time through specialized expertise
+- **Quality**: Consistent high-quality outputs from domain experts

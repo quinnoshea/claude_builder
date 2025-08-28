@@ -1,0 +1,114 @@
+# Agent Usage Patterns for ${project_name}
+
+## Quick Reference Guide
+
+### Immediate Actions (Single Agent)
+${#immediate_patterns}
+**${pattern_name}**
+- **Trigger**: ${trigger_phrase}
+- **Agent**: ${agent_name}
+- **Example**: *"${example_request}"*
+- **Output**: ${expected_output}
+
+${/immediate_patterns}
+
+### Complex Workflows (Multi-Agent)
+${#complex_patterns}
+**${workflow_name}**
+- **Triggers**: ${trigger_phrases}
+- **Agent Sequence**: ${agent_sequence}
+- **Example**: *"${example_request}"*
+- **Coordination**: ${coordination_method}
+
+${/complex_patterns}
+
+## Usage Scenarios by Development Phase
+
+### Planning Phase
+${#planning_agents}
+- **${agent_name}**: ${usage_description}
+  - *Natural request*: "${natural_request}"
+  - *Expected outcome*: ${expected_outcome}
+${/planning_agents}
+
+### Development Phase
+${#development_agents}
+- **${agent_name}**: ${usage_description}
+  - *Natural request*: "${natural_request}"
+  - *Expected outcome*: ${expected_outcome}
+${/development_agents}
+
+### Quality Assurance Phase
+${#qa_agents}
+- **${agent_name}**: ${usage_description}
+  - *Natural request*: "${natural_request}"
+  - *Expected outcome*: ${expected_outcome}
+${/qa_agents}
+
+### Deployment Phase
+${#deployment_agents}
+- **${agent_name}**: ${usage_description}
+  - *Natural request*: "${natural_request}"
+  - *Expected outcome*: ${expected_outcome}
+${/deployment_agents}
+
+## Communication Patterns
+
+### Direct Agent Invocation
+```
+"Have [agent-name] [specific-task]"
+"Let [agent-name] [action-to-take]"
+"[Agent-name], please [detailed-request]"
+```
+
+### Multi-Agent Coordination
+```
+"I need [agent-1] and [agent-2] to [collaborative-task]"
+"Have [agent-1] design this, then [agent-2] implement it"
+"Get [agent-1] to analyze, then [agent-2] to optimize"
+```
+
+### Workflow Initiation
+```
+"Start the [workflow-name] for [feature/task]"
+"Execute [process-name] workflow with [specific-requirements]"
+"Begin [phase-name] using the standard [project-type] process"
+```
+
+## Context Preservation Best Practices
+
+### Agent Handoff Protocols
+1. **Status Summary**: Current progress and completion status
+2. **Technical Context**: Key decisions and architectural choices
+3. **Next Steps**: Clear actions for the receiving agent
+4. **Dependencies**: Blockers and prerequisites identified
+
+### Information Flow
+- **Upstream Context**: What previous agents discovered
+- **Current Focus**: Specific task and constraints
+- **Downstream Impact**: How this affects subsequent agents
+- **Quality Gates**: Validation criteria and success metrics
+
+## Troubleshooting Patterns
+
+### When Things Go Wrong
+${#troubleshooting_patterns}
+**${problem_type}**
+- **Symptoms**: ${symptoms}
+- **Primary Agent**: ${primary_agent}
+- **Support Agent**: ${support_agent}
+- **Resolution Pattern**: ${resolution_approach}
+
+${/troubleshooting_patterns}
+
+### Agent Selection Decision Tree
+```
+IF simple-task AND single-domain:
+    USE specialized-agent-directly
+ELIF complex-task AND single-domain:
+    USE primary-agent WITH support-agents
+ELIF multi-domain-task:
+    USE workflow-pattern WITH agent-coordination
+ELSE:
+    START with requirements-analysis-agent
+```
