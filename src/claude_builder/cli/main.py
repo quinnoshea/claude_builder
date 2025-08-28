@@ -184,6 +184,7 @@ def _execute_main(project_path: str, **kwargs: Any) -> None:
                 f"[bold blue]Claude Builder[/bold blue]\n"
                 f"Analyzing project at: [cyan]{project_path_obj}[/cyan]\n"
                 f"Template: [green]{kwargs.get('template', 'auto-detect')}[/green]\n"
+                f"Output mode: [blue]{_get_output_mode(kwargs)}[/blue]\n"
                 f"Git integration: [yellow]{_get_git_mode(kwargs)}[/yellow]",
                 title="Starting Analysis",
             )
@@ -207,8 +208,43 @@ def _execute_main(project_path: str, **kwargs: Any) -> None:
         if kwargs["verbose"] > 0:
             _display_analysis_results(analysis)
 
-        # Step 2: Document Generation
-        if not kwargs["agents_only"]:
+        # Step 2: Complete Environment Generation
+        if not (kwargs["agents_only"] or kwargs["no_agents"]):
+            # Generate complete environment (CLAUDE.md + individual subagents + AGENTS.md)
+            task2 = progress.add_task("Generating complete environment...", total=None)
+
+            from claude_builder.core.template_manager import TemplateManager
+
+            template_manager = TemplateManager()
+            environment = template_manager.generate_complete_environment(analysis)
+
+            progress.update(
+                task2, completed=True, description="✓ Complete environment generated"
+            )
+
+            # Write files if not dry run
+            if not kwargs["dry_run"]:
+                _write_environment_files(environment, project_path_obj, kwargs)
+
+        elif kwargs["agents_only"]:
+            # Legacy: agents-only mode
+            task2 = progress.add_task("Configuring agents...", total=None)
+
+            from claude_builder.core.template_manager import TemplateManager
+
+            template_manager = TemplateManager()
+            environment = template_manager.generate_complete_environment(analysis)
+
+            progress.update(task2, completed=True, description="✓ Agents configured")
+
+            # Write only AGENTS.md if not dry run
+            if not kwargs["dry_run"]:
+                agents_path = project_path_obj / "AGENTS.md"
+                with agents_path.open("w", encoding="utf-8") as f:
+                    f.write(environment.agents_md)
+
+        elif not kwargs["no_agents"]:
+            # Legacy: documentation without agents
             task2 = progress.add_task("Generating documentation...", total=None)
             generator = DocumentGenerator(config=config.templates.__dict__)
             generated_content = generator.generate(analysis, project_path_obj)
@@ -219,28 +255,6 @@ def _execute_main(project_path: str, **kwargs: Any) -> None:
             # Write files if not dry run
             if not kwargs["dry_run"]:
                 _write_generated_files(generated_content, project_path_obj, kwargs)
-
-        # Step 3: Agent Configuration
-        if not kwargs["no_agents"]:
-            task3 = progress.add_task("Configuring agents...", total=None)
-
-            # Initialize agent system
-            from claude_builder.core.agents import UniversalAgentSystem
-
-            agent_system = UniversalAgentSystem()
-
-            # Configure agents for this project
-            agent_system.select_agents(analysis)
-
-            # Generate AGENTS.md file using DocumentGenerator
-            agent_generator = DocumentGenerator({"agents_only": True})
-            agent_content = agent_generator.generate(analysis, project_path_obj)
-
-            # Extract AGENTS.md content and add to generated files
-            if agent_content.files.get("AGENTS.md"):
-                generated_content.files["AGENTS.md"] = agent_content.files["AGENTS.md"]
-
-            progress.update(task3, completed=True, description="✓ Agents configured")
 
         # Step 4: Git Integration
         if not kwargs["no_git"] and (kwargs["git_exclude"] or kwargs["git_track"]):
@@ -254,6 +268,16 @@ def _execute_main(project_path: str, **kwargs: Any) -> None:
     # Summary
     if not kwargs["quiet"]:
         _display_summary(project_path_obj, dry_run=kwargs["dry_run"])
+
+
+def _get_output_mode(kwargs: dict[str, Any]) -> str:
+    """Get output mode description."""
+    if kwargs["agents_only"]:
+        return "agents only"
+    elif kwargs["no_agents"]:
+        return "documentation only"
+    else:
+        return "complete environment (CLAUDE.md + subagents + AGENTS.md)"
 
 
 def _get_git_mode(kwargs: dict[str, Any]) -> str:
@@ -375,6 +399,62 @@ def _display_analysis_results(analysis: Any) -> None:
     )
 
 
+def _write_environment_files(
+    environment: Any, project_path: Path, kwargs: dict[str, Any]
+) -> None:
+    """Write complete environment files to disk."""
+
+    if kwargs.get("output_dir") is None:
+        output_dir = project_path
+    else:
+        output_dir = Path(kwargs["output_dir"])
+
+    files_written = 0
+
+    # Write CLAUDE.md
+    claude_path = output_dir / "CLAUDE.md"
+    if kwargs["backup_existing"] and claude_path.exists():
+        backup_path = claude_path.with_suffix(claude_path.suffix + ".bak")
+        claude_path.rename(backup_path)
+
+    with claude_path.open("w", encoding="utf-8") as f:
+        f.write(environment.claude_md)
+    files_written += 1
+
+    # Write individual subagents
+    agents_dir = output_dir / ".claude" / "agents"
+    agents_dir.mkdir(parents=True, exist_ok=True)
+
+    for subagent in environment.subagent_files:
+        agent_path = agents_dir / subagent.name
+        if kwargs["backup_existing"] and agent_path.exists():
+            backup_path = agent_path.with_suffix(agent_path.suffix + ".bak")
+            agent_path.rename(backup_path)
+
+        with agent_path.open("w", encoding="utf-8") as f:
+            f.write(subagent.content)
+        files_written += 1
+
+    # Write AGENTS.md
+    agents_guide_path = output_dir / "AGENTS.md"
+    if kwargs["backup_existing"] and agents_guide_path.exists():
+        backup_path = agents_guide_path.with_suffix(agents_guide_path.suffix + ".bak")
+        agents_guide_path.rename(backup_path)
+
+    with agents_guide_path.open("w", encoding="utf-8") as f:
+        f.write(environment.agents_md)
+    files_written += 1
+
+    if not kwargs["quiet"]:
+        console.print("\n[green]✓ Generated complete environment:[/green]")
+        console.print("   • CLAUDE.md - Project documentation")
+        console.print(
+            f"   • {len(environment.subagent_files)} subagent files in .claude/agents/"
+        )
+        console.print("   • AGENTS.md - User guide")
+        console.print(f"   • Total: {files_written} files written to {output_dir}")
+
+
 def _write_generated_files(
     generated_content: Any, project_path: Path, kwargs: dict[str, Any]
 ) -> None:
@@ -419,8 +499,9 @@ def _display_summary(project_path: Path, *, dry_run: bool) -> None:
     if not dry_run:
         console.print("\nNext steps:")
         console.print("1. Review generated CLAUDE.md file")
-        console.print("2. Configure agents using the generated AGENTS.md")
-        console.print("3. Start using Claude Code with your optimized environment!")
+        console.print("2. Check individual agent files in .claude/agents/")
+        console.print("3. Read AGENTS.md for usage instructions")
+        console.print("4. Start using Claude Code with your optimized environment!")
 
 
 # Register subcommands

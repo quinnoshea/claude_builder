@@ -243,6 +243,173 @@ def docs(project_path: str, **kwargs: Any) -> None:
     type=click.Path(exists=True, file_okay=True),
     help="Use existing analysis file",
 )
+@click.option(
+    "--output-dir", type=click.Path(), help="Output directory (default: PROJECT_PATH)"
+)
+@click.option(
+    "--agents-dir",
+    type=click.Path(),
+    help="Directory for individual agent files (default: .claude/agents)",
+)
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    help="Show what would be generated without creating files",
+)
+@click.option("--verbose", "-v", count=True, help="Verbose output")
+def complete(project_path: str, **kwargs: Any) -> None:
+    """Generate complete Claude Code environment (CLAUDE.md + individual subagents + AGENTS.md)."""
+    config = GenerateConfig(**kwargs)
+
+    try:
+        path = Path(project_path).resolve()
+
+        if config.verbose > 0:
+            console.print(f"[cyan]Generating complete environment for: {path}[/cyan]")
+
+        # Get project analysis
+        analysis = _get_project_analysis(config, path)
+
+        # Generate complete environment using TemplateManager
+        from claude_builder.core.template_manager import TemplateManager
+
+        template_manager = TemplateManager()
+        environment = template_manager.generate_complete_environment(analysis)
+
+        # Display what would be generated
+        if config.dry_run or config.verbose > 0:
+            _display_environment_preview(environment)
+
+        if config.dry_run:
+            console.print("[yellow]Dry run complete - no files were created[/yellow]")
+            return
+
+        # Determine output paths
+        output_dir = Path(config.output_dir) if config.output_dir else path
+        agents_dir = (
+            Path(config.agents_dir)
+            if config.agents_dir
+            else output_dir / ".claude" / "agents"
+        )
+
+        # Write CLAUDE.md
+        claude_path = output_dir / "CLAUDE.md"
+        with claude_path.open("w", encoding="utf-8") as f:
+            f.write(environment.claude_md)
+
+        # Write individual subagents
+        agents_dir.mkdir(parents=True, exist_ok=True)
+        for subagent in environment.subagent_files:
+            agent_path = agents_dir / subagent.name
+            with agent_path.open("w", encoding="utf-8") as f:
+                f.write(subagent.content)
+
+        # Write AGENTS.md
+        agents_guide_path = output_dir / "AGENTS.md"
+        with agents_guide_path.open("w", encoding="utf-8") as f:
+            f.write(environment.agents_md)
+
+        console.print("[green]✓ Complete environment generated successfully[/green]")
+        console.print("Generated:")
+        console.print("   • CLAUDE.md - Project documentation")
+        console.print(
+            f"   • {len(environment.subagent_files)} subagent files in {agents_dir.relative_to(path) if agents_dir.is_relative_to(path) else agents_dir}"
+        )
+        console.print("   • AGENTS.md - User guide")
+
+    except Exception as e:
+        console.print(f"[red]Error generating complete environment: {e}[/red]")
+        raise click.ClickException(
+            f"Failed to generate complete environment: {e}"
+        ) from e
+
+
+@generate.command()
+@click.argument(
+    "project_path", type=click.Path(exists=True, file_okay=False, dir_okay=True)
+)
+@click.option(
+    "--from-analysis",
+    type=click.Path(exists=True, file_okay=True),
+    help="Use existing analysis file",
+)
+@click.option(
+    "--output-dir", type=click.Path(), help="Output directory (default: .claude/agents)"
+)
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    help="Show what would be generated without creating files",
+)
+@click.option("--verbose", "-v", count=True, help="Verbose output")
+def subagents(project_path: str, **kwargs: Any) -> None:
+    """Generate individual subagent files with YAML front matter."""
+    config = GenerateConfig(**kwargs)
+
+    try:
+        path = Path(project_path).resolve()
+
+        if config.verbose > 0:
+            console.print(f"[cyan]Generating individual subagents for: {path}[/cyan]")
+
+        # Get project analysis
+        analysis = _get_project_analysis(config, path)
+
+        # Generate complete environment to get subagents
+        from claude_builder.core.template_manager import TemplateManager
+
+        template_manager = TemplateManager()
+        environment = template_manager.generate_complete_environment(analysis)
+
+        # Display what would be generated
+        if config.dry_run or config.verbose > 0:
+            console.print(
+                Panel(
+                    f"**Individual Subagent Files**\n\n"
+                    f"Files to generate: {len(environment.subagent_files)}\n\n"
+                    + "\n".join(
+                        [f"  • {sf.name}" for sf in environment.subagent_files]
+                    ),
+                    title="Subagent Generation Preview",
+                )
+            )
+
+        if config.dry_run:
+            console.print("[yellow]Dry run complete - no files were created[/yellow]")
+            return
+
+        # Write individual subagents
+        output_dir = (
+            Path(config.output_dir)
+            if config.output_dir
+            else path / ".claude" / "agents"
+        )
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        for subagent in environment.subagent_files:
+            agent_path = output_dir / subagent.name
+            with agent_path.open("w", encoding="utf-8") as f:
+                f.write(subagent.content)
+
+        console.print(
+            f"[green]✓ {len(environment.subagent_files)} subagent files generated successfully[/green]"
+        )
+        console.print(f"Output location: {output_dir}")
+
+    except Exception as e:
+        console.print(f"[red]Error generating subagents: {e}[/red]")
+        raise click.ClickException(f"Failed to generate subagents: {e}") from e
+
+
+@generate.command()
+@click.argument(
+    "project_path", type=click.Path(exists=True, file_okay=False, dir_okay=True)
+)
+@click.option(
+    "--from-analysis",
+    type=click.Path(exists=True, file_okay=True),
+    help="Use existing analysis file",
+)
 @click.option("--agents-dir", type=click.Path(), help="Custom agents directory")
 @click.option(
     "--output-file", type=click.Path(), help="Output file (default: AGENTS.md)"
@@ -444,6 +611,22 @@ def _load_analysis_from_file(analysis_file: Path) -> ProjectAnalysis:
         raise ClaudeBuilderError(error_msg) from e
     else:
         return analysis
+
+
+def _display_environment_preview(environment: Any) -> None:
+    """Display preview of complete environment generation."""
+    preview_text = "**Complete Environment Generation Preview**\n\n"
+    preview_text += f"CLAUDE.md: {len(environment.claude_md):,} characters\n"
+    preview_text += f"Individual subagents: {len(environment.subagent_files)} files\n"
+    for subagent in environment.subagent_files:
+        preview_text += f"  • {subagent.name} ({len(subagent.content):,} chars)\n"
+    preview_text += f"AGENTS.md: {len(environment.agents_md):,} characters\n\n"
+    preview_text += "**Metadata:**\n"
+    if hasattr(environment, "metadata"):
+        for key, value in environment.metadata.items():
+            preview_text += f"  • {key}: {value}\n"
+
+    console.print(Panel(preview_text, title="Environment Generation Preview"))
 
 
 def _display_generation_preview(generated_content: Any) -> None:
