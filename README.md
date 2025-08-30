@@ -111,17 +111,26 @@ claude-builder /path/to/project analyze --output=json   # Export project analysi
 
 ### DevOps & MLOps (Honest Scope)
 
-We are expanding beyond language/framework analysis to include DevOps, MLOps, and IaC. Today, claude_builder detects Dockerfiles and docker-compose (and basic Kubernetes directory hints). We are actively adding detection and guidance for:
+We are expanding beyond language/framework analysis to include DevOps, MLOps,
+and IaC. Today, claude_builder detects Dockerfiles and docker-compose (and
+basic Kubernetes directory hints). We are actively adding detection and
+guidance for:
 
-- IaC: Terraform, Pulumi, CloudFormation/SAM, Ansible (roles/playbooks), Puppet/Chef/Salt, Packer
+- IaC: Terraform, Pulumi, CloudFormation/SAM, Ansible (roles/playbooks),
+  Puppet/Chef/Salt, Packer
 - Orchestration: Kubernetes, Helm, Kustomize, Nomad
-- CI/CD: Common pipeline configs (GitHub Actions, GitLab CI, Jenkins, CircleCI, Azure Pipelines, Bitbucket Pipelines)
+- CI/CD: Common pipeline configs (GitHub Actions, GitLab CI, Jenkins,
+  CircleCI, Azure Pipelines, Bitbucket Pipelines)
 - Observability: Prometheus, Grafana, OpenTelemetry
-- MLOps: DVC, MLflow, Airflow, Prefect, dbt, Great Expectations (plus Kubeflow, Feast, Kedro in planning)
+- MLOps: DVC, MLflow, Airflow, Prefect, dbt, Great Expectations (plus
+  Kubeflow, Feast, Kedro in planning)
 
 What this means right now:
-- Guidance-focused: We generate agent recommendations and documentation (INFRA/DEPLOYMENT/OBSERVABILITY/MLOPS) without changing your infrastructure.
-- Honest limits: Detection accuracy varies by stack; coverage is growing. Secrets are never parsed; we only detect presence of files/configs.
+
+- Guidance-focused: We generate agent recommendations and documentation
+  (INFRA/DEPLOYMENT/OBSERVABILITY/MLOPS) without changing your infrastructure.
+- Honest limits: Detection accuracy varies by stack; coverage is growing.
+  Secrets are never parsed; we only detect presence of files/configs.
 
 Quick examples (expected agent suggestions):
 
@@ -648,7 +657,8 @@ adoption flexibility.
   in agent adoption and coordination
 - **Community Driven**: Thanks to beta testers, early adopters, and community
   contributors providing feedback and agent definitions
-- **Engineering Standards**: Built with maintainable design patterns and tests where available
+- **Engineering Standards**: Built with maintainable design patterns and
+  tests where available
 
 ---
 
