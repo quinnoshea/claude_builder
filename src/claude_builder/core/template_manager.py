@@ -37,6 +37,16 @@ from claude_builder.core.template_management.validation.template_validator impor
     ComprehensiveTemplateValidator,
 )
 
+
+# Async components (Phase 3.4)
+try:
+    from claude_builder.core.async_compatibility import SyncTemplateManagerCompat
+    from claude_builder.core.async_template_manager import AsyncTemplateManager
+
+    ASYNC_AVAILABLE = True
+except ImportError:
+    ASYNC_AVAILABLE = False
+
 # Legacy imports for backward compatibility
 from claude_builder.core.template_manager_legacy import (
     FAILED_TO_LOAD_TEMPLATE,
@@ -107,7 +117,29 @@ class ModernTemplateManager:
         # Cache for backward compatibility
         self.templates: Dict[str, Any] = {}
 
+        # Initialize logger first
         self.logger = logging.getLogger(__name__)
+
+        # Async performance optimization (Phase 3.4)
+        self.enable_async_performance = self.config.get(
+            "enable_async_performance", True
+        )
+        if self.enable_async_performance and ASYNC_AVAILABLE:
+            self._async_manager = AsyncTemplateManager(
+                config=self.config,
+                max_concurrent_operations=self.config.get(
+                    "max_concurrent_operations", 10
+                ),
+                enable_caching=self.config.get("enable_caching", True),
+            )
+            self._sync_compat = SyncTemplateManagerCompat(self.config)
+            self.logger.info("Async performance optimization enabled")
+        else:
+            self._async_manager = None
+            self._sync_compat = None
+            if self.enable_async_performance:
+                self.logger.warning("Async performance requested but not available")
+
         self.logger.info("Initialized ModernTemplateManager with modular architecture")
 
     # Community template methods (delegated to CommunityTemplateManager)
@@ -696,6 +728,176 @@ See AGENTS.md for detailed usage instructions and coordination patterns.
 
         # Default example
         return f"Help me improve the {agent.specialization} aspects of this project"
+
+    # Phase 3.4: Async Performance Optimization Methods
+
+    def get_template_async_optimized(
+        self, template_name: str, analysis: Optional[ProjectAnalysis] = None
+    ) -> Optional[Dict[str, Any]]:
+        """Get template with async optimization if available."""
+        if self._sync_compat and self.enable_async_performance:
+            try:
+                return self._sync_compat.get_template(template_name, analysis)
+            except Exception as e:
+                self.logger.warning(
+                    f"Async template retrieval failed, falling back to sync: {e}"
+                )
+                return self._get_template_sync_fallback(template_name, analysis)
+        else:
+            return self._get_template_sync_fallback(template_name, analysis)
+
+    def _get_template_sync_fallback(
+        self, template_name: str, analysis: Optional[ProjectAnalysis] = None
+    ) -> Optional[Dict[str, Any]]:
+        """Synchronous fallback for template retrieval."""
+        # Use existing template loading logic
+        try:
+            content = self.load_template(template_name)
+            return {
+                "name": template_name,
+                "content": content,
+                "type": "local",
+                "source": "sync_fallback",
+            }
+        except Exception:
+            return None
+
+    def list_templates_async_optimized(
+        self, include_remote: bool = True
+    ) -> List[Dict[str, Any]]:
+        """List templates with async optimization if available."""
+        if self._sync_compat and self.enable_async_performance:
+            try:
+                return self._sync_compat.list_templates(include_remote)
+            except Exception as e:
+                self.logger.warning(
+                    f"Async template listing failed, falling back to sync: {e}"
+                )
+                return self._list_templates_sync_fallback(include_remote)
+        else:
+            return self._list_templates_sync_fallback(include_remote)
+
+    def _list_templates_sync_fallback(
+        self, include_remote: bool = True
+    ) -> List[Dict[str, Any]]:
+        """Synchronous fallback for template listing."""
+        templates = []
+
+        # Add local templates
+        try:
+            local_templates = self.list_templates()
+            for template_name in local_templates:
+                templates.append(
+                    {
+                        "name": template_name,
+                        "type": "local",
+                        "source": "sync_fallback",
+                    }
+                )
+        except Exception:
+            pass
+
+        # Add community templates
+        try:
+            community_templates = self.list_available_templates()
+            for template in community_templates:
+                if hasattr(template, "name"):
+                    templates.append(
+                        {
+                            "name": template.name,
+                            "type": "community",
+                            "source": "sync_fallback",
+                        }
+                    )
+        except Exception:
+            pass
+
+        return templates
+
+    def search_templates_async_optimized(
+        self, query: str, limit: int = 20
+    ) -> List[Dict[str, Any]]:
+        """Search templates with async optimization if available."""
+        if self._sync_compat and self.enable_async_performance:
+            try:
+                return self._sync_compat.search_templates(query, limit)
+            except Exception as e:
+                self.logger.warning(
+                    f"Async template search failed, falling back to sync: {e}"
+                )
+                return self._search_templates_sync_fallback(query, limit)
+        else:
+            return self._search_templates_sync_fallback(query, limit)
+
+    def _search_templates_sync_fallback(
+        self, query: str, limit: int = 20
+    ) -> List[Dict[str, Any]]:
+        """Synchronous fallback for template search."""
+        all_templates = self._list_templates_sync_fallback(include_remote=True)
+        matching_templates = []
+        query_lower = query.lower()
+
+        for template in all_templates:
+            name = template.get("name", "").lower()
+            if query_lower in name:
+                matching_templates.append(template)
+                if len(matching_templates) >= limit:
+                    break
+
+        return matching_templates
+
+    def get_performance_stats(self) -> Dict[str, Any]:
+        """Get performance statistics from async system if available."""
+        stats = {
+            "async_performance_enabled": self.enable_async_performance,
+            "async_available": ASYNC_AVAILABLE,
+            "template_manager_type": "ModernTemplateManager",
+        }
+
+        if self._sync_compat and self.enable_async_performance:
+            try:
+                async_stats = self._sync_compat.get_performance_stats()
+                stats["async_stats"] = async_stats
+            except Exception as e:
+                stats["async_stats_error"] = str(e)
+
+        # Add sync stats
+        stats["sync_stats"] = {
+            "templates_dir": str(self.templates_dir),
+            "cached_templates": len(self.templates),
+        }
+
+        return stats
+
+    def enable_async_optimization(self, enable: bool = True) -> None:
+        """Enable or disable async optimization."""
+        if enable and not ASYNC_AVAILABLE:
+            self.logger.warning(
+                "Cannot enable async optimization: async components not available"
+            )
+            return
+
+        self.enable_async_performance = enable
+        if enable and not self._async_manager:
+            self._async_manager = AsyncTemplateManager(self.config)
+            self._sync_compat = SyncTemplateManagerCompat(self.config)
+            self.logger.info("Async optimization enabled")
+        elif not enable:
+            self._async_manager = None
+            self._sync_compat = None
+            self.logger.info("Async optimization disabled")
+
+    def cleanup_async_resources(self) -> None:
+        """Clean up async resources."""
+        if self._sync_compat:
+            try:
+                # The compatibility layer handles cleanup internally
+                pass
+            except Exception as e:
+                self.logger.warning(f"Error during async cleanup: {e}")
+
+        self._async_manager = None
+        self._sync_compat = None
 
 
 # Backward compatibility - use ModernTemplateManager as TemplateManager

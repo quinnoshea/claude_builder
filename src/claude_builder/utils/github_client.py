@@ -242,17 +242,16 @@ class GitHubAgentClient:
             if response.status_code == 401:
                 msg = f"{GITHUB_AUTH_ERROR}: Invalid or missing token"
                 raise ConfigError(msg)
-            elif response.status_code == 403:
+            if response.status_code == 403:
                 if "rate limit" in response.text.lower():
                     msg = f"{GITHUB_RATE_LIMIT_ERROR}: {response.json().get('message', 'Unknown')}"
                     raise ConfigError(msg)
-                else:
-                    msg = f"{GITHUB_API_ERROR}: Forbidden - {response.status_code}"
-                    raise ConfigError(msg)
-            elif response.status_code == 404:
+                msg = f"{GITHUB_API_ERROR}: Forbidden - {response.status_code}"
+                raise ConfigError(msg)
+            if response.status_code == 404:
                 msg = f"{GITHUB_REPO_NOT_FOUND}: {url}"
                 raise ConfigError(msg)
-            elif response.status_code >= 400:
+            if response.status_code >= 400:
                 msg = f"{GITHUB_API_ERROR}: HTTP {response.status_code} - {response.text[:200]}"
                 raise ConfigError(msg)
 

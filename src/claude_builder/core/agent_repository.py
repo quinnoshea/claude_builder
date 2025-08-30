@@ -9,12 +9,7 @@ import time
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar, Dict, List, Optional, Tuple
-
-
-if TYPE_CHECKING:
-    from claude_builder.utils.github_client import GitHubAgentClient
-
+from typing import Any, ClassVar, Dict, List, Optional, Tuple
 from urllib.parse import urlparse
 
 import yaml
@@ -172,7 +167,7 @@ class AgentCache:
             if entry and not entry.is_expired():
                 self._logger.debug(f"Cache hit for {source_url}")
                 return entry.agent
-            elif entry and entry.is_expired():
+            if entry and entry.is_expired():
                 self._logger.debug(f"Cache expired for {source_url}")
                 del self._cache[source_url]
             return None
@@ -1052,7 +1047,7 @@ class AgentRepositoryScanner:
         try:
             from claude_builder.utils.github_client import GitHubAgentClient
 
-            self.github_client: Optional["GitHubAgentClient"] = GitHubAgentClient(
+            self.github_client: Optional[GitHubAgentClient] = GitHubAgentClient(
                 token=github_token
             )
         except ImportError:

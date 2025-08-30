@@ -274,10 +274,9 @@ def _get_output_mode(kwargs: dict[str, Any]) -> str:
     """Get output mode description."""
     if kwargs["agents_only"]:
         return "agents only"
-    elif kwargs["no_agents"]:
+    if kwargs["no_agents"]:
         return "documentation only"
-    else:
-        return "complete environment (CLAUDE.md + subagents + AGENTS.md)"
+    return "complete environment (CLAUDE.md + subagents + AGENTS.md)"
 
 
 def _get_git_mode(kwargs: dict[str, Any]) -> str:

@@ -730,12 +730,11 @@ class TemplateManager:
         """Get appropriate template content based on template name."""
         if "claude" in template_name.lower():
             return "# {{ project_name }} - Claude Instructions\n\nThis is a {{ project_type }} project using {{ framework }}.\n\n## Development Guidelines\n- Follow {{ project_type }} best practices"
-        elif "readme" in template_name.lower():
+        if "readme" in template_name.lower():
             return "# {{ project_name }}\n\n{{ description | default('A ' + project_type + ' project') }}\n\n## Installation\n[Installation instructions]"
-        elif "contributing" in template_name.lower():
+        if "contributing" in template_name.lower():
             return "# Contributing to {{ project_name }}\n\n## Development Setup\n1. Clone repository\n2. Install dependencies\n3. Run tests"
-        else:
-            return f"# {{ project_name }}\n\nGenerated template content for {template_name}"
+        return f"# {{ project_name }}\n\nGenerated template content for {template_name}"
 
     def _list_installed_templates(self) -> List[CommunityTemplate]:
         """List locally installed templates."""

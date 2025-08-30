@@ -934,7 +934,7 @@ class AgentCoordinator:
                     if self.enable_monitoring and self.performance_metrics:
                         self.performance_metrics["total_tasks"] += 1
                         self.performance_metrics["failed_tasks"] += 1
-                    pass  # Fall back to mock result
+                    # Fall back to mock result
             else:
                 # Fallback to priority selection for non-executable agents
                 selected_agent = min(
@@ -1138,19 +1138,18 @@ class AgentCoordinator:
         """Get performance metrics for the coordinator."""
         if self.enable_monitoring and self.performance_metrics:
             return self.performance_metrics.copy()
-        else:
-            # Return basic metrics for compatibility
-            return {
-                "total_tasks": 0,
-                "successful_tasks": 0,
-                "failed_tasks": 0,
-                "total_agents": len(self.agents),
-                "monitoring_enabled": self.enable_monitoring,
-                "max_concurrent": self.max_concurrent_agents,
-                "average_response_time": 50.0,  # Mock metric
-                "success_rate": 0.95,  # Mock metric
-                "coordination_patterns": len(self.coordination_patterns),
-            }
+        # Return basic metrics for compatibility
+        return {
+            "total_tasks": 0,
+            "successful_tasks": 0,
+            "failed_tasks": 0,
+            "total_agents": len(self.agents),
+            "monitoring_enabled": self.enable_monitoring,
+            "max_concurrent": self.max_concurrent_agents,
+            "average_response_time": 50.0,  # Mock metric
+            "success_rate": 0.95,  # Mock metric
+            "coordination_patterns": len(self.coordination_patterns),
+        }
 
     def execute_workflow(self, tasks: List["AgentTask"]) -> List:
         """Execute a workflow of tasks and return mock results."""

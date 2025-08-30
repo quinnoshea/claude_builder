@@ -83,7 +83,6 @@ class HealthCheck(ABC):
     @abstractmethod
     def check(self) -> HealthCheckResult:
         """Perform the health check and return result."""
-        pass
 
     def _create_result(
         self,
@@ -189,7 +188,11 @@ class DependencyHealthCheck(HealthCheck):
                     import subprocess
 
                     result = subprocess.run(
-                        ["git", "--version"], capture_output=True, text=True, timeout=5
+                        ["git", "--version"],
+                        check=False,
+                        capture_output=True,
+                        text=True,
+                        timeout=5,
                     )
                     if result.returncode == 0:
                         details["git"]["version"] = result.stdout.strip()
@@ -235,18 +238,17 @@ class DependencyHealthCheck(HealthCheck):
                     details,
                     duration_ms,
                 )
-            else:
-                status = (
-                    HealthStatus.CRITICAL
-                    if missing_packages or "Git not found" in str(issues)
-                    else HealthStatus.WARNING
-                )
-                return self._create_result(
-                    status,
-                    f"Dependency issues detected: {'; '.join(issues)}",
-                    details,
-                    duration_ms,
-                )
+            status = (
+                HealthStatus.CRITICAL
+                if missing_packages or "Git not found" in str(issues)
+                else HealthStatus.WARNING
+            )
+            return self._create_result(
+                status,
+                f"Dependency issues detected: {'; '.join(issues)}",
+                details,
+                duration_ms,
+            )
 
         except Exception as e:
             duration_ms = (time.time() - start_time) * 1000
@@ -496,13 +498,12 @@ class SecurityHealthCheck(HealthCheck):
                     details,
                     duration_ms,
                 )
-            else:
-                return self._create_result(
-                    HealthStatus.CRITICAL,
-                    f"Security framework issues: {'; '.join(issues)}",
-                    details,
-                    duration_ms,
-                )
+            return self._create_result(
+                HealthStatus.CRITICAL,
+                f"Security framework issues: {'; '.join(issues)}",
+                details,
+                duration_ms,
+            )
 
         except Exception as e:
             duration_ms = (time.time() - start_time) * 1000
@@ -584,21 +585,18 @@ class PerformanceHealthCheck(HealthCheck):
                     details,
                     duration_ms,
                 )
-            else:
-                critical_issues = [
-                    i
-                    for i in issues
-                    if "Critical" in i or "High memory" in i or "High CPU" in i
-                ]
-                status = (
-                    HealthStatus.CRITICAL if critical_issues else HealthStatus.WARNING
-                )
-                return self._create_result(
-                    status,
-                    f"Performance issues detected: {'; '.join(issues)}",
-                    details,
-                    duration_ms,
-                )
+            critical_issues = [
+                i
+                for i in issues
+                if "Critical" in i or "High memory" in i or "High CPU" in i
+            ]
+            status = HealthStatus.CRITICAL if critical_issues else HealthStatus.WARNING
+            return self._create_result(
+                status,
+                f"Performance issues detected: {'; '.join(issues)}",
+                details,
+                duration_ms,
+            )
 
         except Exception as e:
             duration_ms = (time.time() - start_time) * 1000
@@ -678,13 +676,12 @@ class ConfigurationHealthCheck(HealthCheck):
                     details,
                     duration_ms,
                 )
-            else:
-                return self._create_result(
-                    HealthStatus.CRITICAL,
-                    f"Configuration issues detected: {'; '.join(issues)}",
-                    details,
-                    duration_ms,
-                )
+            return self._create_result(
+                HealthStatus.CRITICAL,
+                f"Configuration issues detected: {'; '.join(issues)}",
+                details,
+                duration_ms,
+            )
 
         except Exception as e:
             duration_ms = (time.time() - start_time) * 1000

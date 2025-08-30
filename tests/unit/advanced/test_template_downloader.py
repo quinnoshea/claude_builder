@@ -533,9 +533,9 @@ class TestTemplateRepositoryClient:
         def mock_fetch(source_url):
             if "official" in source_url:
                 return [{"name": "official-template", "source": "official"}]
-            elif "community1" in source_url:
+            if "community1" in source_url:
                 return [{"name": "community1-template", "source": "community1"}]
-            elif "community2" in source_url:
+            if "community2" in source_url:
                 return [{"name": "community2-template", "source": "community2"}]
             return []
 

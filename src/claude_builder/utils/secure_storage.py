@@ -136,7 +136,7 @@ class SecureTokenManager:
                 self.logger.debug(f"Successfully retrieved token: {token_name}")
                 return decrypted_token
 
-            elif prompt_if_missing:
+            if prompt_if_missing:
                 # Token not found, prompt user
                 self.logger.info(f"Token {token_name} not found, prompting user")
                 token_value = getpass(f"Enter {token_name} token: ")

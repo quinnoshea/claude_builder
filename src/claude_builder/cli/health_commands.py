@@ -44,7 +44,6 @@ def health() -> None:
         claude-builder health monitor         # Start continuous monitoring
         claude-builder health report --json   # Export detailed report
     """
-    pass
 
 
 @health.command()

@@ -201,6 +201,27 @@ class TemplateError(ClaudeBuilderError):
         )
 
 
+class PerformanceError(ClaudeBuilderError):
+    """Exception raised for performance-related issues."""
+
+    def __init__(
+        self,
+        message: str,
+        operation_name: str | None = None,
+        threshold_exceeded: str | None = None,
+        actual_value: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            message,
+            exit_code=9,
+            operation_name=operation_name,
+            threshold_exceeded=threshold_exceeded,
+            actual_value=actual_value,
+            **kwargs,
+        )
+
+
 # Placeholder classes for test compatibility
 class ErrorContext:
     """Error context class for test compatibility."""
