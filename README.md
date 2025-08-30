@@ -82,7 +82,7 @@ base.md → python.md → fastapi.md → final output
 
 ### ✅ **OPERATIONAL** (Ready to use today)
 
-#### Sophisticated Project Analysis (90%+ accuracy)
+#### Project Analysis (good coverage for common stacks)
 
 - **15+ Languages**: Python, Rust, JavaScript, TypeScript, Java, Go, PHP, C#,
   Ruby, and more
@@ -93,7 +93,7 @@ base.md → python.md → fastapi.md → final output
 - **Intelligence Engine**: Dependency analysis, file pattern recognition,
   confidence scoring
 
-#### Production-Ready CLI with Rich UI
+#### CLI with Rich UI
 
 ```bash
 # Comprehensive command structure
@@ -108,6 +108,30 @@ claude-builder /path/to/project analyze --output=json   # Export project analysi
 - **Base + Language + Framework** intelligent overlay system
 - **Variable Substitution Engine** with project-specific context
 - **Professional Documentation** with working examples and guidance
+
+### DevOps & MLOps (Honest Scope)
+
+We are expanding beyond language/framework analysis to include DevOps, MLOps, and IaC. Today, claude_builder detects Dockerfiles and docker-compose (and basic Kubernetes directory hints). We are actively adding detection and guidance for:
+
+- IaC: Terraform, Pulumi, CloudFormation/SAM, Ansible (roles/playbooks), Puppet/Chef/Salt, Packer
+- Orchestration: Kubernetes, Helm, Kustomize, Nomad
+- CI/CD: Common pipeline configs (GitHub Actions, GitLab CI, Jenkins, CircleCI, Azure Pipelines, Bitbucket Pipelines)
+- Observability: Prometheus, Grafana, OpenTelemetry
+- MLOps: DVC, MLflow, Airflow, Prefect, dbt, Great Expectations (plus Kubeflow, Feast, Kedro in planning)
+
+What this means right now:
+- Guidance-focused: We generate agent recommendations and documentation (INFRA/DEPLOYMENT/OBSERVABILITY/MLOPS) without changing your infrastructure.
+- Honest limits: Detection accuracy varies by stack; coverage is growing. Secrets are never parsed; we only detect presence of files/configs.
+
+Quick examples (expected agent suggestions):
+
+```bash
+# Terraform module repo
+Recommended: terraform-specialist, ci-pipeline-engineer, security-auditor
+
+# Helm + K8s manifests
+Recommended: kubernetes-operator, helm-specialist, observability-engineer
+```
 
 #### Agent System Foundation
 
@@ -624,8 +648,7 @@ adoption flexibility.
   in agent adoption and coordination
 - **Community Driven**: Thanks to beta testers, early adopters, and community
   contributors providing feedback and agent definitions
-- **Professional Engineering Standards**: Built with production-grade
-  architecture, comprehensive testing, and maintainable design patterns
+- **Engineering Standards**: Built with maintainable design patterns and tests where available
 
 ---
 
