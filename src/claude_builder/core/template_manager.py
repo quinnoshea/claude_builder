@@ -120,6 +120,10 @@ class ModernTemplateManager:
         # Initialize logger first
         self.logger = logging.getLogger(__name__)
 
+        # Type annotations for async components
+        self._async_manager: Optional["AsyncTemplateManager"] = None
+        self._sync_compat: Optional["SyncTemplateManagerCompat"] = None
+
         # Async performance optimization (Phase 3.4)
         self.enable_async_performance = self.config.get(
             "enable_async_performance", True
@@ -737,7 +741,7 @@ See AGENTS.md for detailed usage instructions and coordination patterns.
         """Get template with async optimization if available."""
         if self._sync_compat and self.enable_async_performance:
             try:
-                return self._sync_compat.get_template(template_name, analysis)
+                return self._sync_compat.get_template(template_name, analysis)  # type: ignore[no-any-return]
             except Exception as e:
                 self.logger.warning(
                     f"Async template retrieval failed, falling back to sync: {e}"
@@ -768,7 +772,7 @@ See AGENTS.md for detailed usage instructions and coordination patterns.
         """List templates with async optimization if available."""
         if self._sync_compat and self.enable_async_performance:
             try:
-                return self._sync_compat.list_templates(include_remote)
+                return self._sync_compat.list_templates(include_remote)  # type: ignore[no-any-return]
             except Exception as e:
                 self.logger.warning(
                     f"Async template listing failed, falling back to sync: {e}"
@@ -820,7 +824,7 @@ See AGENTS.md for detailed usage instructions and coordination patterns.
         """Search templates with async optimization if available."""
         if self._sync_compat and self.enable_async_performance:
             try:
-                return self._sync_compat.search_templates(query, limit)
+                return self._sync_compat.search_templates(query, limit)  # type: ignore[no-any-return]
             except Exception as e:
                 self.logger.warning(
                     f"Async template search failed, falling back to sync: {e}"

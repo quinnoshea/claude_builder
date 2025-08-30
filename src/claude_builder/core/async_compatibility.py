@@ -88,11 +88,11 @@ class AsyncCompatibilityManager:
                 f"Failed to run async operation in sync context: {e}"
             ) from e
 
-    def _run_in_thread_pool(self, coro) -> Any:
+    def _run_in_thread_pool(self, coro: Any) -> Any:
         """Run coroutine in thread pool when already in async context."""
         import concurrent.futures
 
-        def run_coro():
+        def run_coro() -> Any:
             new_loop = asyncio.new_event_loop()
             try:
                 asyncio.set_event_loop(new_loop)
@@ -133,7 +133,7 @@ class AsyncCompatibilityManager:
     def cleanup(self) -> None:
         """Clean up async resources."""
 
-        async def cleanup_async():
+        async def cleanup_async() -> None:
             if self._async_template_manager:
                 await self._async_template_manager.cleanup_async()
 
@@ -156,7 +156,7 @@ def async_to_sync(async_func: Callable) -> Callable:
     """Decorator to convert async function to sync with compatibility layer."""
 
     @wraps(async_func)
-    def sync_wrapper(*args, **kwargs):
+    def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
         coro = async_func(*args, **kwargs)
         return _compat_manager.run_async_in_sync(coro)
 
@@ -278,21 +278,21 @@ class SyncTemplateManagerCompat:
 class PerformanceBenchmarker:
     """Performance benchmarking utilities for async vs sync comparison."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.benchmark_results: Dict[str, Dict[str, Any]] = {}
 
     def benchmark_operation(
         self,
         operation_name: str,
-        async_func: Callable,
-        sync_func: Callable,
-        *args,
-        **kwargs,
+        async_func: Callable[..., Any],
+        sync_func: Callable[..., Any],
+        *args: Any,
+        **kwargs: Any,
     ) -> Dict[str, Any]:
         """Benchmark async vs sync operation performance."""
         import time
 
-        results = {
+        results: Dict[str, Any] = {
             "operation": operation_name,
             "args_count": len(args),
             "kwargs_count": len(kwargs),
@@ -339,9 +339,16 @@ class PerformanceBenchmarker:
             }
 
         # Calculate performance improvement
-        if results["sync"]["success"] and results["async"]["success"]:
-            sync_duration = results["sync"]["duration"]
-            async_duration = results["async"]["duration"]
+        sync_result = results["sync"]
+        async_result = results["async"]
+        if (
+            isinstance(sync_result, dict)
+            and isinstance(async_result, dict)
+            and sync_result["success"]
+            and async_result["success"]
+        ):
+            sync_duration = sync_result["duration"]
+            async_duration = async_result["duration"]
 
             if async_duration > 0:
                 improvement = ((sync_duration - async_duration) / sync_duration) * 100
@@ -414,7 +421,7 @@ class PerformanceBenchmarker:
         self.benchmark_operation(
             "template_retrieval",
             async_template_manager._async_template_manager.get_template_async,
-            sync_template_manager.get_template,
+            sync_template_manager.load_template,
             template_name,
         )
 

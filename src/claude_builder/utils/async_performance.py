@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any, AsyncGenerator, AsyncIterable, Callable, Dict, Optional, TypeVar
 from weakref import WeakSet
 
-import aiofiles
+import aiofiles  # type: ignore[import-untyped]
 import aiohttp
 import psutil
 
@@ -61,7 +61,7 @@ class OperationContext:
 class AsyncPerformanceMonitor:
     """Comprehensive performance monitoring for async operations."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.logger = logging.getLogger(__name__)
         self._active_operations: WeakSet = WeakSet()
         self._metrics: Dict[str, Dict[str, Any]] = {}
@@ -84,7 +84,7 @@ class AsyncPerformanceMonitor:
     @asynccontextmanager
     async def track_operation(
         self, operation_name: str
-    ) -> AsyncGenerator[Dict[str, Any], None]:
+    ) -> AsyncGenerator[OperationContext, None]:
         """Context manager for tracking async operation performance."""
         self.register_operation(operation_name)
 
@@ -199,7 +199,7 @@ class AsyncConnectionPool:
         )
         return self._session
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """Clean up HTTP session."""
         if self._session:
             await self._session.close()
@@ -305,7 +305,7 @@ class AsyncCache:
         if not self._access_times:
             return
 
-        lru_key = min(self._access_times.keys(), key=self._access_times.get)
+        lru_key = min(self._access_times, key=lambda k: self._access_times[k])
         await self._evict(lru_key)
         self.logger.debug(f"Evicted LRU cache entry: {lru_key}")
 
@@ -329,7 +329,7 @@ def async_retry(
 
     def decorator(func: F) -> F:
         @functools.wraps(func)
-        async def wrapper(*args, **kwargs):
+        async def wrapper(*args: Any, **kwargs: Any) -> Any:
             last_exception = None
 
             for attempt in range(max_attempts):
@@ -347,9 +347,11 @@ def async_retry(
                     )
                     await asyncio.sleep(wait_time)
 
-            raise last_exception  # This should never be reached
+            if last_exception:
+                raise last_exception
+            raise Exception("Retry failed without exception")
 
-        return wrapper
+        return wrapper  # type: ignore[return-value]
 
     return decorator
 
@@ -360,17 +362,19 @@ def async_rate_limit(
 ) -> Callable[[F], F]:
     """Decorator for rate limiting async operations."""
     # Token bucket algorithm implementation
-    tokens = burst_size
+    tokens = float(burst_size)
     last_update = time.time()
 
     def decorator(func: F) -> F:
         @functools.wraps(func)
-        async def wrapper(*args, **kwargs):
+        async def wrapper(*args: Any, **kwargs: Any) -> Any:
             nonlocal tokens, last_update
 
             now = time.time()
             # Add tokens based on elapsed time
-            tokens = min(burst_size, tokens + (now - last_update) * calls_per_second)
+            tokens = min(
+                float(burst_size), tokens + (now - last_update) * calls_per_second
+            )
             last_update = now
 
             if tokens < 1:
@@ -383,7 +387,7 @@ def async_rate_limit(
 
             return await func(*args, **kwargs)
 
-        return wrapper
+        return wrapper  # type: ignore[return-value]
 
     return decorator
 

@@ -88,7 +88,7 @@ class AsyncTemplateManager:
                 cached_template = await cache.get(cache_key)
                 if cached_template is not None:
                     op["cache_hit"] = True
-                    return cached_template
+                    return cached_template  # type: ignore[no-any-return]
 
             async with self._semaphore:
                 # Use lock for specific template to avoid duplicate downloads
@@ -98,7 +98,7 @@ class AsyncTemplateManager:
                     if self.enable_caching:
                         cached_template = await cache.get(cache_key)
                         if cached_template is not None:
-                            return cached_template
+                            return cached_template  # type: ignore[no-any-return]
 
                     # Load template from various sources
                     template = await self._load_template_from_sources(
@@ -147,13 +147,13 @@ class AsyncTemplateManager:
 
     async def _try_loading_strategy(
         self,
-        strategy_func,
+        strategy_func: Any,
         template_name: str,
         analysis: Optional[ProjectAnalysis] = None,
     ) -> Optional[Dict[str, Any]]:
         """Try a template loading strategy with error handling."""
         try:
-            return await strategy_func(template_name, analysis)
+            return await strategy_func(template_name, analysis)  # type: ignore[no-any-return]
         except Exception:
             # Strategy failed, return None
             return None
@@ -196,11 +196,11 @@ class AsyncTemplateManager:
         try:
             # Get community template metadata
             community_templates = await asyncio.get_event_loop().run_in_executor(
-                None, self.community_manager.list_templates
+                None, self.community_manager._list_installed_templates
             )
 
             for template in community_templates:
-                if template.name == template_name:
+                if template.metadata.name == template_name:
                     # Download template if needed
                     template_path = await self._download_community_template(template)
                     return await self._load_template_from_path(template_path)
@@ -258,7 +258,7 @@ class AsyncTemplateManager:
             try:
                 # Run validation in executor to avoid blocking
                 result = await asyncio.get_event_loop().run_in_executor(
-                    None, self.validator.validate_template, template_path
+                    None, lambda: self.validator.validate_template(Path(template_path))
                 )
 
                 op["validation_result"] = result.is_valid
@@ -368,18 +368,14 @@ class AsyncTemplateManager:
             template_lists = []
 
             # Get builtin templates
-            builtin_task = asyncio.create_task(
-                asyncio.get_event_loop().run_in_executor(
-                    None, self._list_builtin_templates
-                )
+            builtin_task: Any = asyncio.get_event_loop().run_in_executor(
+                None, self._list_builtin_templates
             )
             template_lists.append(builtin_task)
 
             # Get community templates
-            community_task = asyncio.create_task(
-                asyncio.get_event_loop().run_in_executor(
-                    None, self.community_manager.list_templates
-                )
+            community_task: Any = asyncio.get_event_loop().run_in_executor(
+                None, self.community_manager._list_installed_templates
             )
             template_lists.append(community_task)
 
@@ -513,7 +509,7 @@ class AsyncTemplateManager:
         async with performance_monitor.track_operation("save_template_content"):
             content = template.get("content", "# Empty template")
 
-            import aiofiles
+            import aiofiles  # type: ignore[import-untyped]
 
             async with aiofiles.open(template_file, "w", encoding="utf-8") as f:
                 await f.write(content)
@@ -568,7 +564,7 @@ class AsyncTemplateManager:
             results = await asyncio.gather(*tasks, return_exceptions=True)
 
             # Process results
-            processed_results = []
+            processed_results: List[Dict[str, Any]] = []
             for result in results:
                 if isinstance(result, Exception):
                     processed_results.append(
@@ -579,7 +575,7 @@ class AsyncTemplateManager:
                         }
                     )
                 else:
-                    processed_results.append(result)
+                    processed_results.append(result)  # type: ignore[arg-type]
 
             return processed_results
 

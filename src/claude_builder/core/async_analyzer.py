@@ -12,7 +12,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, AsyncGenerator, Dict, List, Optional, Union
 
-import aiofiles
+import aiofiles  # type: ignore[import-untyped]
 import toml
 
 from claude_builder.core.analyzer import (
@@ -114,7 +114,7 @@ class AsyncProjectAnalyzer:
             if self.enable_caching:
                 cached_result = await cache.get(cache_key)
                 if cached_result is not None:
-                    return cached_result
+                    return cached_result  # type: ignore[no-any-return]
 
             try:
                 if not project_path.exists():
@@ -141,6 +141,13 @@ class AsyncProjectAnalyzer:
                 frameworks = results[2]
                 architecture = results[3]
                 domain_info = results[4]
+
+                # Type assertions for mypy
+                assert isinstance(filesystem_info, FileSystemInfo)
+                assert isinstance(languages, list)
+                assert isinstance(frameworks, list)
+                assert isinstance(architecture, ArchitecturePattern)
+                assert isinstance(domain_info, DomainInfo)
 
                 # Calculate complexity (CPU-intensive, run in thread)
                 # Ensure we have proper objects for complexity assessment
@@ -196,10 +203,10 @@ class AsyncProjectAnalyzer:
     async def _analyze_filesystem_async(self, project_path: Path) -> FileSystemInfo:
         """Analyze filesystem structure asynchronously."""
         async with performance_monitor.track_operation("filesystem_analysis"):
-            file_counts = defaultdict(int)
+            file_counts: Dict[str, int] = defaultdict(int)
             total_size = 0
             directory_count = 0
-            file_extensions = defaultdict(int)
+            file_extensions: Dict[str, int] = defaultdict(int)
 
             async for file_path in self._walk_directory_async(project_path):
                 if file_path.is_dir():
@@ -339,7 +346,7 @@ class AsyncProjectAnalyzer:
             return frameworks
 
     async def _run_framework_detector(
-        self, detector_func, file_path: Path
+        self, detector_func: Any, file_path: Path
     ) -> List[FrameworkInfo]:
         """Run framework detector in executor."""
         return await asyncio.get_event_loop().run_in_executor(
@@ -364,30 +371,27 @@ class AsyncProjectAnalyzer:
             if "react" in dependencies:
                 frameworks.append(
                     FrameworkInfo(
-                        name="React",
+                        primary="React",
                         version=dependencies["react"],
-                        confidence=95,
-                        category="frontend",
+                        confidence=0.95,
                     )
                 )
 
             if "vue" in dependencies:
                 frameworks.append(
                     FrameworkInfo(
-                        name="Vue.js",
+                        primary="Vue.js",
                         version=dependencies["vue"],
-                        confidence=95,
-                        category="frontend",
+                        confidence=0.95,
                     )
                 )
 
             if "express" in dependencies:
                 frameworks.append(
                     FrameworkInfo(
-                        name="Express.js",
+                        primary="Express.js",
                         version=dependencies["express"],
-                        confidence=95,
-                        category="backend",
+                        confidence=0.95,
                     )
                 )
 
@@ -414,28 +418,25 @@ class AsyncProjectAnalyzer:
                     if "django" in dep.lower():
                         frameworks.append(
                             FrameworkInfo(
-                                name="Django",
+                                primary="Django",
                                 version="unknown",
-                                confidence=90,
-                                category="web",
+                                confidence=0.90,
                             )
                         )
                     elif "fastapi" in dep.lower():
                         frameworks.append(
                             FrameworkInfo(
-                                name="FastAPI",
+                                primary="FastAPI",
                                 version="unknown",
-                                confidence=90,
-                                category="api",
+                                confidence=0.90,
                             )
                         )
                     elif "flask" in dep.lower():
                         frameworks.append(
                             FrameworkInfo(
-                                name="Flask",
+                                primary="Flask",
                                 version="unknown",
-                                confidence=90,
-                                category="web",
+                                confidence=0.90,
                             )
                         )
 
@@ -459,20 +460,18 @@ class AsyncProjectAnalyzer:
             if "axum" in dependencies:
                 frameworks.append(
                     FrameworkInfo(
-                        name="Axum",
+                        primary="Axum",
                         version=str(dependencies["axum"]),
-                        confidence=95,
-                        category="web",
+                        confidence=0.95,
                     )
                 )
 
             if "actix-web" in dependencies:
                 frameworks.append(
                     FrameworkInfo(
-                        name="Actix Web",
+                        primary="Actix Web",
                         version=str(dependencies["actix-web"]),
-                        confidence=95,
-                        category="web",
+                        confidence=0.95,
                     )
                 )
 
@@ -499,20 +498,18 @@ class AsyncProjectAnalyzer:
             if "github.com/gin-gonic/gin" in content:
                 frameworks.append(
                     FrameworkInfo(
-                        name="Gin",
+                        primary="Gin",
                         version="unknown",
-                        confidence=95,
-                        category="web",
+                        confidence=0.95,
                     )
                 )
 
             if "github.com/gorilla/mux" in content:
                 frameworks.append(
                     FrameworkInfo(
-                        name="Gorilla Mux",
+                        primary="Gorilla Mux",
                         version="unknown",
-                        confidence=95,
-                        category="web",
+                        confidence=0.95,
                     )
                 )
 
@@ -611,7 +608,7 @@ class AsyncProjectAnalyzer:
                     return ProjectType.API_SERVICE
                 return ProjectType.LIBRARY
             if primary_language.primary and primary_language.primary.lower() == "rust":
-                return ProjectType.SYSTEM_TOOL
+                return ProjectType.CLI_TOOL
 
         return ProjectType.LIBRARY
 
@@ -623,7 +620,7 @@ class AsyncProjectAnalyzer:
         domain_info: DomainInfo,
     ) -> float:
         """Calculate overall confidence score for the analysis."""
-        total_confidence = 0
+        total_confidence = 0.0
         count = 0
 
         # Language confidence
@@ -644,7 +641,7 @@ class AsyncProjectAnalyzer:
 
         # Architecture confidence (simplified)
         if architecture != ArchitecturePattern.UNKNOWN:
-            total_confidence += 75  # Base confidence for detected architecture
+            total_confidence += 75.0  # Base confidence for detected architecture
             count += 1
 
         return total_confidence / max(count, 1)
@@ -653,20 +650,18 @@ class AsyncProjectAnalyzer:
         self, filesystem_info: FileSystemInfo
     ) -> DevelopmentEnvironment:
         """Detect development environment from filesystem info."""
-        extensions = filesystem_info.file_extensions
+        root_files = filesystem_info.root_files
 
         # Check for containerization
-        if any(
-            "dockerfile" in ext.lower() or "docker" in ext.lower() for ext in extensions
-        ):
-            return DevelopmentEnvironment.CONTAINERIZED
+        containerization = []
+        if any("dockerfile" in f.lower() or "docker" in f.lower() for f in root_files):
+            containerization.append("Docker")
 
         # Check for cloud deployment indicators
-        cloud_indicators = [".yaml", ".yml"]  # Kubernetes manifests, etc.
-        if any(ext in extensions for ext in cloud_indicators):
-            return DevelopmentEnvironment.CLOUD_NATIVE
+        if any(f.endswith((".yaml", ".yml")) for f in root_files):
+            containerization.append("Kubernetes")
 
-        return DevelopmentEnvironment.LOCAL
+        return DevelopmentEnvironment(containerization=containerization)
 
     async def batch_analyze_async(
         self, project_paths: List[Union[str, Path]]
@@ -688,13 +683,13 @@ class AsyncProjectAnalyzer:
             results = await asyncio.gather(*tasks, return_exceptions=True)
 
             # Process results
-            analyses = []
+            analyses: List[ProjectAnalysis] = []
             for result in results:
                 if isinstance(result, Exception):
-                    # Create failed analysis object
-                    analyses.append(None)  # Or create a FailedAnalysis object
+                    # Skip failed analyses
+                    continue
                 else:
-                    analyses.append(result)
+                    analyses.append(result)  # type: ignore[arg-type]
 
             return analyses
 

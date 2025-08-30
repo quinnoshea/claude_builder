@@ -12,7 +12,7 @@ import tempfile
 from pathlib import Path
 from typing import Any, AsyncGenerator, Dict, List, Optional
 
-import aiofiles
+import aiofiles  # type: ignore[import-untyped]
 import aiohttp
 
 from claude_builder.utils.async_performance import (
@@ -155,7 +155,7 @@ class AsyncTemplateDownloader:
                 cached_result = await cache.get(cache_key)
                 if cached_result is not None:
                     self.logger.debug(f"Cache hit for template index: {source_url}")
-                    return cached_result
+                    return cached_result  # type: ignore[no-any-return]
 
             try:
                 security_validator.validate_url(source_url)
@@ -175,7 +175,7 @@ class AsyncTemplateDownloader:
                         if self.enable_caching:
                             await cache.set(cache_key, result)
 
-                        return result
+                        return result  # type: ignore[no-any-return]
 
             except json.JSONDecodeError as e:
                 raise PerformanceError(f"Invalid JSON in template index: {e}") from e
@@ -222,9 +222,7 @@ class AsyncTemplateDownloader:
             # But run in thread pool to avoid blocking
             await asyncio.get_event_loop().run_in_executor(
                 None,
-                security_validator.safe_extract_zip,
-                str(bundle_path),
-                str(extract_to),
+                lambda: security_validator.safe_extract_zip(bundle_path, extract_to),
             )
 
             self.logger.info(f"Extracted template bundle to {extract_to}")
@@ -271,7 +269,7 @@ class AsyncTemplateDownloader:
                         }
                     )
                 else:
-                    processed_results.append(result)
+                    processed_results.append(result)  # type: ignore[arg-type]
 
             return processed_results
 
@@ -383,7 +381,7 @@ class AsyncTemplateRepositoryClient:
         """List available templates from repository."""
         try:
             index = await self.downloader.fetch_template_index_async(self.base_url)
-            return index.get("templates", [])
+            return index.get("templates", [])  # type: ignore[no-any-return]
         except Exception as e:
             self.logger.error(f"Failed to list templates from {self.base_url}: {e}")
             raise PerformanceError(f"Template listing failed: {e}") from e

@@ -11,7 +11,7 @@ from pathlib import Path
 from string import Template as StringTemplate
 from typing import Any, Dict, List, Optional
 
-import aiofiles
+import aiofiles  # type: ignore[import-untyped]
 
 from claude_builder.core.agents import UniversalAgentSystem
 from claude_builder.core.models import (
@@ -141,7 +141,7 @@ class AsyncDocumentGenerator:
                     cached_result = await cache.get(cache_key)
                     if cached_result is not None and isinstance(cached_result, dict):
                         await self._write_cached_files(cached_result, output_path)
-                        return cached_result
+                        return cached_result  # type: ignore[no-any-return]
 
                 files = {}
 
@@ -606,7 +606,7 @@ $agent_workflow
                     # Skip errors for now - could create error report
                     continue
                 if result is not None:
-                    generated_contents.append(result)
+                    generated_contents.append(result)  # type: ignore[arg-type]
 
             return generated_contents
 
