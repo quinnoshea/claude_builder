@@ -255,6 +255,440 @@ class FilePatterns:
         ".nyc_output/",
     }
 
+    # Infrastructure as Code patterns
+    INFRASTRUCTURE_PATTERNS = {
+        # Terraform
+        "terraform": {
+            "*.tf",
+            "*.tfvars",
+            "*.tfstate",
+            "*.tfstate.backup",
+            ".terraform/",
+            "terraform.tfstate",
+            "terraform.tfstate.backup",
+            ".terraform.lock.hcl",
+            "terraform.tfplan",
+            "provider.tf",
+            "main.tf",
+            "variables.tf",
+            "outputs.tf",
+            "versions.tf",
+        },
+        # Ansible
+        "ansible": {
+            "ansible/",
+            "playbooks/",
+            "roles/",
+            "group_vars/",
+            "host_vars/",
+            "inventory/",
+            "ansible.cfg",
+            "playbook.yml",
+            "playbook.yaml",
+            "site.yml",
+            "site.yaml",
+            "hosts",
+            "inventory.ini",
+            "inventory.yml",
+            "requirements.yml",
+            "vault.yml",
+        },
+        # Kubernetes
+        "kubernetes": {
+            "k8s/",
+            "manifests/",
+            "kustomization.yaml",
+            "kustomization.yml",
+            "Chart.yaml",
+            "Chart.yml",
+            "values.yaml",
+            "values.yml",
+            "charts/",
+            "templates/",
+            "values-*.yaml",
+            "values-*.yml",
+            "deployment.yaml",
+            "deployment.yml",
+            "service.yaml",
+            "service.yml",
+            "configmap.yaml",
+            "configmap.yml",
+            "secret.yaml",
+            "secret.yml",
+            "ingress.yaml",
+            "ingress.yml",
+            "namespace.yaml",
+            "namespace.yml",
+        },
+        # Helm (subset of Kubernetes but distinct)
+        "helm": {
+            "Chart.yaml",
+            "Chart.yml",
+            "values.yaml",
+            "values.yml",
+            "charts/",
+            "templates/",
+            "values-*.yaml",
+            "values-*.yml",
+            ".helmignore",
+            "requirements.yaml",
+            "requirements.yml",
+        },
+        # Pulumi
+        "pulumi": {
+            "Pulumi.yaml",
+            "Pulumi.yml",
+            "Pulumi.*.yaml",
+            "Pulumi.*.yml",
+            "__main__.py",
+            "index.ts",
+            "index.js",
+            "main.go",
+            "Program.cs",
+            "Pulumi.lock",
+            "Pulumi.dev.yaml",
+            "Pulumi.prod.yaml",
+        },
+        # CloudFormation
+        "cloudformation": {
+            "template.json",
+            "template.yaml",
+            "template.yml",
+            "*.template",
+            "cloudformation.yaml",
+            "cloudformation.yml",
+            "cfn-*.yaml",
+            "cfn-*.yml",
+            "aws-*.yaml",
+            "aws-*.yml",
+            "stack.yaml",
+            "stack.yml",
+        },
+        # Docker
+        "docker": {
+            "Dockerfile",
+            "docker-compose.yml",
+            "docker-compose.yaml",
+            "docker-compose.*.yml",
+            "docker-compose.*.yaml",
+            ".dockerignore",
+            "Dockerfile.*",
+            ".docker/",
+        },
+        # Packer
+        "packer": {
+            "*.pkr.hcl",
+            "*.pkr.json",
+            "packer.json",
+            "template.json",
+            "build.pkr.hcl",
+            "variables.pkr.hcl",
+            "sources.pkr.hcl",
+            ".packerconfig",
+            "packer/",
+        },
+        # Vagrant
+        "vagrant": {
+            "Vagrantfile",
+            ".vagrant/",
+            "vagrant/",
+            "Vagrantfile.local",
+            "vagrant.yml",
+            "vagrant.yaml",
+        },
+        # Configuration Management
+        "puppet": {
+            "manifests/",
+            "modules/",
+            "hieradata/",
+            "Puppetfile",
+            "*.pp",
+            "puppet.conf",
+            "hiera.yaml",
+            "environment.conf",
+            "site.pp",
+            "init.pp",
+        },
+        "chef": {
+            "cookbooks/",
+            "roles/",
+            "environments/",
+            "data_bags/",
+            "Berksfile",
+            "Policyfile.rb",
+            "metadata.rb",
+            "recipes/",
+            "attributes/",
+            "templates/",
+            "files/",
+            ".chef/",
+        },
+        "saltstack": {
+            "salt/",
+            "pillar/",
+            "states/",
+            "srv/salt/",
+            "srv/pillar/",
+            "*.sls",
+            "top.sls",
+            "minion.conf",
+            "master.conf",
+            "salt-minion",
+            "salt-master",
+        },
+        # HashiCorp Stack
+        "nomad": {
+            "*.nomad",
+            "*.nomad.hcl",
+            "nomad.hcl",
+            "nomad.json",
+            "jobs/",
+            "nomad/",
+            "job.nomad",
+            "server.hcl",
+            "client.hcl",
+        },
+        "consul": {
+            "consul.hcl",
+            "consul.json",
+            "consul.d/",
+            "consul/",
+            "server.hcl",
+            "client.hcl",
+            "services.json",
+            "checks.json",
+        },
+        "vault": {
+            "vault.hcl",
+            "vault.json",
+            "vault.d/",
+            "vault/",
+            "config.hcl",
+            "server.hcl",
+            "policies/",
+            "auth/",
+            "secrets/",
+            "sys/",
+        },
+        "boundary": {
+            "boundary.hcl",
+            "boundary.json",
+            "boundary.d/",
+            "boundary/",
+            "controller.hcl",
+            "worker.hcl",
+        },
+        "waypoint": {
+            "waypoint.hcl",
+            "waypoint.yml",
+            "waypoint.yaml",
+            ".waypoint/",
+            "waypoint/",
+        },
+    }
+
+    # Observability and Monitoring patterns
+    OBSERVABILITY_PATTERNS = {
+        # Prometheus
+        "prometheus": {
+            "prometheus.yml",
+            "prometheus.yaml",
+            "prometheus.json",
+            "alert.rules",
+            "recording.rules",
+            "alerts/",
+            "rules/",
+            "prometheus/",
+            "prom/",
+            "*.rules.yml",
+            "*.rules.yaml",
+        },
+        # Grafana
+        "grafana": {
+            "grafana/",
+            "dashboards/",
+            "datasources/",
+            "provisioning/",
+            "grafana.ini",
+            "grafana.yml",
+            "grafana.yaml",
+            "dashboard.json",
+            "*.dashboard.json",
+        },
+        # OpenTelemetry
+        "opentelemetry": {
+            "otel*",
+            "opentelemetry.*",
+            "otel-collector.yaml",
+            "otel-collector.yml",
+            "collector.yaml",
+            "collector.yml",
+            "tracing.yaml",
+            "tracing.yml",
+            "spans/",
+            "traces/",
+        },
+        # Jaeger
+        "jaeger": {
+            "jaeger/",
+            "jaeger.yml",
+            "jaeger.yaml",
+            "jaeger.json",
+            "jaeger-*.yml",
+            "jaeger-*.yaml",
+        },
+        # Elastic Stack
+        "elasticsearch": {
+            "elasticsearch/",
+            "elasticsearch.yml",
+            "elasticsearch.yaml",
+            "elastic/",
+            "es/",
+            "logstash/",
+            "kibana/",
+            "logstash.conf",
+            "logstash.yml",
+            "kibana.yml",
+        },
+        # Fluentd/Fluent Bit
+        "fluentd": {
+            "fluentd/",
+            "fluent.conf",
+            "fluent-bit.conf",
+            "td-agent.conf",
+            "fluent-bit/",
+            "logging/",
+        },
+        # New Relic
+        "newrelic": {
+            "newrelic.yml",
+            "newrelic.yaml",
+            "newrelic.json",
+            "newrelic/",
+            ".newrelic/",
+            "nr-config/",
+        },
+        # Datadog
+        "datadog": {
+            "datadog.yaml",
+            "datadog.yml",
+            "datadog/",
+            ".datadog/",
+            "dd-trace/",
+            "datadog-agent/",
+        },
+    }
+
+    # Security and Compliance patterns
+    SECURITY_PATTERNS = {
+        # Infrastructure Security
+        "tfsec": {
+            "tfsec*",
+            ".tfsec/",
+            "tfsec.yml",
+            "tfsec.yaml",
+            ".tfsec.json",
+            "tfsecurity/",
+        },
+        "checkov": {
+            "checkov*",
+            ".checkov/",
+            "checkov.yml",
+            "checkov.yaml",
+            ".checkov.json",
+            ".checkov.yaml",
+        },
+        "terrascan": {
+            "terrascan*",
+            ".terrascan/",
+            "terrascan.toml",
+            "terrascan_config.toml",
+        },
+        # Code Security
+        "semgrep": {
+            "semgrep*",
+            ".semgrep/",
+            ".semgrep.yml",
+            ".semgrep.yaml",
+            "semgrep.yml",
+            "semgrep.yaml",
+            "semgrep-rules/",
+        },
+        "snyk": {
+            ".snyk",
+            "snyk/",
+            "snyk.json",
+            ".snyk.json",
+            "snyk-report.json",
+            "vulnerability.json",
+        },
+        "sonarqube": {
+            "sonar-project.properties",
+            "sonarqube/",
+            "sonar/",
+            ".sonarcloud.properties",
+            "quality-gate/",
+        },
+        # API Security
+        "spectral": {
+            ".spectral.*",
+            "spectral.yml",
+            "spectral.yaml",
+            "spectral/",
+            "api-security/",
+        },
+        # Container Security
+        "trivy": {
+            "trivy/",
+            ".trivyignore",
+            "trivy.yaml",
+            "trivy.yml",
+            "trivy-config.yaml",
+        },
+        "twistlock": {
+            "twistlock/",
+            "prisma/",
+            "defender/",
+            "console/",
+            "twistlock.yml",
+            "prisma-cloud/",
+        },
+        # Policy as Code
+        "opa": {
+            "opa/",
+            "policies/",
+            "*.rego",
+            "policy.rego",
+            "conftest.toml",
+            "policy/",
+        },
+        "falco": {
+            "falco/",
+            "falco.yaml",
+            "falco.yml",
+            "rules/",
+            "falco_rules.yaml",
+            "falco_rules.yml",
+        },
+        # Secrets Management
+        "vault-secrets": {
+            "secrets/",
+            ".secrets/",
+            "vault-secrets/",
+            "secret.yaml",
+            "secret.yml",
+            "sealed-secrets/",
+        },
+        "sops": {
+            ".sops.yaml",
+            ".sops.yml",
+            "sops/",
+            "*.sops.yaml",
+            "*.sops.yml",
+            "sops-config/",
+        },
+    }
+
     # Framework detection patterns
     FRAMEWORK_PATTERNS = {
         "django": {"manage.py", "django/", "settings.py"},
@@ -377,6 +811,96 @@ class FilePatterns:
                 detected[framework] = score
 
         return detected
+
+    @classmethod
+    def detect_infrastructure_tools(cls, project_path: Path) -> dict[str, float]:
+        """Detect infrastructure tools based on file patterns."""
+        detected: dict[str, float] = {}
+
+        for tool, patterns in cls.INFRASTRUCTURE_PATTERNS.items():
+            score = 0.0
+
+            for pattern in patterns:
+                if "/" in pattern:
+                    # Directory pattern
+                    if (project_path / pattern.rstrip("/")).exists():
+                        score += 5.0
+                elif "*" in pattern:
+                    # Glob pattern - check if any files match recursively
+                    if any(project_path.rglob(pattern)):
+                        score += 4.0
+                else:
+                    # Exact file match
+                    if (project_path / pattern).exists():
+                        score += 3.0
+
+            if score > 0:
+                detected[tool] = score
+
+        return detected
+
+    @classmethod
+    def detect_observability_tools(cls, project_path: Path) -> dict[str, float]:
+        """Detect observability tools based on file patterns."""
+        detected: dict[str, float] = {}
+
+        for tool, patterns in cls.OBSERVABILITY_PATTERNS.items():
+            score = 0.0
+
+            for pattern in patterns:
+                if "/" in pattern:
+                    # Directory pattern
+                    if (project_path / pattern.rstrip("/")).exists():
+                        score += 5.0
+                elif "*" in pattern:
+                    # Glob pattern - check if any files match recursively
+                    if any(project_path.rglob(pattern)):
+                        score += 4.0
+                else:
+                    # Exact file match
+                    if (project_path / pattern).exists():
+                        score += 3.0
+
+            if score > 0:
+                detected[tool] = score
+
+        return detected
+
+    @classmethod
+    def detect_security_tools(cls, project_path: Path) -> dict[str, float]:
+        """Detect security tools based on file patterns."""
+        detected: dict[str, float] = {}
+
+        for tool, patterns in cls.SECURITY_PATTERNS.items():
+            score = 0.0
+
+            for pattern in patterns:
+                if "/" in pattern:
+                    # Directory pattern
+                    if (project_path / pattern.rstrip("/")).exists():
+                        score += 5.0
+                elif "*" in pattern:
+                    # Glob pattern - check if any files match recursively
+                    if any(project_path.rglob(pattern)):
+                        score += 4.0
+                else:
+                    # Exact file match
+                    if (project_path / pattern).exists():
+                        score += 3.0
+
+            if score > 0:
+                detected[tool] = score
+
+        return detected
+
+    @classmethod
+    def detect_all_devops_tools(cls, project_path: Path) -> dict[str, dict[str, float]]:
+        """Detect all DevOps tools and return categorized results."""
+        return {
+            "infrastructure": cls.detect_infrastructure_tools(project_path),
+            "observability": cls.detect_observability_tools(project_path),
+            "security": cls.detect_security_tools(project_path),
+        }
 
 
 # Placeholder classes for test compatibility
