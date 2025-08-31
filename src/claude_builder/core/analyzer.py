@@ -236,6 +236,35 @@ class ProjectAnalyzer:
         if any("test" in d for d in filesystem_info.directory_structure):
             env.testing_frameworks.append("generic_testing")
 
+        # P1.4: Add infrastructure/observability/security detection
+        try:
+            from claude_builder.analysis.detectors.infrastructure import (
+                InfrastructureDetector,
+            )
+
+            infra_detector = InfrastructureDetector(project_path)
+            infra_results = infra_detector.detect()
+
+            env.infrastructure_as_code = infra_results.get("infrastructure_as_code", [])
+            env.orchestration_tools = infra_results.get("orchestration_tools", [])
+            env.secrets_management = infra_results.get("secrets_management", [])
+            env.observability = infra_results.get("observability", [])
+            env.security_tools = infra_results.get("security_tools", [])
+        except Exception:
+            pass
+
+        # P1.4.4: Add MLOps/data pipeline detection
+        try:
+            from claude_builder.analysis.detectors.mlops import MLOpsDetector
+
+            mlops_detector = MLOpsDetector()
+            mlops_results = mlops_detector.detect(project_path)
+
+            env.data_pipeline = mlops_results.get("data_pipeline", [])
+            env.mlops_tools = mlops_results.get("mlops_tools", [])
+        except Exception:
+            pass
+
         return env
 
     def _determine_project_type(
