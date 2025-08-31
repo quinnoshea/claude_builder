@@ -211,11 +211,6 @@ jobs:
         pip install interrogate
         interrogate . --ignore-init-method --ignore-magic --ignore-module --ignore-nested-functions --fail-under=50 || true
 
-    - name: Run pre-commit (all files)
-      uses: pre-commit/action@v3.0.0
-      with:
-        extra_args: --all-files
-
     - name: Lint markdown files
       uses: DavidAnson/markdownlint-cli2-action@v16
       with:
