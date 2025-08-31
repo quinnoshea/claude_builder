@@ -689,6 +689,177 @@ class FilePatterns:
         },
     }
 
+    # MLOps patterns for data science and ML workflows
+    MLOPS_PATTERNS = {
+        # Data Version Control (DVC)
+        "dvc": {
+            ".dvc/",
+            "dvc.yaml",
+            "dvc.lock",
+            "dvc.yaml.lock",
+            "params.yaml",
+            "params.yml",
+            ".dvcignore",
+            "stages/",
+            "pipelines/",
+            "*.dvc",
+        },
+        # MLflow Experiment Tracking
+        "mlflow": {
+            "mlflow/",
+            "mlruns/",
+            "MLproject",
+            "conda.yaml",
+            "mlflow.yml",
+            "mlflow.yaml",
+            "mlflow-experiments/",
+            "experiments/",
+            "artifacts/",
+            "models/registry/",
+        },
+        # Apache Airflow
+        "airflow": {
+            "airflow/",
+            "dags/",
+            "airflow.cfg",
+            "airflow.yaml",
+            "airflow.yml",
+            "plugins/",
+            "logs/airflow/",
+            "webserver_config.py",
+            "docker-compose-airflow.yml",
+            "dag_*.py",
+        },
+        # Prefect Workflow Orchestration
+        "prefect": {
+            "prefect/",
+            ".prefect/",
+            "flows/",
+            "prefect.yaml",
+            "prefect.yml",
+            "deployments/",
+            "flow_*.py",
+            "prefect-flows/",
+            "prefect_config.py",
+            "blocks/",
+        },
+        # Dagster Data Platform
+        "dagster": {
+            "dagster/",
+            ".dagster/",
+            "workspace.yaml",
+            "workspace.yml",
+            "dagster.yaml",
+            "dagster.yml",
+            "assets/",
+            "jobs/",
+            "ops/",
+            "resources/",
+        },
+        # dbt Data Transformation
+        "dbt": {
+            "dbt_project.yml",
+            "dbt_project.yaml",
+            "models/",
+            "macros/",
+            "seeds/",
+            "snapshots/",
+            "analyses/",
+            "tests/",
+            "profiles.yml",
+            "packages.yml",
+        },
+        # Great Expectations Data Quality
+        "great_expectations": {
+            "great_expectations/",
+            ".great_expectations/",
+            "expectations/",
+            "checkpoints/",
+            "plugins/",
+            "uncommitted/",
+            "great_expectations.yml",
+            "great_expectations.yaml",
+            "expectation_suites/",
+            "validations/",
+        },
+        # Kubeflow ML Platform
+        "kubeflow": {
+            "kubeflow/",
+            ".kubeflow/",
+            "pipeline.yaml",
+            "pipeline.yml",
+            "kfp/",
+            "pipelines/",
+            "components/",
+            "katib/",
+            "training/",
+            "serving/",
+        },
+        # Seldon Core ML Deployment
+        "seldon": {
+            "seldon/",
+            "seldon-deployments/",
+            "seldon-core/",
+            "SeldonDeployment.yaml",
+            "SeldonDeployment.yml",
+            "seldon_models/",
+            "model.py",
+            "seldon-config/",
+            "seldon_deployment_*.yaml",
+        },
+        # BentoML Model Serving
+        "bentoml": {
+            "bentoml/",
+            "bentofile.yaml",
+            "bentofile.yml",
+            "service.py",
+            "models/",
+            "apis/",
+            "bentos/",
+            "bento_config.py",
+            "bento_service.py",
+            "bento.yaml",
+        },
+        # Feast Feature Store
+        "feast": {
+            "feast/",
+            ".feast/",
+            "feature_store.yaml",
+            "feature_store.yml",
+            "feature_repo/",
+            "features/",
+            "data_sources/",
+            "feast_config.py",
+            "feature_definitions/",
+            "feast.py",
+        },
+        # Jupyter Notebooks & Lab
+        "notebooks": {
+            "notebooks/",
+            "*.ipynb",
+            ".jupyter/",
+            "jupyter/",
+            "lab/",
+            "jupyter_config.py",
+            "jupyter_lab_config.py",
+            "kernels/",
+            "extensions/",
+            "nbconfig/",
+        },
+        # Kedro ML Pipeline
+        "kedro": {
+            ".kedro/",
+            "kedro/",
+            "kedro_config.yml",
+            "kedro.yml",
+            "catalog.yml",
+            "parameters.yml",
+            # Common Kedro layout directories (kept for context; require strong indicator too)
+            "conf/",
+            "src/",
+        },
+    }
+
     # Framework detection patterns
     FRAMEWORK_PATTERNS = {
         "django": {"manage.py", "django/", "settings.py"},
@@ -894,12 +1065,46 @@ class FilePatterns:
         return detected
 
     @classmethod
+    def detect_mlops_tools(cls, project_path: Path) -> dict[str, float]:
+        """Detect MLOps tools based on file patterns.
+
+        Scoring mirrors other detectors:
+        - Directory pattern: +5.0 (strongest indicator)
+        - Glob pattern: +4.0
+        - Exact file match: +3.0
+        """
+        detected: dict[str, float] = {}
+
+        for tool, patterns in cls.MLOPS_PATTERNS.items():
+            score = 0.0
+
+            for pattern in patterns:
+                if "/" in pattern:
+                    # Directory or path pattern
+                    if (project_path / pattern.rstrip("/")).exists():
+                        score += 5.0
+                elif "*" in pattern:
+                    # Glob pattern - search recursively
+                    if any(project_path.rglob(pattern)):
+                        score += 4.0
+                else:
+                    # Exact file match
+                    if (project_path / pattern).exists():
+                        score += 3.0
+
+            if score > 0:
+                detected[tool] = score
+
+        return detected
+
+    @classmethod
     def detect_all_devops_tools(cls, project_path: Path) -> dict[str, dict[str, float]]:
         """Detect all DevOps tools and return categorized results."""
         return {
             "infrastructure": cls.detect_infrastructure_tools(project_path),
             "observability": cls.detect_observability_tools(project_path),
             "security": cls.detect_security_tools(project_path),
+            "mlops": cls.detect_mlops_tools(project_path),
         }
 
 
