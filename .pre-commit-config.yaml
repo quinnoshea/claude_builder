@@ -49,5 +49,7 @@ repos:
     rev: v0.42.0
     hooks:
       - id: markdownlint
-        args: [--disable, MD013, --disable, MD033]
+        # Enforce line length (MD013) in pre-commit to align with CI
+        # Allow inline HTML (MD033) for template docs
+        args: [--disable, MD033]
         exclude: ^src/claude_builder/templates/

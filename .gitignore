@@ -56,6 +56,9 @@ junit.xml
 .pytest_cache/
 cover/
 
+# Local agent worktrees and logs (not for version control)
+.code/
+
 # Security and analysis reports
 bandit-report.json
 safety-report.json

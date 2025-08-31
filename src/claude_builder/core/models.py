@@ -102,6 +102,14 @@ class DevelopmentEnvironment:
     containerization: List[str] = field(default_factory=list)
     databases: List[str] = field(default_factory=list)
     documentation_tools: List[str] = field(default_factory=list)
+    # Phase 1 additions (P1.3): DevOps/MLOps facets
+    infrastructure_as_code: List[str] = field(default_factory=list)
+    orchestration_tools: List[str] = field(default_factory=list)
+    secrets_management: List[str] = field(default_factory=list)
+    observability: List[str] = field(default_factory=list)
+    data_pipeline: List[str] = field(default_factory=list)
+    mlops_tools: List[str] = field(default_factory=list)
+    security_tools: List[str] = field(default_factory=list)
 
 
 @dataclass

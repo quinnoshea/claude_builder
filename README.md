@@ -142,6 +142,26 @@ Recommended: terraform-specialist, ci-pipeline-engineer, security-auditor
 Recommended: kubernetes-operator, helm-specialist, observability-engineer
 ```
 
+#### New: Infrastructure and MLOps Detection
+
+The analyzer now populates additional fields on `DevelopmentEnvironment` so
+downstream docs and tooling can reason about your stack:
+
+- `infrastructure_as_code`: terraform, pulumi, cloudformation, ansible,
+  docker, packer, …
+- `orchestration_tools`: kubernetes, helm, nomad, docker (compose)
+- `secrets_management`: vault, sops
+- `observability`: prometheus, grafana, opentelemetry, jaeger, elasticsearch
+- `security_tools`: tfsec, checkov, semgrep, snyk, trivy, opa
+- `data_pipeline`: airflow, prefect, dagster, dbt, dvc, great_expectations
+- `mlops_tools`: mlflow, feast, kubeflow, bentoml
+  (and notebooks when ML signals are present)
+
+Each tool is scored by presence of files/dirs/globs (dir=+5, glob=+4, file=+3)
+and can be bucketed as `high` (≥12), `medium` (≥8), or `low` (>0) confidence.
+Detection is non‑intrusive; we only check for expected files and directories and
+never read secrets.
+
 #### Agent System Foundation
 
 - **40+ Specialized Agents** with intelligent project-based selection
