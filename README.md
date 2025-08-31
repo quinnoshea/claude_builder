@@ -122,7 +122,7 @@ guidance for:
 - CI/CD: Common pipeline configs (GitHub Actions, GitLab CI, Jenkins,
   CircleCI, Azure Pipelines, Bitbucket Pipelines)
 - Observability: Prometheus, Grafana, OpenTelemetry
- - MLOps: DVC, MLflow, Airflow, Prefect, dbt, Great Expectations,
+- MLOps: DVC, MLflow, Airflow, Prefect, dbt, Great Expectations,
    Kubeflow, Feast, Kedro (initial detection only; confidence varies)
 
 What this means right now:
