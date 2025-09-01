@@ -103,6 +103,14 @@ class AgentRegistry:
         self._load_language_mappings()
         self._load_framework_mappings()
         self._load_domain_mappings()
+        # Optionally load DevOps agents (P2.1) without introducing a hard dependency
+        try:
+            from claude_builder.agents.registry import DevOpsAgents  # type: ignore
+            DevOpsAgents.register(self)
+        except Exception:
+            # If optional registry is unavailable, continue without failure
+            pass
+        self._load_devops_agents()
 
     def _load_standard_agents(self) -> None:
         """Load standard awesome-claude-code-subagents."""
@@ -321,6 +329,15 @@ class AgentRegistry:
                 "data-pipeline-architect",
             ],
         }
+
+    def _load_devops_agents(self) -> None:
+        """Load DevOps agents if available."""
+        try:
+            from claude_builder.agents.registry import DevOpsAgents
+            DevOpsAgents.register(self)
+        except ImportError:
+            # DevOps agents not available, continue without them
+            pass
 
     def get_agent(self, name: str) -> Optional[AgentInfo]:
         """Get agent by name."""
