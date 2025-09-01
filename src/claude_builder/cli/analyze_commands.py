@@ -56,6 +56,16 @@ def analyze() -> None:
 @click.option(
     "--include-suggestions", is_flag=True, help="Include improvement suggestions"
 )
+@click.option(
+    "--infrastructure",
+    is_flag=True,
+    help="Show detailed Infrastructure/IaC, orchestration, observability, security",
+)
+@click.option(
+    "--mlops",
+    is_flag=True,
+    help="Show detailed MLOps/data pipeline tools and signals",
+)
 @click.option("--verbose", "-v", count=True, help="Verbose output")
 def project(project_path: str, **options: Any) -> None:
     """Analyze a project directory."""
@@ -64,6 +74,8 @@ def project(project_path: str, **options: Any) -> None:
     output_format = options.get("output_format", "table")
     confidence_threshold = options.get("confidence_threshold", 0)
     include_suggestions = options.get("include_suggestions", False)
+    show_infra = options.get("infrastructure", False)
+    show_mlops = options.get("mlops", False)
     verbose = options.get("verbose", 0)
 
     try:
@@ -92,7 +104,11 @@ def project(project_path: str, **options: Any) -> None:
             _display_analysis_yaml(analysis, include_suggestions=include_suggestions)
         else:
             _display_analysis_table(
-                analysis, include_suggestions=include_suggestions, verbose=verbose
+                analysis,
+                include_suggestions=include_suggestions,
+                verbose=verbose,
+                show_infrastructure=show_infra,
+                show_mlops=show_mlops,
             )
 
         # Save to file if requested
@@ -109,7 +125,12 @@ def project(project_path: str, **options: Any) -> None:
 
 
 def _display_analysis_table(
-    analysis: Any, *, include_suggestions: bool = False, verbose: int = 0
+    analysis: Any,
+    *,
+    include_suggestions: bool = False,
+    verbose: int = 0,
+    show_infrastructure: bool = False,
+    show_mlops: bool = False,
 ) -> None:
     """Display analysis in table format."""
     _show_analysis_summary(analysis)
@@ -121,6 +142,10 @@ def _display_analysis_table(
         _show_filesystem_table(analysis)
 
     _show_dev_environment_table(analysis, show_verbose=verbose > 0)
+    if show_infrastructure:
+        _show_infrastructure_table(analysis)
+    if show_mlops:
+        _show_mlops_table(analysis)
     _show_domain_table(analysis)
     _show_warnings_and_suggestions(analysis, include_suggestions=include_suggestions)
 
@@ -256,7 +281,85 @@ def _show_dev_environment_table(analysis: Any, *, show_verbose: bool) -> None:
     if analysis.dev_environment.databases:
         dev_table.add_row("Databases", ", ".join(analysis.dev_environment.databases))
 
+    # New DevOps/MLOps categories (shown compactly when present)
+    de = analysis.dev_environment
+    # Use getattr for forward-compatibility with older analyzers
+    infra = getattr(de, "infrastructure_as_code", []) or []
+    orch = getattr(de, "orchestration_tools", []) or []
+    secrets = getattr(de, "secrets_management", []) or []
+    observ = getattr(de, "observability", []) or []
+    security = getattr(de, "security_tools", []) or []
+    data_pipeline = getattr(de, "data_pipeline", []) or []
+    mlops_tools = getattr(de, "mlops_tools", []) or []
+
+    if infra:
+        dev_table.add_row("Infrastructure as Code", ", ".join(infra))
+    if orch:
+        dev_table.add_row("Orchestration", ", ".join(orch))
+    if secrets:
+        dev_table.add_row("Secrets Management", ", ".join(secrets))
+    if observ:
+        dev_table.add_row("Observability", ", ".join(observ))
+    if security:
+        dev_table.add_row("Security Tools", ", ".join(security))
+    if data_pipeline:
+        dev_table.add_row("Data Pipeline", ", ".join(data_pipeline))
+    if mlops_tools:
+        dev_table.add_row("MLOps Tools", ", ".join(mlops_tools))
+
     console.print(dev_table)
+
+
+def _show_infrastructure_table(analysis: Any) -> None:
+    """Show detailed infrastructure/IaC and platform tools."""
+    de = analysis.dev_environment
+    infra = getattr(de, "infrastructure_as_code", []) or []
+    orch = getattr(de, "orchestration_tools", []) or []
+    secrets = getattr(de, "secrets_management", []) or []
+    observ = getattr(de, "observability", []) or []
+    security = getattr(de, "security_tools", []) or []
+
+    # Only render if at least one category has data
+    if not any([infra, orch, secrets, observ, security]):
+        return
+
+    tbl = Table(title="Infrastructure & Platform Details")
+    tbl.add_column("Category", style="cyan")
+    tbl.add_column("Tools", style="green")
+
+    if infra:
+        tbl.add_row("Infrastructure as Code", ", ".join(infra))
+    if orch:
+        tbl.add_row("Orchestration Platforms", ", ".join(orch))
+    if secrets:
+        tbl.add_row("Secrets Management", ", ".join(secrets))
+    if observ:
+        tbl.add_row("Observability", ", ".join(observ))
+    if security:
+        tbl.add_row("Security & Scanners", ", ".join(security))
+
+    console.print(tbl)
+
+
+def _show_mlops_table(analysis: Any) -> None:
+    """Show detailed MLOps/data pipeline tools."""
+    de = analysis.dev_environment
+    data_pipeline = getattr(de, "data_pipeline", []) or []
+    mlops_tools = getattr(de, "mlops_tools", []) or []
+
+    if not any([data_pipeline, mlops_tools]):
+        return
+
+    tbl = Table(title="MLOps & Data Pipeline Details")
+    tbl.add_column("Category", style="cyan")
+    tbl.add_column("Tools", style="green")
+
+    if data_pipeline:
+        tbl.add_row("Data Pipeline", ", ".join(data_pipeline))
+    if mlops_tools:
+        tbl.add_row("MLOps Tools", ", ".join(mlops_tools))
+
+    console.print(tbl)
 
 
 def _show_domain_table(analysis: Any) -> None:
@@ -353,6 +456,22 @@ def _analysis_to_dict(
             "containerization": analysis.dev_environment.containerization,
             "databases": analysis.dev_environment.databases,
             "documentation_tools": analysis.dev_environment.documentation_tools,
+            # New DevOps/MLOps fields (present when analyzer supports them)
+            "infrastructure_as_code": getattr(
+                analysis.dev_environment, "infrastructure_as_code", []
+            ),
+            "orchestration_tools": getattr(
+                analysis.dev_environment, "orchestration_tools", []
+            ),
+            "secrets_management": getattr(
+                analysis.dev_environment, "secrets_management", []
+            ),
+            "observability": getattr(analysis.dev_environment, "observability", []),
+            "security_tools": getattr(
+                analysis.dev_environment, "security_tools", []
+            ),
+            "data_pipeline": getattr(analysis.dev_environment, "data_pipeline", []),
+            "mlops_tools": getattr(analysis.dev_environment, "mlops_tools", []),
         },
         "filesystem_info": {
             "total_files": analysis.filesystem_info.total_files,
