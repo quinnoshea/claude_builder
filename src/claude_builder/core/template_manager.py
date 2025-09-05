@@ -180,8 +180,12 @@ class ModernTemplateManager:
         """
         if self.community_manager is None:
             return []
-        raw = self.community_manager.list_available_templates(
-            include_installed=include_installed, include_community=include_community
+        from typing import Any, cast, List as TList
+        raw: TList[Any] = cast(
+            TList[Any],
+            self.community_manager.list_available_templates(
+                include_installed=include_installed, include_community=include_community
+            ),
         )
         results: List[CommunityTemplate] = []
         for item in raw:
@@ -221,7 +225,10 @@ class ModernTemplateManager:
         """Search for templates matching query and project analysis."""
         if self.community_manager is None:
             return []
-        raw = self.community_manager.search_templates(query, project_analysis)
+        from typing import Any, cast, List as TList
+        raw: TList[Any] = cast(
+            TList[Any], self.community_manager.search_templates(query, project_analysis)
+        )
         results: List[CommunityTemplate] = []
         for item in raw:
             if isinstance(item, CommunityTemplate):
@@ -265,18 +272,24 @@ class ModernTemplateManager:
         self, name: str, project_path: Path, template_config: Dict[str, Any]
     ) -> ValidationResult:
         """Create a custom template from existing project."""
+        if self.community_manager is None:
+            return ValidationResult(is_valid=False, errors=["Community templates unavailable"])
         return self.community_manager.create_custom_template(
             name, project_path, template_config
         )
 
     def get_template_info(self, template_name: str) -> Optional[CommunityTemplate]:
         """Get detailed information about a template."""
+        if self.community_manager is None:
+            return None
         return self.community_manager.get_template_info(template_name)
 
     # Validation methods (delegated to ComprehensiveTemplateValidator)
 
     def validate_template_directory(self, template_path: Path) -> ValidationResult:
         """Validate a template directory."""
+        if self.validator is None:
+            return ValidationResult(is_valid=True)
         return self.validator.validate_template(template_path)
 
     # Legacy template methods for backward compatibility

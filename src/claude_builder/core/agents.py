@@ -821,7 +821,7 @@ class Agent:
         self.capabilities = kwargs.get("capabilities", [])
         self.config = kwargs.get("config", {"timeout": 300})
         self.state = "initialized"
-        self.execution_context = {}
+        self.execution_context: Dict[str, Any] = {}
 
     def execute(self, task: str) -> str:
         """Placeholder execute method."""
@@ -1254,15 +1254,16 @@ class AgentCoordinator:
         # Mock implementation for test compatibility
         return True
 
-    def get_messages_for_agent(self, agent: Any) -> List:
+    def get_messages_for_agent(self, agent: Any) -> List[Any]:
         """Get messages for specific agent (test compatibility)."""
         return ["mock message"]
 
-    def determine_execution_order(self, workflow: Any) -> List:
+    def determine_execution_order(self, workflow: Any) -> List[Any]:
         """Determine execution order for workflow (test compatibility)."""
-        return workflow.agents if hasattr(workflow, "agents") else []
+        from typing import cast
+        return cast(List[Any], workflow.agents) if hasattr(workflow, "agents") else []
 
-    def group_for_parallel_execution(self, workflow: Any) -> Dict:
+    def group_for_parallel_execution(self, workflow: Any) -> Dict[str, List[Any]]:
         """Group agents for parallel execution (test compatibility)."""
         return (
             {"group1": workflow.agents[:2], "group2": workflow.agents[2:]}
@@ -1270,9 +1271,10 @@ class AgentCoordinator:
             else {}
         )
 
-    def resolve_dependencies(self, workflow: Any) -> List:
+    def resolve_dependencies(self, workflow: Any) -> List[Any]:
         """Resolve dependencies for workflow (test compatibility)."""
-        return workflow.agents if hasattr(workflow, "agents") else []
+        from typing import cast
+        return cast(List[Any], workflow.agents) if hasattr(workflow, "agents") else []
 
 
 class AgentManager:

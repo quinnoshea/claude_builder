@@ -338,10 +338,10 @@ class TestFrameworkInfo:
 class AnalysisResult:
     """Analysis result model for test compatibility."""
 
-    project_info: Optional["ProjectInfo"] = None
-    frameworks: List["TestFrameworkInfo"] = field(default_factory=list)
-    dependencies: List["DependencyInfo"] = field(default_factory=list)
-    file_structure: Optional["FileStructure"] = None
+    project_info: Optional["ProjectInfo" | Dict[str, Any]] = None
+    frameworks: List["TestFrameworkInfo" | Dict[str, Any]] = field(default_factory=list)
+    dependencies: List["DependencyInfo" | Dict[str, Any]] = field(default_factory=list)
+    file_structure: Optional["FileStructure" | Dict[str, Any]] = None
     analysis_timestamp: Optional[Any] = None
     success: bool = True
     confidence: float = 0.8
