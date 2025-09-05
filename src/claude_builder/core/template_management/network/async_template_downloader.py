@@ -12,7 +12,7 @@ import tempfile
 from pathlib import Path
 from typing import Any, AsyncGenerator, Dict, List, Optional
 
-import aiofiles  # type: ignore[import-untyped]
+import aiofiles
 import aiohttp
 
 from claude_builder.utils.async_performance import (

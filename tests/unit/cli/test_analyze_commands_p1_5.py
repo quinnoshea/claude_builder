@@ -13,7 +13,11 @@ from claude_builder.core.analyzer import (
     ProjectAnalysis,
 )
 from claude_builder.core.models import DevelopmentEnvironment, FileSystemInfo
-from claude_builder.models.enums import ArchitecturePattern, ComplexityLevel, ProjectType
+from claude_builder.models.enums import (
+    ArchitecturePattern,
+    ComplexityLevel,
+    ProjectType,
+)
 
 
 def _base_mock_analysis() -> ProjectAnalysis:
@@ -53,7 +57,7 @@ def test_infrastructure_flag_prints_details(mock_analyzer_class, tmp_path):
     mock_analyzer_class.return_value = mock_analyzer
 
     runner = CliRunner()
-    result = runner.invoke(project, [str(tmp_path), "--infrastructure"]) 
+    result = runner.invoke(project, [str(tmp_path), "--infrastructure"])
     assert result.exit_code == 0
     assert "Infrastructure & Platform Details" in result.output
     assert "Infrastructure as Code" in result.output
@@ -71,7 +75,7 @@ def test_mlops_flag_prints_details(mock_analyzer_class, tmp_path):
     mock_analyzer_class.return_value = mock_analyzer
 
     runner = CliRunner()
-    result = runner.invoke(project, [str(tmp_path), "--mlops"]) 
+    result = runner.invoke(project, [str(tmp_path), "--mlops"])
     assert result.exit_code == 0
     assert "MLOps & Data Pipeline Details" in result.output
     assert "Data Pipeline" in result.output
@@ -94,4 +98,3 @@ def test_dev_environment_table_includes_new_rows(mock_analyzer_class, tmp_path):
     assert "Development Environment" in result.output
     assert "Infrastructure as Code" in result.output
     assert "MLOps Tools" in result.output
-

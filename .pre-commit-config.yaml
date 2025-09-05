@@ -41,7 +41,7 @@ repos:
     rev: v1.11.2
     hooks:
       - id: mypy
-        additional_dependencies: [types-toml, types-click, types-PyYAML]
+        additional_dependencies: [types-toml, types-click, types-PyYAML, types-aiofiles]
         args: [--config-file=pyproject.toml, --ignore-missing-imports]
         exclude: ^(tests/|src/claude_builder/templates/|scripts/)
 

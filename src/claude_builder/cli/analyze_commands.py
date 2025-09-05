@@ -467,9 +467,7 @@ def _analysis_to_dict(
                 analysis.dev_environment, "secrets_management", []
             ),
             "observability": getattr(analysis.dev_environment, "observability", []),
-            "security_tools": getattr(
-                analysis.dev_environment, "security_tools", []
-            ),
+            "security_tools": getattr(analysis.dev_environment, "security_tools", []),
             "data_pipeline": getattr(analysis.dev_environment, "data_pipeline", []),
             "mlops_tools": getattr(analysis.dev_environment, "mlops_tools", []),
         },
