@@ -22,6 +22,7 @@ class ProjectType(Enum):
     """Detected project types."""
 
     WEB_APPLICATION = "web_application"
+    WEB_FRONTEND = "web_frontend"  # Add for test compatibility
     API_SERVICE = "api_service"
     CLI_TOOL = "cli_tool"
     LIBRARY = "library"
@@ -42,6 +43,7 @@ class ComplexityLevel(Enum):
     MODERATE = "moderate"
     MEDIUM = "moderate"  # Alias for test compatibility
     COMPLEX = "complex"
+    HIGH = "complex"  # Alias for test compatibility
     ENTERPRISE = "enterprise"
 
 
@@ -68,6 +70,8 @@ class LanguageInfo:
     confidence: float = 0.0
     file_counts: Dict[str, int] = field(default_factory=dict)
     total_lines: Dict[str, int] = field(default_factory=dict)
+    # Optional version information keyed by language name (e.g., {"python": "3.11"})
+    version_info: Dict[str, str] = field(default_factory=dict)
 
 
 @dataclass
@@ -79,6 +83,8 @@ class FrameworkInfo:
     confidence: float = 0.0
     version: Optional[str] = None
     config_files: List[str] = field(default_factory=list)
+    # Arbitrary details map (e.g., {"web_framework": True, "dependencies": [...]})
+    details: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -143,6 +149,9 @@ class ProjectAnalysis:
         default_factory=DevelopmentEnvironment
     )
     filesystem_info: FileSystemInfo = field(default_factory=FileSystemInfo)
+    # Convenience attributes commonly asserted in tests
+    build_system: Optional[str] = None
+    dependencies: List[str] = field(default_factory=list)
 
     # Analysis metadata
     analysis_confidence: float = 0.0
@@ -350,6 +359,69 @@ class AnalysisResult:
         # Auto-generate timestamp if not provided
         if self.analysis_timestamp is None:
             self.analysis_timestamp = datetime.now()
+
+        # Normalize project_info from dict
+        if isinstance(self.project_info, dict):
+            pi = self.project_info
+            self.project_info = ProjectInfo(
+                name=pi.get("name", "unknown"),
+                project_type=pi.get("project_type"),
+                framework=pi.get("framework"),
+                description=pi.get("description"),
+                version=pi.get("version"),
+                language_version=pi.get("language_version"),
+                main_directory=pi.get("main_directory"),
+                path=pi.get("path", "."),
+                language=pi.get("language"),
+                dependencies=pi.get("dependencies", []),
+            )
+
+        # Normalize frameworks from dicts
+        normalized_frameworks: List["TestFrameworkInfo"] = []
+        for f in self.frameworks:
+            if isinstance(f, dict):
+                normalized_frameworks.append(
+                    TestFrameworkInfo(
+                        name=f.get("name", "unknown"),
+                        version=f.get("version"),
+                        category=f.get("category"),
+                        description=f.get("description"),
+                    )
+                )
+            else:
+                normalized_frameworks.append(f)
+        self.frameworks = normalized_frameworks
+
+        # Normalize dependencies from dicts
+        normalized_deps: List["DependencyInfo"] = []
+        for d in self.dependencies:
+            if isinstance(d, dict):
+                normalized_deps.append(
+                    DependencyInfo(
+                        name=d.get("name", "unknown"),
+                        version=d.get("version"),
+                        dependency_type=d.get("dependency_type", "runtime"),
+                        source=d.get("source"),
+                    )
+                )
+            else:
+                normalized_deps.append(d)
+        self.dependencies = normalized_deps
+
+        # Normalize file_structure
+        if isinstance(self.file_structure, dict):
+            fs = self.file_structure
+            self.file_structure = FileStructure(
+                path=fs.get("path", "."),
+                file_type=fs.get("file_type", "file"),
+                size=fs.get("size"),
+                language=fs.get("language"),
+                children=fs.get("children", []),
+                source_files=fs.get("source_files", []),
+                test_files=fs.get("test_files", []),
+                config_files=fs.get("config_files", []),
+                documentation_files=fs.get("documentation_files", []),
+            )
 
     def dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
