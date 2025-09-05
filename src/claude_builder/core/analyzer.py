@@ -94,7 +94,9 @@ class ProjectAnalyzer:
             # Surface dependency names when available
             try:
                 if isinstance(framework_info.details.get("dependencies"), list):
-                    analysis.dependencies = framework_info.details.get("dependencies", [])
+                    analysis.dependencies = framework_info.details.get(
+                        "dependencies", []
+                    )
             except Exception:
                 pass
 
@@ -1019,7 +1021,9 @@ class FrameworkDetector:
                 except (OSError, UnicodeDecodeError):
                     pass
 
-    def _check_npm_packages(self, project_path: Path, scores: Dict[str, float]) -> List[str]:
+    def _check_npm_packages(
+        self, project_path: Path, scores: Dict[str, float]
+    ) -> List[str]:
         """Check npm package.json for frameworks."""
         package_file = project_path / "package.json"
         deps_list: List[str] = []
@@ -1356,7 +1360,8 @@ class ComplexityAssessor:
         # Nested directory depth heuristic for large projects
         try:
             if filesystem_info.total_files > 100 and any(
-                isinstance(v, dict) and v.get("subdirs") for v in filesystem_info.directory_structure.values()
+                isinstance(v, dict) and v.get("subdirs")
+                for v in filesystem_info.directory_structure.values()
             ):
                 complexity_score += 1
         except Exception:

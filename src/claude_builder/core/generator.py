@@ -5,6 +5,8 @@ from pathlib import Path
 from string import Template
 from typing import Any, Dict, List, Optional
 
+from pydantic import ValidationError as PydanticValidationError
+
 from claude_builder.core.agents import UniversalAgentSystem
 from claude_builder.core.models import (
     GeneratedContent,
@@ -12,7 +14,6 @@ from claude_builder.core.models import (
     TemplateRequest,
 )
 from claude_builder.core.template_manager import CoreTemplateManager
-from pydantic import ValidationError as PydanticValidationError
 from claude_builder.utils.exceptions import GenerationError
 
 
@@ -86,9 +87,7 @@ class DocumentGenerator:
             mapping = (self.config or {}).get("custom_template_mapping", {})
             mapped_name = mapping.get("CLAUDE.md")
             if mapped_name:
-                context = self.template_manager._create_context_from_analysis(
-                    analysis
-                )
+                context = self.template_manager._create_context_from_analysis(analysis)
                 content_raw = self.template_loader.load_template(mapped_name, "base")
                 files["CLAUDE.md"] = self.template_loader.substitute_variables(
                     content_raw, context
@@ -1133,12 +1132,16 @@ class TemplateLoader:
     # Simple variable tools expected by tests
     def extract_variables(self, template_content: str) -> set[str]:
         import re
+
         return set(re.findall(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}", template_content))
 
-    def substitute_variables(self, template_content: str, variables: Dict[str, Any]) -> str:
+    def substitute_variables(
+        self, template_content: str, variables: Dict[str, Any]
+    ) -> str:
         import re
 
         content = str(template_content)
+
         # Handle {{#if var}} ... {{/if}} blocks
         def repl(match: "re.Match[str]") -> str:
             key = match.group(1).strip()
@@ -1146,7 +1149,9 @@ class TemplateLoader:
             val = variables.get(key)
             return body if val else ""
 
-        content = re.sub(r"\{\{#if\s+([^}]+)\}\}(.*?)\{\{\/if\}\}", repl, content, flags=re.DOTALL)
+        content = re.sub(
+            r"\{\{#if\s+([^}]+)\}\}(.*?)\{\{\/if\}\}", repl, content, flags=re.DOTALL
+        )
 
         # Replace ${var} placeholders; missing vars -> empty string
         def var_repl(m: "re.Match[str]") -> str:

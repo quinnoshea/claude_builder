@@ -103,7 +103,6 @@ class AgentRegistry:
         self._load_language_mappings()
         self._load_framework_mappings()
         self._load_domain_mappings()
-<<<<<<< Updated upstream
         # Optionally load DevOps agents without introducing a hard dependency
         self._load_devops_agents()
 

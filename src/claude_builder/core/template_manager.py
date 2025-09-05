@@ -64,6 +64,7 @@ from claude_builder.core.template_manager_legacy import (
     TemplateVersion,
 )
 
+
 # Expose a simple capability flag used in tests to branch behavior
 MODULAR_COMPONENTS_AVAILABLE = True
 
@@ -190,7 +191,8 @@ class ModernTemplateManager:
                 try:
                     meta_dict = (
                         item.metadata.to_dict()  # type: ignore[attr-defined]
-                        if hasattr(item, "metadata") and hasattr(item.metadata, "to_dict")
+                        if hasattr(item, "metadata")
+                        and hasattr(item.metadata, "to_dict")
                         else {
                             "name": getattr(item, "name", "unknown"),
                             "version": getattr(item, "version", "1.0.0"),
@@ -228,7 +230,8 @@ class ModernTemplateManager:
                 try:
                     meta_dict = (
                         item.metadata.to_dict()  # type: ignore[attr-defined]
-                        if hasattr(item, "metadata") and hasattr(item.metadata, "to_dict")
+                        if hasattr(item, "metadata")
+                        and hasattr(item.metadata, "to_dict")
                         else {
                             "name": getattr(item, "name", "unknown"),
                             "version": getattr(item, "version", "1.0.0"),
@@ -239,7 +242,9 @@ class ModernTemplateManager:
                     metadata = TemplateMetadata(meta_dict)
                     results.append(CommunityTemplate(metadata))
                 except Exception:
-                    results.append(CommunityTemplate(TemplateMetadata({"name": "unknown"})))
+                    results.append(
+                        CommunityTemplate(TemplateMetadata({"name": "unknown"}))
+                    )
         return results
 
     def install_template(
@@ -247,13 +252,13 @@ class ModernTemplateManager:
     ) -> ValidationResult:
         """Install a community template."""
         if self.community_manager is None:
-            return ValidationResult(is_valid=False, errors=["Template not found"]) 
+            return ValidationResult(is_valid=False, errors=["Template not found"])
         return self.community_manager.install_template(template_id, force=force)
 
     def uninstall_template(self, template_name: str) -> ValidationResult:
         """Uninstall an installed template."""
         if self.community_manager is None:
-            return ValidationResult(is_valid=False, errors=["Template not installed"]) 
+            return ValidationResult(is_valid=False, errors=["Template not installed"])
         return self.community_manager.uninstall_template(template_name)
 
     def create_custom_template(
