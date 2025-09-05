@@ -6,8 +6,9 @@ Mapping/selection logic is deferred to P2.3.
 
 from typing import TYPE_CHECKING
 
-from claude_builder.core.models import AgentInfo
 from claude_builder.core.agents import AgentRole
+from claude_builder.core.models import AgentInfo
+
 
 if TYPE_CHECKING:  # Imported at type-check time only to avoid cycles
     from claude_builder.core.agents import AgentRegistry
@@ -206,4 +207,3 @@ class DevOpsAgents:
 
         for agent in agents_to_register:
             registry.register_agent(agent)
-

@@ -103,7 +103,8 @@ class AgentRegistry:
         self._load_language_mappings()
         self._load_framework_mappings()
         self._load_domain_mappings()
-        # Load DevOps agents (P2.1) without introducing a hard dependency
+<<<<<<< Updated upstream
+        # Optionally load DevOps agents without introducing a hard dependency
         self._load_devops_agents()
 
     def _load_standard_agents(self) -> None:
