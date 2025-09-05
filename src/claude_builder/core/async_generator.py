@@ -11,7 +11,7 @@ from pathlib import Path
 from string import Template as StringTemplate
 from typing import Any, Dict, List, Optional
 
-import aiofiles  # type: ignore[import-untyped]
+import aiofiles
 
 from claude_builder.core.agents import UniversalAgentSystem
 from claude_builder.core.models import (

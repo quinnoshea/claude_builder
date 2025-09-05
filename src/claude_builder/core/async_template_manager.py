@@ -509,7 +509,7 @@ class AsyncTemplateManager:
         async with performance_monitor.track_operation("save_template_content"):
             content = template.get("content", "# Empty template")
 
-            import aiofiles  # type: ignore[import-untyped]
+            import aiofiles
 
             async with aiofiles.open(template_file, "w", encoding="utf-8") as f:
                 await f.write(content)

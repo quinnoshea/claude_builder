@@ -1261,6 +1261,7 @@ class AgentCoordinator:
     def determine_execution_order(self, workflow: Any) -> List[Any]:
         """Determine execution order for workflow (test compatibility)."""
         from typing import cast
+
         return cast(List[Any], workflow.agents) if hasattr(workflow, "agents") else []
 
     def group_for_parallel_execution(self, workflow: Any) -> Dict[str, List[Any]]:
@@ -1274,6 +1275,7 @@ class AgentCoordinator:
     def resolve_dependencies(self, workflow: Any) -> List[Any]:
         """Resolve dependencies for workflow (test compatibility)."""
         from typing import cast
+
         return cast(List[Any], workflow.agents) if hasattr(workflow, "agents") else []
 
 
@@ -1348,7 +1350,7 @@ class AgentManager:
 class AgentWorkflow:
     """Placeholder AgentWorkflow class for test compatibility."""
 
-    def __init__(self, agents: List = None, project_analysis: Any = None):
+    def __init__(self, agents: Optional[List] = None, project_analysis: Any = None):
         self.agents: List[Agent] = agents or []
         self.project_analysis: Optional[Any] = project_analysis
         self.workflow_name = "default"

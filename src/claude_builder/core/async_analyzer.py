@@ -12,7 +12,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, AsyncGenerator, Dict, List, Optional, Union
 
-import aiofiles  # type: ignore[import-untyped]
+import aiofiles
 import toml
 
 from claude_builder.core.analyzer import (

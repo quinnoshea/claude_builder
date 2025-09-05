@@ -180,7 +180,10 @@ class ModernTemplateManager:
         """
         if self.community_manager is None:
             return []
-        from typing import Any, cast, List as TList
+        from typing import Any
+        from typing import List as TList
+        from typing import cast
+
         raw: TList[Any] = cast(
             TList[Any],
             self.community_manager.list_available_templates(
@@ -194,7 +197,7 @@ class ModernTemplateManager:
             else:
                 try:
                     meta_dict = (
-                        item.metadata.to_dict()  # type: ignore[attr-defined]
+                        item.metadata.to_dict()
                         if hasattr(item, "metadata")
                         and hasattr(item.metadata, "to_dict")
                         else {
@@ -225,7 +228,10 @@ class ModernTemplateManager:
         """Search for templates matching query and project analysis."""
         if self.community_manager is None:
             return []
-        from typing import Any, cast, List as TList
+        from typing import Any
+        from typing import List as TList
+        from typing import cast
+
         raw: TList[Any] = cast(
             TList[Any], self.community_manager.search_templates(query, project_analysis)
         )
@@ -236,7 +242,7 @@ class ModernTemplateManager:
             else:
                 try:
                     meta_dict = (
-                        item.metadata.to_dict()  # type: ignore[attr-defined]
+                        item.metadata.to_dict()
                         if hasattr(item, "metadata")
                         and hasattr(item.metadata, "to_dict")
                         else {
@@ -273,7 +279,9 @@ class ModernTemplateManager:
     ) -> ValidationResult:
         """Create a custom template from existing project."""
         if self.community_manager is None:
-            return ValidationResult(is_valid=False, errors=["Community templates unavailable"])
+            return ValidationResult(
+                is_valid=False, errors=["Community templates unavailable"]
+            )
         return self.community_manager.create_custom_template(
             name, project_path, template_config
         )
@@ -373,7 +381,7 @@ class ModernTemplateManager:
     def _find_community_template(self, template_id: str) -> Optional[CommunityTemplate]:
         """Find a specific template in community sources (backward compatibility)."""
         # Delegate to community manager
-        if hasattr(self.community_manager, "find_template"):
+        if self.community_manager and hasattr(self.community_manager, "find_template"):
             result = self.community_manager.find_template(template_id)
             if isinstance(result, CommunityTemplate):
                 return result

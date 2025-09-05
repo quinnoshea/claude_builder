@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -338,10 +338,14 @@ class TestFrameworkInfo:
 class AnalysisResult:
     """Analysis result model for test compatibility."""
 
-    project_info: Optional["ProjectInfo" | Dict[str, Any]] = None
-    frameworks: List["TestFrameworkInfo" | Dict[str, Any]] = field(default_factory=list)
-    dependencies: List["DependencyInfo" | Dict[str, Any]] = field(default_factory=list)
-    file_structure: Optional["FileStructure" | Dict[str, Any]] = None
+    project_info: Optional[Union["ProjectInfo", Dict[str, Any]]] = None
+    frameworks: List[Union["TestFrameworkInfo", Dict[str, Any]]] = field(
+        default_factory=list
+    )
+    dependencies: List[Union["DependencyInfo", Dict[str, Any]]] = field(
+        default_factory=list
+    )
+    file_structure: Optional[Union["FileStructure", Dict[str, Any]]] = None
     analysis_timestamp: Optional[Any] = None
     success: bool = True
     confidence: float = 0.8
@@ -390,7 +394,7 @@ class AnalysisResult:
                 )
             else:
                 normalized_frameworks.append(f)
-        self.frameworks = normalized_frameworks
+        self.frameworks = normalized_frameworks  # type: ignore[assignment]
 
         # Normalize dependencies from dicts
         normalized_deps: List["DependencyInfo"] = []
@@ -406,7 +410,7 @@ class AnalysisResult:
                 )
             else:
                 normalized_deps.append(d)
-        self.dependencies = normalized_deps
+        self.dependencies = normalized_deps  # type: ignore[assignment]
 
         # Normalize file_structure
         if isinstance(self.file_structure, dict):
@@ -426,11 +430,21 @@ class AnalysisResult:
     def dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
-            "project_info": self.project_info.dict() if self.project_info else None,
-            "frameworks": [f.dict() for f in self.frameworks],
-            "dependencies": [d.dict() for d in self.dependencies],
+            "project_info": (
+                self.project_info.dict()
+                if self.project_info and hasattr(self.project_info, "dict")
+                else None
+            ),
+            "frameworks": [
+                f.dict() if hasattr(f, "dict") else f for f in self.frameworks
+            ],
+            "dependencies": [
+                d.dict() if hasattr(d, "dict") else d for d in self.dependencies
+            ],
             "file_structure": (
-                self.file_structure.dict() if self.file_structure else None
+                self.file_structure.dict()
+                if self.file_structure and hasattr(self.file_structure, "dict")
+                else None
             ),
             "analysis_timestamp": (
                 str(self.analysis_timestamp) if self.analysis_timestamp else None
@@ -447,7 +461,17 @@ class AnalysisResult:
 
     def filter_dependencies(self, dependency_type: str) -> List["DependencyInfo"]:
         """Filter dependencies by type."""
-        return [d for d in self.dependencies if d.dependency_type == dependency_type]
+        from typing import cast
+
+        return cast(
+            List["DependencyInfo"],
+            [
+                d
+                for d in self.dependencies
+                if hasattr(d, "dependency_type")
+                and d.dependency_type == dependency_type
+            ],
+        )
 
 
 @dataclass

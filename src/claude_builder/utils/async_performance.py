@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any, AsyncGenerator, AsyncIterable, Callable, Dict, Optional, TypeVar
 from weakref import WeakSet
 
-import aiofiles  # type: ignore[import-untyped]
+import aiofiles
 import aiohttp
 import psutil
 
