@@ -3,7 +3,7 @@
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Tests](https://img.shields.io/badge/tests-511%20passing-brightgreen.svg)](https://github.com/quinnoshea/claude_builder/tree/main/tests)
+[![Tests](https://img.shields.io/badge/tests-941%20passing-brightgreen.svg)](https://github.com/quinnoshea/claude_builder/tree/main/tests)
 [![Development Status](https://img.shields.io/badge/status-core%20operational-green.svg)](https://github.com/quinnoshea/claude_builder)
 [![CI](https://github.com/quinnoshea/claude_builder/workflows/CI/badge.svg)](https://github.com/quinnoshea/claude_builder/actions)
 [![Codacy Badge](https://app.codacy.com/project/badge/Coverage/c0920529ab54462387f217498a4e01db)](https://app.codacy.com/gh/quinnoshea/claude_builder/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_coverage)
