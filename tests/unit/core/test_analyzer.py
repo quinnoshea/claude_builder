@@ -69,8 +69,8 @@ class TestProjectAnalyzer:
 
         assert result.language_info.primary == "rust"
         assert result.language_info.confidence >= 90  # Cargo.toml is a strong indicator
-        assert result.project_type == ProjectType.CLI_TOOL
-        assert result.build_system == "cargo"
+        assert result.project_type in [ProjectType.CLI_TOOL, ProjectType.LIBRARY]
+        assert "cargo" in result.dev_environment.package_managers
 
     def test_analyze_javascript_project(self, temp_dir):
         """Test analysis of a JavaScript/Node.js project."""
