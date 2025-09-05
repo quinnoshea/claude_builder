@@ -103,7 +103,13 @@ class AgentRegistry:
         self._load_language_mappings()
         self._load_framework_mappings()
         self._load_domain_mappings()
-        # Load DevOps agents (P2.1) without introducing a hard dependency
+        # Optionally load DevOps agents (P2.1) without introducing a hard dependency
+        try:
+            from claude_builder.agents.registry import DevOpsAgents  # type: ignore
+            DevOpsAgents.register(self)
+        except Exception:
+            # If optional registry is unavailable, continue without failure
+            pass
         self._load_devops_agents()
 
     def _load_standard_agents(self) -> None:
@@ -128,13 +134,6 @@ class AgentRegistry:
                     role=AgentRole.CORE.value,
                     description="Server-side architecture and API development",
                     use_cases=["API design", "business logic", "service architecture"],
-                    priority=1,
-                ),
-                "backend-architect": AgentInfo(
-                    name="backend-architect",
-                    role=AgentRole.CORE.value,
-                    description="Backend architecture and system design specialist",
-                    use_cases=["system architecture", "API design", "scalability"],
                     priority=1,
                 ),
                 "frontend-developer": AgentInfo(
@@ -208,13 +207,6 @@ class AgentRegistry:
                         "contract validation",
                     ],
                     priority=2,
-                ),
-                "api-designer": AgentInfo(
-                    name="api-designer",
-                    role=AgentRole.CORE.value,
-                    description="API design and specification specialist",
-                    use_cases=["API design", "OpenAPI specs", "REST architecture"],
-                    priority=1,
                 ),
                 "performance-benchmarker": AgentInfo(
                     name="performance-benchmarker",
@@ -310,8 +302,6 @@ class AgentRegistry:
         """Load domain-specific agent mappings."""
         self.domain_mappings = {
             "e_commerce": [
-                "backend-architect",
-                "api-designer",
                 "payment-specialist",
                 "inventory-expert",
                 "analytics-reporter",
@@ -344,7 +334,6 @@ class AgentRegistry:
         """Load DevOps agents if available."""
         try:
             from claude_builder.agents.registry import DevOpsAgents
-
             DevOpsAgents.register(self)
         except ImportError:
             # DevOps agents not available, continue without them
@@ -371,11 +360,8 @@ class AgentRegistry:
 class AgentSelector:
     """Selects appropriate agents based on project analysis."""
 
-    def __init__(
-        self, registry: Optional[AgentRegistry] = None, algorithm: str = "intelligent"
-    ) -> None:
+    def __init__(self, registry: Optional[AgentRegistry] = None) -> None:
         self.registry = registry or AgentRegistry()
-        self.selection_algorithm = algorithm  # Add for test compatibility
 
     def select_core_agents(self, analysis: ProjectAnalysis) -> List[AgentInfo]:
         """Select core agents based on language and framework."""
@@ -426,13 +412,8 @@ class AgentSelector:
             if domain in self.registry.domain_mappings:
                 domain_agents = self.registry.domain_mappings[domain]
                 for agent_name in domain_agents:
-                    # Get agent from registry if it exists
-                    if agent_name in self.registry._agents:
-                        agent = self.registry.get_agent(agent_name)
-                        if agent and agent not in agents:
-                            agents.append(agent)
-                    else:
-                        # Create domain agent if not in standard registry
+                    # Create domain agent if not in standard registry
+                    if agent_name not in self.registry._agents:
                         agent = self._create_domain_agent(agent_name, domain, analysis)
                         if agent:
                             agents.append(agent)
@@ -819,31 +800,10 @@ class Agent:
         self.role = role
         self.description = kwargs.get("description", "")
         self.capabilities = kwargs.get("capabilities", [])
-        self.config = kwargs.get("config", {"timeout": 300})
-        self.state = "initialized"
-        self.execution_context = {}
 
     def execute(self, task: str) -> str:
         """Placeholder execute method."""
         return f"Agent {self.name} would execute: {task}"
-
-    def has_capability(self, capability: str) -> bool:
-        """Check if agent has specific capability (test compatibility)."""
-        return capability in self.capabilities or capability.lower() in [
-            c.lower() for c in self.capabilities
-        ]
-
-    def calculate_compatibility(self, analysis: Any) -> float:
-        """Calculate compatibility score with project analysis (test compatibility)."""
-        # Mock compatibility calculation
-        if hasattr(analysis, "language_info") and analysis.language_info.primary:
-            if analysis.language_info.primary.lower() in self.name.lower():
-                return 0.9
-        return 0.5
-
-    def set_execution_context(self, context: dict) -> None:
-        """Set execution context for agent (test compatibility)."""
-        self.execution_context.update(context)
 
 
 class AgentCoordinator:
@@ -1243,37 +1203,6 @@ class AgentCoordinator:
 
         return results
 
-    def create_workflow(self, agents: List, analysis: Any) -> "AgentWorkflow":
-        """Create workflow from agents and analysis (test compatibility)."""
-        from claude_builder.core.agents import AgentWorkflow
-
-        return AgentWorkflow(agents, analysis)
-
-    def send_message(self, sender: Any, receiver: Any, message: str) -> bool:
-        """Send message between agents (test compatibility)."""
-        # Mock implementation for test compatibility
-        return True
-
-    def get_messages_for_agent(self, agent: Any) -> List:
-        """Get messages for specific agent (test compatibility)."""
-        return ["mock message"]
-
-    def determine_execution_order(self, workflow: Any) -> List:
-        """Determine execution order for workflow (test compatibility)."""
-        return workflow.agents if hasattr(workflow, "agents") else []
-
-    def group_for_parallel_execution(self, workflow: Any) -> Dict:
-        """Group agents for parallel execution (test compatibility)."""
-        return (
-            {"group1": workflow.agents[:2], "group2": workflow.agents[2:]}
-            if hasattr(workflow, "agents")
-            else {}
-        )
-
-    def resolve_dependencies(self, workflow: Any) -> List:
-        """Resolve dependencies for workflow (test compatibility)."""
-        return workflow.agents if hasattr(workflow, "agents") else []
-
 
 class AgentManager:
     """Main agent management and coordination system."""
@@ -1322,11 +1251,12 @@ class AgentManager:
 
     def create_workflow(self, agents: List[str]) -> "AgentWorkflow":
         """Create a workflow for the given agents."""
-        agent_objects = [Agent(name=agent) for agent in agents]
-        workflow = AgentWorkflow(agent_objects, None)
-        workflow.workflow_name = "project_workflow"
+        workflow = AgentWorkflow("project_workflow")
         for agent in agents:
             workflow.add_step(f"execute_{agent}")
+            # Create Agent objects for the workflow
+            agent_obj = Agent(name=agent)
+            workflow.agents.append(agent_obj)
         return workflow
 
     def create_workflow_for_project(self, project_analysis: Any) -> "AgentWorkflow":
@@ -1346,11 +1276,11 @@ class AgentManager:
 class AgentWorkflow:
     """Placeholder AgentWorkflow class for test compatibility."""
 
-    def __init__(self, agents: List = None, project_analysis: Any = None):
-        self.agents: List[Agent] = agents or []
-        self.project_analysis: Optional[Any] = project_analysis
-        self.workflow_name = "default"
+    def __init__(self, workflow_name: str):
+        self.workflow_name = workflow_name
         self.steps: List[str] = []
+        self.agents: List[Agent] = []
+        self.project_analysis: Optional[Any] = None
 
     def add_step(self, step: str) -> None:
         self.steps.append(step)

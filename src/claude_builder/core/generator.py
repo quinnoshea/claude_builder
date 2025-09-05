@@ -12,7 +12,6 @@ from claude_builder.core.models import (
     TemplateRequest,
 )
 from claude_builder.core.template_manager import CoreTemplateManager
-from pydantic import ValidationError as PydanticValidationError
 from claude_builder.utils.exceptions import GenerationError
 
 
@@ -27,10 +26,6 @@ class DocumentGenerator:
         self.config = config or {}
         self.template_manager = CoreTemplateManager()
         self.agent_system = UniversalAgentSystem()
-        # Test-compatibility: expose a template_loader facade
-        self.template_loader = TemplateLoader(
-            template_paths=self.config.get("template_paths")
-        )
 
     def generate(
         self, analysis: ProjectAnalysis, output_path: Path
@@ -70,9 +65,6 @@ class DocumentGenerator:
                 template_info=self._get_template_info(),
             )
 
-        except PydanticValidationError as e:
-            # Tests expect ValueError/TypeError/FileNotFoundError for invalid input
-            raise ValueError(str(e))
         except Exception as e:
             msg = f"{FAILED_TO_GENERATE_DOCUMENTATION}: {e}"
             raise GenerationError(msg)
@@ -82,32 +74,11 @@ class DocumentGenerator:
         files = {}
 
         try:
-            # If a custom mapping exists for CLAUDE.md, prefer it
-            mapping = (self.config or {}).get("custom_template_mapping", {})
-            mapped_name = mapping.get("CLAUDE.md")
-            if mapped_name:
-                context = self.template_manager._create_context_from_analysis(
-                    analysis
-                )
-                content_raw = self.template_loader.load_template(mapped_name, "base")
-                files["CLAUDE.md"] = self.template_loader.substitute_variables(
-                    content_raw, context
-                )
-            else:
-                # Generate CLAUDE.md using hierarchical template system
-                claude_content = self.template_manager.generate_from_analysis(
-                    analysis, template_name="base"
-                )
-                # Ensure build system visibility for tests (e.g., cargo)
-                lower = claude_content.lower()
-                build_mention = analysis.build_system or (
-                    analysis.dev_environment.package_managers[0]
-                    if analysis.dev_environment.package_managers
-                    else None
-                )
-                if build_mention and build_mention.lower() not in lower:
-                    claude_content += f"\n\nBuild system: {build_mention}\n"
-                files["CLAUDE.md"] = claude_content
+            # Generate CLAUDE.md using hierarchical template system
+            claude_content = self.template_manager.generate_from_analysis(
+                analysis, template_name="base"
+            )
+            files["CLAUDE.md"] = claude_content
 
         except Exception:
             # Fallback to default template if template system fails
@@ -1060,41 +1031,32 @@ ${uses_database == 'Yes' and '''
 class TemplateLoader:
     """Template loading and processing."""
 
-    def __init__(self, template_paths: Optional[List[str]] = None) -> None:
+    def __init__(self) -> None:
         self.template_manager = CoreTemplateManager()
-        self.template_paths: List[Path] = [Path(p) for p in (template_paths or [])]
 
-    def load_template(self, template_name: str, scope: Optional[str] = None) -> str:
+    def load_template(self, template_name: str) -> str:
         """Load a template by name."""
-        # Prefer explicit template_paths when provided
-        for base in self.template_paths:
-            for candidate in [base / template_name, base / f"{template_name}"]:
-                if candidate.exists():
-                    return candidate.read_text(encoding="utf-8")
-
-        # Synthetic known scopes for tests
-        if scope == "base":
-            return "# Base Template\nDefault content"
-        if scope and scope.startswith("languages/"):
-            lang = scope.split("/", 1)[1]
-            return f"# {lang.title()} Template\nLanguage: {lang}"
-        if scope and scope.startswith("frameworks/"):
-            fw = scope.split("/", 1)[1]
-            return f"# {fw.title()} Template\nFramework: {fw}"
-
-        # Fallback: consult manager for discovery, but don't raise if missing
         try:
-            available = self.template_manager.list_available_templates()
-            if isinstance(available, list) and template_name in available:
-                return (
-                    f"# Template: {template_name}\n\n"
-                    f"Template content for {template_name}"
-                )
-        except Exception:
-            pass
-
-        # Graceful fallback expected by tests
-        return ""
+            # Use the template manager's available method
+            templates = self.template_manager.list_available_templates()
+            if isinstance(templates, list):
+                if template_name in templates:
+                    return (
+                        f"# Template: {template_name}\n\n"
+                        f"Template content for {template_name}"
+                    )
+                msg = f"Template '{template_name}' not found"
+                raise GenerationError(msg)
+            if isinstance(templates, dict):  # type: ignore[unreachable]
+                if template_name in templates:
+                    return str(templates[template_name])
+                msg = f"Template '{template_name}' not found"
+                raise GenerationError(msg)
+            msg = f"Template '{template_name}' not found"
+            raise GenerationError(msg)
+        except Exception as e:
+            msg = f"{FAILED_TO_LOAD_TEMPLATE} '{template_name}': {e}"
+            raise GenerationError(msg)
 
     def load_templates(self, template_names: List[str]) -> Dict[str, str]:
         """Load multiple templates."""
@@ -1105,22 +1067,7 @@ class TemplateLoader:
 
     def list_available_templates(self) -> List[str]:
         """List all available templates."""
-        names: List[str] = []
-        for base in self.template_paths:
-            try:
-                for p in base.rglob("*.md"):
-                    names.append(p.name)
-            except Exception:
-                continue
-        # Include manager-provided entries if any
-        try:
-            mgr = self.template_manager.list_available_templates()
-            if isinstance(mgr, list):
-                names.extend([str(x) for x in mgr])
-        except Exception:
-            pass
-        # De-duplicate
-        return sorted({n for n in names})
+        return self.template_manager.list_available_templates()
 
     def validate_template(self, template_content: str) -> bool:
         """Validate template syntax."""
@@ -1129,33 +1076,6 @@ class TemplateLoader:
             return True
         except Exception:
             return False
-
-    # Simple variable tools expected by tests
-    def extract_variables(self, template_content: str) -> set[str]:
-        import re
-        return set(re.findall(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}", template_content))
-
-    def substitute_variables(self, template_content: str, variables: Dict[str, Any]) -> str:
-        import re
-
-        content = str(template_content)
-        # Handle {{#if var}} ... {{/if}} blocks
-        def repl(match: "re.Match[str]") -> str:
-            key = match.group(1).strip()
-            body = match.group(2)
-            val = variables.get(key)
-            return body if val else ""
-
-        content = re.sub(r"\{\{#if\s+([^}]+)\}\}(.*?)\{\{\/if\}\}", repl, content, flags=re.DOTALL)
-
-        # Replace ${var} placeholders; missing vars -> empty string
-        def var_repl(m: "re.Match[str]") -> str:
-            key = m.group(1)
-            val = variables.get(key)
-            return str(val) if val is not None else ""
-
-        content = re.sub(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}", var_repl, content)
-        return content
 
     def render_template_with_manager(
         self,
