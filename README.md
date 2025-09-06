@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Tests](https://img.shields.io/badge/tests-941%20passing-brightgreen.svg)](https://github.com/quinnoshea/claude_builder/tree/main/tests)
-[![Development Status](https://img.shields.io/badge/status-core%20operational-green.svg)](https://github.com/quinnoshea/claude_builder)
+[![Development Status](https://img.shields.io/badge/status-alpha-yellow.svg)](https://github.com/quinnoshea/claude_builder)
 [![CI](https://github.com/quinnoshea/claude_builder/workflows/CI/badge.svg)](https://github.com/quinnoshea/claude_builder/actions)
 [![Codacy Badge](https://app.codacy.com/project/badge/Coverage/c0920529ab54462387f217498a4e01db)](https://app.codacy.com/gh/quinnoshea/claude_builder/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_coverage)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/c0920529ab54462387f217498a4e01db)](https://app.codacy.com/gh/quinnoshea/claude_builder/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
@@ -18,13 +18,26 @@
 
 ## What Claude Builder Does
 
-**Currently:** Analyzes projects (15+ languages, 25+ frameworks) and generates
-intelligent `CLAUDE.md` and `AGENTS.md` files with project-specific agent
-recommendations.
+**Currently:** A Python CLI tool that analyzes project directories and generates
+template-based Claude Code configuration files. The core analysis engine works well
+for detecting languages and basic project structure, with a hierarchical template
+system for generating documentation.
 
-**In Development:** Working toward natural language triggers like "optimize this
-API" that automatically suggest relevant agent teams based on your project
-context.
+**Working Today:**
+- Detects 15+ languages: Python, JavaScript, TypeScript, Rust, Java, Go, C#, Ruby, PHP, and more
+- Framework detection for 25+ frameworks (Django, FastAPI, React, Vue, Spring Boot, etc.) via file patterns
+- DevOps/IaC detection: Terraform, Ansible, Kubernetes, Helm, Docker, Pulumi, CloudFormation
+- MLOps detection: MLflow, Airflow, Prefect, dbt, DVC, Kubeflow, Great Expectations
+- Security & observability tools: Prometheus, Grafana, tfsec, Semgrep, Trivy
+- Generates CLAUDE.md and AGENTS.md from templates
+- CLI with subcommands for analyze, generate, config, templates, git, health
+- 1,227 tests demonstrating various features (71.5% coverage per Codacy)
+
+**In Active Development:**
+- Enhanced agent recommendation algorithms
+- Natural language trigger generation
+- Community template repository integration
+- More sophisticated framework and pattern detection
 
 **Goal:** Reduce the overhead of discovering and coordinating Claude Code
 agents by providing smart defaults and context-aware suggestions.
@@ -80,18 +93,22 @@ base.md → python.md → fastapi.md → final output
 
 ## 🎯 Current Implementation Status
 
-### ✅ **OPERATIONAL** (Ready to use today)
+### ✅ **WORKING COMPONENTS**
 
-#### Project Analysis (good coverage for common stacks)
+#### Project Analysis Engine
 
-- **15+ Languages**: Python, Rust, JavaScript, TypeScript, Java, Go, PHP, C#,
-  Ruby, and more
-- **25+ Frameworks**: Django, FastAPI, React, Vue, Axum, Spring Boot, Express,
-  Next.js, Laravel
-- **Architecture Patterns**: MVC, microservices, domain-driven design,
-  serverless detection
-- **Intelligence Engine**: Dependency analysis, file pattern recognition,
-  confidence scoring
+- **Language Detection**: 15+ languages including Python, JavaScript, TypeScript, Rust, Java, Go, C#, Ruby, PHP
+  (file extension and pattern-based detection with confidence scoring)
+- **Framework Recognition**: 25+ frameworks - Django, FastAPI, React, Vue, Express, Next.js, Spring Boot, Laravel
+  (detects via characteristic files - package.json, requirements.txt, pom.xml, etc.)
+- **DevOps/IaC Detection**: Terraform, Ansible, Kubernetes, Helm, Docker, Pulumi, CloudFormation, Packer
+  (comprehensive pattern matching for infrastructure-as-code tools)
+- **MLOps Detection**: MLflow, Airflow, Prefect, dbt, DVC, Kubeflow, Great Expectations, Feast, Kedro
+  (detects data pipelines, ML lifecycle management, and orchestration tools)
+- **Security & Observability**: Prometheus, Grafana, OpenTelemetry, tfsec, Semgrep, Trivy, Checkov
+  (identifies monitoring, security scanning, and observability configurations)
+- **Confidence Scoring System**: Each detection includes confidence levels (high/medium/low)
+  based on pattern strength and file presence
 
 #### CLI with Rich UI
 
@@ -168,27 +185,22 @@ never read secrets.
 - **Team Composition Logic** for optimal agent combinations
 - **Git Integration** with agent environment versioning
 
-### 🔧 **IN ACTIVE DEVELOPMENT**
+### 🔧 **PARTIALLY IMPLEMENTED**
 
-#### Natural Language Trigger Generation
+#### Agent System Foundation
 
-- Intuitive phrase mapping to agent teams
-- Context-aware trigger customization
-- Workflow pattern automation
+- Basic agent recommendation logic exists in codebase
+- Agent selection based on project characteristics (needs refinement)
+- AGENTS.md template generation (functional but basic)
 
-#### Community Agent Repository Integration
+#### Git Integration Structure
 
-- Live agent scanning and capability indexing
-- Automatic updates from community repositories
-- Custom agent integration framework
+- GitIntegrationManager class implemented
+- Basic git operations scaffolding in place
+- Configuration for claude-mentions policy exists
+- Full functionality not yet complete
 
-#### Advanced Coordination Patterns
-
-- Multi-agent workflow orchestration
-- Intelligent handoff mechanisms
-- Adaptive team composition
-
-### 🎯 **PLANNED FEATURES** (In design/development)
+### 🎯 **PLANNED FEATURES** (Not yet started)
 
 #### Enhanced Natural Language Integration
 
@@ -229,17 +241,21 @@ claude-builder --help
 ### Basic Usage
 
 ```bash
-# Generate complete development environment for any project
-claude-builder /path/to/your/project
+# Note: The CLI structure expects: claude-builder [PROJECT_PATH] COMMAND [ARGS]
 
-# Preview what would be generated (safe mode)
-claude-builder /path/to/project --dry-run --verbose
+# Analyze a project
+claude-builder /path/to/project analyze
 
-# Generate with agent team optimization
-claude-builder /path/to/project --agents-only
+# Generate configuration files
+claude-builder /path/to/project generate
 
-# Advanced git integration
-claude-builder /path/to/project --git-exclude --claude-mentions=minimal
+# View available templates
+claude-builder /path/to/project templates list
+
+# Check configuration
+claude-builder /path/to/project config show
+
+# Note: Some advertised features like --dry-run, --agents-only may not be fully functional
 ```
 
 ### Instant Results
@@ -448,17 +464,19 @@ claude-builder ./project deploy "with security audit and performance testing"
 ### Running Tests
 
 ```bash
-# Core functionality tests (should pass)
+# Core functionality tests (134 tests passing)
 pytest tests/unit/core/ -v
 
-# Intelligence layer tests
-pytest tests/unit/intelligence/ -v
+# All unit tests
+pytest tests/unit/ -v
 
-# Advanced features (some in development)
-pytest tests/unit/advanced/ -v
+# Integration tests (if available)
+pytest tests/integration/ -v
 
-# Full test suite with coverage
+# Full test suite with coverage (1,227 total tests)
 pytest --cov=claude_builder --cov-report=term-missing
+
+# Note: Coverage shows ~71.5% on Codacy, ~29% locally due to configuration differences
 ```
 
 ### Code Quality & Standards
@@ -557,32 +575,37 @@ When contributing agent definitions or coordination patterns:
 
 ---
 
-## 📈 Success Stories & Impact
+## 📈 Project Status & Reality Check
 
-### Current Status
+### What's Actually Working
 
-- **Projects Supported**: 15+ languages, 25+ frameworks with good detection
-  accuracy
-- **Agent Suggestions**: Works well for common project types (Python web apps,
-  React SPAs, Rust CLI tools)
-- **Setup**: Automates the manual process of researching and configuring
-  Claude Code agents
-- **Community**: Growing set of templates and agent configurations
+- **Language Detection**: Reliably detects 15+ languages (Python, JS, TS, Rust, Java, Go, C#, Ruby, PHP, etc.)
+- **Framework Detection**: Identifies 25+ frameworks via file patterns (Django, React, Spring Boot, etc.)
+- **DevOps/IaC Detection**: Comprehensive detection of Terraform, Kubernetes, Docker, Ansible, and more
+- **MLOps Detection**: Recognizes MLflow, Airflow, DVC, dbt, and other data/ML tools
+- **Security & Observability**: Detects Prometheus, Grafana, security scanners, and monitoring tools
+- **Template Generation**: Successfully generates CLAUDE.md and AGENTS.md from templates
+- **CLI Structure**: Well-organized Click-based CLI with subcommands
+- **Test Suite**: 1,227 tests providing good coverage of intended functionality
 
-### User Experience
+### Current Limitations
 
-The tool helps reduce the initial setup overhead when starting to use Claude Code
-agents on a new project. Instead of manually researching which agents might be
-relevant and creating configuration files from scratch, claude-builder analyzes
-your project and provides educated suggestions based on what it detects.
+- **Agent Recommendations**: Basic logic exists but needs significant refinement
+- **Natural Language Triggers**: Planned but not yet implemented
+- **Community Integration**: Architecture planned but not built
+- **Git Integration**: Partial implementation, not fully functional
+- **Real-world Testing**: Limited production use, mostly development testing
 
-### Development Impact
+### Honest Assessment
 
-- Faster initial setup compared to manual agent discovery
-- Consistent agent configuration patterns across projects
-- Good starting point for teams new to Claude Code agents
-- **Seamless onboarding** for new team members through generated environments
-- **Consistent workflows** across diverse project types and team experience levels
+This is an **alpha-stage tool** that shows promise but needs more development. The core
+project analysis works well, and the template system is functional. However, the
+"intelligent" agent selection and natural language features described in various
+places are aspirational rather than fully implemented.
+
+If you're looking for a tool to automatically analyze your project and generate
+basic Claude Code configuration files, this can help. If you're expecting sophisticated
+AI-driven agent orchestration, that functionality doesn't exist yet.
 
 ---
 
