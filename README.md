@@ -24,16 +24,22 @@ for detecting languages and basic project structure, with a hierarchical templat
 system for generating documentation.
 
 **Working Today:**
-- Detects 15+ languages: Python, JavaScript, TypeScript, Rust, Java, Go, C#, Ruby, PHP, and more
-- Framework detection for 25+ frameworks (Django, FastAPI, React, Vue, Spring Boot, etc.) via file patterns
-- DevOps/IaC detection: Terraform, Ansible, Kubernetes, Helm, Docker, Pulumi, CloudFormation
-- MLOps detection: MLflow, Airflow, Prefect, dbt, DVC, Kubeflow, Great Expectations
+
+- Detects 15+ languages: Python, JavaScript, TypeScript, Rust, Java, Go, C#,
+  Ruby, PHP, and more
+- Framework detection for 25+ frameworks (Django, FastAPI, React, Vue, Spring
+  Boot, etc.) via file patterns
+- DevOps/IaC detection: Terraform, Ansible, Kubernetes, Helm, Docker, Pulumi,
+  CloudFormation
+- MLOps detection: MLflow, Airflow, Prefect, dbt, DVC, Kubeflow, Great
+  Expectations
 - Security & observability tools: Prometheus, Grafana, tfsec, Semgrep, Trivy
 - Generates CLAUDE.md and AGENTS.md from templates
 - CLI with subcommands for analyze, generate, config, templates, git, health
 - 1,227 tests demonstrating various features (71.5% coverage per Codacy)
 
 **In Active Development:**
+
 - Enhanced agent recommendation algorithms
 - Natural language trigger generation
 - Community template repository integration
@@ -97,18 +103,23 @@ base.md → python.md → fastapi.md → final output
 
 #### Project Analysis Engine
 
-- **Language Detection**: 15+ languages including Python, JavaScript, TypeScript, Rust, Java, Go, C#, Ruby, PHP
-  (file extension and pattern-based detection with confidence scoring)
-- **Framework Recognition**: 25+ frameworks - Django, FastAPI, React, Vue, Express, Next.js, Spring Boot, Laravel
-  (detects via characteristic files - package.json, requirements.txt, pom.xml, etc.)
-- **DevOps/IaC Detection**: Terraform, Ansible, Kubernetes, Helm, Docker, Pulumi, CloudFormation, Packer
-  (comprehensive pattern matching for infrastructure-as-code tools)
-- **MLOps Detection**: MLflow, Airflow, Prefect, dbt, DVC, Kubeflow, Great Expectations, Feast, Kedro
-  (detects data pipelines, ML lifecycle management, and orchestration tools)
-- **Security & Observability**: Prometheus, Grafana, OpenTelemetry, tfsec, Semgrep, Trivy, Checkov
-  (identifies monitoring, security scanning, and observability configurations)
-- **Confidence Scoring System**: Each detection includes confidence levels (high/medium/low)
-  based on pattern strength and file presence
+- **Language Detection**: 15+ languages including Python, JavaScript,
+  TypeScript, Rust, Java, Go, C#, Ruby, PHP (file extension and pattern-based
+  detection with confidence scoring)
+- **Framework Recognition**: 25+ frameworks - Django, FastAPI, React, Vue,
+  Express, Next.js, Spring Boot, Laravel (detects via characteristic files -
+  package.json, requirements.txt, pom.xml, etc.)
+- **DevOps/IaC Detection**: Terraform, Ansible, Kubernetes, Helm, Docker,
+  Pulumi, CloudFormation, Packer (comprehensive pattern matching for
+  infrastructure-as-code tools)
+- **MLOps Detection**: MLflow, Airflow, Prefect, dbt, DVC, Kubeflow, Great
+  Expectations, Feast, Kedro (detects data pipelines, ML lifecycle management,
+  and orchestration tools)
+- **Security & Observability**: Prometheus, Grafana, OpenTelemetry, tfsec,
+  Semgrep, Trivy, Checkov (identifies monitoring, security scanning, and
+  observability configurations)
+- **Confidence Scoring System**: Each detection includes confidence levels
+  (high/medium/low) based on pattern strength and file presence
 
 #### CLI with Rich UI
 
@@ -187,7 +198,7 @@ never read secrets.
 
 ### 🔧 **PARTIALLY IMPLEMENTED**
 
-#### Agent System Foundation
+#### Agent Configuration System
 
 - Basic agent recommendation logic exists in codebase
 - Agent selection based on project characteristics (needs refinement)
@@ -579,14 +590,21 @@ When contributing agent definitions or coordination patterns:
 
 ### What's Actually Working
 
-- **Language Detection**: Reliably detects 15+ languages (Python, JS, TS, Rust, Java, Go, C#, Ruby, PHP, etc.)
-- **Framework Detection**: Identifies 25+ frameworks via file patterns (Django, React, Spring Boot, etc.)
-- **DevOps/IaC Detection**: Comprehensive detection of Terraform, Kubernetes, Docker, Ansible, and more
-- **MLOps Detection**: Recognizes MLflow, Airflow, DVC, dbt, and other data/ML tools
-- **Security & Observability**: Detects Prometheus, Grafana, security scanners, and monitoring tools
-- **Template Generation**: Successfully generates CLAUDE.md and AGENTS.md from templates
+- **Language Detection**: Reliably detects 15+ languages (Python, JS, TS,
+  Rust, Java, Go, C#, Ruby, PHP, etc.)
+- **Framework Detection**: Identifies 25+ frameworks via file patterns
+  (Django, React, Spring Boot, etc.)
+- **DevOps/IaC Detection**: Comprehensive detection of Terraform, Kubernetes,
+  Docker, Ansible, and more
+- **MLOps Detection**: Recognizes MLflow, Airflow, DVC, dbt, and other
+  data/ML tools
+- **Security & Observability**: Detects Prometheus, Grafana, security
+  scanners, and monitoring tools
+- **Template Generation**: Successfully generates CLAUDE.md and AGENTS.md from
+  templates
 - **CLI Structure**: Well-organized Click-based CLI with subcommands
-- **Test Suite**: 1,227 tests providing good coverage of intended functionality
+- **Test Suite**: 1,227 tests providing good coverage of intended
+  functionality
 
 ### Current Limitations
 
@@ -598,14 +616,15 @@ When contributing agent definitions or coordination patterns:
 
 ### Honest Assessment
 
-This is an **alpha-stage tool** that shows promise but needs more development. The core
-project analysis works well, and the template system is functional. However, the
-"intelligent" agent selection and natural language features described in various
-places are aspirational rather than fully implemented.
+This is an **alpha-stage tool** that shows promise but needs more development.
+The core project analysis works well, and the template system is functional.
+However, the "intelligent" agent selection and natural language features
+described in various places are aspirational rather than fully implemented.
 
-If you're looking for a tool to automatically analyze your project and generate
-basic Claude Code configuration files, this can help. If you're expecting sophisticated
-AI-driven agent orchestration, that functionality doesn't exist yet.
+If you're looking for a tool to automatically analyze your project and
+generate basic Claude Code configuration files, this can help. If you're
+expecting sophisticated AI-driven agent orchestration, that functionality
+doesn't exist yet.
 
 ---
 
