@@ -105,6 +105,8 @@ class AgentRegistry:
         self._load_domain_mappings()
         # Optionally load DevOps agents without introducing a hard dependency
         self._load_devops_agents()
+        # Optionally load MLOps agents without introducing a hard dependency
+        self._load_mlops_agents()
 
     def _load_standard_agents(self) -> None:
         """Load standard awesome-claude-code-subagents."""
@@ -348,6 +350,16 @@ class AgentRegistry:
             DevOpsAgents.register(self)
         except ImportError:
             # DevOps agents not available, continue without them
+            pass
+
+    def _load_mlops_agents(self) -> None:
+        """Load MLOps agents if available."""
+        try:
+            from claude_builder.agents.registry import MLOpsAgents
+
+            MLOpsAgents.register(self)
+        except ImportError:
+            # MLOps agents not available, continue without them
             pass
 
     def get_agent(self, name: str) -> Optional[AgentInfo]:

@@ -207,3 +207,172 @@ class DevOpsAgents:
 
         for agent in agents_to_register:
             registry.register_agent(agent)
+
+
+class MLOpsAgents:
+    """MLOps agents registration façade (P2.2)."""
+
+    @staticmethod
+    def register(registry: "AgentRegistry") -> None:
+        """Register MLOps agents into the provided registry."""
+        # Platform agents (domain)
+        agents_to_register = [
+            AgentInfo(
+                name="mlops-engineer",
+                role=AgentRole.DOMAIN.value,
+                priority=2,
+                description=(
+                    "End-to-end ML pipeline management: from data ingestion and feature "
+                    "engineering through model training, evaluation, deployment, and monitoring "
+                    "in production environments."
+                ),
+                use_cases=[
+                    "Design ML pipelines from data to serving",
+                    "Feature engineering and store management",
+                    "Model training orchestration and HPO",
+                    "Model deployment and A/B testing strategies",
+                    "Drift detection and performance monitoring",
+                ],
+            ),
+            AgentInfo(
+                name="data-pipeline-engineer",
+                role=AgentRole.DOMAIN.value,
+                priority=2,
+                description=(
+                    "ETL/ELT pipeline development and operations: batch and streaming data "
+                    "processing, transformation workflows, data quality, and orchestration "
+                    "across cloud and on-premise systems."
+                ),
+                use_cases=[
+                    "Design batch and streaming data pipelines",
+                    "Implement data transformations and validation",
+                    "Optimize pipeline performance and costs",
+                    "Data lineage and dependency management",
+                    "Cross-platform data movement and sync",
+                ],
+            ),
+            AgentInfo(
+                name="mlflow-ops",
+                role=AgentRole.DOMAIN.value,
+                priority=2,
+                description=(
+                    "MLflow ecosystem management: experiment tracking, model registry, "
+                    "model lifecycle operations, artifact management, and integration with "
+                    "CI/CD pipelines for reproducible ML workflows."
+                ),
+                use_cases=[
+                    "Set up experiment tracking and metrics logging",
+                    "Model registry versioning and promotion",
+                    "Artifact storage and model packaging",
+                    "Deploy models to MLflow serving endpoints",
+                    "Integration with CI/CD and monitoring tools",
+                ],
+            ),
+            # Orchestration and quality (workflow)
+            AgentInfo(
+                name="airflow-orchestrator",
+                role=AgentRole.WORKFLOW.value,
+                priority=2,
+                description=(
+                    "Apache Airflow DAG design and operations: scheduling, dependency "
+                    "management, task orchestration, monitoring, and optimization across "
+                    "distributed compute environments."
+                ),
+                use_cases=[
+                    "Design and optimize DAG workflows",
+                    "Implement dynamic task generation patterns",
+                    "Configure executors and resource pools",
+                    "Set up alerting and failure recovery",
+                    "Cross-DAG dependencies and sensors",
+                ],
+            ),
+            AgentInfo(
+                name="prefect-orchestrator",
+                role=AgentRole.WORKFLOW.value,
+                priority=2,
+                description=(
+                    "Prefect flow design and deployment: dynamic workflows, deployments, "
+                    "observability, error handling, and cloud-native orchestration patterns "
+                    "for modern data engineering."
+                ),
+                use_cases=[
+                    "Build dynamic flows with parametrization",
+                    "Configure deployments and work pools",
+                    "Implement retry logic and failure handling",
+                    "Set up observability and monitoring",
+                    "Hybrid cloud execution patterns",
+                ],
+            ),
+            AgentInfo(
+                name="dbt-analyst",
+                role=AgentRole.WORKFLOW.value,
+                priority=2,
+                description=(
+                    "dbt development and operations: data models, tests, documentation, "
+                    "incremental builds, macros, and analytics engineering best practices "
+                    "for reliable data transformations."
+                ),
+                use_cases=[
+                    "Design modular dbt models and macros",
+                    "Implement data quality tests and contracts",
+                    "Configure incremental materializations",
+                    "Generate and maintain documentation",
+                    "Optimize model performance and dependencies",
+                ],
+            ),
+            AgentInfo(
+                name="data-quality-engineer",
+                role=AgentRole.WORKFLOW.value,
+                priority=2,
+                description=(
+                    "Data quality and validation engineering: Great Expectations suites, "
+                    "data profiling, anomaly detection, SLA monitoring, and automated "
+                    "quality gates in data pipelines."
+                ),
+                use_cases=[
+                    "Create Great Expectations validation suites",
+                    "Implement data profiling and statistics",
+                    "Design anomaly detection rules",
+                    "Set up data quality dashboards and alerts",
+                    "Integrate quality gates in pipelines",
+                ],
+            ),
+            # Specialized ML (domain)
+            AgentInfo(
+                name="dvc-ops",
+                role=AgentRole.DOMAIN.value,
+                priority=2,
+                description=(
+                    "DVC (Data Version Control) operations: data versioning, pipeline "
+                    "definitions, experiment tracking, artifact management, and remote "
+                    "storage integration for reproducible ML projects."
+                ),
+                use_cases=[
+                    "Version datasets and model artifacts",
+                    "Define reproducible ML pipelines",
+                    "Configure remote storage backends",
+                    "Track experiments and metrics",
+                    "Implement data registry patterns",
+                ],
+            ),
+            AgentInfo(
+                name="kubeflow-operator",
+                role=AgentRole.DOMAIN.value,
+                priority=2,
+                description=(
+                    "Kubeflow platform operations: Kubernetes-native ML workflows, pipeline "
+                    "components, distributed training, model serving, and multi-tenant "
+                    "ML platform management."
+                ),
+                use_cases=[
+                    "Build Kubeflow pipeline components",
+                    "Configure distributed training jobs",
+                    "Deploy models with KFServing/KServe",
+                    "Set up multi-tenant isolation",
+                    "Integrate with Kubernetes ecosystem",
+                ],
+            ),
+        ]
+
+        for agent in agents_to_register:
+            registry.register_agent(agent)
