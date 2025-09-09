@@ -388,6 +388,32 @@ class AgentSelector:
     ) -> None:
         self.registry = registry or AgentRegistry()
         self.selection_algorithm = algorithm  # Add for test compatibility
+        # Natural language trigger map (P2.3.2 / P2.3.3)
+        # Simple, fast substring matching for CLI and conversational triggers.
+        self._trigger_map: Dict[str, List[str]] = {
+            # DevOps
+            "pipeline is failing": ["ci-pipeline-engineer"],
+            "pipeline failing": ["ci-pipeline-engineer"],
+            "ci failing": ["ci-pipeline-engineer"],
+            "terraform drift": ["terraform-specialist"],
+            "drift": ["terraform-specialist"],
+            "harden cluster": ["security-auditor", "kubernetes-operator"],
+            "harden kubernetes": ["security-auditor", "kubernetes-operator"],
+            "add metrics": ["observability-engineer"],
+            "add alerts": ["observability-engineer"],
+            "observability": ["observability-engineer"],
+            "logging": ["observability-engineer"],
+            "monitoring": ["observability-engineer"],
+            # MLOps
+            "version models": ["mlflow-ops"],
+            "model versioning": ["mlflow-ops"],
+            "orchestrate dags": ["airflow-orchestrator", "prefect-orchestrator"],
+            "airflow": ["airflow-orchestrator"],
+            "prefect": ["prefect-orchestrator"],
+            "data quality": ["data-quality-engineer"],
+            "ml pipeline": ["mlops-engineer"],
+            "mlops": ["mlops-engineer"],
+        }
 
     def select_core_agents(self, analysis: ProjectAnalysis) -> List[AgentInfo]:
         """Select core agents based on language and framework."""
@@ -460,6 +486,140 @@ class AgentSelector:
 
         return agents
 
+    # --- P2.3 additions: environment-driven selection (DevOps/MLOps) ---
+    def _add_agent_if_available(
+        self, agents: List[AgentInfo], name: str, *, confidence: float = 0.7
+    ) -> None:
+        agent = self.registry.get_agent(name)
+        if agent and agent not in agents:
+            # Mutate confidence on the registry instance for downstream display
+            agent.confidence = confidence
+            agents.append(agent)
+
+    def select_environment_agents(self, analysis: ProjectAnalysis) -> List[AgentInfo]:
+        """Suggest agents based on DevOps/MLOps signals from DevelopmentEnvironment.
+
+        Implements P2.3.1: map detected tools to relevant agents and handle
+        multi-tool environments with confidence-based suggestions.
+        """
+        env = analysis.dev_environment
+        agents: List[AgentInfo] = []
+
+        # IaC → specialists
+        iac_map = {
+            "terraform": "terraform-specialist",
+            "ansible": "ansible-automator",
+            "pulumi": "pulumi-engineer",
+            "cloudformation": "cloudformation-specialist",
+            "packer": "packer-builder",
+        }
+        for tool in env.infrastructure_as_code:
+            name = iac_map.get(tool.lower())
+            if name:
+                self._add_agent_if_available(agents, name, confidence=0.8)
+
+        # Orchestration → operators
+        orch_map = {
+            "kubernetes": "kubernetes-operator",
+            "helm": "helm-specialist",
+        }
+        for tool in env.orchestration_tools:
+            name = orch_map.get(tool.lower())
+            if name:
+                self._add_agent_if_available(agents, name, confidence=0.75)
+
+        # Secrets/Security → security-auditor
+        if env.secrets_management or env.security_tools:
+            self._add_agent_if_available(agents, "security-auditor", confidence=0.7)
+
+        # Observability → observability-engineer
+        if env.observability:
+            self._add_agent_if_available(
+                agents, "observability-engineer", confidence=0.75
+            )
+
+        # CI/CD → ci-pipeline-engineer (devops-automator handled elsewhere)
+        if env.ci_cd_systems:
+            self._add_agent_if_available(agents, "ci-pipeline-engineer", confidence=0.8)
+
+        # Data Pipeline tools → orchestration and analytics engineering
+        dp_map_specific = {
+            "airflow": "airflow-orchestrator",
+            "prefect": "prefect-orchestrator",
+            "dbt": "dbt-analyst",
+            "dvc": "dvc-ops",
+            "great_expectations": "data-quality-engineer",
+        }
+        dp_detected = set()
+        for tool in env.data_pipeline:
+            key = tool.lower()
+            dp_detected.add(key)
+            name = dp_map_specific.get(key)
+            if name:
+                self._add_agent_if_available(agents, name, confidence=0.8)
+        # If any pipeline tooling exists, add a generalist
+        if env.data_pipeline:
+            self._add_agent_if_available(
+                agents, "data-pipeline-engineer", confidence=0.75
+            )
+
+        # MLOps tools → platform ops
+        mlops_map_specific = {
+            "mlflow": "mlflow-ops",
+            "kubeflow": "kubeflow-operator",
+            "dvc": "dvc-ops",
+            "feast": "mlops-engineer",  # handled by generalist
+            "bentoml": "mlops-engineer",
+            "notebooks": "mlops-engineer",
+        }
+        for tool in env.mlops_tools:
+            name = mlops_map_specific.get(tool.lower())
+            if name:
+                self._add_agent_if_available(agents, name, confidence=0.8)
+        if env.mlops_tools:
+            self._add_agent_if_available(agents, "mlops-engineer", confidence=0.75)
+
+        # Confidence bump for multi-tool environments
+        categories_present = sum(
+            1
+            for seq in [
+                env.infrastructure_as_code,
+                env.orchestration_tools,
+                env.observability,
+                env.security_tools,
+                env.data_pipeline,
+                env.mlops_tools,
+                env.ci_cd_systems,
+            ]
+            if seq
+        )
+        if categories_present >= 3:
+            for a in agents:
+                a.confidence = max(a.confidence, 0.85)
+
+        return agents
+
+    def select_from_text(self, text: str) -> List[AgentInfo]:
+        """Map natural language phrases to agents (P2.3.2/3).
+
+        Performs simple substring matching; returns unique agents in
+        registry order when available.
+        """
+        text_l = text.lower()
+        suggested: List[AgentInfo] = []
+        seen: set[str] = set()
+        for phrase, names in self._trigger_map.items():
+            if phrase in text_l:
+                for name in names:
+                    if name in seen:
+                        continue
+                    agent = self.registry.get_agent(name)
+                    if agent:
+                        agent.confidence = max(getattr(agent, "confidence", 0.6), 0.6)
+                        suggested.append(agent)
+                        seen.add(name)
+        return suggested
+
     def select_workflow_agents(self, analysis: ProjectAnalysis) -> List[AgentInfo]:
         """Select workflow agents based on complexity and patterns."""
         agents = []
@@ -508,6 +668,9 @@ class AgentSelector:
 
         # Domain agents
         agents.extend(self.select_domain_agents(analysis))
+
+        # Environment-driven DevOps/MLOps agents (P2.3.1)
+        agents.extend(self.select_environment_agents(analysis))
 
         # Workflow agents based on complexity
         if analysis.complexity_level == ComplexityLevel.COMPLEX:
