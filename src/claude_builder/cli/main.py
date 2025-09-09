@@ -22,6 +22,7 @@ from claude_builder.utils.git import GitIntegrationManager
 from claude_builder.utils.validation import validate_project_path
 
 # Import subcommands
+from .agent_commands import agents
 from .analyze_commands import analyze
 from .config_commands import config
 from .generate_commands import generate
@@ -505,6 +506,7 @@ def _display_summary(project_path: Path, *, dry_run: bool) -> None:
 
 # Register subcommands
 cli.add_command(templates)
+cli.add_command(agents)
 cli.add_command(analyze)
 cli.add_command(generate)
 cli.add_command(config)
