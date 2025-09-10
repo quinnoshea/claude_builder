@@ -240,11 +240,12 @@ CLAUDE.md when relevant tools are detected in a project.
 
 Example snippet:
 
-````markdown
+```jinja
 {% if dev_environment.tools.kubernetes %}
 ### Kubernetes Deployments
 
 Define resource requests/limits and probes. Example:
+```
 
 ```yaml
 livenessProbe:
@@ -254,10 +255,6 @@ livenessProbe:
 ```
 
 {% endif %}
-
-````
-
-<a name="code-standards"></a>
 
 ## Code Standards
 

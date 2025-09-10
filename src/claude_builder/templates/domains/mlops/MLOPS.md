@@ -1,12 +1,15 @@
 {% if dev_environment.tools.mlflow %}
+
 ### MLflow for MLOps
 
-**Detected Tool:** MLflow (Confidence: {{ dev_environment.tools.mlflow.confidence }})
+**Detected Tool:** MLflow (Confidence:
+{{ dev_environment.tools.mlflow.confidence }})
 
-MLflow usage has been detected. MLflow is a great open-source platform for managing the end-to-end machine learning lifecycle.
+MLflow manages the end‑to‑end machine learning lifecycle.
 
 **Key Files Detected:**
-```
+
+```text
 {% for file in dev_environment.tools.mlflow.files %}
 - {{ file }}
 {% endfor %}
@@ -14,24 +17,30 @@ MLflow usage has been detected. MLflow is a great open-source platform for manag
 
 **Next Steps & Best Practices:**
 
-1.  **Use a Tracking Server:** For collaborative projects, set up a central MLflow Tracking Server to log and compare experiments.
-2.  **Log Artifacts:** In addition to metrics and parameters, log artifacts such as models, data files, and images to ensure reproducibility.
-3.  **Model Registry:** Use the MLflow Model Registry to manage your model's lifecycle from staging to production.
+1. **Use a Tracking Server:** For collaboration, set up a central Tracking
+   Server to log and compare experiments.
+2. **Log Artifacts:** Log models, data, and images in addition to metrics and
+   parameters to ensure reproducibility.
+3. **Model Registry:** Manage lifecycle from staging to production with the
+   Model Registry.
 
 {% endif %}
 
 {% if dev_environment.tools.kubeflow %}
+
 ### Kubeflow for MLOps on Kubernetes
 
-**Detected Tool:** Kubeflow (Confidence: {{ dev_environment.tools.kubeflow.confidence }})
+**Detected Tool:** Kubeflow (Confidence:
+{{ dev_environment.tools.kubeflow.confidence }})
 
-We've detected Kubeflow configuration files. Kubeflow is a powerful platform for deploying and managing machine learning workflows on Kubernetes.
+Kubeflow helps deploy and manage ML workflows on Kubernetes.
 
 **Next Steps & Best Practices:**
 
-1.  **Use Pipelines:** Define your ML workflows as pipelines to make them reproducible, scalable, and easy to manage.
-2.  **Leverage Components:** Create reusable components to share and reuse parts of your ML workflows.
-3.  **Katib for Hyperparameter Tuning:** Use Katib to automate hyperparameter tuning and find the best model for your problem.
+1. **Pipelines:** Define ML workflows as pipelines to make them reproducible
+   and scalable.
+2. **Components:** Create reusable components to share workflow building
+   blocks.
+3. **Katib:** Use Katib for automated hyperparameter tuning.
 
 {% endif %}
-
