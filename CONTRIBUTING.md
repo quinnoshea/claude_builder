@@ -203,6 +203,62 @@ For new templates:
 - **Test cases** to validate template generation
 - **Examples** of generated output
 
+### Domain Template Guidelines (DevOps & MLOps)
+
+Domain templates provide infrastructure and MLOps guidance that is appended to
+CLAUDE.md when relevant tools are detected in a project.
+
+- Location: `src/claude_builder/templates/domains/{devops,mlops}`
+- Filenames: `INFRA.md`, `DEPLOYMENT.md`, `OBSERVABILITY.md`, `SECURITY.md`,
+  `MLOPS.md`, `DATA_PIPELINE.md`, `ML_GOVERNANCE.md`
+- Rendering: Sections are included only when matching tools are present in the
+  analysis. Gating is handled by the generator, and you can also use
+  conditionals inside templates.
+- Supported syntax:
+  - Conditionals: `{% if dev_environment.tools.terraform %} ... {% endif %}`
+  - Loops: `{% for file in dev_environment.tools.terraform.files %} ...`
+    `{% endfor %}`
+  - Variables: `{{ dev_environment.tools.terraform.confidence }}`
+  - Dotted paths are supported in `if/for` and `{{ }}` expressions.
+- Available context:
+  - `dev_environment.tools` is a dict keyed by lowercase tool name
+    (`terraform`, `kubernetes`, `helm`, `prometheus`, `grafana`, `opentelemetry`,
+    `vault`, `tfsec`, `trivy`, `mlflow`, `airflow`, `prefect`, `dagster`, `dvc`,
+    `dbt`, `great_expectations`, `feast`, etc.).
+  - Each entry provides: `{ present: bool, confidence: str|"unknown",`
+    `files: list }`.
+  - Not all detectors populate `confidence` or `files` yet; write templates to
+    degrade gracefully when values are missing.
+- Best practices:
+  - Make guidance practical and action-oriented (commands, checklists).
+  - Avoid external network fetches; link text is fine but generation must not
+    depend on network.
+  - Keep conditionals specific to avoid emitting irrelevant sections.
+  - Use lowercase tool keys; prefer portable shell snippets.
+  - Add focused unit tests under `tests/unit/templates/` that exercise your
+    template with and without relevant tools present.
+
+Example snippet:
+
+````markdown
+{% if dev_environment.tools.kubernetes %}
+### Kubernetes Deployments
+
+Define resource requests/limits and probes. Example:
+
+```yaml
+livenessProbe:
+  httpGet: { path: /healthz, port: 8080 }
+  initialDelaySeconds: 10
+  periodSeconds: 5
+```
+
+{% endif %}
+
+````
+
+<a name="code-standards"></a>
+
 ## Code Standards
 
 ### Python Code Style

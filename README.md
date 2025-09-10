@@ -95,6 +95,28 @@ base.md → python.md → fastapi.md → final output
 # Results in FastAPI-specific development guidance
 ```
 
+#### Domain Templates (DevOps & MLOps)
+
+In addition to base/language/framework overlays, the generator now discovers
+and renders domain templates when matching signals are detected in your project.
+
+- DevOps: `INFRA.md`, `DEPLOYMENT.md`, `OBSERVABILITY.md`, `SECURITY.md`
+- MLOps: `MLOPS.md`, `DATA_PIPELINE.md`, `ML_GOVERNANCE.md`
+
+How it works:
+
+- Detection populates `analysis.dev_environment` (IaC, orchestration, secrets,
+  observability, CI/CD, data pipelines, MLOps tools).
+- CLAUDE.md appends any relevant domain sections automatically.
+- Templates use simple conditionals/loops, e.g.
+  `{% if dev_environment.tools.terraform %}`.
+
+Example signals → sections added to CLAUDE.md:
+
+- Terraform + Kubernetes + Helm → Infrastructure and Deployment guidance
+- Prometheus + Grafana → Observability guidance
+- MLflow + DVC + Airflow → MLOps and Data Pipeline guidance
+
 ---
 
 ## 🎯 Current Implementation Status
@@ -276,10 +298,14 @@ claude-builder /path/to/project config show
 your-project/
 ├── CLAUDE.md                    # Project-specific development guidelines
 ├── AGENTS.md                    # Intelligent agent team configuration
-└── .claude/                     # Detailed development environment
-    ├── development_workflow.md  # Optimized development processes
-    ├── agent_coordination.md    # Multi-agent collaboration patterns
-    └── project_context.md       # Complete project analysis results
+    └── .claude/                     # Detailed development environment
+        ├── development_workflow.md  # Optimized development processes
+        ├── agent_coordination.md    # Multi-agent collaboration patterns
+        └── project_context.md       # Complete project analysis results
+
+When DevOps/MLOps tools are detected, CLAUDE.md includes domain-specific
+sections with actionable guidance (infrastructure, deployment, observability,
+security, MLOps, data pipelines, and governance).
 ```
 
 ---
