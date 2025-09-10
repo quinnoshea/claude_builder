@@ -1399,6 +1399,9 @@ class TemplateLoader:
                 current_dir / "templates" / "base",
                 current_dir / "templates" / "languages",
                 current_dir / "templates" / "frameworks",
+                # Phase 3: Domain templates (DevOps/MLOps)
+                current_dir / "templates" / "domains" / "devops",
+                current_dir / "templates" / "domains" / "mlops",
             ]
 
         # Ensure directories exist
@@ -1712,17 +1715,26 @@ class TemplateRenderer:
         import re
 
         # Handle loops: {% for item in items %}
-        loop_pattern = r"\{%\s*for\s+(\w+)\s+in\s+(\w+)\s*%\}(.*?)\{%\s*endfor\s*%\}"
+        loop_pattern = (
+            r"\{%\s*for\s+(\w+)\s+in\s+([\w\.]+)\s*%\}(.*?)\{%\s*endfor\s*%\}"
+        )
 
         def replace_loop(match: Any) -> str:
             item_var = match.group(1)
             list_var = match.group(2)
             loop_content = match.group(3)
 
-            if list_var not in context:
-                return ""
+            # Support dotted path list variables
+            def _get_by_path(data: Dict[str, Any], path: str) -> Any:
+                cur: Any = data
+                for part in path.split("."):
+                    if isinstance(cur, dict):
+                        cur = cur.get(part, {})
+                    else:
+                        return []
+                return cur
 
-            items = context[list_var]
+            items = _get_by_path(context, list_var)
             if not isinstance(items, (list, tuple)):
                 return ""
 
@@ -1741,14 +1753,24 @@ class TemplateRenderer:
 
         content = re.sub(loop_pattern, replace_loop, content, flags=re.DOTALL)
 
-        # Handle conditionals: {% if condition %}
-        if_pattern = r"\{%\s*if\s+(\w+)\s*%\}(.*?)\{%\s*endif\s*%\}"
+        # Handle conditionals: {% if condition %} with dotted variables
+        if_pattern = r"\{%\s*if\s+([\w\.]+)\s*%\}(.*?)\{%\s*endif\s*%\}"
 
         def replace_if(match: Any) -> str:
             condition_var = match.group(1)
             if_content = match.group(2) or ""
 
-            condition_value = context.get(condition_var, False)
+            # Resolve dotted path, truthy if found and truthy
+            def _get_by_path(data: Dict[str, Any], path: str) -> Any:
+                cur: Any = data
+                for part in path.split("."):
+                    if isinstance(cur, dict):
+                        cur = cur.get(part, {})
+                    else:
+                        return None
+                return cur
+
+            condition_value = _get_by_path(context, condition_var)
             if isinstance(condition_value, str):
                 condition_value = condition_value.lower() in ("true", "yes", "1")
 
@@ -1777,12 +1799,22 @@ class TemplateRenderer:
 
         content = re.sub(filter_pattern, replace_filter, content)
 
-        # Handle simple variables: {{ variable }}
-        var_pattern = r"\{\{\s*(\w+)\s*\}\}"
+        # Handle simple variables: {{ variable }} (supports dotted path)
+        var_pattern = r"\{\{\s*([\w\.]+)\s*\}\}"
 
         def replace_var(match: Any) -> str:
             var_name = match.group(1)
-            return str(context.get(var_name, ""))
+
+            def _get_by_path(data: Dict[str, Any], path: str) -> Any:
+                cur: Any = data
+                for part in path.split("."):
+                    if isinstance(cur, dict):
+                        cur = cur.get(part, "")
+                    else:
+                        return ""
+                return cur
+
+            return str(_get_by_path(context, var_name))
 
         return re.sub(var_pattern, replace_var, content)
 

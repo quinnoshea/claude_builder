@@ -571,6 +571,44 @@ class ModernTemplateManager:
         self, analysis: ProjectAnalysis, agent_definitions: List[AgentDefinition]
     ) -> Dict[str, Any]:
         """Create comprehensive context for template rendering."""
+        # Derive DevOps/MLOps-friendly environment context (Phase 3)
+        dev_env = getattr(analysis, "dev_environment", None)
+
+        # Normalize lists (fall back to empty lists)
+        def _safe_list(val: Any) -> List[str]:
+            try:
+                return list(val) if val else []
+            except Exception:
+                return []
+
+        infrastructure_as_code = _safe_list(
+            getattr(dev_env, "infrastructure_as_code", [])
+        )
+        orchestration_tools = _safe_list(getattr(dev_env, "orchestration_tools", []))
+        secrets_management = _safe_list(getattr(dev_env, "secrets_management", []))
+        observability = _safe_list(getattr(dev_env, "observability", []))
+        ci_cd_systems = _safe_list(getattr(dev_env, "ci_cd_systems", []))
+        data_pipeline = _safe_list(getattr(dev_env, "data_pipeline", []))
+        mlops_tools = _safe_list(getattr(dev_env, "mlops_tools", []))
+        security_tools = _safe_list(getattr(dev_env, "security_tools", []))
+
+        # Consolidate tool presence into a convenient dict for templates
+        tool_names: List[str] = (
+            infrastructure_as_code
+            + orchestration_tools
+            + secrets_management
+            + observability
+            + ci_cd_systems
+            + data_pipeline
+            + mlops_tools
+            + security_tools
+        )
+        tools_map: Dict[str, Dict[str, Any]] = {}
+        for t in tool_names:
+            key = str(t).lower().replace(" ", "_")
+            # Confidence buckets are not persisted yet; default to "unknown"
+            tools_map[key] = {"present": True, "confidence": "unknown", "files": []}
+
         return {
             "project_name": analysis.project_path.name,
             "project_description": f"A {analysis.language or 'multi-language'} {analysis.project_type.value} project",
@@ -595,6 +633,18 @@ class ModernTemplateManager:
             ],
             "development_commands": self._generate_development_commands(analysis),
             "development_standards": self._generate_development_standards(analysis),
+            # Phase 3: domain-aware environment context
+            "dev_environment": {
+                "infrastructure_as_code": infrastructure_as_code,
+                "orchestration_tools": orchestration_tools,
+                "secrets_management": secrets_management,
+                "observability": observability,
+                "ci_cd_systems": ci_cd_systems,
+                "data_pipeline": data_pipeline,
+                "mlops_tools": mlops_tools,
+                "security_tools": security_tools,
+                "tools": tools_map,
+            },
         }
 
     def _generate_development_commands(self, analysis: ProjectAnalysis) -> str:
@@ -738,7 +788,73 @@ See AGENTS.md for detailed usage instructions and coordination patterns.
 - Use the specialized agents for domain-specific tasks
 """
         )
+        # Phase 3: Render and append domain documentation if available
+        domain_sections = self._render_domain_sections(context)
+        if domain_sections:
+            template_content = template_content + "\n\n" + domain_sections
+
         return template_content
+
+    def _render_domain_sections(self, context: Dict[str, Any]) -> str:
+        """Render DevOps and MLOps domain documentation sections.
+
+        Looks for domain templates shipped with the package and renders them
+        with the same context used for CLAUDE.md. Missing templates are ignored.
+        """
+        sections: List[str] = []
+
+        # Helper to load and render a single template file by name
+        def render_template_if_exists(name: str) -> Optional[str]:
+            # Try current core manager paths (user templates)
+            try:
+                content = self.core_manager.load_template(name)
+                return self.core_manager.render_template(content, context)
+            except Exception:
+                pass
+
+            # Fallback to default package template paths
+            try:
+                from claude_builder.core.template_manager_legacy import (
+                    CoreTemplateManager as DefaultCore,
+                )
+
+                default_core = DefaultCore()  # uses built-in search paths
+                content = default_core.load_template(name)
+                return default_core.render_template(content, context)
+            except Exception:
+                return None
+
+        tools_ctx = context.get("dev_environment", {}).get("tools", {})
+
+        def _has_any(keys: list[str]) -> bool:
+            return any(k in tools_ctx for k in keys)
+
+        # DevOps domain docs (render only when relevant tools are present)
+        devops_templates = [
+            ("INFRA", ["terraform", "pulumi", "ansible", "cloudformation"]),
+            ("DEPLOYMENT", ["kubernetes", "helm"]),
+            ("OBSERVABILITY", ["prometheus", "grafana", "opentelemetry"]),
+            ("SECURITY", ["vault", "tfsec", "trivy"]),
+        ]
+        for name, keys in devops_templates:
+            if _has_any(keys):
+                rendered = render_template_if_exists(name)
+                if rendered and rendered.strip():
+                    sections.append(rendered.strip())
+
+        # MLOps domain docs
+        mlops_templates = [
+            ("MLOPS", ["mlflow", "kubeflow"]),
+            ("DATA_PIPELINE", ["airflow", "prefect", "dagster", "dvc"]),
+            ("ML_GOVERNANCE", ["dbt", "great_expectations", "feast"]),
+        ]
+        for name, keys in mlops_templates:
+            if _has_any(keys):
+                rendered = render_template_if_exists(name)
+                if rendered and rendered.strip():
+                    sections.append(rendered.strip())
+
+        return "\n\n".join(sections).strip()
 
     def _generate_user_documentation(
         self, context: Dict[str, Any], agent_definitions: List[AgentDefinition]
