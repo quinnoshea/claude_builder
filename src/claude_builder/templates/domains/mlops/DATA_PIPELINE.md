@@ -1,6 +1,8 @@
+# MLOps: Data Pipeline Guidance
+
 {% if dev_environment.tools.airflow %}
 
-### Airflow for Data Pipelines
+## Airflow for Data Pipelines
 
 **Detected Tool:** Airflow (Confidence:
 {{ dev_environment.tools.airflow.confidence }})
@@ -25,7 +27,7 @@ Airflow is a platform for authoring, scheduling, and monitoring workflows.
 
 {% if dev_environment.tools.prefect %}
 
-### Prefect for Data Pipelines
+## Prefect for Data Pipelines
 
 **Detected Tool:** Prefect (Confidence:
 {{ dev_environment.tools.prefect.confidence }})
@@ -42,7 +44,7 @@ Prefect is a modern workflow automation platform.
 
 {% if dev_environment.tools.dagster %}
 
-### Dagster for Data Pipelines
+## Dagster for Data Pipelines
 
 **Detected Tool:** Dagster (Confidence:
 {{ dev_environment.tools.dagster.confidence }})
@@ -59,7 +61,7 @@ Dagster orchestrates ML, analytics, and ETL assets.
 
 {% if dev_environment.tools.dvc %}
 
-### DVC for Data Versioning
+## DVC for Data Versioning
 
 **Detected Tool:** DVC (Confidence:
 {{ dev_environment.tools.dvc.confidence }})

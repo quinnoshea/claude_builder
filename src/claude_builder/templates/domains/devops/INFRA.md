@@ -2,7 +2,7 @@
 
 {% if dev_environment.tools.terraform %}
 
-### Infrastructure as Code (IaC) with Terraform
+## Infrastructure as Code (IaC) with Terraform
 
 **Detected Tool:** Terraform (Confidence:
 {{ dev_environment.tools.terraform.confidence }})

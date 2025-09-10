@@ -1,6 +1,8 @@
+# MLOps: Lifecycle Guidance
+
 {% if dev_environment.tools.mlflow %}
 
-### MLflow for MLOps
+## MLflow for MLOps
 
 **Detected Tool:** MLflow (Confidence:
 {{ dev_environment.tools.mlflow.confidence }})
@@ -28,7 +30,7 @@ MLflow manages the end‑to‑end machine learning lifecycle.
 
 {% if dev_environment.tools.kubeflow %}
 
-### Kubeflow for MLOps on Kubernetes
+## Kubeflow for MLOps on Kubernetes
 
 **Detected Tool:** Kubeflow (Confidence:
 {{ dev_environment.tools.kubeflow.confidence }})

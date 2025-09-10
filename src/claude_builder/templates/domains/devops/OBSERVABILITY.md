@@ -2,7 +2,7 @@
 
 {% if dev_environment.tools.prometheus %}
 
-### Prometheus Monitoring
+## Prometheus Monitoring
 
 **Detected Tool:** Prometheus (Confidence:
 {{ dev_environment.tools.prometheus.confidence }})
@@ -30,7 +30,7 @@ monitoring.
 
 {% if dev_environment.tools.grafana %}
 
-### Grafana Dashboards
+## Grafana Dashboards
 
 **Detected Tool:** Grafana (Confidence:
 {{ dev_environment.tools.grafana.confidence }})
@@ -57,7 +57,7 @@ system behavior.
 
 {% if dev_environment.tools.opentelemetry %}
 
-### OpenTelemetry Tracing
+## OpenTelemetry Tracing
 
 **Detected Tool:** OpenTelemetry (Confidence:
 {{ dev_environment.tools.opentelemetry.confidence }})

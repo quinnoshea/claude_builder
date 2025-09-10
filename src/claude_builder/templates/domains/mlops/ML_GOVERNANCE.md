@@ -1,6 +1,8 @@
+# MLOps: Governance Guidance
+
 {% if dev_environment.tools.dbt %}
 
-### dbt for Data Transformation
+## dbt for Data Transformation
 
 **Detected Tool:** dbt (Confidence:
 {{ dev_environment.tools.dbt.confidence }})
@@ -25,7 +27,7 @@ dbt transforms data in your warehouse using SQL and tested models.
 
 {% if dev_environment.tools.great_expectations %}
 
-### Great Expectations for Data Quality
+## Great Expectations for Data Quality
 
 **Detected Tool:** Great Expectations (Confidence:
 {{ dev_environment.tools.great_expectations.confidence }})
@@ -42,7 +44,7 @@ Great Expectations provides data testing, documentation, and profiling.
 
 {% if dev_environment.tools.feast %}
 
-### Feast for Feature Stores
+## Feast for Feature Stores
 
 **Detected Tool:** Feast (Confidence:
 {{ dev_environment.tools.feast.confidence }})

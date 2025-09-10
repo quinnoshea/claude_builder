@@ -2,7 +2,7 @@
 
 {% if dev_environment.tools.vault %}
 
-### HashiCorp Vault for Secrets Management
+## HashiCorp Vault for Secrets Management
 
 **Detected Tool:** Vault (Confidence:
 {{ dev_environment.tools.vault.confidence }})
@@ -22,7 +22,7 @@ Vault helps manage secrets and protect sensitive data.
 
 {% if dev_environment.tools.tfsec %}
 
-### tfsec for Terraform Security
+## tfsec for Terraform Security
 
 **Detected Tool:** tfsec (Confidence:
 {{ dev_environment.tools.tfsec.confidence }})
@@ -39,7 +39,7 @@ tfsec scans Terraform code for security issues.
 
 {% if dev_environment.tools.trivy %}
 
-### Trivy for Vulnerability Scanning
+## Trivy for Vulnerability Scanning
 
 **Detected Tool:** Trivy (Confidence:
 {{ dev_environment.tools.trivy.confidence }})

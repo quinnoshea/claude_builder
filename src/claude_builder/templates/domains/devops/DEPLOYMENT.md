@@ -2,7 +2,7 @@
 
 {% if dev_environment.tools.kubernetes %}
 
-### Kubernetes Deployments
+## Kubernetes Deployments
 
 **Detected Tool:** Kubernetes (Confidence:
 {{ dev_environment.tools.kubernetes.confidence }})
@@ -33,7 +33,7 @@ your application to a Kubernetes cluster.
 
 {% if dev_environment.tools.helm %}
 
-### Helm Chart for Kubernetes
+## Helm Chart for Kubernetes
 
 **Detected Tool:** Helm (Confidence:
 {{ dev_environment.tools.helm.confidence }})
