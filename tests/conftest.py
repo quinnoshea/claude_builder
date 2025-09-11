@@ -578,7 +578,7 @@ def sample_template_metadata() -> Dict[str, Any]:
 def mock_http_responses():
     """Mock HTTP responses for template marketplace testing."""
     responses = {
-        "https://raw.githubusercontent.com/claude-builder/templates/main/index.json": {
+        "https://raw.githubusercontent.com/quinnoshea/claude-builder-templates/main/index.json": {
             "templates": [
                 {
                     "name": "python-web",

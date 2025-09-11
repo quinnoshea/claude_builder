@@ -379,10 +379,10 @@ class TestTemplateRepositoryClient:
         assert client.downloader is not None
         assert (
             client.official_repository
-            == "https://raw.githubusercontent.com/claude-builder/templates/main"
+            == "https://raw.githubusercontent.com/quinnoshea/claude-builder-templates/main/"
         )
         assert (
-            "https://raw.githubusercontent.com/claude-builder/community-templates/main"
+            "https://raw.githubusercontent.com/quinnoshea/claude-builder-community/main/"
             in client.community_sources
         )
 

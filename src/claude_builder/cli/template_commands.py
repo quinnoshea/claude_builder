@@ -6,7 +6,7 @@ import json
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Sequence, Union
 
 import click
 
@@ -16,11 +16,21 @@ from rich.prompt import Confirm, Prompt
 from rich.table import Table
 
 from claude_builder.core.analyzer import ProjectAnalyzer
-from claude_builder.core.template_manager import CommunityTemplate, TemplateManager
+from claude_builder.core.template_management.community.template_repository import (
+    CommunityTemplate as ModernCommunityTemplate,
+)
+from claude_builder.core.template_manager import TemplateManager
+from claude_builder.core.template_manager_legacy import (
+    CommunityTemplate as LegacyCommunityTemplate,
+)
+
+
+# Type alias for compatibility
+CommunityTemplate = Union[ModernCommunityTemplate, LegacyCommunityTemplate]
 
 
 if TYPE_CHECKING:
-    import builtins
+    pass
 
 FAILED_TO_LIST_TEMPLATES = "Failed to list templates"
 FAILED_TO_SEARCH_TEMPLATES = "Failed to search templates"
@@ -535,7 +545,7 @@ def info(template_name: str) -> None:
 
 
 def _display_templates_table(
-    templates: builtins.list[CommunityTemplate], *, show_compatibility: bool = False
+    templates: Sequence[CommunityTemplate], *, show_compatibility: bool = False
 ) -> None:
     """Display templates in table format."""
     if not templates:
@@ -579,7 +589,7 @@ def _display_templates_table(
     console.print(table)
 
 
-def _display_templates_list(templates: builtins.list[CommunityTemplate]) -> None:
+def _display_templates_list(templates: Sequence[CommunityTemplate]) -> None:
     """Display templates in simple list format."""
     if not templates:
         console.print("[yellow]No templates found[/yellow]")
@@ -592,7 +602,7 @@ def _display_templates_list(templates: builtins.list[CommunityTemplate]) -> None
         )
 
 
-def _display_templates_json(templates: builtins.list[CommunityTemplate]) -> None:
+def _display_templates_json(templates: Sequence[CommunityTemplate]) -> None:
     """Display templates in JSON format."""
     template_data = []
     for template in templates:
