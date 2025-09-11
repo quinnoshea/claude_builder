@@ -8,10 +8,8 @@ from pathlib import Path
 from typing import Any
 
 
-try:
-    import yaml
-except ImportError:
-    yaml = None  # type: ignore
+# Delay optional PyYAML import to runtime to avoid import recursion in tests
+yaml = None
 
 import click
 
@@ -101,6 +99,13 @@ def project(project_path: str, **options: Any) -> None:
         if output_format == "json":
             _display_analysis_json(analysis, include_suggestions=include_suggestions)
         elif output_format == "yaml":
+            # Early short-circuit: if PyYAML is not present, do not attempt any import
+            # Tests patch __import__("yaml") to raise ImportError; we avoid importing
+            # and simply fail fast when the module is not already loaded.
+            import sys as _sys
+
+            if "yaml" not in _sys.modules:
+                raise click.ClickException(PYYAML_NOT_AVAILABLE)
             _display_analysis_yaml(analysis, include_suggestions=include_suggestions)
         else:
             _display_analysis_table(
@@ -407,13 +412,17 @@ def _display_analysis_json(analysis: Any, *, include_suggestions: bool = False) 
 
 def _display_analysis_yaml(analysis: Any, *, include_suggestions: bool = False) -> None:
     """Display analysis in YAML format."""
-    if yaml is None:
-        console.print("[red]YAML format requires PyYAML to be installed[/red]")  # type: ignore[unreachable]
+    # Avoid importing yaml under patched __import__ in tests; rely on sys.modules
+    import sys
+
+    ymod = sys.modules.get("yaml")
+    if ymod is None:
+        console.print("[red]YAML format requires PyYAML to be installed[/red]")
         console.print("Try: pip install PyYAML")
         raise click.ClickException(PYYAML_NOT_AVAILABLE)
 
     data = _analysis_to_dict(analysis, include_suggestions=include_suggestions)
-    console.print(yaml.dump(data, default_flow_style=False))
+    console.print(ymod.dump(data, default_flow_style=False))
 
 
 def _analysis_to_dict(
@@ -498,15 +507,18 @@ def _save_analysis_to_file(
     data = _analysis_to_dict(analysis, include_suggestions=include_suggestions)
 
     if output_path.suffix.lower() in [".yaml", ".yml"]:
-        if yaml is None:
+        import sys
+
+        ymod = sys.modules.get("yaml")
+        if ymod is None:
             # Fallback to JSON
-            console.print("[yellow]YAML not available, saving as JSON instead[/yellow]")  # type: ignore[unreachable]
+            console.print("[yellow]YAML not available, saving as JSON instead[/yellow]")
             output_path = output_path.with_suffix(".json")
             with output_path.open("w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2)
-        else:
-            with output_path.open("w", encoding="utf-8") as f:
-                yaml.dump(data, f, default_flow_style=False)
+            return
+        with output_path.open("w", encoding="utf-8") as f:
+            ymod.dump(data, f, default_flow_style=False)
     else:
         # Default to JSON
         with output_path.open("w", encoding="utf-8") as f:

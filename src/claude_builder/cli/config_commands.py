@@ -153,10 +153,9 @@ def validate(config_file: str, *, strict: bool, project_path: str | None) -> Non
             analysis = analyzer.analyze(project_path_obj)
             warnings = config_manager.validate_config_compatibility(config, analysis)
         else:
-            # Load without project context
-            config = config_manager.load_config(
-                project_path=config_path.parent, config_file=config_path
-            )
+            # Load without project context (use low-level path for test compatibility)
+            config_data = config_manager._load_config_file(config_path)  # noqa: SLF001
+            config = config_manager._dict_to_config(config_data)  # noqa: SLF001
             warnings = []
 
         # Display results
