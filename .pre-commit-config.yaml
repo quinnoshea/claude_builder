@@ -15,6 +15,13 @@ repos:
       - id: check-toml
         exclude: ^src/claude_builder/templates/
 
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: ^src/claude_builder/templates/
+
   - repo: https://github.com/PyCQA/isort
     rev: 5.13.2
     hooks:
