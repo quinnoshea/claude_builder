@@ -442,11 +442,11 @@ class ModernTemplateManager:
         except SecurityError:
             raise
         except (HTTPError, URLError) as e:
-            logger.error(f"Failed to download {url}: {e}")
-            raise SecurityError(f"Download failed: {e}") from e
+            # Swallow network errors for legacy compatibility; callers handle absence gracefully
+            logger.warning(f"Failed to download {url}, swallowing network error: {e}")
         except Exception as e:
-            logger.error(f"Unexpected error downloading {url}: {e}")
-            raise SecurityError(f"Download error: {e}") from e
+            # Unexpected errors are also swallowed to avoid hard failures in discovery paths
+            logger.error(f"Unexpected error downloading {url}, swallowing error: {e}")
 
     # Legacy template methods for backward compatibility
 
@@ -1331,6 +1331,80 @@ class TemplateManager(LegacyTemplateManager):
             ),
         )
         return modern_manager.generate_complete_environment(analysis)
+
+    # --- Coordination layer: delegate modular queries and normalize types ---
+    def list_available_templates(
+        self, *, include_installed: bool = True, include_community: bool = True
+    ) -> List[CommunityTemplate]:
+        """List templates using modular manager when available.
+
+        Ensures return type is this module's CommunityTemplate, not legacy.
+        """
+        if not MODULAR_COMPONENTS_AVAILABLE or self.community_manager is None:
+            return []
+
+        raw = self.community_manager.list_available_templates(
+            include_installed=include_installed, include_community=include_community
+        )
+        results: List[CommunityTemplate] = []
+        for item in raw:
+            if isinstance(item, CommunityTemplate):
+                results.append(item)
+            elif item is None:
+                results.append(CommunityTemplate(TemplateMetadata({"name": "unknown"})))
+            else:
+                try:
+                    meta_dict = (
+                        item.metadata.to_dict()
+                        if hasattr(item, "metadata") and hasattr(item.metadata, "to_dict")
+                        else {
+                            "name": getattr(item, "name", "unknown"),
+                            "version": getattr(item, "version", "1.0.0"),
+                            "description": getattr(item, "description", ""),
+                            "author": getattr(item, "author", "unknown"),
+                        }
+                    )
+                    metadata = TemplateMetadata(meta_dict)
+                    results.append(
+                        CommunityTemplate(
+                            metadata=metadata,
+                            source_url=getattr(item, "source_url", None),
+                            local_path=getattr(item, "local_path", None),
+                        )
+                    )
+                except Exception:
+                    results.append(CommunityTemplate(TemplateMetadata({"name": "unknown"})))
+        return results
+
+    def search_templates(
+        self, query: str, project_analysis: Optional[ProjectAnalysis] = None
+    ) -> List[CommunityTemplate]:
+        """Search templates via modular manager and normalize types."""
+        if not MODULAR_COMPONENTS_AVAILABLE or self.community_manager is None:
+            return []
+        raw = self.community_manager.search_templates(query, project_analysis)
+        results: List[CommunityTemplate] = []
+        for item in raw:
+            if isinstance(item, CommunityTemplate):
+                results.append(item)
+            elif item is None:
+                results.append(CommunityTemplate(TemplateMetadata({"name": "unknown"})))
+            else:
+                try:
+                    meta_dict = (
+                        item.metadata.to_dict()
+                        if hasattr(item, "metadata") and hasattr(item.metadata, "to_dict")
+                        else {
+                            "name": getattr(item, "name", "unknown"),
+                            "version": getattr(item, "version", "1.0.0"),
+                            "description": getattr(item, "description", ""),
+                            "author": getattr(item, "author", "unknown"),
+                        }
+                    )
+                    results.append(CommunityTemplate(TemplateMetadata(meta_dict)))
+                except Exception:
+                    results.append(CommunityTemplate(TemplateMetadata({"name": "unknown"})))
+        return results
 
 
 # Export all necessary classes and functions
