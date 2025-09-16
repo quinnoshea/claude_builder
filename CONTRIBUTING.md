@@ -280,6 +280,29 @@ mypy claude_builder
 
 # Security scanning
 bandit -r claude_builder
+
+## Security Scanning (CodeQL)
+
+We run GitHub CodeQL code scanning on `main` and on pull requests into `main`.
+
+- Where to view: GitHub → Security → Code scanning alerts
+- On PRs: “Code scanning results / CodeQL” check and inline annotations
+- Schedule: Weekly (Mon 03:00 UTC) and on PRs to `main`
+
+Triage and dismissals
+- Open an alert → “Dismiss alert” with a reason (false positive / won’t fix / used in tests)
+- Prefer code fixes when feasible; for non-executable or generated areas, you can exclude paths via `.github/codeql-config.yml` (`paths-ignore`).
+- Keep ignores narrow and include justification in the PR description.
+
+Recommended branch protection
+1. Settings → Branches → “Add branch protection rule” for `main`
+2. Require a pull request before merging
+3. Require status checks to pass, and add:
+   - `Code scanning results / CodeQL`
+   - Your CI checks (e.g., `CI / test`, `CI / integration-tests`)
+   - Optional: Codacy checks (`Codacy Static Analysis`, `codacy/coverage`)
+4. Save
+
 ```
 
 ### Project Structure
