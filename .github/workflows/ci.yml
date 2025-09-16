@@ -25,6 +25,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
@@ -73,6 +75,16 @@ jobs:
           coverage xml -o coverage.xml || true
         fi
         ls -la coverage.xml || echo "coverage.xml not found after generation attempt"
+
+    - name: Normalize coverage paths for Codacy (if needed)
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      run: |
+        if grep -q "src/claude_builder" coverage.xml; then
+          python scripts/fix_coverage_paths.py coverage.xml || true
+          echo "Applied coverage path normalization for Codacy"
+        else
+          echo "No path normalization needed"
+        fi
 
     - name: Debug coverage file
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
