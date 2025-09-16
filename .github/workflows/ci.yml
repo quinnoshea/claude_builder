@@ -120,7 +120,7 @@ jobs:
           !.venv/**
           !node_modules/**
 
-  secrets:
+  security:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -134,3 +134,84 @@ jobs:
           pip install detect-secrets
       - name: Verify secrets baseline
         run: detect-secrets scan --baseline .secrets.baseline --all-files --exclude-files 'src/claude_builder/templates/*'
+      - name: Bandit (security scan)
+        run: |
+          pip install bandit
+          bandit -r src/claude_builder -f json -o bandit-report.json || true
+      - name: Upload security artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-artifacts
+          path: |
+            bandit-report.json
+
+  performance:
+    runs-on: ubuntu-latest
+    needs: [test]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install project (dev)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[dev]
+      - name: Run performance smoke tests (if present)
+        run: |
+          if [ -d tests/performance ]; then
+            pytest tests/performance -q || true
+          else
+            echo "No tests/performance directory; skipping."
+          fi
+
+  integration-tests:
+    runs-on: ubuntu-latest
+    needs: [test]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install project (dev)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[dev]
+      - name: Run integration tests
+        env:
+          PYTHONPATH: src
+        run: |
+          if [ -d tests/integration ]; then
+            pytest tests/integration -q
+          else
+            echo "No integration tests found; skipping."
+          fi
+
+  build:
+    runs-on: ubuntu-latest
+    needs: [test, integration-tests]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Build sdist and wheel
+        run: |
+          python -m pip install --upgrade pip
+          pip install build
+          python -m build
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-artifacts
+          path: dist/*
+
+  notify:
+    runs-on: ubuntu-latest
+    needs: [test, code-quality, security, performance, integration-tests, build]
+    if: always()
+    steps:
+      - name: Summary
+        run: |
+          echo "CI completed. Check artifacts and job results above." >> $GITHUB_STEP_SUMMARY
