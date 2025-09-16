@@ -461,6 +461,22 @@ class ModernTemplateManager:
         try:
             return self.loader.load_template_from_file(template_name)
         except Exception:
+            # As an additional compatibility path for integration tests,
+            # look in CWD and CWD/templates for ad-hoc files.
+            from typing import Iterable
+
+            candidates: Iterable[Path] = (
+                Path.cwd() / template_name,
+                Path.cwd() / "templates" / template_name,
+                Path.cwd() / f"{template_name}.md",
+                Path.cwd() / "templates" / f"{template_name}.md",
+            )
+            for p in candidates:
+                try:
+                    if p.exists():
+                        return Template(template_name, content=p.read_text(encoding="utf-8"))
+                except Exception:
+                    continue
             return Template(template_name, content=f"# {template_name}\n")
 
     def get_templates_by_type(self, template_type: str) -> List[Template]:
