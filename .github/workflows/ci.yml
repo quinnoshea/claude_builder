@@ -133,6 +133,15 @@ jobs:
         verbose: true
         token: ${{ secrets.CODECOV_TOKEN }}
 
+    - name: Upload test results to Codecov
+      id: codecov-test-results
+      if: ${{ !cancelled() && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11' }}
+      uses: codecov/test-results-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: ./junit.xml
+        flags: unittests
+
     - name: Append coverage status to summary
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
       run: |
@@ -140,6 +149,7 @@ jobs:
         echo "Coverage percent: ${{ steps.cov.outputs.percent }}%" >> $GITHUB_STEP_SUMMARY
         echo "Codacy upload:  ${{ steps.codacy.outcome }}" >> $GITHUB_STEP_SUMMARY
         echo "Codecov upload: ${{ steps.codecov.outcome }}" >> $GITHUB_STEP_SUMMARY
+        echo "Test results:   ${{ steps.codecov-test-results.outcome }}" >> $GITHUB_STEP_SUMMARY
 
     - name: Upload test results and coverage artifacts
       if: always()
