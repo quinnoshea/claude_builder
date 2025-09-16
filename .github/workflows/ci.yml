@@ -167,6 +167,54 @@ jobs:
         python -m pip install --upgrade pip
         pip install -e ".[dev,test]"
 
+    - name: Check Codacy token availability
+      run: |
+        if [ -z "${{ secrets.CODACY_PROJECT_TOKEN }}" ]; then
+          echo "⚠️  CODACY_PROJECT_TOKEN is not set - Codacy analysis will be skipped"
+        else
+          echo "✅ CODACY_PROJECT_TOKEN is configured"
+        fi
+
+    - name: Codacy Analysis (ruff)
+      continue-on-error: true
+      uses: codacy/codacy-analysis-cli-action@v4
+      with:
+        project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+        upload: true
+        max-allowed-issues: 2147483647
+        tool: "ruff"
+        directory: "${{ github.workspace }}/src"
+
+    - name: Codacy Analysis (pylint)
+      continue-on-error: true
+      uses: codacy/codacy-analysis-cli-action@v4
+      with:
+        project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+        upload: true
+        max-allowed-issues: 2147483647
+        tool: "pylint"
+        directory: "${{ github.workspace }}/src"
+
+    - name: Codacy Analysis (bandit)
+      continue-on-error: true
+      uses: codacy/codacy-analysis-cli-action@v4
+      with:
+        project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+        upload: true
+        max-allowed-issues: 2147483647
+        tool: "bandit"
+        directory: "${{ github.workspace }}/src"
+
+    - name: Codacy Analysis (semgrep)
+      continue-on-error: true
+      uses: codacy/codacy-analysis-cli-action@v4
+      with:
+        project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+        upload: true
+        max-allowed-issues: 2147483647
+        tool: "semgrep"
+        directory: "${{ github.workspace }}/src"
+
     - name: Lint markdown files
       uses: DavidAnson/markdownlint-cli2-action@v16
       with:
