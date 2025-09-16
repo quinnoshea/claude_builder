@@ -1,0 +1,100 @@
+name: Codacy Issues Report
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Branch to analyze
+        default: main
+        required: true
+      category:
+        description: Categories (comma list), e.g., Security,Style,Performance
+        default: Security
+        required: false
+      levels:
+        description: Levels (comma list), e.g., Error,Warning,Info
+        default: Error,Warning
+        required: false
+
+jobs:
+  codacy-issues:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Prepare filters
+        id: prep
+        run: |
+          CAT="${{ github.event.inputs.category }}"; [ -z "$CAT" ] && CAT=Security
+          LVL="${{ github.event.inputs.levels }}"; [ -z "$LVL" ] && LVL="Error,Warning"
+          # Build JSON arrays from comma lists
+          cat_json=$(printf '%s' "$CAT" | awk -F',' '{printf "["; for(i=1;i<=NF;i++){gsub(/^ +| +$/,"",$i); printf (i>1?"," :"")"\""$i"\""} printf "]"}')
+          lvl_json=$(printf '%s' "$LVL" | awk -F',' '{printf "["; for(i=1;i<=NF;i++){gsub(/^ +| +$/,"",$i); printf (i>1?"," :"")"\""$i"\""} printf "]"}')
+          echo "cat=$cat_json" >> $GITHUB_OUTPUT
+          echo "lvl=$lvl_json" >> $GITHUB_OUTPUT
+
+      - name: Fetch issues (paged)
+        id: fetch
+        env:
+          CODACY_API_TOKEN: ${{ secrets.CODACY_API_TOKEN }}
+          BRANCH: ${{ github.event.inputs.branch }}
+        run: |
+          set -e
+          org=quinnoshea
+          repo=claude_builder
+          cursor=""
+          page=1
+          echo '{"data":[]}' > issues.json
+          while :; do
+            url="https://app.codacy.com/api/v3/analysis/organizations/gh/${org}/repositories/${repo}/issues/search?branch=${BRANCH}&limit=500";
+            [ -n "$cursor" ] && url="$url&cursor=$cursor"
+            body=$(jq -n --argjson categories '${{ steps.prep.outputs.cat }}' --argjson levels '${{ steps.prep.outputs.lvl }}' '{categories:$categories,levels:$levels}')
+            resp=$(curl -sS -X POST "$url" -H "api-token: ${CODACY_API_TOKEN}" -H "Content-Type: application/json" -d "$body")
+            # Append data
+            jq -s '.[0] + {data:(.[0].data + .[1].data)}' issues.json <(printf '%s' "$resp") > tmp.json && mv tmp.json issues.json
+            # Next cursor
+            cursor=$(printf '%s' "$resp" | jq -r '.pagination.cursor // ""')
+            [ -z "$cursor" ] && break
+            page=$((page+1))
+            [ "$page" -gt 20 ] && break  # safety cap
+          done
+          total=$(jq '.data | length' issues.json)
+          echo "total=$total" >> $GITHUB_OUTPUT
+
+      - name: Aggregate summary
+        id: agg
+        run: |
+          by_level=$(jq -r '.data | group_by(.level) | map({level: .[0].level, count: length})' issues.json)
+          top_patterns=$(jq -r '[.data[]|.patternId] | group_by(.) | map({pattern: .[0], count: length}) | sort_by(-.count) | .[:10]' issues.json)
+          top_files=$(jq -r '[.data[]|.filePath] | group_by(.) | map({file: .[0], count: length}) | sort_by(-.count) | .[:10]' issues.json)
+          jq -n --arg branch "${{ github.event.inputs.branch }}" \
+                --argjson by_level "$by_level" \
+                --argjson top_patterns "$top_patterns" \
+                --argjson top_files "$top_files" \
+                --arg total "${{ steps.fetch.outputs.total }}" \
+                '{branch:$branch,total:($total|tonumber),byLevel:$by_level,topPatterns:$top_patterns,topFiles:$top_files}' > summary.json
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: codacy-issues-${{ github.event.inputs.branch }}
+          path: |
+            issues.json
+            summary.json
+
+      - name: Run summary
+        run: |
+          echo "## Codacy Issues Report" >> $GITHUB_STEP_SUMMARY
+          echo "Branch: \`${{ github.event.inputs.branch }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "Total issues: **${{ steps.fetch.outputs.total }}**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### By level" >> $GITHUB_STEP_SUMMARY
+          echo '```json' >> $GITHUB_STEP_SUMMARY
+          cat summary.json | jq '.byLevel' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "### Top patterns" >> $GITHUB_STEP_SUMMARY
+          echo '```json' >> $GITHUB_STEP_SUMMARY
+          cat summary.json | jq '.topPatterns' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "### Top files" >> $GITHUB_STEP_SUMMARY
+          echo '```json' >> $GITHUB_STEP_SUMMARY
+          cat summary.json | jq '.topFiles' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
