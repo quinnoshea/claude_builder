@@ -52,4 +52,3 @@ class StubCheck(HealthCheck):
 
     def check(self):  # type: ignore[override]
         return self._create_result(self._status, self._message)
-

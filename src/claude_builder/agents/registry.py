@@ -20,7 +20,7 @@ class DevOpsAgents:
     @staticmethod
     def register(registry: "AgentRegistry") -> None:
         """Register DevOps agents into the provided registry."""
-        # Infrastructure (domain)
+        # Section: Infrastructure (domain)
         agents_to_register = [
             AgentInfo(
                 name="terraform-specialist",
@@ -87,7 +87,7 @@ class DevOpsAgents:
                     "Chart-testing and provenance/signing policies",
                 ],
             ),
-            # Platform (domain)
+            # Section: Platform (domain)
             AgentInfo(
                 name="pulumi-engineer",
                 role=AgentRole.DOMAIN.value,
@@ -136,7 +136,7 @@ class DevOpsAgents:
                     "Publish/version images to registries",
                 ],
             ),
-            # Security (workflow)
+            # Section: Security (workflow)
             AgentInfo(
                 name="security-auditor",
                 role=AgentRole.WORKFLOW.value,
@@ -153,7 +153,7 @@ class DevOpsAgents:
                     "Identity and least-privilege reviews",
                 ],
             ),
-            # Operations (workflow)
+            # Section: Operations (workflow)
             AgentInfo(
                 name="ci-pipeline-engineer",
                 role=AgentRole.WORKFLOW.value,

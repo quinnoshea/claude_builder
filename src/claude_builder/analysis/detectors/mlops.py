@@ -5,7 +5,7 @@ commonly used in machine learning and data engineering projects.
 """
 
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 from claude_builder.analysis.detectors.base import BaseDetector
 
@@ -90,17 +90,17 @@ class MLOpsDetector(BaseDetector):
         confidence = 0
         patterns = self._patterns.get(tool, {})
 
-        # Files (+3)
+        # Weight: files (+3)
         for file_pattern in patterns.get("files", []):
             if (project_path / file_pattern).exists():
                 confidence += 3
 
-        # Dirs (+5)
+        # Weight: directories (+5)
         for dir_pattern in patterns.get("dirs", []):
             if (project_path / dir_pattern).is_dir():
                 confidence += 5
 
-        # Globs (+4)
+        # Weight: globs (+4)
         for glob_pattern in patterns.get("globs", []):
             if list(project_path.glob(glob_pattern)):
                 confidence += 4
@@ -121,14 +121,13 @@ class MLOpsDetector(BaseDetector):
         ]
 
         for indicator in ml_dirs:
-            if (project_path / indicator).exists():
-                if indicator.endswith("/"):
-                    return True
+            if indicator.endswith("/") and (project_path / indicator).exists():
+                return True
 
         req_file = project_path / "requirements.txt"
         if req_file.exists():
             try:
-                content = req_file.read_text().lower()
+                content = req_file.read_text(encoding="utf-8", errors="ignore").lower()
                 ml_packages = [
                     "scikit-learn",
                     "tensorflow",
@@ -139,14 +138,15 @@ class MLOpsDetector(BaseDetector):
                 ]
                 if any(pkg in content for pkg in ml_packages):
                     return True
-            except Exception:
-                pass
+            except (OSError, UnicodeDecodeError):
+                # Ignore unreadable requirements files for this heuristic
+                return False
 
         return False
 
-    def detect(self, project_path: Optional[Path] = None) -> Dict[str, List[str]]:
+    def detect(self, project_path: Optional[Path] = None) -> dict[str, list[str]]:
         """Detect MLOps tools and categorize them."""
-        results: Dict[str, List[str]] = {"data_pipeline": [], "mlops_tools": []}
+        results: dict[str, list[str]] = {"data_pipeline": [], "mlops_tools": []}
 
         target = project_path or self.project_path
         if target is None:
@@ -181,10 +181,10 @@ class MLOpsDetector(BaseDetector):
 
     def detect_with_confidence(
         self, project_path: Optional[Path] = None
-    ) -> Tuple[Dict[str, List[str]], Dict[str, str]]:
+    ) -> tuple[dict[str, list[str]], dict[str, str]]:
         """Detect MLOps tools with confidence levels."""
-        results: Dict[str, List[str]] = {"data_pipeline": [], "mlops_tools": []}
-        bucket_map: Dict[str, str] = {}
+        results: dict[str, list[str]] = {"data_pipeline": [], "mlops_tools": []}
+        bucket_map: dict[str, str] = {}
 
         target = project_path or self.project_path
         if target is None:
@@ -200,14 +200,17 @@ class MLOpsDetector(BaseDetector):
         }
         mlops_tools = {"mlflow", "feast", "kubeflow", "bentoml"}
 
+        HIGH = 12
+        MEDIUM = 8
+
         for tool in self._patterns.keys():
             if tool == "notebooks":
                 continue
             confidence = self._calculate_confidence(target, tool)
             if confidence > 0:
-                if confidence >= 12:
+                if confidence >= HIGH:
                     bucket = "high"
-                elif confidence >= 8:
+                elif confidence >= MEDIUM:
                     bucket = "medium"
                 else:
                     bucket = "low"
@@ -219,9 +222,9 @@ class MLOpsDetector(BaseDetector):
 
         notebook_confidence = self._calculate_confidence(target, "notebooks")
         if notebook_confidence > 0 and self._has_strong_ml_signals(target):
-            if notebook_confidence >= 12:
+            if notebook_confidence >= HIGH:
                 bucket = "high"
-            elif notebook_confidence >= 8:
+            elif notebook_confidence >= MEDIUM:
                 bucket = "medium"
             else:
                 bucket = "low"

@@ -15,27 +15,38 @@ from tests.helpers.health_registry import StubCheck, temp_health_registry
 
 def test_health_cli_e2e_healthy_exit_zero() -> None:
     runner = CliRunner()
-    with temp_health_registry([
-        StubCheck("stub-healthy", HealthStatus.HEALTHY, HealthCheckType.APPLICATION),
-    ]):
+    with temp_health_registry(
+        [
+            StubCheck(
+                "stub-healthy", HealthStatus.HEALTHY, HealthCheckType.APPLICATION
+            ),
+        ]
+    ):
         result = runner.invoke(health, ["check", "--quiet"])  # minimal output
         assert result.exit_code == 0, result.output
 
 
 def test_health_cli_e2e_warning_exit_two() -> None:
     runner = CliRunner()
-    with temp_health_registry([
-        StubCheck("stub-warning", HealthStatus.WARNING, HealthCheckType.APPLICATION),
-    ]):
+    with temp_health_registry(
+        [
+            StubCheck(
+                "stub-warning", HealthStatus.WARNING, HealthCheckType.APPLICATION
+            ),
+        ]
+    ):
         result = runner.invoke(health, ["check", "--quiet"])  # minimal output
         assert result.exit_code == 2, result.output
 
 
 def test_health_cli_e2e_critical_exit_one() -> None:
     runner = CliRunner()
-    with temp_health_registry([
-        StubCheck("stub-critical", HealthStatus.CRITICAL, HealthCheckType.APPLICATION),
-    ]):
+    with temp_health_registry(
+        [
+            StubCheck(
+                "stub-critical", HealthStatus.CRITICAL, HealthCheckType.APPLICATION
+            ),
+        ]
+    ):
         result = runner.invoke(health, ["check", "--quiet"])  # minimal output
         assert result.exit_code == 1, result.output
-

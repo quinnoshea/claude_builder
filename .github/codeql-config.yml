@@ -4,4 +4,3 @@ paths-ignore:
   - ".venv/**"
   - "node_modules/**"
   - "**/*.md"
-

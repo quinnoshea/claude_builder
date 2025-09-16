@@ -35,7 +35,9 @@ class DocumentGenerator:
         self.template_manager = CoreTemplateManager()
         self.agent_system = UniversalAgentSystem()
         # Test-compatibility: expose a template_loader facade
-        template_paths = self.config.get("template_paths") if isinstance(self.config, dict) else None
+        template_paths = (
+            self.config.get("template_paths") if isinstance(self.config, dict) else None
+        )
         self.template_loader = TemplateLoader(template_paths=template_paths)
 
     def generate(
@@ -44,7 +46,7 @@ class DocumentGenerator:
         """Generate all documentation for the project."""
         try:
             if analysis is None:
-                analysis = self._default_analysis  # type: ignore[assignment]
+                analysis = self._default_analysis
             if analysis is None:
                 raise ValueError("analysis is required")
             # Create template request
@@ -1159,18 +1161,31 @@ ${uses_database == 'Yes' and '''
                         base_vars: Dict[str, Any] = {}
                         if hasattr(template_manager, "_create_context_from_analysis"):
                             try:
-                                base_vars = template_manager._create_context_from_analysis(analysis)
+                                base_vars = (
+                                    template_manager._create_context_from_analysis(
+                                        analysis
+                                    )
+                                )
                             except Exception:
                                 base_vars = {}
                         # Ensure essential vars
                         essentials = {
-                            "project_name": getattr(analysis.project_path, "name", None)
-                            if hasattr(analysis, "project_path")
-                            else None,
+                            "project_name": (
+                                getattr(analysis.project_path, "name", None)
+                                if hasattr(analysis, "project_path")
+                                else None
+                            ),
                             "dependencies": getattr(analysis, "dependencies", []) or [],
                         }
-                        merged = {**essentials, **base_vars, **(getattr(self, "context_data", {}) or {}), **(context or {})}
-                        return self._render_lightweight_template(alt.read_text(encoding="utf-8"), merged)
+                        merged = {
+                            **essentials,
+                            **base_vars,
+                            **(getattr(self, "context_data", {}) or {}),
+                            **(context or {}),
+                        }
+                        return self._render_lightweight_template(
+                            alt.read_text(encoding="utf-8"), merged
+                        )
             except Exception:
                 pass
             # Handle different template object types
@@ -1199,20 +1214,26 @@ ${uses_database == 'Yes' and '''
                     except Exception:
                         pass
                 # If Jinja-style markers are present, try rendering via manager's core engine
-                if ("{{" in content and "}}" in content) or ("{%" in content and "%}" in content):
-                    base_vars: Dict[str, Any] = {}
+                if ("{{" in content and "}}" in content) or (
+                    "{%" in content and "%}" in content
+                ):
+                    jinja_vars: Dict[str, Any] = {}
                     try:
                         if hasattr(template_manager, "_create_context_from_analysis"):
                             analysis = getattr(self, "_default_analysis", None)
                             if analysis is not None:
-                                base_vars = template_manager._create_context_from_analysis(analysis)
+                                jinja_vars = (
+                                    template_manager._create_context_from_analysis(
+                                        analysis
+                                    )
+                                )
                     except Exception:
-                        base_vars = {}
+                        jinja_vars = {}
                     # Merge any ad-hoc context data
                     ctx_data = getattr(self, "context_data", {}) or {}
                     if context:
                         ctx_data = {**ctx_data, **context}
-                    merged = {**base_vars, **ctx_data}
+                    merged = {**jinja_vars, **ctx_data}
                     # Use lightweight renderer for Jinja-like templates
                     return self._render_lightweight_template(content, merged)
                 # Fallback: ${var} substitution
@@ -1229,14 +1250,24 @@ ${uses_database == 'Yes' and '''
                             base = _P(analysis.project_path).parent
                             alt = base / "templates" / str(getattr(template, "name"))
                             if alt.exists():
-                                base_vars: Dict[str, Any] = {}
-                                if hasattr(template_manager, "_create_context_from_analysis"):
+                                alt_vars: Dict[str, Any] = {}
+                                if hasattr(
+                                    template_manager, "_create_context_from_analysis"
+                                ):
                                     try:
-                                        base_vars = template_manager._create_context_from_analysis(analysis)
+                                        alt_vars = template_manager._create_context_from_analysis(
+                                            analysis
+                                        )
                                     except Exception:
-                                        base_vars = {}
-                                merged = {**base_vars, **(getattr(self, "context_data", {}) or {}), **(context or {})}
-                                return self._render_lightweight_template(alt.read_text(encoding="utf-8"), merged)
+                                        alt_vars = {}
+                                merged = {
+                                    **alt_vars,
+                                    **(getattr(self, "context_data", {}) or {}),
+                                    **(context or {}),
+                                }
+                                return self._render_lightweight_template(
+                                    alt.read_text(encoding="utf-8"), merged
+                                )
                     except Exception:
                         pass
                 return content
@@ -1271,8 +1302,8 @@ ${uses_database == 'Yes' and '''
         - {% for x in list_name %}...{% endfor %}
         - {% if expression %}...{% endif %} with expression like `i % 10 == 0`
         """
-        import re
         import ast
+        import re
 
         # Strip frontmatter
         if content.startswith("---"):
@@ -1292,13 +1323,31 @@ ${uses_database == 'Yes' and '''
 
         def safe_eval(expr: str, locals_: Dict[str, Any]) -> bool:
             node = ast.parse(expr, mode="eval")
-            allowed = (ast.Expression, ast.BinOp, ast.Mod, ast.Load, ast.Name, ast.Constant, ast.Compare, ast.Eq, ast.Gt, ast.GtE, ast.Lt, ast.LtE, ast.Num)
+            allowed = (
+                ast.Expression,
+                ast.BinOp,
+                ast.Mod,
+                ast.Load,
+                ast.Name,
+                ast.Constant,
+                ast.Compare,
+                ast.Eq,
+                ast.Gt,
+                ast.GtE,
+                ast.Lt,
+                ast.LtE,
+                ast.Num,
+            )
             for n in ast.walk(node):
                 if not isinstance(n, allowed):
                     raise ValueError("Disallowed expression")
-            return bool(eval(compile(node, "<expr>", "eval"), {"__builtins__": {}}, locals_))
+            return bool(
+                eval(compile(node, "<expr>", "eval"), {"__builtins__": {}}, locals_)
+            )
 
-        tag_re = re.compile(r"\{\%\s*(for|if)\b(.*?)\%\}|\{\%\s*end(for|if)\s*\%\}", re.DOTALL)
+        tag_re = re.compile(
+            r"\{\%\s*(for|if)\b(.*?)\%\}|\{\%\s*end(for|if)\s*\%\}", re.DOTALL
+        )
 
         def find_matching(text: str, start: int, kind: str) -> int:
             # kind: 'for' or 'if'
@@ -1319,6 +1368,7 @@ ${uses_database == 'Yes' and '''
                 name = m.group(1).strip()
                 val = resolve(name, locals_)
                 return str(val) if val is not None else ""
+
             return var_re.sub(var_repl, s)
 
         def render_segment(text: str, locals_: Dict[str, Any]) -> str:
@@ -1329,41 +1379,45 @@ ${uses_database == 'Yes' and '''
                 if not m:
                     out.append(replace_vars(text[pos:], locals_))
                     break
-                out.append(replace_vars(text[pos:m.start()], locals_))
-                if m.group(1) == 'for':
+                out.append(replace_vars(text[pos : m.start()], locals_))
+                if m.group(1) == "for":
                     head = m.group(2).strip()
-                    endpos = find_matching(text, m.end(), 'for')
+                    endpos = find_matching(text, m.end(), "for")
                     if endpos == -1:
                         # malformed; render literally
-                        out.append(replace_vars(text[m.start():], locals_))
+                        out.append(replace_vars(text[m.start() :], locals_))
                         break
-                    body = text[m.end():endpos]
+                    body = text[m.end() : endpos]
                     # parse head: var in range(N) or var in list
                     try:
-                        _, after_for = head.split('for',1) if head.startswith('for ') else ('', head)
+                        _, after_for = (
+                            head.split("for", 1)
+                            if head.startswith("for ")
+                            else ("", head)
+                        )
                         # normalized: var in expr
-                        var, expr = [p.strip() for p in head.split(' in ',1)]
-                        seq = None
-                        if expr.startswith('range(') and expr.endswith(')'):
+                        var, expr = [p.strip() for p in head.split(" in ", 1)]
+                        seq: Any = None
+                        if expr.startswith("range(") and expr.endswith(")"):
                             count = int(expr[6:-1])
                             seq = range(count)
                         else:
                             seq = resolve(expr, locals_) or []
                     except Exception:
                         seq = []
-                        var = 'i'
+                        var = "i"
                     for item in seq:
                         l2 = dict(locals_)
                         l2[var] = item
                         out.append(render_segment(body, l2))
-                    pos = endpos + len('{% endfor %}')
-                elif m.group(1) == 'if':
+                    pos = endpos + len("{% endfor %}")
+                elif m.group(1) == "if":
                     expr = m.group(2).strip()
-                    endpos = find_matching(text, m.end(), 'if')
+                    endpos = find_matching(text, m.end(), "if")
                     if endpos == -1:
-                        out.append(replace_vars(text[m.start():], locals_))
+                        out.append(replace_vars(text[m.start() :], locals_))
                         break
-                    body = text[m.end():endpos]
+                    body = text[m.end() : endpos]
                     ok = False
                     try:
                         ok = safe_eval(expr, locals_ | ctx)
@@ -1371,12 +1425,12 @@ ${uses_database == 'Yes' and '''
                         ok = False
                     if ok:
                         out.append(render_segment(body, locals_))
-                    pos = endpos + len('{% endif %}')
+                    pos = endpos + len("{% endif %}")
                 else:
                     # unexpected end tag; append literally
-                    out.append(replace_vars(text[m.start():m.end()], locals_))
+                    out.append(replace_vars(text[m.start() : m.end()], locals_))
                     pos = m.end()
-            return ''.join(out)
+            return "".join(out)
 
         return render_segment(content, {})
 

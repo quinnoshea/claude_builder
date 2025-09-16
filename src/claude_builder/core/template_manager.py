@@ -441,20 +441,31 @@ class ModernTemplateManager:
 
         except SecurityError:
             raise
-        except (HTTPError, URLError) as e:
-<<<<<<< HEAD
-            # Swallow network errors for legacy compatibility; callers handle absence gracefully
-            logger.warning(f"Failed to download {url}, swallowing network error: {e}")
-        except Exception as e:
-            # Unexpected errors are also swallowed to avoid hard failures in discovery paths
-            logger.error(f"Unexpected error downloading {url}, swallowing error: {e}")
-=======
-            logger.error(f"Failed to download {url}: {e}")
-            raise SecurityError(f"Download failed: {e}") from e
-        except Exception as e:
-            logger.error(f"Unexpected error downloading {url}: {e}")
-            raise SecurityError(f"Download error: {e}") from e
->>>>>>> origin/main
+        except (
+            HTTPError,
+            URLError,
+            __import__("socket").timeout,
+            TimeoutError,
+            __import__("ssl").SSLError,
+            __import__("http.client").IncompleteRead,
+        ) as e:
+            # Network issues are non-fatal in discovery paths; log and continue
+            logger.warning(
+                "Failed to download %s, swallowing network error: %s", url, e
+            )
+        except OSError as e:
+            # Filesystem issues writing the download; non-fatal for legacy discovery
+            logger.warning(
+                "Filesystem error writing %s from %s, swallowing: %s",
+                destination,
+                url,
+                e,
+            )
+        except (ValueError, RuntimeError) as e:
+            # Other foreseeable non-fatal errors; keep compatibility by not raising
+            logger.warning(
+                "Non-fatal error downloading %s, swallowing error: %s", url, e
+            )
 
     # Legacy template methods for backward compatibility
 
@@ -482,7 +493,9 @@ class ModernTemplateManager:
             for p in candidates:
                 try:
                     if p.exists():
-                        return Template(template_name, content=p.read_text(encoding="utf-8"))
+                        return Template(
+                            template_name, content=p.read_text(encoding="utf-8")
+                        )
                 except Exception:
                     continue
             return Template(template_name, content=f"# {template_name}\n")
@@ -1355,6 +1368,7 @@ class TemplateManager(LegacyTemplateManager):
             ),
         )
         return modern_manager.generate_complete_environment(analysis)
+
     # --- Coordination layer: delegate modular queries and normalize types ---
     def list_available_templates(
         self, *, include_installed: bool = True, include_community: bool = True
