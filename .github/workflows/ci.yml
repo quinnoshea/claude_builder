@@ -27,6 +27,8 @@ jobs:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
+        # Ensure we have access to compare commits for coverage
+        ref: ${{ github.head_ref || github.ref }}
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
@@ -121,10 +123,25 @@ jobs:
       env:
         CODACY_API_BASE_URL: https://api.codacy.com
 
+    - name: Debug git refs for Codecov
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      env:
+        GITHUB_REF_NAME: ${{ github.ref_name }}
+        GITHUB_EVENT_BEFORE: ${{ github.event.before }}
+        GITHUB_BASE_REF: ${{ github.base_ref }}
+        GITHUB_HEAD_REF: ${{ github.head_ref }}
+      run: |
+        echo "Current commit: $(git rev-parse HEAD)"
+        echo "Branch: $GITHUB_REF_NAME"
+        echo "Event before: $GITHUB_EVENT_BEFORE"
+        echo "Base ref: $GITHUB_BASE_REF"
+        echo "Head ref: $GITHUB_HEAD_REF"
+        git log --oneline -5
+
     - name: Upload coverage to Codecov
       id: codecov
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
         file: ./coverage.xml
         flags: unittests
@@ -132,6 +149,8 @@ jobs:
         fail_ci_if_error: false
         verbose: true
         token: ${{ secrets.CODECOV_TOKEN }}
+        slug: ${{ github.repository }}
+        commit_parent: ${{ github.event.before }}
 
     - name: Upload test results to Codecov
       id: codecov-test-results
