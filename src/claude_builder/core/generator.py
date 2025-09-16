@@ -93,7 +93,9 @@ class DocumentGenerator:
                 # Try explicit mapping first; fall back to hierarchical system if missing/empty
                 context = self.template_manager._create_context_from_analysis(analysis)
                 try:
-                    content_raw = self.template_loader.load_template(mapped_name, "base")
+                    content_raw = self.template_loader.load_template(
+                        mapped_name, "base"
+                    )
                 except Exception:
                     content_raw = ""
                 if content_raw and content_raw.strip():
@@ -277,9 +279,7 @@ class DocumentGenerator:
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "date": datetime.now().strftime("%Y-%m-%d"),
             # Language-specific variables
-            "package_managers": ", ".join(
-                getattr(dev, "package_managers", []) or []
-            ),
+            "package_managers": ", ".join(getattr(dev, "package_managers", []) or []),
             "testing_frameworks": ", ".join(
                 getattr(dev, "testing_frameworks", []) or []
             ),

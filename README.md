@@ -119,6 +119,81 @@ Example signals → sections added to CLAUDE.md:
 
 ---
 
+## Local Verification (Pre-commit + Tests)
+
+Preferred tooling order: `uv` → `pipx` → `pip`.
+Use `uv` if available for speed and reproducibility.
+
+Run all local quality checks with one command:
+
+```bash
+pre-commit run --all-files
+```
+
+If `pre-commit` is not installed yet:
+
+```bash
+pip install pre-commit
+pre-commit install
+pre-commit run --all-files
+```
+
+Run the full test suite with coverage:
+
+```bash
+# Using uv (recommended)
+uv pip install -e .[dev]
+uv run pytest -q
+
+# Using pipx (fallback)
+pipx install .[dev]
+# If already installed without [dev], inject dev tools:
+pipx inject claude-builder '.[dev]'
+pipx run pytest -q
+
+# Using pip (last resort)
+python -m pip install -e .[dev]
+pytest -q
+```
+
+## Health Command Exit Codes
+
+The `claude-builder health check` command uses exit codes to indicate status:
+
+- 0: HEALTHY — all checks passed
+- 2: WARNING — warnings present, no critical failures
+- 1: CRITICAL — at least one critical failure
+
+These are validated by unit tests under `tests/unit/cli/test_health_commands.py`.
+
+## Adding a New Health Check (Registry)
+
+Health checks are managed via a lightweight registry (see `src/claude_builder/utils/health.py`).
+
+Example:
+
+```python
+from claude_builder.utils.health import (
+    HealthCheck,
+    HealthCheckType,
+    HealthStatus,
+    default_health_check_registry,
+)
+
+class MyCustomCheck(HealthCheck):
+    def __init__(self) -> None:
+        super().__init__("My Custom", HealthCheckType.APPLICATION)
+
+    def check(self):
+        # your logic here
+        return self._create_result(HealthStatus.HEALTHY, "All good")
+
+# Register it at startup (e.g., in app init or a plugin):
+default_health_check_registry.register(MyCustomCheck())
+```
+
+During tests, you can inject or clear the registry to control which checks run.
+
 ## 🎯 Current Implementation Status
 
 ### ✅ **WORKING COMPONENTS**

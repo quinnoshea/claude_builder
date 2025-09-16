@@ -459,6 +459,7 @@ class TestCLIPerformance:
             result = runner.invoke(
                 cli,
                 [
+                    str(temp_dir),
                     "analyze",
                     "project",
                     str(temp_dir),

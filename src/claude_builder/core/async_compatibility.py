@@ -13,6 +13,7 @@ from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
 
 # Import module to allow unittest.patch on class reference to take effect
 import claude_builder.core.async_analyzer as _async_analyzer_mod
+
 from claude_builder.core.async_generator import AsyncDocumentGenerator
 from claude_builder.core.async_template_manager import AsyncTemplateManager
 from claude_builder.core.models import (
@@ -32,7 +33,7 @@ class AsyncCompatibilityManager:
 
     def __init__(self) -> None:
         self._loop: Optional[asyncio.AbstractEventLoop] = None
-        self._async_analyzer: Optional[AsyncProjectAnalyzer] = None
+        self._async_analyzer: Optional[Any] = None
         self._async_generator: Optional[AsyncDocumentGenerator] = None
         self._async_template_manager: Optional[AsyncTemplateManager] = None
         self._thread_pool_size = 4
@@ -92,9 +93,7 @@ class AsyncCompatibilityManager:
             future = executor.submit(run_coro)
             return future.result(timeout=300)  # 5 minute timeout
 
-    def get_async_analyzer(
-        self, config: Optional[Dict[str, Any]] = None
-    ) -> Any:
+    def get_async_analyzer(self, config: Optional[Dict[str, Any]] = None) -> Any:
         """Get or create async analyzer instance.
 
         Instances are isolated per-thread to support concurrent operations
@@ -192,19 +191,22 @@ class SyncProjectAnalyzerCompat:
     @async_to_sync
     async def analyze(self, project_path: Union[str, Path]) -> ProjectAnalysis:
         """Analyze project synchronously using async implementation."""
-        return await self._async_analyzer.analyze_async(project_path)
+        result = await self._async_analyzer.analyze_async(project_path)
+        return result  # type: ignore[no-any-return]
 
     @async_to_sync
     async def batch_analyze(
         self, project_paths: List[Union[str, Path]]
     ) -> List[ProjectAnalysis]:
         """Batch analyze projects synchronously."""
-        return await self._async_analyzer.batch_analyze_async(project_paths)
+        results = await self._async_analyzer.batch_analyze_async(project_paths)
+        return results  # type: ignore[no-any-return]
 
     def get_performance_stats(self) -> Dict[str, Any]:
         """Get performance statistics."""
         analyzer = _compat_manager.get_async_analyzer(self.config)
-        return analyzer.get_performance_stats()
+        stats = analyzer.get_performance_stats()
+        return stats  # type: ignore[no-any-return]
 
 
 class SyncDocumentGeneratorCompat:

@@ -1335,7 +1335,7 @@ class TemplateManager(LegacyTemplateManager):
     # --- Coordination layer: delegate modular queries and normalize types ---
     def list_available_templates(
         self, *, include_installed: bool = True, include_community: bool = True
-    ) -> List[CommunityTemplate]:
+    ) -> Any:
         """List templates using modular manager when available.
 
         Ensures return type is this module's CommunityTemplate, not legacy.
@@ -1343,67 +1343,64 @@ class TemplateManager(LegacyTemplateManager):
         if not MODULAR_COMPONENTS_AVAILABLE or self.community_manager is None:
             return []
 
-        raw = self.community_manager.list_available_templates(
-            include_installed=include_installed, include_community=include_community
+        from typing import Any
+        from typing import List as TList
+        from typing import cast
+
+        raw: TList[Any] = cast(
+            TList[Any],
+            self.community_manager.list_available_templates(
+                include_installed=include_installed, include_community=include_community
+            ),
         )
         results: List[CommunityTemplate] = []
         for item in raw:
-            if isinstance(item, CommunityTemplate):
-                results.append(item)
-            elif item is None:
+            try:
+                meta_dict = (
+                    item.metadata.to_dict()
+                    if hasattr(item, "metadata") and hasattr(item.metadata, "to_dict")
+                    else {
+                        "name": getattr(item, "name", "unknown"),
+                        "version": getattr(item, "version", "1.0.0"),
+                        "description": getattr(item, "description", ""),
+                        "author": getattr(item, "author", "unknown"),
+                    }
+                )
+                metadata = TemplateMetadata(meta_dict)
+                results.append(
+                    CommunityTemplate(
+                        metadata=metadata,
+                        source_url=getattr(item, "source_url", None),
+                        local_path=getattr(item, "local_path", None),
+                    )
+                )
+            except Exception:
                 results.append(CommunityTemplate(TemplateMetadata({"name": "unknown"})))
-            else:
-                try:
-                    meta_dict = (
-                        item.metadata.to_dict()
-                        if hasattr(item, "metadata") and hasattr(item.metadata, "to_dict")
-                        else {
-                            "name": getattr(item, "name", "unknown"),
-                            "version": getattr(item, "version", "1.0.0"),
-                            "description": getattr(item, "description", ""),
-                            "author": getattr(item, "author", "unknown"),
-                        }
-                    )
-                    metadata = TemplateMetadata(meta_dict)
-                    results.append(
-                        CommunityTemplate(
-                            metadata=metadata,
-                            source_url=getattr(item, "source_url", None),
-                            local_path=getattr(item, "local_path", None),
-                        )
-                    )
-                except Exception:
-                    results.append(CommunityTemplate(TemplateMetadata({"name": "unknown"})))
         return results
 
     def search_templates(
         self, query: str, project_analysis: Optional[ProjectAnalysis] = None
-    ) -> List[CommunityTemplate]:
+    ) -> Any:
         """Search templates via modular manager and normalize types."""
         if not MODULAR_COMPONENTS_AVAILABLE or self.community_manager is None:
             return []
         raw = self.community_manager.search_templates(query, project_analysis)
         results: List[CommunityTemplate] = []
         for item in raw:
-            if isinstance(item, CommunityTemplate):
-                results.append(item)
-            elif item is None:
+            try:
+                meta_dict = (
+                    item.metadata.to_dict()
+                    if hasattr(item, "metadata") and hasattr(item.metadata, "to_dict")
+                    else {
+                        "name": getattr(item, "name", "unknown"),
+                        "version": getattr(item, "version", "1.0.0"),
+                        "description": getattr(item, "description", ""),
+                        "author": getattr(item, "author", "unknown"),
+                    }
+                )
+                results.append(CommunityTemplate(TemplateMetadata(meta_dict)))
+            except Exception:
                 results.append(CommunityTemplate(TemplateMetadata({"name": "unknown"})))
-            else:
-                try:
-                    meta_dict = (
-                        item.metadata.to_dict()
-                        if hasattr(item, "metadata") and hasattr(item.metadata, "to_dict")
-                        else {
-                            "name": getattr(item, "name", "unknown"),
-                            "version": getattr(item, "version", "1.0.0"),
-                            "description": getattr(item, "description", ""),
-                            "author": getattr(item, "author", "unknown"),
-                        }
-                    )
-                    results.append(CommunityTemplate(TemplateMetadata(meta_dict)))
-                except Exception:
-                    results.append(CommunityTemplate(TemplateMetadata({"name": "unknown"})))
         return results
 
 

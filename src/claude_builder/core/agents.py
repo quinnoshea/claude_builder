@@ -2,7 +2,8 @@
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from claude_builder.core.models import (
     AgentInfo,
@@ -1078,6 +1079,19 @@ class AgentCoordinator:
         self.enable_monitoring = enable_monitoring
         self.max_concurrent_agents = max_concurrent_agents
         self._messages: Dict[Any, List[Dict[str, Any]]] = {}
+        # Performance metrics structure for monitoring
+        self.performance_metrics: Dict[str, Any] = {}
+        if self.enable_monitoring:
+            self.performance_metrics = {
+                "total_tasks": 0,
+                "successful_tasks": 0,
+                "failed_tasks": 0,
+                "total_execution_time": 0.0,
+                "average_execution_time": 0.0,
+                "avg_execution_time": 0.0,
+                "agent_usage": {},
+                "agent_metrics": {},
+            }
 
     def _normalize_name(self, a: Any) -> str:
         name = getattr(a, "name", None)
@@ -1098,20 +1112,6 @@ class AgentCoordinator:
         except Exception:
             pass
         return s
-
-        # Initialize performance metrics if monitoring is enabled
-        self.performance_metrics: Dict[str, Any] = {}
-        if self.enable_monitoring:
-            self.performance_metrics = {
-                "total_tasks": 0,
-                "successful_tasks": 0,
-                "failed_tasks": 0,
-                "total_execution_time": 0.0,
-                "average_execution_time": 0.0,
-                "avg_execution_time": 0.0,  # Alias for test compatibility
-                "agent_usage": {},
-                "agent_metrics": {},  # Alias for test compatibility
-            }
 
     def add_agent(self, agent: Agent) -> None:
         """Add an agent to coordination."""
@@ -1490,11 +1490,13 @@ class AgentCoordinator:
         """Determine execution order by priority ascending."""
         if not hasattr(workflow, "agents"):
             return []
+
         def prio(a: Any) -> int:
             try:
                 return int(getattr(a, "priority", 999))
             except Exception:
                 return 999
+
         ordered = sorted(list(workflow.agents), key=prio)
         # Normalize names for test expectations
         for a in ordered:
@@ -1542,7 +1544,8 @@ class AgentCoordinator:
             return out
 
         deps = {
-            name: resolve_tokens(getattr(a, "dependencies", []) or []) for name, a in name_map.items()
+            name: resolve_tokens(getattr(a, "dependencies", []) or [])
+            for name, a in name_map.items()
         }
         ordered: List[Any] = []
         satisfied: set[str] = set()
@@ -1573,6 +1576,7 @@ class AgentCoordinator:
         for name, a in name_map.items():
             for cap in getattr(a, "capabilities", []) or []:
                 cap_to_agent.setdefault(str(cap), name)
+
         def deps_for(a: Any, name: str) -> set[str]:
             out: set[str] = set()
             for t in getattr(a, "dependencies", []) or []:
@@ -1582,6 +1586,7 @@ class AgentCoordinator:
                 elif t_str in cap_to_agent:
                     out.add(cap_to_agent[t_str])
             return out
+
         deps = {name: deps_for(a, name) for name, a in name_map.items()}
         for a, d in deps.items():
             for b in d:
@@ -1638,8 +1643,16 @@ class AgentManager:
         """Select appropriate agents for a project with config overrides."""
         cfg = self.load_project_config(getattr(project_analysis, "project_path", None))
         overrides = (cfg or {}).get("agents", {})
-        exclude = set((self.config.get("exclude_agents") or []) + (overrides.get("exclude_agents") or []))
-        priority = list(set((self.config.get("priority_agents") or []) + (overrides.get("priority_agents") or [])))
+        exclude = set(
+            (self.config.get("exclude_agents") or [])
+            + (overrides.get("exclude_agents") or [])
+        )
+        priority = list(
+            set(
+                (self.config.get("priority_agents") or [])
+                + (overrides.get("priority_agents") or [])
+            )
+        )
 
         selected = self.agent_selector.select_agents(project_analysis)
         selected = [a for a in selected if a.name not in exclude]
@@ -1697,14 +1710,37 @@ class AgentManager:
                 raise RuntimeError("Required templates not available")
         return agent.execute("template_task")
 
-    def execute_agent_with_git(self, agent: Any, analysis: Any, repo_path: str) -> None:
+    def execute_agent_with_git(
+        self,
+        agent: Any,
+        analysis: Any,
+        repo_path: Union[str, Path],
+        config: Optional[Any] = None,
+    ) -> None:
         """Integrate agent work with GitIntegrationManager."""
         if not getattr(agent, "modifies_git", False):
             return
+        from pathlib import Path
+
         from claude_builder.utils.git import GitIntegrationManager
 
         git = GitIntegrationManager()
-        git.integrate(repo_path)
+        path = Path(repo_path)
+        if config is None:
+            Mode = type("Mode", (), {"value": "exclude_generated"})
+            Policy = type("Policy", (), {"value": "allowed"})
+            config = type(
+                "GitCfg",
+                (),
+                {
+                    "enabled": True,
+                    "backup_before_changes": False,
+                    "mode": Mode(),
+                    "files_to_exclude": [],
+                    "claude_mention_policy": Policy(),
+                },
+            )()
+        git.integrate(path, config)
 
     # Hook used by integration tests to gate template-aware agents
     def _check_template_availability(self, required_templates: List[str]) -> bool:
@@ -1726,12 +1762,12 @@ class AgentWorkflow:
         self.steps: List[str] = []
         self.status = "initialized"
         self.execution_times: List[float] = []
-        self._progress_cb = None
+        self._progress_cb: Optional[Callable[[int, int], None]] = None
 
     def add_step(self, step: str) -> None:
         self.steps.append(step)
 
-    def set_progress_callback(self, cb) -> None:
+    def set_progress_callback(self, cb: Callable[[int, int], None]) -> None:
         self._progress_cb = cb
 
     def start_async(self) -> None:
@@ -1749,13 +1785,16 @@ class AgentWorkflow:
         for idx, agent in enumerate(self.agents, start=1):
             start = time.time()
             try:
-                res = agent.execute()
+                res: Any = agent.execute("run")
             except Exception as e:
                 self.status = "failed"
                 raise e
             finally:
                 self.execution_times.append(time.time() - start)
-            results.append(res)
+            if isinstance(res, dict):
+                results.append(res)
+            else:
+                results.append({"result": res})
             if self._progress_cb:
                 try:
                     self._progress_cb(idx, total)
