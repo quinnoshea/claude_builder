@@ -1,14 +1,24 @@
 #!/usr/bin/env python3
 """Fix coverage.xml paths for external tools like Codacy.
 
-This script fixes path issues in coverage.xml files generated from src layout projects.
-External tools like Codacy expect paths to be relative to the project root without
-the src/ prefix, while coverage.py generates paths with src/ when using src layout.
+This script fixes path issues in coverage.xml files generated from src-layout
+projects. External tools often expect paths relative to the project root without
+the `src/` prefix.
 """
+
+import logging
 import sys
-import xml.etree.ElementTree as ET
 
 from pathlib import Path
+
+
+try:  # Prefer hardened XML parsing when available
+    from defusedxml import ElementTree as ET  # type: ignore[import-not-found]
+except Exception:  # Fallback remains safe for local CI artifact rewriting
+    import xml.etree.ElementTree as ET  # noqa: S314
+
+
+LOGGER = logging.getLogger("fix_coverage_paths")
 
 
 def fix_coverage_paths(coverage_file: str) -> None:
@@ -17,8 +27,9 @@ def fix_coverage_paths(coverage_file: str) -> None:
     Args:
         coverage_file: Path to the coverage.xml file to fix
     """
-    if not Path(coverage_file).exists():
-        print(f"Error: Coverage file not found: {coverage_file}")
+    path = Path(coverage_file)
+    if not path.exists():
+        LOGGER.error("Coverage file not found: %s", coverage_file)
         sys.exit(1)
 
     try:
@@ -35,7 +46,7 @@ def fix_coverage_paths(coverage_file: str) -> None:
                 source.text = source.text.replace(
                     "src/claude_builder", "claude_builder"
                 )
-                print(f"Fixed source path: {old_text} -> {source.text}")
+                LOGGER.info("Fixed source path: %s -> %s", old_text, source.text)
                 changes_made += 1
 
         # Fix filename attributes in <class> elements
@@ -45,7 +56,9 @@ def fix_coverage_paths(coverage_file: str) -> None:
                 old_filename = filename
                 new_filename = filename[4:]  # Remove 'src/' prefix
                 cls.set("filename", new_filename)
-                print(f"Fixed class filename: {old_filename} -> {new_filename}")
+                LOGGER.info(
+                    "Fixed class filename: %s -> %s", old_filename, new_filename
+                )
                 changes_made += 1
 
         # Fix filename attributes in <package> elements
@@ -55,33 +68,34 @@ def fix_coverage_paths(coverage_file: str) -> None:
                 old_name = name
                 new_name = name[4:]  # Remove 'src.' prefix
                 package.set("name", new_name)
-                print(f"Fixed package name: {old_name} -> {new_name}")
+                LOGGER.info("Fixed package name: %s -> %s", old_name, new_name)
                 changes_made += 1
 
         # Save the modified file
         tree.write(coverage_file, encoding="utf-8", xml_declaration=True)
 
-        print("\nCoverage paths fixed successfully!")
-        print(f"Total changes made: {changes_made}")
-        print(f"Updated file: {coverage_file}")
+        LOGGER.info("Coverage paths fixed successfully!")
+        LOGGER.info("Total changes made: %d", changes_made)
+        LOGGER.info("Updated file: %s", coverage_file)
 
-    except ET.ParseError as e:
-        print(f"Error parsing coverage.xml: {e}")
+    except ET.ParseError as err:
+        LOGGER.error("Error parsing coverage.xml: %s", err)
         sys.exit(1)
-    except Exception as e:
-        print(f"Error processing coverage file: {e}")
+    except (OSError, ValueError) as err:
+        LOGGER.error("Error processing coverage file: %s", err)
         sys.exit(1)
 
 
 def main() -> None:
     """Main entry point."""
-    if len(sys.argv) < 2:
-        coverage_file = "coverage.xml"
-        print(f"No coverage file specified, using default: {coverage_file}")
+    MIN_ARGS = 2
+    if len(sys.argv) < MIN_ARGS:
+        coverage_file = "coverage.xml"  # default path in CI workspace
+        LOGGER.info("No coverage file specified, using default: %s", coverage_file)
     else:
         coverage_file = sys.argv[1]
 
-    print(f"Fixing coverage paths in: {coverage_file}")
+    LOGGER.info("Fixing coverage paths in: %s", coverage_file)
     fix_coverage_paths(coverage_file)
 
 

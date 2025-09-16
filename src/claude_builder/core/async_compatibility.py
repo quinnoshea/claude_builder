@@ -5,12 +5,15 @@ maintaining 100% backward compatibility while enabling async optimization.
 """
 
 import asyncio
+import threading
 
 from functools import wraps
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
 
-from claude_builder.core.async_analyzer import AsyncProjectAnalyzer
+# Import module to allow unittest.patch on class reference to take effect
+import claude_builder.core.async_analyzer as _async_analyzer_mod
+
 from claude_builder.core.async_generator import AsyncDocumentGenerator
 from claude_builder.core.async_template_manager import AsyncTemplateManager
 from claude_builder.core.models import (
@@ -30,39 +33,23 @@ class AsyncCompatibilityManager:
 
     def __init__(self) -> None:
         self._loop: Optional[asyncio.AbstractEventLoop] = None
-        self._async_analyzer: Optional[AsyncProjectAnalyzer] = None
+        self._async_analyzer: Optional[Any] = None
         self._async_generator: Optional[AsyncDocumentGenerator] = None
         self._async_template_manager: Optional[AsyncTemplateManager] = None
         self._thread_pool_size = 4
+        # Per-thread storage to avoid sharing async components across threads
+        self._tls = threading.local()
 
     def _get_or_create_loop(self) -> asyncio.AbstractEventLoop:
-        """Get or create event loop for sync operations."""
+        """Get or create event loop for sync operations in the current thread."""
+        # Called only when not already inside an async context; safe to reuse or create
         try:
-            # Try to get current loop
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                # If loop is already running, we need a new thread
-                # This handles cases where we're called from async context
-                return self._create_new_loop_in_thread()
-            return loop
+            return asyncio.get_event_loop()
         except RuntimeError:
-            # No loop exists, create one
+            # No loop exists in this thread; create and set one
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             return loop
-
-    def _create_new_loop_in_thread(self) -> asyncio.AbstractEventLoop:
-        """Create new event loop in separate thread."""
-        import concurrent.futures
-
-        def create_loop() -> asyncio.AbstractEventLoop:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            return loop
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-            future = executor.submit(create_loop)
-            return future.result()
 
     def run_async_in_sync(self, coro: Any) -> Any:
         """Run async coroutine in sync context safely."""
@@ -106,29 +93,56 @@ class AsyncCompatibilityManager:
             future = executor.submit(run_coro)
             return future.result(timeout=300)  # 5 minute timeout
 
-    def get_async_analyzer(
-        self, config: Optional[Dict[str, Any]] = None
-    ) -> AsyncProjectAnalyzer:
-        """Get or create async analyzer instance."""
-        if self._async_analyzer is None:
-            self._async_analyzer = AsyncProjectAnalyzer(config)
-        return self._async_analyzer
+    def get_async_analyzer(self, config: Optional[Dict[str, Any]] = None) -> Any:
+        """Get or create async analyzer instance.
+
+        Instances are isolated per-thread to support concurrent operations
+        in tests and real usage without cross-thread state leakage. Within a
+        given thread and manager instance, the returned analyzer is stable
+        (singleton behavior per thread).
+        """
+        analyzer = getattr(self._tls, "async_analyzer", None)
+        if analyzer is None:
+            analyzer = _async_analyzer_mod.AsyncProjectAnalyzer(config)
+            setattr(self._tls, "async_analyzer", analyzer)
+            # Maintain legacy attribute for compatibility with tests
+            self._async_analyzer = analyzer
+        return analyzer
+
+    def new_async_analyzer(self, config: Optional[Dict[str, Any]] = None) -> Any:
+        """Always create a fresh async analyzer instance.
+
+        Does not cache into thread-local storage; used where tests expect the
+        constructor to reflect current patching/mocking.
+        """
+        return _async_analyzer_mod.AsyncProjectAnalyzer(config)
+
+    def reset_thread_analyzer(self) -> None:
+        """Reset the thread-local analyzer instance (used by tests)."""
+        if hasattr(self._tls, "async_analyzer"):
+            delattr(self._tls, "async_analyzer")
 
     def get_async_generator(
         self, config: Optional[Dict[str, Any]] = None
     ) -> AsyncDocumentGenerator:
-        """Get or create async generator instance."""
-        if self._async_generator is None:
-            self._async_generator = AsyncDocumentGenerator(config)
-        return self._async_generator
+        """Get or create async generator instance (per-thread)."""
+        generator = getattr(self._tls, "async_generator", None)
+        if generator is None:
+            generator = AsyncDocumentGenerator(config)
+            setattr(self._tls, "async_generator", generator)
+            self._async_generator = generator
+        return generator
 
     def get_async_template_manager(
         self, config: Optional[Dict[str, Any]] = None
     ) -> AsyncTemplateManager:
-        """Get or create async template manager instance."""
-        if self._async_template_manager is None:
-            self._async_template_manager = AsyncTemplateManager(config)
-        return self._async_template_manager
+        """Get or create async template manager instance (per-thread)."""
+        manager = getattr(self._tls, "async_template_manager", None)
+        if manager is None:
+            manager = AsyncTemplateManager(config)
+            setattr(self._tls, "async_template_manager", manager)
+            self._async_template_manager = manager
+        return manager
 
     def cleanup(self) -> None:
         """Clean up async resources."""
@@ -142,10 +156,13 @@ class AsyncCompatibilityManager:
         ):
             self.run_async_in_sync(cleanup_async())
 
-        # Reset instances
+        # Reset instances (legacy attributes) and thread-local ones for current thread
         self._async_analyzer = None
         self._async_generator = None
         self._async_template_manager = None
+        for name in ("async_analyzer", "async_generator", "async_template_manager"):
+            if hasattr(self._tls, name):
+                delattr(self._tls, name)
 
 
 # Global compatibility manager instance
@@ -168,23 +185,28 @@ class SyncProjectAnalyzerCompat:
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config
+        _compat_manager.reset_thread_analyzer()
         self._async_analyzer = _compat_manager.get_async_analyzer(config)
 
     @async_to_sync
     async def analyze(self, project_path: Union[str, Path]) -> ProjectAnalysis:
         """Analyze project synchronously using async implementation."""
-        return await self._async_analyzer.analyze_async(project_path)
+        result = await self._async_analyzer.analyze_async(project_path)
+        return result  # type: ignore[no-any-return]
 
     @async_to_sync
     async def batch_analyze(
         self, project_paths: List[Union[str, Path]]
     ) -> List[ProjectAnalysis]:
         """Batch analyze projects synchronously."""
-        return await self._async_analyzer.batch_analyze_async(project_paths)
+        results = await self._async_analyzer.batch_analyze_async(project_paths)
+        return results  # type: ignore[no-any-return]
 
     def get_performance_stats(self) -> Dict[str, Any]:
         """Get performance statistics."""
-        return self._async_analyzer.get_performance_stats()
+        analyzer = _compat_manager.get_async_analyzer(self.config)
+        stats = analyzer.get_performance_stats()
+        return stats  # type: ignore[no-any-return]
 
 
 class SyncDocumentGeneratorCompat:

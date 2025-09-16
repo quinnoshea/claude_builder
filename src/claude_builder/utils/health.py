@@ -10,6 +10,7 @@ import json
 import platform
 import shutil
 import sys
+import tempfile
 import time
 
 from abc import ABC, abstractmethod
@@ -17,7 +18,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Iterable, List, Optional
 
 import psutil
 
@@ -165,10 +166,16 @@ class ApplicationHealthCheck(HealthCheck):
 
 
 class DependencyHealthCheck(HealthCheck):
-    """Health check for external dependencies."""
+    """Health check for external dependencies.
 
-    def __init__(self) -> None:
+    Adds a probe directory seam to avoid writing into the repository during tests
+    or in restricted environments. When ``probe_dir`` is None, a temporary
+    directory is used for the write test.
+    """
+
+    def __init__(self, probe_dir: Optional[Path] = None) -> None:
         super().__init__("Dependencies", HealthCheckType.DEPENDENCY)
+        self.probe_dir = probe_dir
 
     def check(self) -> HealthCheckResult:
         """Check external dependencies health."""
@@ -192,7 +199,7 @@ class DependencyHealthCheck(HealthCheck):
                         check=False,
                         capture_output=True,
                         text=True,
-                        timeout=5,
+                        timeout=2,
                     )
                     if result.returncode == 0:
                         details["git"]["version"] = result.stdout.strip()
@@ -219,11 +226,17 @@ class DependencyHealthCheck(HealthCheck):
             if missing_packages:
                 issues.append(f"Missing Python packages: {', '.join(missing_packages)}")
 
-            # Check filesystem permissions
+            # Check filesystem permissions (in probe directory or a temp dir)
             try:
-                test_file = Path.cwd() / ".claude-builder-health-test"
-                test_file.write_text("test")
-                test_file.unlink()
+                if self.probe_dir is not None:
+                    test_file = self.probe_dir / ".claude-builder-health-test"
+                    test_file.write_text("test")
+                    test_file.unlink()
+                else:
+                    with tempfile.TemporaryDirectory() as td:
+                        test_file = Path(td) / ".claude-builder-health-test"
+                        test_file.write_text("test")
+                        test_file.unlink()
                 details["filesystem"] = {"write_access": True}
             except (OSError, PermissionError) as e:
                 issues.append(f"Filesystem write access failed: {e}")
@@ -545,8 +558,10 @@ class PerformanceHealthCheck(HealthCheck):
             elif memory_usage_percent > 80:
                 issues.append(f"Warning: Memory usage at {memory_usage_percent:.1f}%")
 
-            # CPU usage
-            cpu_percent = psutil.cpu_percent(interval=1)
+            # CPU usage (non-blocking first, with tiny fallback interval for stability)
+            cpu_percent = psutil.cpu_percent(interval=None)
+            if cpu_percent == 0.0:
+                cpu_percent = psutil.cpu_percent(interval=0.05)
             details["cpu"] = {"usage_percent": cpu_percent, "count": psutil.cpu_count()}
 
             if cpu_percent > 90:
@@ -696,20 +711,26 @@ class ConfigurationHealthCheck(HealthCheck):
 class HealthCheckManager:
     """Central manager for all health checks."""
 
-    def __init__(self, timeout: int = 60) -> None:
+    def __init__(
+        self, timeout: int = 60, registry: "HealthCheckRegistry | None" = None
+    ) -> None:
         self.timeout = timeout
+        self.registry = registry or default_health_check_registry
         self.checks: List[HealthCheck] = []
         self._register_default_checks()
 
     def _register_default_checks(self) -> None:
         """Register default health checks."""
-        self.checks = [
-            ApplicationHealthCheck(),
-            DependencyHealthCheck(),
-            SecurityHealthCheck(),
-            PerformanceHealthCheck(),
-            ConfigurationHealthCheck(),
-        ]
+        # Populate from registry. If empty, seed with default checks then read.
+        if not self.registry.get_checks():
+            self.registry.register(
+                ApplicationHealthCheck(),
+                DependencyHealthCheck(),
+                SecurityHealthCheck(),
+                PerformanceHealthCheck(),
+                ConfigurationHealthCheck(),
+            )
+        self.checks = list(self.registry.get_checks())
 
     def add_check(self, check: HealthCheck) -> None:
         """Add a custom health check."""
@@ -850,6 +871,31 @@ class HealthCheckManager:
                 json.dump(report, f, indent=2, sort_keys=True)
         else:
             raise ValueError(f"Unsupported export format: {format}")
+
+
+class HealthCheckRegistry:
+    """Lightweight registry to manage available health checks.
+
+    This allows the CLI layer to remain decoupled from specific check wiring and
+    enables tests or extensions to swap or augment checks without modifying the
+    command module.
+    """
+
+    def __init__(self) -> None:
+        self._checks: List[HealthCheck] = []
+
+    def clear(self) -> None:
+        self._checks.clear()
+
+    def register(self, *checks: HealthCheck) -> None:
+        self._checks.extend(checks)
+
+    def get_checks(self) -> Iterable[HealthCheck]:
+        return tuple(self._checks)
+
+
+# Default singleton registry pre-seeded by HealthCheckManager on first use.
+default_health_check_registry = HealthCheckRegistry()
 
 
 class HealthMonitor:

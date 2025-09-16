@@ -1,0 +1,6 @@
+name: codeql-config
+paths-ignore:
+  - "src/claude_builder/templates/**"  # documentation templates, not executable code
+  - ".venv/**"
+  - "node_modules/**"
+  - "**/*.md"

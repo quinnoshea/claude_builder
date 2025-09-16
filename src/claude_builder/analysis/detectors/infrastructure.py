@@ -8,7 +8,6 @@ based on aggregate pattern scores to help downstream consumers tune output.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 from claude_builder.utils.file_patterns import FilePatterns
 
@@ -23,9 +22,9 @@ class InfrastructureDetector:
 
     def __init__(self, project_path: Path) -> None:
         self.project_path = Path(project_path)
-        self._raw: Dict[str, Dict[str, float]] = {}
+        self._raw: dict[str, dict[str, float]] = {}
 
-    def _classify_confidence(self, scores: Dict[str, float]) -> Dict[str, str]:
+    def _classify_confidence(self, scores: dict[str, float]) -> dict[str, str]:
         """Map raw scores to confidence buckets.
 
         Thresholds (aligned with P1.4 guidance):
@@ -33,17 +32,20 @@ class InfrastructureDetector:
         - medium: score >= 8  (one strong indicator)
         - low:    score >  0  (pattern-only)
         """
-        buckets: Dict[str, str] = {}
+        HIGH_THRESHOLD = 12.0
+        MEDIUM_THRESHOLD = 8.0
+
+        buckets: dict[str, str] = {}
         for tool, score in scores.items():
-            if score >= 12.0:
+            if score >= HIGH_THRESHOLD:
                 buckets[tool] = "high"
-            elif score >= 8.0:
+            elif score >= MEDIUM_THRESHOLD:
                 buckets[tool] = "medium"
             elif score > 0.0:
                 buckets[tool] = "low"
         return buckets
 
-    def detect(self) -> Dict[str, List[str]]:
+    def detect(self) -> dict[str, list[str]]:
         """Return categorized lists only (for analyzer integration)."""
         self._raw = FilePatterns.detect_all_devops_tools(self.project_path)
 
@@ -85,12 +87,12 @@ class InfrastructureDetector:
             "mlops_tools": [],
         }
 
-    def detect_with_confidence(self) -> Tuple[Dict[str, List[str]], Dict[str, str]]:
+    def detect_with_confidence(self) -> tuple[dict[str, list[str]], dict[str, str]]:
         """Return categorized lists plus a {tool: bucket} confidence map."""
         categorized = self.detect()
 
         # Merge scores from all categories so bucket map covers all tools
-        all_scores: Dict[str, float] = {}
+        all_scores: dict[str, float] = {}
         for cat in ("infrastructure", "observability", "security"):
             for k, v in self._raw.get(cat, {}).items():
                 all_scores[k] = max(all_scores.get(k, 0.0), v)
