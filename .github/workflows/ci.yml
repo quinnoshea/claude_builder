@@ -86,7 +86,20 @@ jobs:
         echo "## Coverage Summary" >> $GITHUB_STEP_SUMMARY
         coverage report >> $GITHUB_STEP_SUMMARY || echo "Coverage report not available" >> $GITHUB_STEP_SUMMARY
 
+    - name: Compute coverage percent
+      id: cov
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      run: |
+        if [ -f coverage.xml ]; then
+          RATE=$(grep -o 'line-rate="[^"]*"' coverage.xml | head -1 | sed 's/[^0-9\.]//g' || true)
+          if [ -z "$RATE" ]; then PCT=0; else PCT=$(awk -v r="$RATE" 'BEGIN{printf "%.2f", r*100}'); fi
+        else
+          PCT=0
+        fi
+        echo "percent=$PCT" >> "$GITHUB_OUTPUT"
+
     - name: Upload coverage to Codacy
+      id: codacy
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
       uses: codacy/codacy-coverage-reporter-action@v1
       with:
@@ -95,6 +108,25 @@ jobs:
         force-coverage-parser: cobertura
       env:
         CODACY_API_BASE_URL: https://api.codacy.com
+
+    - name: Upload coverage to Codecov
+      id: codecov
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+        verbose: true
+
+    - name: Append coverage status to summary
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      run: |
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "Coverage percent: ${{ steps.cov.outputs.percent }}%" >> $GITHUB_STEP_SUMMARY
+        echo "Codacy upload:  ${{ steps.codacy.outcome }}" >> $GITHUB_STEP_SUMMARY
+        echo "Codecov upload: ${{ steps.codecov.outcome }}" >> $GITHUB_STEP_SUMMARY
 
     - name: Upload test results and coverage artifacts
       if: always()
