@@ -119,6 +119,7 @@ jobs:
         name: codecov-umbrella
         fail_ci_if_error: false
         verbose: true
+        token: ${{ secrets.CODECOV_TOKEN }}
 
     - name: Append coverage status to summary
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
