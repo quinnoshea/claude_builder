@@ -442,11 +442,19 @@ class ModernTemplateManager:
         except SecurityError:
             raise
         except (HTTPError, URLError) as e:
+<<<<<<< HEAD
             # Swallow network errors for legacy compatibility; callers handle absence gracefully
             logger.warning(f"Failed to download {url}, swallowing network error: {e}")
         except Exception as e:
             # Unexpected errors are also swallowed to avoid hard failures in discovery paths
             logger.error(f"Unexpected error downloading {url}, swallowing error: {e}")
+=======
+            logger.error(f"Failed to download {url}: {e}")
+            raise SecurityError(f"Download failed: {e}") from e
+        except Exception as e:
+            logger.error(f"Unexpected error downloading {url}: {e}")
+            raise SecurityError(f"Download error: {e}") from e
+>>>>>>> origin/main
 
     # Legacy template methods for backward compatibility
 
@@ -1347,7 +1355,6 @@ class TemplateManager(LegacyTemplateManager):
             ),
         )
         return modern_manager.generate_complete_environment(analysis)
-
     # --- Coordination layer: delegate modular queries and normalize types ---
     def list_available_templates(
         self, *, include_installed: bool = True, include_community: bool = True
