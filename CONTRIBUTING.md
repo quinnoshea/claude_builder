@@ -290,8 +290,10 @@ We run GitHub CodeQL code scanning on `main` and on pull requests into `main`.
 - Schedule: Weekly (Mon 03:00 UTC) and on PRs to `main`
 
 Triage and dismissals
-- Open an alert → “Dismiss alert” with a reason (false positive / won’t fix / used in tests)
-- Prefer code fixes when feasible; for non-executable or generated areas, you can exclude paths via `.github/codeql-config.yml` (`paths-ignore`).
+- Open an alert → “Dismiss alert” with a reason
+  (false positive / won’t fix / used in tests)
+- Prefer code fixes when feasible; for non‑executable or generated areas,
+  you can exclude paths via `.github/codeql-config.yml` (`paths-ignore`).
 - Keep ignores narrow and include justification in the PR description.
 
 Recommended branch protection
