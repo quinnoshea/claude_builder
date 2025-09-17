@@ -1554,9 +1554,6 @@ class TemplateMarketplace:
             api_key: Optional API key for authenticated requests
         """
         # Validate marketplace URL with security validator
-        from claude_builder.utils.exceptions import SecurityError
-        from claude_builder.utils.security import security_validator
-
         try:
             security_validator.validate_url(marketplace_url)
         except SecurityError:
