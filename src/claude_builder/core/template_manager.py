@@ -13,7 +13,7 @@ PHASE 3.1 REFACTORING: Core Module Separation
 import logging
 
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 from claude_builder.core.models import (
     AgentDefinition,
@@ -195,12 +195,8 @@ class ModernTemplateManager:
         """
         if self.community_manager is None:
             return []
-        from typing import Any
-        from typing import List as TList
-        from typing import cast
-
-        raw: TList[Any] = cast(
-            TList[Any],
+        raw: List[Any] = cast(
+            List[Any],
             self.community_manager.list_available_templates(
                 include_installed=include_installed, include_community=include_community
             ),
@@ -243,12 +239,8 @@ class ModernTemplateManager:
         """Search for templates matching query and project analysis."""
         if self.community_manager is None:
             return []
-        from typing import Any
-        from typing import List as TList
-        from typing import cast
-
-        raw: TList[Any] = cast(
-            TList[Any], self.community_manager.search_templates(query, project_analysis)
+        raw: List[Any] = cast(
+            List[Any], self.community_manager.search_templates(query, project_analysis)
         )
         results: List[CommunityTemplate] = []
         for item in raw:
@@ -354,7 +346,6 @@ class ModernTemplateManager:
         never raises network exceptions directly.
         """
         import json
-        import logging
 
         from urllib.error import HTTPError, URLError
         from urllib.request import Request, urlopen
@@ -400,8 +391,6 @@ class ModernTemplateManager:
 
     def _download_file(self, url: str, destination: Path) -> None:
         """Download a file with strict security checks (legacy-compatible)."""
-        import logging
-
         from urllib.error import HTTPError, URLError
         from urllib.request import Request, urlopen
 
@@ -999,11 +988,7 @@ See AGENTS.md for detailed usage instructions and coordination patterns.
 
             # Fallback to default package template paths
             try:
-                from claude_builder.core.template_manager_legacy import (
-                    CoreTemplateManager as DefaultCore,
-                )
-
-                default_core = DefaultCore()  # uses built-in search paths
+                default_core = CoreTemplateManager()  # uses built-in search paths
                 content = default_core.load_template(name)
                 return default_core.render_template(content, context)
             except Exception:
@@ -1380,12 +1365,8 @@ class TemplateManager(LegacyTemplateManager):
         if not MODULAR_COMPONENTS_AVAILABLE or self.community_manager is None:
             return []
 
-        from typing import Any
-        from typing import List as TList
-        from typing import cast
-
-        raw: TList[Any] = cast(
-            TList[Any],
+        raw: List[Any] = cast(
+            List[Any],
             self.community_manager.list_available_templates(
                 include_installed=include_installed, include_community=include_community
             ),

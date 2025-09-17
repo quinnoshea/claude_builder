@@ -670,8 +670,6 @@ class LanguageDetector:
 
     def _analyze_filesystem_for_language_detection(self, project_path: Path) -> Any:
         """Minimal filesystem analysis for language detection."""
-        from claude_builder.core.models import FileSystemInfo
-
         info = FileSystemInfo()
         for item in project_path.rglob("*"):
             if item.is_file():
@@ -880,8 +878,6 @@ class FrameworkDetector:
     def detect_framework(self, project_path: Path, language: str) -> FrameworkInfo:
         """Test-compatible method for detecting frameworks."""
         # Create minimal filesystem analysis and language info
-        from claude_builder.core.models import LanguageInfo
-
         filesystem_info = self._analyze_filesystem_for_framework_detection(project_path)
         language_info = LanguageInfo(primary=language, confidence=100.0)
 
@@ -919,8 +915,6 @@ class FrameworkDetector:
 
     def _analyze_filesystem_for_framework_detection(self, project_path: Path) -> Any:
         """Minimal filesystem analysis for framework detection."""
-        from claude_builder.core.models import FileSystemInfo
-
         info = FileSystemInfo()
         info.root_files = [f.name for f in project_path.iterdir() if f.is_file()]
 
@@ -1130,8 +1124,6 @@ class FrameworkDetector:
 
     def detect_frameworks(self, project_path: Path) -> List[Any]:
         """Detect frameworks in project - test compatibility method."""
-        from claude_builder.core.models import FileSystemInfo, LanguageInfo
-
         # Create mock objects for compatibility
         filesystem_info = FileSystemInfo()
         language_info = LanguageInfo()

@@ -1153,9 +1153,7 @@ ${uses_database == 'Yes' and '''
             try:
                 analysis = getattr(self, "_default_analysis", None)
                 if analysis is not None and hasattr(template, "name"):
-                    from pathlib import Path as _P
-
-                    base = _P(analysis.project_path).parent
+                    base = Path(analysis.project_path).parent
                     alt = base / "templates" / str(getattr(template, "name"))
                     if alt.exists():
                         base_vars: Dict[str, Any] = {}
