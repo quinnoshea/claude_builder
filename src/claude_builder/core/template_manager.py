@@ -195,12 +195,10 @@ class ModernTemplateManager:
         """
         if self.community_manager is None:
             return []
-        from typing import Any
-        from typing import List as TList
         from typing import cast
 
-        raw: TList[Any] = cast(
-            TList[Any],
+        raw: List[Any] = cast(
+            List[Any],
             self.community_manager.list_available_templates(
                 include_installed=include_installed, include_community=include_community
             ),

@@ -1720,7 +1720,6 @@ class AgentManager:
         """Integrate agent work with GitIntegrationManager."""
         if not getattr(agent, "modifies_git", False):
             return
-        from pathlib import Path
 
         from claude_builder.utils.git import GitIntegrationManager
 

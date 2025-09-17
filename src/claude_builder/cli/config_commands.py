@@ -626,8 +626,6 @@ def reset(project_path: str, *, force: bool) -> None:
         config_manager = ConfigManager()
 
         if not force:
-            from rich.prompt import Confirm
-
             if not Confirm.ask("Reset configuration to defaults?"):
                 console.print("[yellow]Reset cancelled[/yellow]")
                 return

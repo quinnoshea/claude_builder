@@ -214,8 +214,6 @@ def _execute_main(project_path: str, **kwargs: Any) -> None:
             # Generate complete environment (CLAUDE.md + individual subagents + AGENTS.md)
             task2 = progress.add_task("Generating complete environment...", total=None)
 
-            from claude_builder.core.template_manager import TemplateManager
-
             template_manager = TemplateManager()
             environment = template_manager.generate_complete_environment(analysis)
 
@@ -230,8 +228,6 @@ def _execute_main(project_path: str, **kwargs: Any) -> None:
         elif kwargs["agents_only"]:
             # Legacy: agents-only mode
             task2 = progress.add_task("Configuring agents...", total=None)
-
-            from claude_builder.core.template_manager import TemplateManager
 
             template_manager = TemplateManager()
             environment = template_manager.generate_complete_environment(analysis)

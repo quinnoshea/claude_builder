@@ -438,7 +438,6 @@ def _display_report_summary(health: SystemHealth, output_path: Path) -> None:
 def _get_system_info() -> dict[str, Any]:
     """Get detailed system information."""
     import platform
-    import sys
 
     return {
         "platform": platform.platform(),
