@@ -503,6 +503,11 @@ version = "1.0.0"
         # Simulate initial load
         watcher.start_watching()
 
+        # Add a small delay to ensure file modification time is different
+        import time
+
+        time.sleep(0.01)
+
         # Modify configuration
         config_file.write_text(
             """
