@@ -1,5 +1,5 @@
-<!-- markdownlint-disable MD025 -->
 # DevOps: Infrastructure Guidance
+<!-- markdownlint-disable MD025 -->
 
 ## Infrastructure as Code (IaC) with Terraform
 

@@ -1,5 +1,5 @@
-<!-- markdownlint-disable MD025 -->
 # MLOps: Lifecycle Guidance
+<!-- markdownlint-disable MD025 -->
 
 ## MLflow for MLOps
 
