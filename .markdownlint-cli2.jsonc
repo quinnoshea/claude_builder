@@ -1,0 +1,14 @@
+{
+  // markdownlint-cli2 configuration for repository docs and templates
+  // We keep lines reasonably readable while allowing longer guidance lines.
+  "markdownlint": {
+    // MD013: line length — allow up to 120 chars; ignore code and tables
+    "MD013": {
+      "line_length": 120,
+      "ignore_code_blocks": true,
+      "ignore_tables": true
+    },
+    // MD041: first line heading — disabled globally (already enforced in README via tooling)
+    "MD041": false
+  }
+}
