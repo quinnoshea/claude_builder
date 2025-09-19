@@ -216,7 +216,7 @@ jobs:
         upload: true
         max-allowed-issues: 2147483647
         tool: "ruff"
-        directory: "${{ github.workspace }}"
+        directory: "${{ github.workspace }}/src"
 
     - name: Codacy Analysis (pylint)
       continue-on-error: true
@@ -226,7 +226,7 @@ jobs:
         upload: true
         max-allowed-issues: 2147483647
         tool: "pylint"
-        directory: "${{ github.workspace }}"
+        directory: "${{ github.workspace }}/src"
 
     - name: Codacy Analysis (bandit)
       continue-on-error: true
@@ -236,7 +236,7 @@ jobs:
         upload: true
         max-allowed-issues: 2147483647
         tool: "bandit"
-        directory: "${{ github.workspace }}"
+        directory: "${{ github.workspace }}/src"
 
     - name: Codacy Analysis (semgrep)
       continue-on-error: true
@@ -246,7 +246,7 @@ jobs:
         upload: true
         max-allowed-issues: 2147483647
         tool: "semgrep"
-        directory: "${{ github.workspace }}"
+        directory: "${{ github.workspace }}/src"
 
     - name: Lint markdown files
       uses: DavidAnson/markdownlint-cli2-action@v16
