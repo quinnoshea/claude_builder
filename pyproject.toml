@@ -64,6 +64,7 @@ dev = [
     "radon>=6.0.1",
     "interrogate>=1.7.0",
     "detect-secrets>=1.5.0",
+    "build>=0.10.0",
 ]
 test = [
     "pytest>=7.0.0",
@@ -257,4 +258,5 @@ dev = [
     "types-toml>=0.10.8.20240310",
     "types-aiofiles>=23.2.0.20241106",
     "types-psutil>=6.1.0.20241221",
+    "build>=1.2.2.post1",
 ]

@@ -5,8 +5,10 @@
 
 ## Kubernetes Deployments
 
-**Detected Tool:** {{ kube.display_name }} (Confidence: {{ kube.confidence|capitalize }})
-{% if kube.score is not none %}_Detection score: {{ '%.1f'|format(kube.score) }}_{% endif %}
+**Detected Tool:** {{ kube.display_name }} (Confidence:
+{{ kube.confidence|capitalize }})
+{% if kube.score is not none %}_Detection score:
+{{ '%.1f'|format(kube.score) }}_{% endif %}
 
 We've detected Kubernetes configuration files, suggesting you are deploying
 your application to a Kubernetes cluster.
@@ -33,7 +35,8 @@ your application to a Kubernetes cluster.
 
 - Use Helm or Kustomize to manage complex deployments consistently.
 - Define resource requests/limits and liveness/readiness probes for each pod.
-- Apply strict RBAC roles and Pod Security admission policies to harden clusters.
+- Apply strict RBAC roles and Pod Security admission policies to harden
+  clusters.
 
 {% endif %}
 
@@ -44,8 +47,10 @@ your application to a Kubernetes cluster.
 
 ## Helm Chart for Kubernetes
 
-**Detected Tool:** {{ helm.display_name }} (Confidence: {{ helm.confidence|capitalize }})
-{% if helm.score is not none %}_Detection score: {{ '%.1f'|format(helm.score) }}_{% endif %}
+**Detected Tool:** {{ helm.display_name }} (Confidence:
+{{ helm.confidence|capitalize }})
+{% if helm.score is not none %}_Detection score:
+{{ '%.1f'|format(helm.score) }}_{% endif %}
 
 We've detected a Helm chart, which is a great way to package and deploy your
 application on Kubernetes.
@@ -72,7 +77,8 @@ application on Kubernetes.
 
 - Run `helm lint` and chart unit tests before publishing new releases.
 - Parameterise values per environment and store them in source control.
-- Integrate secret management (e.g. SOPS, External Secrets) instead of plaintext values.
+- Integrate secret management (e.g. SOPS, External Secrets) instead of
+  plaintext values.
 
 {% endif %}
 

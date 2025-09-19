@@ -271,7 +271,7 @@ jobs:
         run: |
           uv sync --dev
       - name: Verify secrets baseline
-        run: uv run python -m detect_secrets scan --baseline .secrets.baseline --all-files --exclude-files 'src/claude_builder/templates/*'
+        run: uv run detect-secrets scan --baseline .secrets.baseline --all-files --exclude-files 'src/claude_builder/templates/*'
       - name: Bandit (security scan)
         run: |
           uv run bandit -r src/claude_builder -f json -o bandit-report.json || true
