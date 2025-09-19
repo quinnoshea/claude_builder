@@ -1,11 +1,12 @@
 # DevOps: Deployment Guidance
 
-{% if dev_environment.tools.kubernetes %}
+{% set kube = dev_environment.tools.get('kubernetes') %}
+{% if kube %}
 
 ## Kubernetes Deployments
 
-**Detected Tool:** Kubernetes (Confidence:
-{{ dev_environment.tools.kubernetes.confidence }})
+**Detected Tool:** {{ kube.display_name }} (Confidence: {{ kube.confidence|capitalize }})
+{% if kube.score is not none %}_Detection score: {{ '%.1f'|format(kube.score) }}_{% endif %}
 
 We've detected Kubernetes configuration files, suggesting you are deploying
 your application to a Kubernetes cluster.
@@ -13,30 +14,38 @@ your application to a Kubernetes cluster.
 **Key Files Detected:**
 
 ```text
-{% for file in dev_environment.tools.kubernetes.files %}
+{% for file in kube.files %}
 - {{ file }}
 {% endfor %}
+{% if kube.files|length == 0 %}
+(no representative files captured yet)
+{% endif %}
 ```
 
-**Next Steps & Best Practices:**
+{% if kube.recommendations %}
+**Actionable Recommendations:**
 
-1. **Use a Package Manager:** For complex applications, consider using a
-   package manager like Helm to manage your Kubernetes resources.
-2. **Resource Management:** Define resource requests and limits for your
-   containers to ensure stable performance and prevent resource contention.
-3. **Health Probes:** Implement readiness and liveness probes so Kubernetes
-   can manage your application's lifecycle effectively.
-4. **Security Context:** Configure a security context for pods and containers
-   to restrict permissions and enhance security.
+{% for rec in kube.recommendations %}- {{ rec }}
+{% endfor %}
+
+{% else %}
+**Actionable Recommendations:**
+
+- Use Helm or Kustomize to manage complex deployments consistently.
+- Define resource requests/limits and liveness/readiness probes for each pod.
+- Apply strict RBAC roles and Pod Security admission policies to harden clusters.
 
 {% endif %}
 
-{% if dev_environment.tools.helm %}
+{% endif %}
+
+{% set helm = dev_environment.tools.get('helm') %}
+{% if helm %}
 
 ## Helm Chart for Kubernetes
 
-**Detected Tool:** Helm (Confidence:
-{{ dev_environment.tools.helm.confidence }})
+**Detected Tool:** {{ helm.display_name }} (Confidence: {{ helm.confidence|capitalize }})
+{% if helm.score is not none %}_Detection score: {{ '%.1f'|format(helm.score) }}_{% endif %}
 
 We've detected a Helm chart, which is a great way to package and deploy your
 application on Kubernetes.
@@ -44,25 +53,27 @@ application on Kubernetes.
 **Key Files Detected:**
 
 ```text
-{% for file in dev_environment.tools.helm.files %}
+{% for file in helm.files %}
 - {{ file }}
 {% endfor %}
+{% if helm.files|length == 0 %}
+(no representative files captured yet)
+{% endif %}
 ```
 
-**Next Steps & Best Practices:**
+{% if helm.recommendations %}
+**Actionable Recommendations:**
 
-1. **Lint Your Chart:** Always run `helm lint` to catch syntax issues and
-   ensure your chart follows best practices.
-2. **Use Dependencies:** Manage complex applications with subcharts and
-   dependencies in `Chart.yaml`.
-3. **Secure Your Secrets:** Avoid plain-text secrets in templates. Prefer a
-   secrets management tool like Vault or Kubernetes Secrets.
+{% for rec in helm.recommendations %}- {{ rec }}
+{% endfor %}
 
-**Example Command:**
+{% else %}
+**Actionable Recommendations:**
 
-```bash
-# Lint your Helm chart
-helm lint ./path/to/your/chart
-```
+- Run `helm lint` and chart unit tests before publishing new releases.
+- Parameterise values per environment and store them in source control.
+- Integrate secret management (e.g. SOPS, External Secrets) instead of plaintext values.
+
+{% endif %}
 
 {% endif %}

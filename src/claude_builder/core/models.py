@@ -98,6 +98,19 @@ class DomainInfo:
 
 
 @dataclass
+class ToolMetadata:
+    """Rich metadata describing a detected DevOps/MLOps tool."""
+
+    name: str
+    slug: str
+    category: str
+    confidence: str = "unknown"
+    score: Optional[float] = None
+    files: List[str] = field(default_factory=list)
+    recommendations: List[str] = field(default_factory=list)
+
+
+@dataclass
 class DevelopmentEnvironment:
     """Information about development environment and tools."""
 
@@ -116,6 +129,7 @@ class DevelopmentEnvironment:
     data_pipeline: List[str] = field(default_factory=list)
     mlops_tools: List[str] = field(default_factory=list)
     security_tools: List[str] = field(default_factory=list)
+    tool_details: Dict[str, ToolMetadata] = field(default_factory=dict)
 
 
 @dataclass

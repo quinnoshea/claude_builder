@@ -1,11 +1,12 @@
 # DevOps: Infrastructure Guidance
 
-{% if dev_environment.tools.terraform %}
+{% set tool = dev_environment.tools.get('terraform') %}
+{% if tool %}
 
 ## Infrastructure as Code (IaC) with Terraform
 
-**Detected Tool:** Terraform (Confidence:
-{{ dev_environment.tools.terraform.confidence }})
+**Detected Tool:** {{ tool.display_name }} (Confidence: {{ tool.confidence|capitalize }})
+{% if tool.score is not none %}_Detection score: {{ '%.1f'|format(tool.score) }}_{% endif %}
 
 Your project appears to use Terraform for managing infrastructure as code. This
 helps ensure infrastructure is reproducible, versionable, and scalable.
@@ -13,27 +14,27 @@ helps ensure infrastructure is reproducible, versionable, and scalable.
 **Key Files Detected:**
 
 ```text
-{% for file in dev_environment.tools.terraform.files %}
+{% for file in tool.files %}
 - {{ file }}
 {% endfor %}
+{% if tool.files|length == 0 %}
+(no representative files captured yet)
+{% endif %}
 ```
 
-**Next Steps & Best Practices:**
+{% if tool.recommendations %}
+**Actionable Recommendations:**
 
-1. **Standardize Modules:** If you have multiple configurations, create
-   reusable modules to enforce consistency and reduce duplication.
-2. **State Management:** Store state in a secure, remote backend (for example
-   S3, Azure Blob, or Terraform Cloud), not locally. This is critical for team
-   collaboration.
-3. **Linting and Formatting:** Use `terraform fmt -recursive` for formatting and
-   `tflint` to catch common errors and enforce best practices.
-4. **Security:** Scan plans with `tfsec` or `checkov` before applying changes.
+{% for rec in tool.recommendations %}- {{ rec }}
+{% endfor %}
 
-**Example Command:**
+{% else %}
+**Actionable Recommendations:**
 
-```bash
-# Run a security scan on your Terraform code
-tfsec .
-```
+- Standardise modules to enforce consistency across stacks.
+- Store state in a secure remote backend (Terraform Cloud, S3 + DynamoDB, etc.).
+- Enforce `terraform fmt`/`terraform validate` and plan scans (`tfsec`, `checkov`) in CI.
+
+{% endif %}
 
 {% endif %}

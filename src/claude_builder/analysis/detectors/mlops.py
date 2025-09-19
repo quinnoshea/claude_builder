@@ -5,9 +5,14 @@ commonly used in machine learning and data engineering projects.
 """
 
 from pathlib import Path
-from typing import Optional
+from typing import Dict, List, Optional, Tuple
 
 from claude_builder.analysis.detectors.base import BaseDetector
+from claude_builder.analysis.tool_recommendations import (
+    get_display_name,
+    get_recommendations,
+)
+from claude_builder.core.models import ToolMetadata
 
 
 class MLOpsDetector(BaseDetector):
@@ -107,6 +112,51 @@ class MLOpsDetector(BaseDetector):
 
         return confidence
 
+    def _collect_examples(
+        self, project_path: Path, tool: str, limit: int = 5
+    ) -> List[str]:
+        """Return representative files or directories that matched patterns."""
+
+        patterns = self._patterns.get(tool, {})
+        if not patterns:
+            return []
+
+        root = project_path.resolve()
+        matches: List[str] = []
+        seen: set[str] = set()
+
+        def _record(path: Path) -> None:
+            try:
+                rel = str(path.resolve().relative_to(root))
+            except (ValueError, RuntimeError):
+                rel = str(path)
+            if rel not in seen:
+                seen.add(rel)
+                matches.append(rel)
+
+        for file_pattern in patterns.get("files", []):
+            candidate = root / file_pattern
+            if candidate.exists():
+                _record(candidate)
+                if len(matches) >= limit:
+                    return matches[:limit]
+
+        for dir_pattern in patterns.get("dirs", []):
+            candidate = root / dir_pattern
+            if candidate.exists():
+                _record(candidate)
+                if len(matches) >= limit:
+                    return matches[:limit]
+
+        for glob_pattern in patterns.get("globs", []):
+            for match in root.glob(glob_pattern):
+                if match.exists():
+                    _record(match)
+                    if len(matches) >= limit:
+                        return matches[:limit]
+
+        return matches[:limit]
+
     def _has_strong_ml_signals(self, project_path: Path) -> bool:
         """Heuristic to check strong ML signals to allow notebook inclusion."""
         ml_dirs = [
@@ -181,14 +231,26 @@ class MLOpsDetector(BaseDetector):
 
     def detect_with_confidence(
         self, project_path: Optional[Path] = None
-    ) -> tuple[dict[str, list[str]], dict[str, str]]:
+    ) -> Tuple[dict[str, list[str]], Dict[str, str]]:
         """Detect MLOps tools with confidence levels."""
+        results, metadata = self.detect_with_metadata(project_path)
+        return results, {
+            slug: meta.confidence
+            for slug, meta in metadata.items()
+            if meta.confidence != "unknown"
+        }
+
+    def detect_with_metadata(
+        self, project_path: Optional[Path] = None
+    ) -> Tuple[dict[str, list[str]], Dict[str, ToolMetadata]]:
+        """Detect MLOps tools and return rich metadata for each hit."""
+
         results: dict[str, list[str]] = {"data_pipeline": [], "mlops_tools": []}
-        bucket_map: dict[str, str] = {}
+        metadata: Dict[str, ToolMetadata] = {}
 
         target = project_path or self.project_path
         if target is None:
-            return results, bucket_map
+            return results, metadata
 
         data_pipeline_tools = {
             "airflow",
@@ -198,7 +260,7 @@ class MLOpsDetector(BaseDetector):
             "dvc",
             "great_expectations",
         }
-        mlops_tools = {"mlflow", "feast", "kubeflow", "bentoml"}
+        mlops_tools = {"mlflow", "feast", "kubeflow", "bentoml", "seldon", "kedro"}
 
         HIGH = 12
         MEDIUM = 8
@@ -206,19 +268,37 @@ class MLOpsDetector(BaseDetector):
         for tool in self._patterns.keys():
             if tool == "notebooks":
                 continue
-            confidence = self._calculate_confidence(target, tool)
-            if confidence > 0:
-                if confidence >= HIGH:
-                    bucket = "high"
-                elif confidence >= MEDIUM:
-                    bucket = "medium"
-                else:
-                    bucket = "low"
-                bucket_map[tool] = bucket
-                if tool in data_pipeline_tools:
-                    results["data_pipeline"].append(tool)
-                elif tool in mlops_tools:
-                    results["mlops_tools"].append(tool)
+            confidence_score = self._calculate_confidence(target, tool)
+            if confidence_score <= 0:
+                continue
+
+            if confidence_score >= HIGH:
+                bucket = "high"
+            elif confidence_score >= MEDIUM:
+                bucket = "medium"
+            else:
+                bucket = "low"
+
+            if tool in data_pipeline_tools:
+                results["data_pipeline"].append(tool)
+                category = "data_pipeline"
+            elif tool in mlops_tools:
+                results["mlops_tools"].append(tool)
+                category = "mlops_tools"
+            else:
+                # Tools that act as supporting utilities default to mlops bucket
+                results["mlops_tools"].append(tool)
+                category = "mlops_tools"
+
+            metadata[tool] = ToolMetadata(
+                name=get_display_name(tool),
+                slug=tool,
+                category=category,
+                confidence=bucket,
+                score=float(confidence_score),
+                files=self._collect_examples(target, tool),
+                recommendations=get_recommendations(tool),
+            )
 
         notebook_confidence = self._calculate_confidence(target, "notebooks")
         if notebook_confidence > 0 and self._has_strong_ml_signals(target):
@@ -228,7 +308,16 @@ class MLOpsDetector(BaseDetector):
                 bucket = "medium"
             else:
                 bucket = "low"
-            bucket_map["notebooks"] = bucket
-            results["mlops_tools"].append("notebooks")
 
-        return results, bucket_map
+            results["mlops_tools"].append("notebooks")
+            metadata["notebooks"] = ToolMetadata(
+                name=get_display_name("notebooks"),
+                slug="notebooks",
+                category="mlops_tools",
+                confidence=bucket,
+                score=float(notebook_confidence),
+                files=self._collect_examples(target, "notebooks"),
+                recommendations=get_recommendations("notebooks"),
+            )
+
+        return results, metadata

@@ -1,11 +1,12 @@
 # DevOps: Observability Guidance
 
-{% if dev_environment.tools.prometheus %}
+{% set prom = dev_environment.tools.get('prometheus') %}
+{% if prom %}
 
 ## Prometheus Monitoring
 
-**Detected Tool:** Prometheus (Confidence:
-{{ dev_environment.tools.prometheus.confidence }})
+**Detected Tool:** {{ prom.display_name }} (Confidence: {{ prom.confidence|capitalize }})
+{% if prom.score is not none %}_Detection score: {{ '%.1f'|format(prom.score) }}_{% endif %}
 
 Prometheus configuration files were found, indicating you are using it for
 monitoring.
@@ -13,27 +14,31 @@ monitoring.
 **Key Files Detected:**
 
 ```text
-{% for file in dev_environment.tools.prometheus.files %}
+{% for file in prom.files %}
 - {{ file }}
 {% endfor %}
+{% if prom.files|length == 0 %}
+(no representative files captured yet)
+{% endif %}
 ```
 
-**Next Steps & Best Practices:**
+{% if prom.recommendations %}
+**Actionable Recommendations:**
 
-1. **Instrument Your Application:** Expose custom metrics for Prometheus to
-   scrape to gain insight into performance and behavior.
-2. **Alerting Rules:** Define alerting rules to be notified of important
-   events.
-3. **Dashboards:** Visualize metrics in Grafana for faster analysis.
+{% for rec in prom.recommendations %}- {{ rec }}
+{% endfor %}
 
 {% endif %}
 
-{% if dev_environment.tools.grafana %}
+{% endif %}
+
+{% set grafana = dev_environment.tools.get('grafana') %}
+{% if grafana %}
 
 ## Grafana Dashboards
 
-**Detected Tool:** Grafana (Confidence:
-{{ dev_environment.tools.grafana.confidence }})
+**Detected Tool:** {{ grafana.display_name }} (Confidence: {{ grafana.confidence|capitalize }})
+{% if grafana.score is not none %}_Detection score: {{ '%.1f'|format(grafana.score) }}_{% endif %}
 
 We detected Grafana configurations. Visualizing metrics helps you understand
 system behavior.
@@ -41,34 +46,40 @@ system behavior.
 **Key Files Detected:**
 
 ```text
-{% for file in dev_environment.tools.grafana.files %}
+{% for file in grafana.files %}
 - {{ file }}
 {% endfor %}
+{% if grafana.files|length == 0 %}
+(no representative files captured yet)
+{% endif %}
 ```
 
-**Next Steps & Best Practices:**
+{% if grafana.recommendations %}
+**Actionable Recommendations:**
 
-1. **Version Dashboards:** Store dashboard JSON in version control to track
-   changes.
-2. **Use Variables:** Make dashboards reusable and interactive with variables.
-3. **Organize:** Group related dashboards into folders to keep things tidy.
+{% for rec in grafana.recommendations %}- {{ rec }}
+{% endfor %}
 
 {% endif %}
 
-{% if dev_environment.tools.opentelemetry %}
+{% endif %}
+
+{% set otel = dev_environment.tools.get('opentelemetry') %}
+{% if otel %}
 
 ## OpenTelemetry Tracing
 
-**Detected Tool:** OpenTelemetry (Confidence:
-{{ dev_environment.tools.opentelemetry.confidence }})
+**Detected Tool:** {{ otel.display_name }} (Confidence: {{ otel.confidence|capitalize }})
+{% if otel.score is not none %}_Detection score: {{ '%.1f'|format(otel.score) }}_{% endif %}
 
 Distributed tracing helps debug and understand performance across services.
 
-**Next Steps & Best Practices:**
+{% if otel.recommendations %}
+**Actionable Recommendations:**
 
-1. **Sampling:** Configure sampling to balance visibility and overhead.
-2. **Context Propagation:** Ensure trace context is propagated across all
-   services.
-3. **Custom Attributes:** Enrich spans with attributes for better debugging.
+{% for rec in otel.recommendations %}- {{ rec }}
+{% endfor %}
+
+{% endif %}
 
 {% endif %}
