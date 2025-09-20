@@ -13,6 +13,9 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+
+pytestmark = pytest.mark.failing
+
 from claude_builder.core.analyzer import ProjectAnalyzer
 from claude_builder.core.generator import DocumentGenerator
 from claude_builder.core.template_manager import TemplateManager

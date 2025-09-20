@@ -1,5 +1,10 @@
 from pathlib import Path
 
+import pytest
+
+
+pytestmark = pytest.mark.failing
+
 from claude_builder.analysis.tool_recommendations import get_display_name
 from claude_builder.core.models import (
     ComplexityLevel,

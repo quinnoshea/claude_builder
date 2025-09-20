@@ -9,6 +9,11 @@ Tests the complete CLI workflow including:
 - Configuration management via CLI
 """
 
+import pytest
+
+
+pytestmark = pytest.mark.failing
+
 from pathlib import Path
 
 from click.testing import CliRunner

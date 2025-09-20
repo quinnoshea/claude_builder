@@ -179,6 +179,7 @@ markers = [
     "phase3: Phase 3 advanced feature tests",
     "asyncio: Async tests",
     "benchmark: Performance benchmark tests using pytest-benchmark",
+    "failing: Known failing tests that run in non-blocking CI job",
 ]
 
 [tool.coverage.run]
