@@ -900,18 +900,24 @@ class ConfigWatcher:
         if not self.config_file.exists():
             return
         mtime = self.config_file.stat().st_mtime
-        if self.last_modified is None or mtime > self.last_modified:
+        # Always load current snapshot; some filesystems have coarse mtime
+        new_snapshot = self._loader.load_config_file(self.config_file)
+        changed = (
+            self.last_modified is None
+            or mtime > (self.last_modified or 0)
+            or new_snapshot != self._last_snapshot
+        )
+        if changed:
             old = self._last_snapshot
-            new = self._loader.load_config_file(self.config_file)
             self.last_modified = mtime
-            self._last_snapshot = new
+            self._last_snapshot = new_snapshot
 
             # fire callbacks
             for cb in self.callbacks:
-                cb(old, new)
+                cb(old, new_snapshot)
 
             if self.validator:
-                res = self.validator.validate(new)
+                res = self.validator.validate(new_snapshot)
                 messages = [e.message for e in res.errors]
                 for vcb in self.validation_callbacks:
                     vcb(res.is_valid, messages)

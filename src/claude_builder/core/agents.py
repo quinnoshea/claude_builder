@@ -7,7 +7,6 @@ from typing import Any, Callable, Dict, List, Optional, Union
 
 from claude_builder.core.models import (
     AgentInfo,
-    AgentSelection,
     ComplexityLevel,
     ProjectAnalysis,
     ProjectType,
@@ -67,8 +66,13 @@ class UniversalAgentSystem:
         self.selector = AgentSelector(self.agent_registry)
         self.configurator = AgentConfigurator()
 
-    def select_agents(self, project_analysis: ProjectAnalysis) -> AgentSelection:
-        """Select and configure agents based on project analysis."""
+    def select_agents(self, project_analysis: ProjectAnalysis) -> AgentConfiguration:
+        """Select and configure agents based on project analysis.
+
+        Tests expect a complete AgentConfiguration object rather than the
+        intermediate AgentSelection structure, so we wrap the selections
+        with generated coordination patterns into AgentConfiguration.
+        """
         # Step 1: Select core agents based on language/framework
         core_agents = self.selector.select_core_agents(project_analysis)
 
@@ -86,7 +90,7 @@ class UniversalAgentSystem:
             core_agents, domain_agents, workflow_agents, custom_agents, project_analysis
         )
 
-        return AgentSelection(
+        return AgentConfiguration(
             core_agents=core_agents,
             domain_agents=domain_agents,
             workflow_agents=workflow_agents,

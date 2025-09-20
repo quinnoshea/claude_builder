@@ -84,13 +84,16 @@ def validate_project_path(project_path: Path) -> ValidationResult:
     )
 
     if not has_project_indicators:
-        # Check for source files
+        # Check for source files (be resilient to permission errors)
         source_extensions = {".py", ".rs", ".js", ".ts", ".java", ".go", ".cpp", ".c"}
-        has_source_files = any(
-            file.suffix in source_extensions
-            for file in project_path.rglob("*")
-            if file.is_file()
-        )
+        try:
+            has_source_files = any(
+                file.suffix in source_extensions
+                for file in project_path.rglob("*")
+                if file.is_file()
+            )
+        except OSError:
+            has_source_files = False
 
         if not has_source_files:
             warnings.append("No common project files or source code detected")

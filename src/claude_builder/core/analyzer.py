@@ -78,18 +78,12 @@ class ProjectAnalyzer:
 
             # Stage 2: Language detection
             language_info = self.language_detector.detect(project_path, filesystem_info)
-            # Apply optional overrides
-            if self.config.get("overrides", {}).get("language"):
-                language_info.primary = self.config["overrides"]["language"]
             analysis.language_info = language_info
 
             # Stage 3: Framework detection
             framework_info = self.framework_detector.detect(
                 project_path, filesystem_info, language_info
             )
-            # Apply optional overrides
-            if self.config.get("overrides", {}).get("framework"):
-                framework_info.primary = self.config["overrides"]["framework"]
             analysis.framework_info = framework_info
             # Surface dependency names when available
             try:

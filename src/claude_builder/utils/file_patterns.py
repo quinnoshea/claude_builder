@@ -1438,10 +1438,13 @@ class PatternRule:
     """Advanced pattern rule for project detection."""
 
     def __init__(
-        self, config: AdvancedPatternRule | None = None, **kwargs: Any
+        self, config: AdvancedPatternRule | str | None = None, **kwargs: Any
     ) -> None:
-        # Support both config object and individual parameters
-        if config:
+        # Support multiple legacy calling conventions:
+        # - PatternRule(AdvancedPatternRule(...))
+        # - PatternRule("*.py", action="include")
+        # - PatternRule(pattern="*.py", action="include", ...)
+        if isinstance(config, AdvancedPatternRule):
             self.name = config.name or "unnamed_rule"
             self.description = config.description or ""
             self.patterns = config.patterns or []
@@ -1449,14 +1452,24 @@ class PatternRule:
             self.required_patterns = config.required_patterns or []
             self.weight_factors = config.weight_factors or {}
             self.action = config.action
-            # Handle legacy pattern parameter
+            # Handle legacy single-pattern field
             if config.pattern and not self.patterns:
                 self.pattern = config.pattern
                 self.patterns = [config.pattern]
             else:
                 self.pattern = self.patterns[0] if self.patterns else ""
+        elif isinstance(config, str):
+            # Legacy positional string means "pattern"
+            self.name = kwargs.get("name", "unnamed_rule")
+            self.description = kwargs.get("description", "")
+            self.patterns = [config]
+            self.priority = kwargs.get("priority", 1.0)
+            self.required_patterns = kwargs.get("required_patterns", [])
+            self.weight_factors = kwargs.get("weight_factors", {})
+            self.action = kwargs.get("action", "include")
+            self.pattern = config
         else:
-            # Legacy constructor support
+            # Legacy keyword-only constructor
             self.name = kwargs.get("name", "unnamed_rule")
             self.description = kwargs.get("description", "")
             self.patterns = kwargs.get("patterns", [])

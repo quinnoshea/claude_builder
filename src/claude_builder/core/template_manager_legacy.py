@@ -1979,7 +1979,7 @@ class TemplateRenderer:
     original "simple" renderer available for backward compatibility.
     """
 
-    def __init__(self, template_engine: str = "jinja2", *, enable_cache: bool = False):
+    def __init__(self, template_engine: str = "simple", *, enable_cache: bool = False):
         """Initialize template renderer.
 
         Args:

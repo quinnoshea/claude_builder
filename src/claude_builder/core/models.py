@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -174,8 +174,10 @@ class ProjectAnalysis:
     warnings: List[str] = field(default_factory=list)
     suggestions: List[str] = field(default_factory=list)
 
-    # Agent configuration
-    agent_configuration: Optional["AgentSelection"] = None
+    # Agent configuration (supports both modern and legacy containers)
+    if TYPE_CHECKING:
+        from claude_builder.core.agents import AgentConfiguration  # pragma: no cover
+    agent_configuration: Optional["AgentConfiguration | AgentSelection"] = None
 
     @property
     def language(self) -> Optional[str]:
@@ -246,7 +248,8 @@ class AgentInfo:
     name: str
     description: str = ""
     category: str = "general"
-    confidence: float = 1.0
+    # Default confidence should start at 0.0; tests rely on this
+    confidence: float = 0.0
 
     # Additional fields for compatibility
     role: Optional[str] = None

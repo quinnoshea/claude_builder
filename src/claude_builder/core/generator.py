@@ -1444,45 +1444,34 @@ class TemplateLoader:
         self.template_paths: List[Path] = [Path(p) for p in (template_paths or [])]
 
     def load_template(self, template_name: str, scope: Optional[str] = None) -> str:
-        """Load a template by name."""
-        # Prefer explicit template_paths when provided
-        for base in self.template_paths:
-            # Try exact name
-            candidates = [base / template_name]
-            # Also try with .md extension if not present
-            if not template_name.endswith(".md"):
-                candidates.append(base / f"{template_name}.md")
-            for candidate in candidates:
-                try:
-                    if candidate.exists():
-                        return candidate.read_text(encoding="utf-8")
-                except Exception:
-                    # Continue to other candidates/paths
-                    continue
+        """Load a template by name using the CoreTemplateManager.
 
-        # Synthetic known scopes for tests
-        if scope == "base":
-            return "# Base Template\nDefault content"
-        if scope and scope.startswith("languages/"):
-            lang = scope.split("/", 1)[1]
-            return f"# {lang.title()} Template\nLanguage: {lang}"
-        if scope and scope.startswith("frameworks/"):
-            fw = scope.split("/", 1)[1]
-            return f"# {fw.title()} Template\nFramework: {fw}"
+        Tests expect this to delegate to the manager and raise a
+        GenerationError when the template cannot be loaded.
+        """
+        from claude_builder.utils.exceptions import GenerationError
 
-        # Fallback: consult manager for discovery, but don't raise if missing
         try:
-            available = self.template_manager.list_available_templates()
-            if isinstance(available, list) and template_name in available:
-                return (
-                    f"# Template: {template_name}\n\n"
-                    f"Template content for {template_name}"
-                )
-        except Exception:
-            pass
-
-        # Graceful fallback expected by tests
-        return ""
+            # Prefer modern API if available (tests patch this symbol)
+            if hasattr(self.template_manager, "get_template"):
+                res = getattr(self.template_manager, "get_template")(template_name)
+            elif hasattr(self.template_manager, "load_template"):
+                res = getattr(self.template_manager, "load_template")(template_name)
+            else:
+                raise AttributeError("Template manager lacks get/load_template")
+            # Manager may return a Template object or a raw string (tests patch this)
+            if isinstance(res, str):
+                return res
+            if hasattr(res, "content"):
+                return str(getattr(res, "content"))
+            # Fallback: stringify anything else
+            return str(res)
+        except Exception as exc:
+            raise GenerationError(
+                f"Failed to load template '{template_name}'",
+                template_name=template_name,
+                cause=exc,
+            )
 
     def load_templates(self, template_names: List[str]) -> Dict[str, str]:
         """Load multiple templates."""
@@ -1493,22 +1482,11 @@ class TemplateLoader:
 
     def list_available_templates(self) -> List[str]:
         """List all available templates."""
-        names: List[str] = []
-        for base in self.template_paths:
-            try:
-                for p in base.rglob("*.md"):
-                    names.append(p.name)
-            except Exception:
-                continue
-        # Include manager-provided entries if any
         try:
-            mgr = self.template_manager.list_available_templates()
-            if isinstance(mgr, list):
-                names.extend([str(x) for x in mgr])
+            names = self.template_manager.list_available_templates()
+            return [str(n) for n in names] if isinstance(names, list) else []
         except Exception:
-            pass
-        # De-duplicate
-        return sorted({n for n in names})
+            return []
 
     def validate_template(self, template_content: str) -> bool:
         """Validate template syntax."""
