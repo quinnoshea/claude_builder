@@ -78,18 +78,12 @@ class ProjectAnalyzer:
 
             # Stage 2: Language detection
             language_info = self.language_detector.detect(project_path, filesystem_info)
-            # Apply optional overrides
-            if self.config.get("overrides", {}).get("language"):
-                language_info.primary = self.config["overrides"]["language"]
             analysis.language_info = language_info
 
             # Stage 3: Framework detection
             framework_info = self.framework_detector.detect(
                 project_path, filesystem_info, language_info
             )
-            # Apply optional overrides
-            if self.config.get("overrides", {}).get("framework"):
-                framework_info.primary = self.config["overrides"]["framework"]
             analysis.framework_info = framework_info
             # Surface dependency names when available
             try:
@@ -268,13 +262,15 @@ class ProjectAnalyzer:
             )
 
             infra_detector = InfrastructureDetector(project_path)
-            infra_results = infra_detector.detect()
+            infra_results, infra_metadata = infra_detector.detect_with_metadata()
 
             env.infrastructure_as_code = infra_results.get("infrastructure_as_code", [])
             env.orchestration_tools = infra_results.get("orchestration_tools", [])
             env.secrets_management = infra_results.get("secrets_management", [])
             env.observability = infra_results.get("observability", [])
             env.security_tools = infra_results.get("security_tools", [])
+
+            env.tool_details.update(infra_metadata)
         except Exception:
             pass
 
@@ -283,10 +279,17 @@ class ProjectAnalyzer:
             from claude_builder.analysis.detectors.mlops import MLOpsDetector
 
             mlops_detector = MLOpsDetector()
-            mlops_results = mlops_detector.detect(project_path)
+            mlops_results, mlops_metadata = mlops_detector.detect_with_metadata(
+                project_path
+            )
 
             env.data_pipeline = mlops_results.get("data_pipeline", [])
             env.mlops_tools = mlops_results.get("mlops_tools", [])
+
+            for slug, meta in mlops_metadata.items():
+                existing = env.tool_details.get(slug)
+                if existing is None or (existing.score or 0.0) < (meta.score or 0.0):
+                    env.tool_details[slug] = meta
         except Exception:
             pass
 

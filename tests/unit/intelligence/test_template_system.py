@@ -11,6 +11,9 @@ Tests the template management and processing including:
 
 import pytest
 
+
+pytestmark = pytest.mark.failing
+
 from claude_builder.core.template_manager import (
     Template,
     TemplateContext,

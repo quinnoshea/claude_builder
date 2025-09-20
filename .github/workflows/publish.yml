@@ -18,18 +18,22 @@ jobs:
     - uses: actions/checkout@v5
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: "3.11"
 
+    - name: Install uv
+      uses: astral-sh/setup-uv@v6
+      with:
+        enable-cache: true
+
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install -e ".[dev,test]"
+        uv sync --dev
 
     - name: Run full test suite
       run: |
-        pytest --cov=claude_builder --cov-report=xml
+        uv run pytest --cov=claude_builder --cov-report=xml
 
     - name: Validate version consistency
       run: |
@@ -74,22 +78,26 @@ jobs:
     - uses: actions/checkout@v5
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: "3.11"
 
+    - name: Install uv
+      uses: astral-sh/setup-uv@v6
+      with:
+        enable-cache: true
+
     - name: Install build dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install build twine
+        uv sync --dev
 
     - name: Build package
       run: |
-        python -m build
+        uvx build
 
     - name: Check package integrity
       run: |
-        twine check dist/*
+        uvx twine check dist/*
 
     - name: List package contents
       run: |
@@ -102,6 +110,7 @@ jobs:
         name: dist
         path: dist/
         retention-days: 7
+        if-no-files-found: error
 
   publish-test:
     needs: build
@@ -183,7 +192,7 @@ jobs:
         python-version: ["3.8", "3.11"]
     steps:
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -238,6 +247,10 @@ jobs:
     steps:
     - name: Create failure notification
       run: |
+        echo "## ❌ Publish Workflow Failed" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "One or more jobs failed in the publish pipeline." >> $GITHUB_STEP_SUMMARY
+        echo "Check the logs for validate-release, build, and publish-pypi." >> $GITHUB_STEP_SUMMARY
         echo "❌ **Publication failed for Claude Builder**" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "Please check the workflow logs for details." >> $GITHUB_STEP_SUMMARY

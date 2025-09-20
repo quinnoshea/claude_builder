@@ -1,55 +1,79 @@
 # DevOps: Security Guidance
 
-{% if dev_environment.tools.vault %}
+{% set vault_tool = dev_environment.tools.get('vault') %}
+{% if vault_tool %}
 
-## HashiCorp Vault for Secrets Management
+## {{ vault_tool.display_name }} for Secrets Management
 
-**Detected Tool:** Vault (Confidence:
-{{ dev_environment.tools.vault.confidence }})
+**Detected Tool:** {{ vault_tool.display_name }} (Confidence:
+{{ vault_tool.confidence|capitalize }})
+{% if vault_tool.score is not none %}_Detection score:
+{{ '%.1f'|format(vault_tool.score) }}_{% endif %}
 
 Vault helps manage secrets and protect sensitive data.
 
-**Next Steps & Best Practices:**
+{% if vault_tool.recommendations %}
+**Actionable Recommendations:**
 
-1. **Use Dynamic Secrets:** Prefer dynamic credentials to reduce the risk of
-   leaked static secrets.
-2. **Audit Trails:** Enable audit devices to maintain detailed logs of all
-   requests and responses to Vault.
-3. **Fine-Grained Policies:** Implement policies to ensure apps and users only
-   access what they need.
+{% for rec in vault_tool.recommendations %}- {{ rec }}
+{% endfor %}
 
 {% endif %}
 
-{% if dev_environment.tools.tfsec %}
+{% endif %}
 
-## tfsec for Terraform Security
+{% set tfsec_tool = dev_environment.tools.get('tfsec') %}
+{% if tfsec_tool %}
 
-**Detected Tool:** tfsec (Confidence:
-{{ dev_environment.tools.tfsec.confidence }})
+## {{ tfsec_tool.display_name }} for Terraform Security
 
-tfsec scans Terraform code for security issues.
+**Detected Tool:** {{ tfsec_tool.display_name }} (Confidence:
+{{ tfsec_tool.confidence|capitalize }})
+{% if tfsec_tool.score is not none %}_Detection score:
+{{ '%.1f'|format(tfsec_tool.score) }}_{% endif %}
 
-**Next Steps & Best Practices:**
+{% if tfsec_tool.recommendations %}
+**Actionable Recommendations:**
 
-1. **CI/CD Integration:** Run `tfsec` in CI to scan every pull request.
-2. **Customize Policies:** Adjust checks via a configuration file when needed.
-3. **Stay Updated:** Keep `tfsec` current to benefit from new rules.
+{% for rec in tfsec_tool.recommendations %}- {{ rec }}
+{% endfor %}
+
+{% else %}
+**Actionable Recommendations:**
+
+- Run `tfsec` in CI to scan every pull request.
+- Tune policies via configuration files to reduce false positives.
+- Keep `tfsec` updated to benefit from new rules.
 
 {% endif %}
 
-{% if dev_environment.tools.trivy %}
+{% endif %}
 
-## Trivy for Vulnerability Scanning
+{% set trivy_tool = dev_environment.tools.get('trivy') %}
+{% if trivy_tool %}
 
-**Detected Tool:** Trivy (Confidence:
-{{ dev_environment.tools.trivy.confidence }})
+## {{ trivy_tool.display_name }} for Vulnerability Scanning
 
-Trivy scans container images and filesystems for vulnerabilities.
+**Detected Tool:** {{ trivy_tool.display_name }} (Confidence:
+{{ trivy_tool.confidence|capitalize }})
+{% if trivy_tool.score is not none %}_Detection score:
+{{ '%.1f'|format(trivy_tool.score) }}_{% endif %}
 
-**Next Steps & Best Practices:**
+{% if trivy_tool.recommendations %}
+**Actionable Recommendations:**
 
-1. **Scan in CI/CD:** Scan images before pushing to a registry.
-2. **Scan Filesystems and Repos:** Use Trivy on app files and dependencies.
-3. **Filter Noise:** Use `.trivyignore` for irrelevant findings.
+{% for rec in trivy_tool.recommendations %}- {{ rec }}
+{% endfor %}
+
+{% else %}
+**Actionable Recommendations:**
+
+- Scan container images before pushing to registries and block failing
+  builds.
+- Use `.trivyignore` to suppress noisy findings while tracking rationale in
+  code review.
+- Schedule regular filesystem and dependency scans to catch CVEs early.
+
+{% endif %}
 
 {% endif %}

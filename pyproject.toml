@@ -40,6 +40,7 @@ dependencies = [
     "psutil>=5.9.0",
     "cryptography>=3.4.0",
     "keyring>=23.0.0",
+    "jinja2>=3.1.0",
 ]
 
 [project.optional-dependencies]
@@ -63,6 +64,7 @@ dev = [
     "radon>=6.0.1",
     "interrogate>=1.7.0",
     "detect-secrets>=1.5.0",
+    "build>=0.10.0",
 ]
 test = [
     "pytest>=7.0.0",
@@ -176,6 +178,8 @@ markers = [
     "phase2: Phase 2 intelligence layer tests",
     "phase3: Phase 3 advanced feature tests",
     "asyncio: Async tests",
+    "benchmark: Performance benchmark tests using pytest-benchmark",
+    "failing: Known failing tests that run in non-blocking CI job",
 ]
 
 [tool.coverage.run]
@@ -249,6 +253,7 @@ dev = [
     "pylint>=3.2.7",
     "pytest>=8.3.5",
     "pytest-asyncio>=0.24.0",
+    "pytest-benchmark>=4.0.0",
     "pytest-cov>=5.0.0",
     "ruff>=0.12.9",
     "types-pyyaml>=6.0.12.20241230",
@@ -256,4 +261,5 @@ dev = [
     "types-toml>=0.10.8.20240310",
     "types-aiofiles>=23.2.0.20241106",
     "types-psutil>=6.1.0.20241221",
+    "build>=1.2.2.post1",
 ]

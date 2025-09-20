@@ -1,61 +1,72 @@
 # MLOps: Governance Guidance
 
-{% if dev_environment.tools.dbt %}
+{% set dbt_tool = dev_environment.tools.get('dbt') %}
+{% if dbt_tool %}
 
-## dbt for Data Transformation
+## {{ dbt_tool.display_name }} for Data Transformation
 
-**Detected Tool:** dbt (Confidence:
-{{ dev_environment.tools.dbt.confidence }})
-
-dbt transforms data in your warehouse using SQL and tested models.
+**Detected Tool:** {{ dbt_tool.display_name }} (Confidence:
+{{ dbt_tool.confidence|capitalize }})
+{% if dbt_tool.score is not none %}_Detection score:
+{{ '%.1f'|format(dbt_tool.score) }}_{% endif %}
 
 **Key Files Detected:**
 
 ```text
-{% for file in dev_environment.tools.dbt.files %}
+{% for file in dbt_tool.files %}
 - {{ file }}
 {% endfor %}
+{% if dbt_tool.files|length == 0 %}
+(no representative files captured yet)
+{% endif %}
 ```
 
-**Next Steps & Best Practices:**
+{% if dbt_tool.recommendations %}
+**Actionable Recommendations:**
 
-1. **Tests:** Write tests to ensure data quality and prevent regressions.
-2. **Docs:** Document models to help teams understand your warehouse.
-3. **Packages:** Reuse code via dbt packages to speed development.
-
-{% endif %}
-
-{% if dev_environment.tools.great_expectations %}
-
-## Great Expectations for Data Quality
-
-**Detected Tool:** Great Expectations (Confidence:
-{{ dev_environment.tools.great_expectations.confidence }})
-
-Great Expectations provides data testing, documentation, and profiling.
-
-**Next Steps & Best Practices:**
-
-1. **Pipelines:** Run checkpoints in pipelines to validate data.
-2. **Data Docs:** Host Data Docs as the single source of truth.
-3. **Custom Expectations:** Write custom checks for your needs.
+{% for rec in dbt_tool.recommendations %}- {{ rec }}
+{% endfor %}
 
 {% endif %}
 
-{% if dev_environment.tools.feast %}
+{% endif %}
 
-## Feast for Feature Stores
+{% set gx_tool = dev_environment.tools.get('great_expectations') %}
+{% if gx_tool %}
 
-**Detected Tool:** Feast (Confidence:
-{{ dev_environment.tools.feast.confidence }})
+## {{ gx_tool.display_name }} for Data Quality
 
-Feast is a feature store for machine learning.
+**Detected Tool:** {{ gx_tool.display_name }} (Confidence:
+{{ gx_tool.confidence|capitalize }})
+{% if gx_tool.score is not none %}_Detection score:
+{{ '%.1f'|format(gx_tool.score) }}_{% endif %}
 
-**Next Steps & Best Practices:**
+{% if gx_tool.recommendations %}
+**Actionable Recommendations:**
 
-1. **Centralized Store:** Provide combined online/offline stores for training
-   and inference.
-2. **Monitor Drift:** Watch features for drift to avoid stale inputs.
-3. **Share/Reuse:** Share features across projects and teams.
+{% for rec in gx_tool.recommendations %}- {{ rec }}
+{% endfor %}
+
+{% endif %}
+
+{% endif %}
+
+{% set feast_tool = dev_environment.tools.get('feast') %}
+{% if feast_tool %}
+
+## {{ feast_tool.display_name }} for Feature Stores
+
+**Detected Tool:** {{ feast_tool.display_name }} (Confidence:
+{{ feast_tool.confidence|capitalize }})
+{% if feast_tool.score is not none %}_Detection score:
+{{ '%.1f'|format(feast_tool.score) }}_{% endif %}
+
+{% if feast_tool.recommendations %}
+**Actionable Recommendations:**
+
+{% for rec in feast_tool.recommendations %}- {{ rec }}
+{% endfor %}
+
+{% endif %}
 
 {% endif %}

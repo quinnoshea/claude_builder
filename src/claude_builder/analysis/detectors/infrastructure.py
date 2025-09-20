@@ -8,7 +8,13 @@ based on aggregate pattern scores to help downstream consumers tune output.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Dict, Tuple
 
+from claude_builder.analysis.tool_recommendations import (
+    get_display_name,
+    get_recommendations,
+)
+from claude_builder.core.models import ToolMetadata
 from claude_builder.utils.file_patterns import FilePatterns
 
 
@@ -98,3 +104,33 @@ class InfrastructureDetector:
                 all_scores[k] = max(all_scores.get(k, 0.0), v)
 
         return categorized, self._classify_confidence(all_scores)
+
+    def detect_with_metadata(
+        self,
+    ) -> Tuple[dict[str, list[str]], Dict[str, ToolMetadata]]:
+        """Return categorized lists plus rich metadata for each detected tool."""
+
+        categorized, confidence_map = self.detect_with_confidence()
+        metadata: Dict[str, ToolMetadata] = {}
+
+        for category in ("infrastructure", "observability", "security"):
+            for tool, score in self._raw.get(category, {}).items():
+                files = FilePatterns.collect_tool_examples(
+                    self.project_path, category, tool
+                )
+                recommendations = get_recommendations(tool)
+                entry = ToolMetadata(
+                    name=get_display_name(tool),
+                    slug=tool,
+                    category=category,
+                    confidence=confidence_map.get(tool, "unknown"),
+                    score=score,
+                    files=files,
+                    recommendations=recommendations,
+                )
+
+                existing = metadata.get(tool)
+                if existing is None or (existing.score or 0.0) < (entry.score or 0.0):
+                    metadata[tool] = entry
+
+        return categorized, metadata

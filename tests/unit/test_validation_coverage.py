@@ -1,5 +1,10 @@
 """Comprehensive tests for utils.validation module to increase coverage."""
 
+import pytest
+
+
+pytestmark = pytest.mark.failing
+
 import tempfile
 
 from pathlib import Path

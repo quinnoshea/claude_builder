@@ -1,48 +1,54 @@
 # MLOps: Lifecycle Guidance
 
-{% if dev_environment.tools.mlflow %}
+{% set mlflow_tool = dev_environment.tools.get('mlflow') %}
+{% if mlflow_tool %}
 
-## MLflow for MLOps
+## {{ mlflow_tool.display_name }} for MLOps
 
-**Detected Tool:** MLflow (Confidence:
-{{ dev_environment.tools.mlflow.confidence }})
+**Detected Tool:** {{ mlflow_tool.display_name }} (Confidence:
+{{ mlflow_tool.confidence|capitalize }})
+{% if mlflow_tool.score is not none %}_Detection score:
+{{ '%.1f'|format(mlflow_tool.score) }}_{% endif %}
 
-MLflow manages the end‑to‑end machine learning lifecycle.
+MLflow manages the end-to-end machine learning lifecycle.
 
 **Key Files Detected:**
 
 ```text
-{% for file in dev_environment.tools.mlflow.files %}
+{% for file in mlflow_tool.files %}
 - {{ file }}
 {% endfor %}
+{% if mlflow_tool.files|length == 0 %}
+(no representative files captured yet)
+{% endif %}
 ```
 
-**Next Steps & Best Practices:**
+{% if mlflow_tool.recommendations %}
+**Actionable Recommendations:**
 
-1. **Use a Tracking Server:** For collaboration, set up a central Tracking
-   Server to log and compare experiments.
-2. **Log Artifacts:** Log models, data, and images in addition to metrics and
-   parameters to ensure reproducibility.
-3. **Model Registry:** Manage lifecycle from staging to production with the
-   Model Registry.
+{% for rec in mlflow_tool.recommendations %}- {{ rec }}
+{% endfor %}
 
 {% endif %}
 
-{% if dev_environment.tools.kubeflow %}
+{% endif %}
 
-## Kubeflow for MLOps on Kubernetes
+{% set kubeflow_tool = dev_environment.tools.get('kubeflow') %}
+{% if kubeflow_tool %}
 
-**Detected Tool:** Kubeflow (Confidence:
-{{ dev_environment.tools.kubeflow.confidence }})
+## {{ kubeflow_tool.display_name }} for MLOps on Kubernetes
 
-Kubeflow helps deploy and manage ML workflows on Kubernetes.
+**Detected Tool:** {{ kubeflow_tool.display_name }} (Confidence:
+{{ kubeflow_tool.confidence|capitalize }})
+{% if kubeflow_tool.score is not none %}_Detection score:
+{{ '%.1f'|format(kubeflow_tool.score) }}_{% endif %}
 
-**Next Steps & Best Practices:**
+{% if kubeflow_tool.recommendations %}
+**Actionable Recommendations:**
 
-1. **Pipelines:** Define ML workflows as pipelines to make them reproducible
-   and scalable.
-2. **Components:** Create reusable components to share workflow building
-   blocks.
-3. **Katib:** Use Katib for automated hyperparameter tuning.
+{% for rec in kubeflow_tool.recommendations %}- {{ rec }}
+{% endfor %}
+
+{% endif %}
 
 {% endif %}

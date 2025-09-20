@@ -1971,7 +1971,13 @@ class RemoteTemplateRepository:
 
 
 class TemplateRenderer:
-    """Template rendering with variable substitution for Phase 2 implementation."""
+    """Template rendering engine used by ModernTemplateManager.
+
+    The original implementation supported a very small, custom substitution
+    syntax. Phase 3 domain templates rely on richer constructs (loops, filters,
+    attribute access) so we now default to the Jinja2 engine while keeping the
+    original "simple" renderer available for backward compatibility.
+    """
 
     def __init__(self, template_engine: str = "simple", *, enable_cache: bool = False):
         """Initialize template renderer.
@@ -1991,6 +1997,24 @@ class TemplateRenderer:
             "title": str.title,
         }
 
+        self._jinja_env: Optional[Any] = None
+        if self.template_engine == "jinja2":
+            try:
+                from jinja2 import Environment, StrictUndefined
+            except ImportError as exc:  # pragma: no cover - guard rails
+                raise RuntimeError(
+                    "Jinja2 is required for template rendering. Please install the 'jinja2' package."
+                ) from exc
+
+            env = Environment(
+                autoescape=False,
+                undefined=StrictUndefined,
+                trim_blocks=True,
+                lstrip_blocks=True,
+            )
+            env.filters.update(self.filters)
+            self._jinja_env = env
+
     def render_template(self, template_content: str, variables: Dict[str, Any]) -> str:
         """Render template content with variable substitution.
 
@@ -2002,6 +2026,10 @@ class TemplateRenderer:
             Rendered template with variables substituted
         """
         import re
+
+        if self.template_engine == "jinja2" and self._jinja_env is not None:
+            template = self._jinja_env.from_string(template_content)
+            return str(template.render(**variables))
 
         rendered_content = template_content
 

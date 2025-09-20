@@ -767,21 +767,45 @@ class ModernTemplateManager:
         security_tools = _safe_list(getattr(dev_env, "security_tools", []))
 
         # Consolidate tool presence into a convenient dict for templates
-        tool_names: List[str] = (
-            infrastructure_as_code
-            + orchestration_tools
-            + secrets_management
-            + observability
-            + ci_cd_systems
-            + data_pipeline
-            + mlops_tools
-            + security_tools
+        tool_names: List[str] = list(
+            dict.fromkeys(
+                infrastructure_as_code
+                + orchestration_tools
+                + secrets_management
+                + observability
+                + ci_cd_systems
+                + data_pipeline
+                + mlops_tools
+                + security_tools
+            )
         )
+
+        tool_details: Dict[str, Any] = getattr(dev_env, "tool_details", {}) or {}
         tools_map: Dict[str, Dict[str, Any]] = {}
-        for t in tool_names:
-            key = str(t).lower().replace(" ", "_")
-            # Confidence buckets are not persisted yet; default to "unknown"
-            tools_map[key] = {"present": True, "confidence": "unknown", "files": []}
+        for slug in tool_names:
+            key = str(slug).lower().replace(" ", "_")
+            metadata = tool_details.get(key) or tool_details.get(slug)
+
+            if metadata is not None:
+                tools_map[key] = {
+                    "present": True,
+                    "display_name": metadata.name,
+                    "confidence": metadata.confidence or "unknown",
+                    "score": metadata.score,
+                    "files": metadata.files,
+                    "recommendations": metadata.recommendations,
+                    "category": metadata.category,
+                }
+            else:
+                tools_map[key] = {
+                    "present": True,
+                    "display_name": slug.replace("_", " ").title(),
+                    "confidence": "unknown",
+                    "score": None,
+                    "files": [],
+                    "recommendations": [],
+                    "category": "unknown",
+                }
 
         return {
             "project_name": analysis.project_path.name,

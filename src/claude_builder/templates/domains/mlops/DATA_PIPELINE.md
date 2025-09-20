@@ -1,85 +1,105 @@
 # MLOps: Data Pipeline Guidance
 
-{% if dev_environment.tools.airflow %}
+{% set airflow_tool = dev_environment.tools.get('airflow') %}
+{% if airflow_tool %}
 
-## Airflow for Data Pipelines
+## {{ airflow_tool.display_name }} for Data Pipelines
 
-**Detected Tool:** Airflow (Confidence:
-{{ dev_environment.tools.airflow.confidence }})
+**Detected Tool:** {{ airflow_tool.display_name }} (Confidence:
+{{ airflow_tool.confidence|capitalize }})
+{% if airflow_tool.score is not none %}_Detection score:
+{{ '%.1f'|format(airflow_tool.score) }}_{% endif %}
 
 Airflow is a platform for authoring, scheduling, and monitoring workflows.
 
 **Key Files Detected:**
 
 ```text
-{% for file in dev_environment.tools.airflow.files %}
+{% for file in airflow_tool.files %}
 - {{ file }}
 {% endfor %}
+{% if airflow_tool.files|length == 0 %}
+(no representative files captured yet)
+{% endif %}
 ```
 
-**Next Steps & Best Practices:**
+{% if airflow_tool.recommendations %}
+**Actionable Recommendations:**
 
-1. **TaskFlow API:** Prefer TaskFlow for Python‑native DAGs.
-2. **Atomic Tasks:** Design tasks to be atomic and idempotent.
-3. **Version Control:** Store DAGs in Git to track changes.
-
-{% endif %}
-
-{% if dev_environment.tools.prefect %}
-
-## Prefect for Data Pipelines
-
-**Detected Tool:** Prefect (Confidence:
-{{ dev_environment.tools.prefect.confidence }})
-
-Prefect is a modern workflow automation platform.
-
-**Next Steps & Best Practices:**
-
-1. **Backend:** Use Prefect Cloud or a self‑hosted server.
-2. **Caching:** Enable caching to avoid repeated work.
-3. **Projects:** Group related flows into projects.
+{% for rec in airflow_tool.recommendations %}- {{ rec }}
+{% endfor %}
 
 {% endif %}
 
-{% if dev_environment.tools.dagster %}
+{% endif %}
 
-## Dagster for Data Pipelines
+{% set prefect_tool = dev_environment.tools.get('prefect') %}
+{% if prefect_tool %}
 
-**Detected Tool:** Dagster (Confidence:
-{{ dev_environment.tools.dagster.confidence }})
+## {{ prefect_tool.display_name }} for Data Pipelines
 
-Dagster orchestrates ML, analytics, and ETL assets.
+**Detected Tool:** {{ prefect_tool.display_name }} (Confidence:
+{{ prefect_tool.confidence|capitalize }})
+{% if prefect_tool.score is not none %}_Detection score:
+{{ '%.1f'|format(prefect_tool.score) }}_{% endif %}
 
-**Next Steps & Best Practices:**
+{% if prefect_tool.recommendations %}
+**Actionable Recommendations:**
 
-1. **Software‑Defined Assets:** Define assets in code as the source of truth.
-2. **I/O Managers:** Abstract storage/loading with I/O managers.
-3. **Dagit:** Use Dagit for visualization and debugging.
+{% for rec in prefect_tool.recommendations %}- {{ rec }}
+{% endfor %}
 
 {% endif %}
 
-{% if dev_environment.tools.dvc %}
+{% endif %}
 
-## DVC for Data Versioning
+{% set dagster_tool = dev_environment.tools.get('dagster') %}
+{% if dagster_tool %}
 
-**Detected Tool:** DVC (Confidence:
-{{ dev_environment.tools.dvc.confidence }})
+## {{ dagster_tool.display_name }} for Data Pipelines
 
-DVC versions data and models.
+**Detected Tool:** {{ dagster_tool.display_name }} (Confidence:
+{{ dagster_tool.confidence|capitalize }})
+{% if dagster_tool.score is not none %}_Detection score:
+{{ '%.1f'|format(dagster_tool.score) }}_{% endif %}
+
+{% if dagster_tool.recommendations %}
+**Actionable Recommendations:**
+
+{% for rec in dagster_tool.recommendations %}- {{ rec }}
+{% endfor %}
+
+{% endif %}
+
+{% endif %}
+
+{% set dvc_tool = dev_environment.tools.get('dvc') %}
+{% if dvc_tool %}
+
+## {{ dvc_tool.display_name }} for Data Versioning
+
+**Detected Tool:** {{ dvc_tool.display_name }} (Confidence:
+{{ dvc_tool.confidence|capitalize }})
+{% if dvc_tool.score is not none %}_Detection score:
+{{ '%.1f'|format(dvc_tool.score) }}_{% endif %}
 
 **Key Files Detected:**
 
 ```text
-{% for file in dev_environment.tools.dvc.files %}
+{% for file in dvc_tool.files %}
 - {{ file }}
 {% endfor %}
+{% if dvc_tool.files|length == 0 %}
+(no representative files captured yet)
+{% endif %}
 ```
 
-**Next Steps & Best Practices:**
+{% if dvc_tool.recommendations %}
+**Actionable Recommendations:**
 
-1. **Remote Storage:** Configure a remote (S3, GCS, etc.) for sharing.
-2. **Pipelines:** Define processing and modeling pipelines in DVC.
-3. **Track Metrics:** Track and compare experiment metrics.
+{% for rec in dvc_tool.recommendations %}- {{ rec }}
+{% endfor %}
+
+{% endif %}
 
 {% endif %}

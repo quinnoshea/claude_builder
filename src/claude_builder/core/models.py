@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -98,6 +98,19 @@ class DomainInfo:
 
 
 @dataclass
+class ToolMetadata:
+    """Rich metadata describing a detected DevOps/MLOps tool."""
+
+    name: str
+    slug: str
+    category: str
+    confidence: str = "unknown"
+    score: Optional[float] = None
+    files: List[str] = field(default_factory=list)
+    recommendations: List[str] = field(default_factory=list)
+
+
+@dataclass
 class DevelopmentEnvironment:
     """Information about development environment and tools."""
 
@@ -116,6 +129,7 @@ class DevelopmentEnvironment:
     data_pipeline: List[str] = field(default_factory=list)
     mlops_tools: List[str] = field(default_factory=list)
     security_tools: List[str] = field(default_factory=list)
+    tool_details: Dict[str, ToolMetadata] = field(default_factory=dict)
 
 
 @dataclass
@@ -160,8 +174,10 @@ class ProjectAnalysis:
     warnings: List[str] = field(default_factory=list)
     suggestions: List[str] = field(default_factory=list)
 
-    # Agent configuration
-    agent_configuration: Optional["AgentSelection"] = None
+    # Agent configuration (supports both modern and legacy containers)
+    if TYPE_CHECKING:
+        from claude_builder.core.agents import AgentConfiguration  # pragma: no cover
+    agent_configuration: Optional["AgentConfiguration | AgentSelection"] = None
 
     @property
     def language(self) -> Optional[str]:
@@ -232,7 +248,8 @@ class AgentInfo:
     name: str
     description: str = ""
     category: str = "general"
-    confidence: float = 1.0
+    # Default confidence should start at 0.0; tests rely on this
+    confidence: float = 0.0
 
     # Additional fields for compatibility
     role: Optional[str] = None

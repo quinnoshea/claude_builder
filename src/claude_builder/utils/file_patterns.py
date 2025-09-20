@@ -860,6 +860,14 @@ class FilePatterns:
         },
     }
 
+    # Mapping helpers for DevOps/MLOps categories → pattern sets
+    _DEVOPS_PATTERN_MAP = {
+        "infrastructure": INFRASTRUCTURE_PATTERNS,
+        "observability": OBSERVABILITY_PATTERNS,
+        "security": SECURITY_PATTERNS,
+        "mlops": MLOPS_PATTERNS,
+    }
+
     # Framework detection patterns
     FRAMEWORK_PATTERNS = {
         "django": {"manage.py", "django/", "settings.py"},
@@ -1106,6 +1114,58 @@ class FilePatterns:
             "security": cls.detect_security_tools(project_path),
             "mlops": cls.detect_mlops_tools(project_path),
         }
+
+    @classmethod
+    def collect_tool_examples(
+        cls, project_path: Path, category: str, tool: str, limit: int = 5
+    ) -> list[str]:
+        """Return representative paths that triggered detection for a tool.
+
+        The helper inspects the pattern definition used for the detection pass
+        (files, directories, or glob expressions) and attempts to collect up to
+        ``limit`` relative paths that exist in ``project_path``. This keeps the
+        template output grounded in actual repository files without requiring a
+        second expensive detection pass.
+        """
+
+        patterns = cls._DEVOPS_PATTERN_MAP.get(category, {}).get(tool)
+        if not patterns:
+            return []
+
+        resolved_root = project_path.resolve()
+        matches: list[str] = []
+        seen: set[str] = set()
+
+        def _record(path: Path) -> None:
+            try:
+                rel = str(path.resolve().relative_to(resolved_root))
+            except (ValueError, RuntimeError):
+                rel = str(path)
+            if rel not in seen:
+                seen.add(rel)
+                matches.append(rel)
+
+        for pattern in patterns:
+            if len(matches) >= limit:
+                break
+
+            if "*" in pattern:
+                for candidate in resolved_root.rglob(pattern):
+                    if candidate.is_file() or candidate.is_dir():
+                        _record(candidate)
+                    if len(matches) >= limit:
+                        break
+                continue
+
+            stripped = pattern.rstrip("/")
+            candidate = resolved_root / stripped
+            if candidate.exists():
+                if candidate.is_dir():
+                    _record(candidate)
+                else:
+                    _record(candidate)
+
+        return matches[:limit]
 
 
 # Placeholder classes for test compatibility
@@ -1378,10 +1438,13 @@ class PatternRule:
     """Advanced pattern rule for project detection."""
 
     def __init__(
-        self, config: AdvancedPatternRule | None = None, **kwargs: Any
+        self, config: AdvancedPatternRule | str | None = None, **kwargs: Any
     ) -> None:
-        # Support both config object and individual parameters
-        if config:
+        # Support multiple legacy calling conventions:
+        # - PatternRule(AdvancedPatternRule(...))
+        # - PatternRule("*.py", action="include")
+        # - PatternRule(pattern="*.py", action="include", ...)
+        if isinstance(config, AdvancedPatternRule):
             self.name = config.name or "unnamed_rule"
             self.description = config.description or ""
             self.patterns = config.patterns or []
@@ -1389,14 +1452,24 @@ class PatternRule:
             self.required_patterns = config.required_patterns or []
             self.weight_factors = config.weight_factors or {}
             self.action = config.action
-            # Handle legacy pattern parameter
+            # Handle legacy single-pattern field
             if config.pattern and not self.patterns:
                 self.pattern = config.pattern
                 self.patterns = [config.pattern]
             else:
                 self.pattern = self.patterns[0] if self.patterns else ""
+        elif isinstance(config, str):
+            # Legacy positional string means "pattern"
+            self.name = kwargs.get("name", "unnamed_rule")
+            self.description = kwargs.get("description", "")
+            self.patterns = [config]
+            self.priority = kwargs.get("priority", 1.0)
+            self.required_patterns = kwargs.get("required_patterns", [])
+            self.weight_factors = kwargs.get("weight_factors", {})
+            self.action = kwargs.get("action", "include")
+            self.pattern = config
         else:
-            # Legacy constructor support
+            # Legacy keyword-only constructor
             self.name = kwargs.get("name", "unnamed_rule")
             self.description = kwargs.get("description", "")
             self.patterns = kwargs.get("patterns", [])
