@@ -269,12 +269,12 @@ jobs:
           enable-cache: true
       - name: Install security tooling
         run: |
-          uv sync --dev
+          uv pip install --system detect-secrets bandit
       - name: Verify secrets baseline
-        run: uv run -- detect-secrets scan --baseline .secrets.baseline --all-files --exclude-files 'src/claude_builder/templates/*'
+        run: detect-secrets scan --baseline .secrets.baseline --all-files --exclude-files 'src/claude_builder/templates/*'
       - name: Bandit (security scan)
         run: |
-          uv run bandit -r src/claude_builder -f json -o bandit-report.json || true
+          bandit -r src/claude_builder -f json -o bandit-report.json || true
       - name: Upload security artifacts
         if: always()
         uses: actions/upload-artifact@v4
