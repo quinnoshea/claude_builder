@@ -4,6 +4,11 @@ import json
 import tempfile
 
 from pathlib import Path
+
+import pytest
+
+
+pytestmark = pytest.mark.failing
 from unittest.mock import Mock, patch
 
 

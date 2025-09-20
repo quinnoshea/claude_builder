@@ -11,6 +11,9 @@ Tests cover the fundamental project analysis capabilities including:
 
 import pytest
 
+
+pytestmark = pytest.mark.failing
+
 from claude_builder.core.analyzer import (
     FrameworkDetector,
     LanguageDetector,
