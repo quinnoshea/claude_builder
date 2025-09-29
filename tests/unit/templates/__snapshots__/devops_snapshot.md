@@ -102,3 +102,11 @@ Vault helps manage secrets and protect sensitive data.
 **Actionable Recommendations:**
 
 - Enable best practices for vault.
+
+**Actionable Recommendations:**
+
+- Scan container images before pushing to registries and block failing
+  builds.
+- Use `.trivyignore` to suppress noisy findings while tracking rationale in
+  code review.
+- Schedule regular filesystem and dependency scans to catch CVEs early.

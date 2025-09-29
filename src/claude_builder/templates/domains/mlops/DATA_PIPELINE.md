@@ -13,7 +13,6 @@
 Airflow is a platform for authoring, scheduling, and monitoring workflows.
 
 **Key Files Detected:**
-
 ```text
 {% for file in airflow_tool.files %}
 - {{ file }}
@@ -84,7 +83,6 @@ Airflow is a platform for authoring, scheduling, and monitoring workflows.
 {{ '%.1f'|format(dvc_tool.score) }}_{% endif %}
 
 **Key Files Detected:**
-
 ```text
 {% for file in dvc_tool.files %}
 - {{ file }}

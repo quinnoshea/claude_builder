@@ -1,9 +1,9 @@
+import os
+import time
+
 from pathlib import Path
 
 import pytest
-
-
-pytestmark = pytest.mark.failing
 
 from claude_builder.analysis.tool_recommendations import get_display_name
 from claude_builder.core.models import (
@@ -251,3 +251,100 @@ def test_mixed_snapshot(tmp_path: Path) -> None:
         "<!-- markdownlint-disable MD025 -->", ""
     )
     assert _normalise_markdown(rendered) == _normalise_markdown(expected)
+
+
+@pytest.mark.performance
+def test_domain_section_rendering_performance(tmp_path: Path) -> None:
+    """Performance guard: Domain section rendering should complete in reasonable time.
+
+    This test ensures that rendering domain sections doesn't regress significantly
+    in performance. The threshold is set generously to avoid CI flakiness while
+    still catching major performance regressions.
+    """
+    # Skip on CI if environment variable is set
+    if os.environ.get("SKIP_PERFORMANCE_TESTS"):
+        pytest.skip("Performance tests disabled in CI")
+
+    # Create a comprehensive metadata set to test realistic rendering performance
+    metadata = {
+        "terraform": _metadata(
+            "terraform",
+            category="infrastructure",
+            recommendations=[
+                "Use workspaces for environment separation.",
+                "Enable remote state locking with DynamoDB.",
+                "Implement proper tagging strategy.",
+                "Set up state file encryption.",
+            ],
+        ),
+        "kubernetes": _metadata(
+            "kubernetes",
+            category="orchestration_tools",
+            files=["k8s/deployment.yaml", "k8s/service.yaml", "k8s/ingress.yaml"],
+        ),
+        "helm": _metadata(
+            "helm",
+            category="orchestration_tools",
+            files=["charts/app/Chart.yaml", "charts/app/values.yaml"],
+        ),
+        "prometheus": _metadata(
+            "prometheus",
+            category="observability",
+            files=["observability/prometheus.yml", "observability/alertmanager.yml"],
+        ),
+        "grafana": _metadata(
+            "grafana",
+            category="observability",
+            files=[
+                "grafana/dashboards/app.json",
+                "grafana/provisioning/datasources.yaml",
+            ],
+        ),
+        "vault": _metadata("vault", category="security"),
+        "airflow": _metadata(
+            "airflow",
+            category="data_pipeline",
+            files=["dags/sample_dag.py", "dags/etl_pipeline.py"],
+        ),
+        "mlflow": _metadata(
+            "mlflow",
+            category="mlops_tools",
+            files=["mlruns/0/meta.yaml", "models/production/model.pkl"],
+        ),
+        "feast": _metadata("feast", category="mlops_tools"),
+        "dvc": _metadata(
+            "dvc", category="data_pipeline", files=["data.dvc", "models.dvc"]
+        ),
+    }
+
+    tools = {
+        "infrastructure_as_code": ["terraform"],
+        "orchestration_tools": ["kubernetes", "helm"],
+        "observability": ["prometheus", "grafana"],
+        "security_tools": ["vault"],
+        "data_pipeline": ["airflow", "dvc"],
+        "mlops_tools": ["mlflow", "feast"],
+    }
+
+    # Measure rendering time (multiple runs for stability)
+    times = []
+    for _ in range(3):
+        start_time = time.perf_counter()
+        rendered = _render_sections(tmp_path, tools=tools, metadata=metadata)
+        end_time = time.perf_counter()
+        times.append(end_time - start_time)
+
+    avg_time = sum(times) / len(times)
+
+    # Verify output is substantial (sanity check)
+    assert len(rendered) > 1000, "Rendered output should be substantial"
+    assert "DevOps: Infrastructure Guidance" in rendered
+    assert "MLOps: Lifecycle Guidance" in rendered
+
+    # Performance guard: rendering should complete within 2 seconds (generous threshold)
+    # This catches major performance regressions while being forgiving of CI variability
+    assert (
+        avg_time < 2.0
+    ), f"Domain section rendering took {avg_time:.3f}s, expected < 2.0s"
+
+    # Performance logged for debugging: {avg_time:.3f}s average over {len(times)} runs

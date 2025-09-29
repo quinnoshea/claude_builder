@@ -782,6 +782,20 @@ class ModernTemplateManager:
 
         tool_details: Dict[str, Any] = getattr(dev_env, "tool_details", {}) or {}
         tools_map: Dict[str, Dict[str, Any]] = {}
+        # Late import to avoid any potential import cycles at module import time
+        try:
+            from claude_builder.analysis.tool_recommendations import (
+                get_display_name,
+                get_recommendations,
+            )
+        except Exception:  # pragma: no cover - ultra-defensive, fall back gracefully
+
+            def get_display_name(slug: str) -> str:
+                return slug.replace("_", " ").title()
+
+            def get_recommendations(slug: str) -> list[str]:
+                return []
+
         for slug in tool_names:
             key = str(slug).lower().replace(" ", "_")
             metadata = tool_details.get(key) or tool_details.get(slug)
@@ -797,13 +811,14 @@ class ModernTemplateManager:
                     "category": metadata.category,
                 }
             else:
+                # P3.3: supply human-friendly defaults and curated recs when metadata is absent
                 tools_map[key] = {
                     "present": True,
-                    "display_name": slug.replace("_", " ").title(),
+                    "display_name": get_display_name(key),
                     "confidence": "unknown",
                     "score": None,
                     "files": [],
-                    "recommendations": [],
+                    "recommendations": get_recommendations(key),
                     "category": "unknown",
                 }
 
