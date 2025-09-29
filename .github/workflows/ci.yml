@@ -129,7 +129,7 @@ jobs:
 
     - name: Upload coverage to Codacy
       id: codacy
-      if: ${{ matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11' && secrets.CODACY_PROJECT_TOKEN != '' && hashFiles('coverage.xml') != '' }}
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11' && secrets.CODACY_PROJECT_TOKEN != '' && hashFiles('coverage.xml') != ''
       uses: codacy/codacy-coverage-reporter-action@v1
       with:
         project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
@@ -155,7 +155,7 @@ jobs:
 
     - name: Upload coverage to Codecov
       id: codecov
-      if: ${{ matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11' && secrets.CODECOV_TOKEN != '' }}
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11' && secrets.CODECOV_TOKEN != ''
       uses: codecov/codecov-action@v5
       with:
         file: ./coverage.xml
@@ -168,7 +168,7 @@ jobs:
 
     - name: Upload test results to Codecov
       id: codecov-test-results
-      if: ${{ !cancelled() && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11' && secrets.CODECOV_TOKEN != '' }}
+      if: "!cancelled() && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11' && secrets.CODECOV_TOKEN != ''"
       uses: codecov/test-results-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
@@ -408,7 +408,7 @@ jobs:
           echo "percent=$PCT" >> "$GITHUB_OUTPUT"
 
       - name: Upload coverage to Codacy (only if tests failed)
-        if: ${{ needs.test.result != 'success' && secrets.CODACY_PROJECT_TOKEN != '' && hashFiles('coverage.xml') != '' }}
+        if: needs.test.result != 'success' && secrets.CODACY_PROJECT_TOKEN != '' && hashFiles('coverage.xml') != ''
         uses: codacy/codacy-coverage-reporter-action@v1
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
@@ -418,7 +418,7 @@ jobs:
           CODACY_API_BASE_URL: https://api.codacy.com
 
       - name: Upload coverage to Codecov (only if tests failed)
-        if: ${{ needs.test.result != 'success' && secrets.CODECOV_TOKEN != '' && hashFiles('coverage.xml') != '' }}
+        if: needs.test.result != 'success' && secrets.CODECOV_TOKEN != '' && hashFiles('coverage.xml') != ''
         uses: codecov/codecov-action@v5
         with:
           file: ./coverage.xml
