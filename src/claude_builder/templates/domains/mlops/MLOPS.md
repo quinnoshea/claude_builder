@@ -13,7 +13,6 @@
 MLflow manages the end-to-end machine learning lifecycle.
 
 **Key Files Detected:**
-
 ```text
 {% for file in mlflow_tool.files %}
 - {{ file }}

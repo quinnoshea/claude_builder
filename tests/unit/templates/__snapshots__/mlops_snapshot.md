@@ -39,6 +39,7 @@ Airflow is a platform for authoring, scheduling, and monitoring workflows.
 
 **Detected Tool:** Prefect (Confidence: High)
 _Detection score: 12.0_
+
 **Actionable Recommendations:**
 
 - Enable best practices for prefect.
@@ -49,6 +50,7 @@ _Detection score: 12.0_
 
 **Detected Tool:** Feast (Confidence: High)
 _Detection score: 12.0_
+
 **Actionable Recommendations:**
 
 - Enable best practices for feast.
