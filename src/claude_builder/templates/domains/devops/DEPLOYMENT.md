@@ -14,6 +14,7 @@ We've detected Kubernetes configuration files, suggesting you are deploying
 your application to a Kubernetes cluster.
 
 **Key Files Detected:**
+
 ```text
 {% for file in kube.files %}
 - {{ file }}
@@ -55,6 +56,7 @@ We've detected a Helm chart, which is a great way to package and deploy your
 application on Kubernetes.
 
 **Key Files Detected:**
+
 ```text
 {% for file in helm.files %}
 - {{ file }}

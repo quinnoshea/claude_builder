@@ -14,6 +14,7 @@ Your project appears to use Terraform for managing infrastructure as code. This
 helps ensure infrastructure is reproducible, versionable, and scalable.
 
 **Key Files Detected:**
+
 ```text
 {% for file in tool.files %}
 - {{ file }}
