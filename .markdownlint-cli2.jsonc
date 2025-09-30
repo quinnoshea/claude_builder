@@ -1,6 +1,12 @@
 {
   // markdownlint-cli2 configuration for repository docs and templates
   // We keep lines reasonably readable while allowing longer guidance lines.
+  // Skip linting of domain templates used to render generated docs; their
+  // content is validated by snapshot tests and may intentionally exceed
+  // standard line-length to match rendered UX.
+  "ignores": [
+    "src/claude_builder/templates/domains/**"
+  ],
   "markdownlint": {
     // MD013: line length — keep to 80 chars; ignore code and tables
     "MD013": {
