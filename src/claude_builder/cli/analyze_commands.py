@@ -25,10 +25,47 @@ PYYAML_NOT_AVAILABLE = "PyYAML not available"
 
 console = Console()
 
+# Domain constants for filtering displays
+VALID_DOMAINS = ["infra", "devops", "mlops"]
+
+
+def _resolve_domain_flags(
+    domains: tuple[str, ...],
+    infrastructure: bool,
+    mlops: bool,
+) -> tuple[bool, bool]:
+    """Resolve --domain values to show_infrastructure/show_mlops flags.
+
+    When --domain is provided, it overrides the legacy flags.
+    """
+    show_infra = infrastructure
+    show_mlops_flag = mlops
+    if domains:
+        domain_set = {d.lower() for d in domains}
+        # Treat "infra" and "devops" as infrastructure-focused
+        show_infra = ("infra" in domain_set) or ("devops" in domain_set)
+        show_mlops_flag = "mlops" in domain_set
+    return show_infra, show_mlops_flag
+
 
 @click.group()
 def analyze() -> None:
-    """Analyze project structure and characteristics."""
+    """Analyze project structure and characteristics.
+
+    \b
+    Examples:
+        # Standard analysis with table output
+        claude-builder analyze project ./my-app
+
+        # Focus on infrastructure and MLOps domains
+        claude-builder analyze project ./k8s-ml-app --domain infra --domain mlops
+
+        # JSON output for CI/CD integration
+        claude-builder analyze project ./app --format json --output analysis.json
+
+        # Interactive analysis (scaffold)
+        claude-builder analyze project ./app --interactive
+    """
 
 
 @analyze.command()
@@ -55,14 +92,29 @@ def analyze() -> None:
     "--include-suggestions", is_flag=True, help="Include improvement suggestions"
 )
 @click.option(
+    "--domain",
+    multiple=True,
+    type=click.Choice(VALID_DOMAINS, case_sensitive=False),
+    help=(
+        "Filter analysis by domain (repeatable). Choices: infra, devops, mlops. "
+        "Example: --domain infra --domain mlops"
+    ),
+)
+@click.option(
     "--infrastructure",
     is_flag=True,
-    help="Show detailed Infrastructure/IaC, orchestration, observability, security",
+    help="[DEPRECATED: use --domain infra] Show detailed Infrastructure/IaC details",
 )
 @click.option(
     "--mlops",
     is_flag=True,
-    help="Show detailed MLOps/data pipeline tools and signals",
+    help="[DEPRECATED: use --domain mlops] Show detailed MLOps/data pipeline details",
+)
+@click.option(
+    "--interactive",
+    "-i",
+    is_flag=True,
+    help="Enable interactive mode (prompts coming soon). Requires TTY.",
 )
 @click.option("--verbose", "-v", count=True, help="Verbose output")
 def project(project_path: str, **options: Any) -> None:
@@ -72,8 +124,12 @@ def project(project_path: str, **options: Any) -> None:
     output_format = options.get("output_format", "table")
     confidence_threshold = options.get("confidence_threshold", 0)
     include_suggestions = options.get("include_suggestions", False)
-    show_infra = options.get("infrastructure", False)
-    show_mlops = options.get("mlops", False)
+    domains = options.get("domain", ())
+    infrastructure_flag = options.get("infrastructure", False)
+    mlops_flag = options.get("mlops", False)
+    show_infra, show_mlops = _resolve_domain_flags(
+        domains, infrastructure_flag, mlops_flag
+    )
     verbose = options.get("verbose", 0)
 
     try:
@@ -94,6 +150,18 @@ def project(project_path: str, **options: Any) -> None:
             )
             if not include_suggestions:
                 return
+
+        # Interactive scaffold (non-blocking)
+        if options.get("interactive", False):
+            import sys as _sys
+
+            if not (_sys.stdin.isatty() and _sys.stdout.isatty()):
+                console.print(
+                    "[yellow]Interactive mode requires a TTY environment; "
+                    "continuing non-interactively[/yellow]"
+                )
+            else:
+                console.print("[cyan]Interactive analysis wizard coming soon...[/cyan]")
 
         # Display results based on format
         if output_format == "json":
