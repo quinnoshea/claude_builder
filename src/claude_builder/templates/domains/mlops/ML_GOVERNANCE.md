@@ -5,10 +5,8 @@
 
 ## {{ dbt_tool.display_name }} for Data Transformation
 
-**Detected Tool:** {{ dbt_tool.display_name }} (Confidence:
-{{ dbt_tool.confidence|capitalize }})
-{% if dbt_tool.score is not none %}_Detection score:
-{{ '%.1f'|format(dbt_tool.score) }}_{% endif %}
+**Detected Tool:** {{ dbt_tool.display_name }} (Confidence: {{ dbt_tool.confidence|capitalize }})
+{% if dbt_tool.score is not none %}_Detection score: {{ '%.1f'|format(dbt_tool.score) }}_{% endif %}
 
 **Key Files Detected:**
 
@@ -22,6 +20,7 @@
 ```
 
 {% if dbt_tool.recommendations %}
+
 **Actionable Recommendations:**
 
 {% for rec in dbt_tool.recommendations %}- {{ rec }}
@@ -36,12 +35,11 @@
 
 ## {{ gx_tool.display_name }} for Data Quality
 
-**Detected Tool:** {{ gx_tool.display_name }} (Confidence:
-{{ gx_tool.confidence|capitalize }})
-{% if gx_tool.score is not none %}_Detection score:
-{{ '%.1f'|format(gx_tool.score) }}_{% endif %}
+**Detected Tool:** {{ gx_tool.display_name }} (Confidence: {{ gx_tool.confidence|capitalize }})
+{% if gx_tool.score is not none %}_Detection score: {{ '%.1f'|format(gx_tool.score) }}_{% endif %}
 
 {% if gx_tool.recommendations %}
+
 **Actionable Recommendations:**
 
 {% for rec in gx_tool.recommendations %}- {{ rec }}
@@ -56,12 +54,11 @@
 
 ## {{ feast_tool.display_name }} for Feature Stores
 
-**Detected Tool:** {{ feast_tool.display_name }} (Confidence:
-{{ feast_tool.confidence|capitalize }})
-{% if feast_tool.score is not none %}_Detection score:
-{{ '%.1f'|format(feast_tool.score) }}_{% endif %}
+**Detected Tool:** {{ feast_tool.display_name }} (Confidence: {{ feast_tool.confidence|capitalize }})
+{% if feast_tool.score is not none %}_Detection score: {{ '%.1f'|format(feast_tool.score) }}_{% endif %}
 
 {% if feast_tool.recommendations %}
+
 **Actionable Recommendations:**
 
 {% for rec in feast_tool.recommendations %}- {{ rec }}

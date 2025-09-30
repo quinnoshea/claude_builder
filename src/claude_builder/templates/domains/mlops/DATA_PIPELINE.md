@@ -40,6 +40,7 @@ Airflow is a platform for authoring, scheduling, and monitoring workflows.
 {% if prefect_tool.score is not none %}_Detection score: {{ '%.1f'|format(prefect_tool.score) }}_{% endif %}
 
 {% if prefect_tool.recommendations %}
+
 **Actionable Recommendations:**
 
 {% for rec in prefect_tool.recommendations %}- {{ rec }}
@@ -58,6 +59,7 @@ Airflow is a platform for authoring, scheduling, and monitoring workflows.
 {% if dagster_tool.score is not none %}_Detection score: {{ '%.1f'|format(dagster_tool.score) }}_{% endif %}
 
 {% if dagster_tool.recommendations %}
+
 **Actionable Recommendations:**
 
 {% for rec in dagster_tool.recommendations %}- {{ rec }}
