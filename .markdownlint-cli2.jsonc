@@ -1,6 +1,10 @@
 {
   // markdownlint-cli2 configuration for repository docs and templates
   // We keep lines reasonably readable while allowing longer guidance lines.
+  // Ignore generated domain templates; these are covered by snapshot tests.
+  "ignores": [
+    "src/claude_builder/templates/domains/**"
+  ],
   "markdownlint": {
     // MD013: line length — keep to 80 chars; ignore code and tables
     "MD013": {
