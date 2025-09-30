@@ -99,13 +99,14 @@ def project(project_path: str, **options: Any) -> None:
         if output_format == "json":
             _display_analysis_json(analysis, include_suggestions=include_suggestions)
         elif output_format == "yaml":
-            # Early short-circuit: if PyYAML is not present, do not attempt any import
-            # Tests patch __import__("yaml") to raise ImportError; we avoid importing
-            # and simply fail fast when the module is not already loaded.
-            import sys as _sys
-
-            if "yaml" not in _sys.modules:
-                raise click.ClickException(PYYAML_NOT_AVAILABLE)
+            # Try to import PyYAML explicitly so tests that mock ImportError
+            # are correctly detected. If unavailable, print a clear message
+            # and exit with a non-zero status via ClickException.
+            try:
+                import yaml  # noqa: F401
+            except ImportError as _e:
+                click.echo("YAML format requires PyYAML", err=True)
+                raise click.ClickException(PYYAML_NOT_AVAILABLE) from _e
             _display_analysis_yaml(analysis, include_suggestions=include_suggestions)
         else:
             _display_analysis_table(
@@ -412,17 +413,15 @@ def _display_analysis_json(analysis: Any, *, include_suggestions: bool = False) 
 
 def _display_analysis_yaml(analysis: Any, *, include_suggestions: bool = False) -> None:
     """Display analysis in YAML format."""
-    # Avoid importing yaml under patched __import__ in tests; rely on sys.modules
-    import sys
-
-    ymod = sys.modules.get("yaml")
-    if ymod is None:
-        console.print("[red]YAML format requires PyYAML to be installed[/red]")
-        console.print("Try: pip install PyYAML")
-        raise click.ClickException(PYYAML_NOT_AVAILABLE)
+    try:
+        import yaml as _yaml
+    except ImportError as _e:
+        # Mirror the message expected by tests and fail non-zero.
+        click.echo("YAML format requires PyYAML", err=True)
+        raise click.ClickException(PYYAML_NOT_AVAILABLE) from _e
 
     data = _analysis_to_dict(analysis, include_suggestions=include_suggestions)
-    console.print(ymod.dump(data, default_flow_style=False))
+    console.print(_yaml.dump(data, default_flow_style=False))
 
 
 def _analysis_to_dict(
@@ -507,18 +506,17 @@ def _save_analysis_to_file(
     data = _analysis_to_dict(analysis, include_suggestions=include_suggestions)
 
     if output_path.suffix.lower() in [".yaml", ".yml"]:
-        import sys
-
-        ymod = sys.modules.get("yaml")
-        if ymod is None:
-            # Fallback to JSON
+        try:
+            import yaml as _yaml
+        except ImportError:
+            # Fallback to JSON when PyYAML is not available
             console.print("[yellow]YAML not available, saving as JSON instead[/yellow]")
             output_path = output_path.with_suffix(".json")
             with output_path.open("w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2)
             return
         with output_path.open("w", encoding="utf-8") as f:
-            ymod.dump(data, f, default_flow_style=False)
+            _yaml.dump(data, f, default_flow_style=False)
     else:
         # Default to JSON
         with output_path.open("w", encoding="utf-8") as f:

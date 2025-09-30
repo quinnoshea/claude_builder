@@ -5,14 +5,13 @@
 
 ## {{ mlflow_tool.display_name }} for MLOps
 
-**Detected Tool:** {{ mlflow_tool.display_name }} (Confidence:
-{{ mlflow_tool.confidence|capitalize }})
-{% if mlflow_tool.score is not none %}_Detection score:
-{{ '%.1f'|format(mlflow_tool.score) }}_{% endif %}
+**Detected Tool:** {{ mlflow_tool.display_name }} (Confidence: {{ mlflow_tool.confidence|capitalize }})
+{% if mlflow_tool.score is not none %}_Detection score: {{ '%.1f'|format(mlflow_tool.score) }}_{% endif %}
 
 MLflow manages the end-to-end machine learning lifecycle.
 
 **Key Files Detected:**
+
 ```text
 {% for file in mlflow_tool.files %}
 - {{ file }}
@@ -37,10 +36,8 @@ MLflow manages the end-to-end machine learning lifecycle.
 
 ## {{ kubeflow_tool.display_name }} for MLOps on Kubernetes
 
-**Detected Tool:** {{ kubeflow_tool.display_name }} (Confidence:
-{{ kubeflow_tool.confidence|capitalize }})
-{% if kubeflow_tool.score is not none %}_Detection score:
-{{ '%.1f'|format(kubeflow_tool.score) }}_{% endif %}
+**Detected Tool:** {{ kubeflow_tool.display_name }} (Confidence: {{ kubeflow_tool.confidence|capitalize }})
+{% if kubeflow_tool.score is not none %}_Detection score: {{ '%.1f'|format(kubeflow_tool.score) }}_{% endif %}
 
 {% if kubeflow_tool.recommendations %}
 **Actionable Recommendations:**

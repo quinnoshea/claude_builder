@@ -5,10 +5,8 @@
 
 ## Prometheus Monitoring
 
-**Detected Tool:** {{ prom.display_name }} (Confidence:
-{{ prom.confidence|capitalize }})
-{% if prom.score is not none %}_Detection score:
-{{ '%.1f'|format(prom.score) }}_{% endif %}
+**Detected Tool:** {{ prom.display_name }} (Confidence: {{ prom.confidence|capitalize }})
+{% if prom.score is not none %}_Detection score: {{ '%.1f'|format(prom.score) }}_{% endif %}
 
 Prometheus configuration files were found, indicating you are using it for
 monitoring.
@@ -39,10 +37,8 @@ monitoring.
 
 ## Grafana Dashboards
 
-**Detected Tool:** {{ grafana.display_name }} (Confidence:
-{{ grafana.confidence|capitalize }})
-{% if grafana.score is not none %}_Detection score:
-{{ '%.1f'|format(grafana.score) }}_{% endif %}
+**Detected Tool:** {{ grafana.display_name }} (Confidence: {{ grafana.confidence|capitalize }})
+{% if grafana.score is not none %}_Detection score: {{ '%.1f'|format(grafana.score) }}_{% endif %}
 
 We detected Grafana configurations. Visualizing metrics helps you understand
 system behavior.
@@ -73,10 +69,8 @@ system behavior.
 
 ## OpenTelemetry Tracing
 
-**Detected Tool:** {{ otel.display_name }} (Confidence:
-{{ otel.confidence|capitalize }})
-{% if otel.score is not none %}_Detection score:
-{{ '%.1f'|format(otel.score) }}_{% endif %}
+**Detected Tool:** {{ otel.display_name }} (Confidence: {{ otel.confidence|capitalize }})
+{% if otel.score is not none %}_Detection score: {{ '%.1f'|format(otel.score) }}_{% endif %}
 
 Distributed tracing helps debug and understand performance across services.
 

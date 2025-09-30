@@ -235,11 +235,14 @@ class TestAnalyzeCommands:
 
         runner = CliRunner()
 
-        # Mock ImportError for yaml import
+        # Mock ImportError for yaml import without recursive import
+        # Capture the original import to avoid infinite recursion when forwarding
+        orig_import = __import__
+
         def mock_import(name, *args, **kwargs):
             if name == "yaml":
                 raise ImportError("No module named 'yaml'")
-            return __import__(name, *args, **kwargs)
+            return orig_import(name, *args, **kwargs)
 
         with patch("builtins.__import__", side_effect=mock_import):
             result = runner.invoke(
