@@ -23,6 +23,10 @@ version = "0.1.0"
 """.strip()
         )
         (project / "sample.py").write_text("print('hello')\n")
+        # Add a main module to satisfy CLI/tool heuristics
+        (project / "main.py").write_text(
+            "if __name__ == '__main__':\n    print('hi')\n"
+        )
         (project / "tests").mkdir(exist_ok=True)
     elif language == "rust":
         (project / "Cargo.toml").write_text(
