@@ -68,3 +68,33 @@ def pytest_collection_modifyitems(config, items):
                         strict=False,
                     )
                 )
+
+
+# --- Common fixtures used across the test suite ---
+
+
+@pytest.fixture
+def temp_dir(tmp_path: Path) -> Path:
+    """Provide a temporary directory as a Path.
+
+    Many tests reference a `temp_dir` fixture; map it to pytest's `tmp_path`.
+    """
+    return tmp_path
+
+
+@pytest.fixture
+def sample_python_project(temp_dir: Path) -> Path:
+    """Create a minimal sample Python project and return its path."""
+    return create_test_project(temp_dir, "python")
+
+
+@pytest.fixture
+def sample_rust_project(temp_dir: Path) -> Path:
+    """Create a minimal sample Rust project (when needed)."""
+    return create_test_project(temp_dir, "rust")
+
+
+@pytest.fixture
+def sample_javascript_project(temp_dir: Path) -> Path:
+    """Create a minimal sample JavaScript project (when needed)."""
+    return create_test_project(temp_dir, "javascript")
