@@ -5,10 +5,8 @@
 
 ## {{ vault_tool.display_name }} for Secrets Management
 
-**Detected Tool:** {{ vault_tool.display_name }} (Confidence:
-{{ vault_tool.confidence|capitalize }})
-{% if vault_tool.score is not none %}_Detection score:
-{{ '%.1f'|format(vault_tool.score) }}_{% endif %}
+**Detected Tool:** {{ vault_tool.display_name }} (Confidence: {{ vault_tool.confidence|capitalize }})
+{% if vault_tool.score is not none %}_Detection score: {{ '%.1f'|format(vault_tool.score) }}_{% endif %}
 
 Vault helps manage secrets and protect sensitive data.
 
@@ -27,10 +25,8 @@ Vault helps manage secrets and protect sensitive data.
 
 ## {{ tfsec_tool.display_name }} for Terraform Security
 
-**Detected Tool:** {{ tfsec_tool.display_name }} (Confidence:
-{{ tfsec_tool.confidence|capitalize }})
-{% if tfsec_tool.score is not none %}_Detection score:
-{{ '%.1f'|format(tfsec_tool.score) }}_{% endif %}
+**Detected Tool:** {{ tfsec_tool.display_name }} (Confidence: {{ tfsec_tool.confidence|capitalize }})
+{% if tfsec_tool.score is not none %}_Detection score: {{ '%.1f'|format(tfsec_tool.score) }}_{% endif %}
 
 {% if tfsec_tool.recommendations %}
 **Actionable Recommendations:**
@@ -54,10 +50,8 @@ Vault helps manage secrets and protect sensitive data.
 
 ## {{ trivy_tool.display_name }} for Vulnerability Scanning
 
-**Detected Tool:** {{ trivy_tool.display_name }} (Confidence:
-{{ trivy_tool.confidence|capitalize }})
-{% if trivy_tool.score is not none %}_Detection score:
-{{ '%.1f'|format(trivy_tool.score) }}_{% endif %}
+**Detected Tool:** {{ trivy_tool.display_name }} (Confidence: {{ trivy_tool.confidence|capitalize }})
+{% if trivy_tool.score is not none %}_Detection score: {{ '%.1f'|format(trivy_tool.score) }}_{% endif %}
 
 {% if trivy_tool.recommendations %}
 **Actionable Recommendations:**

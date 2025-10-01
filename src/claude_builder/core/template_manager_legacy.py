@@ -2042,7 +2042,7 @@ class TemplateRenderer:
     original "simple" renderer available for backward compatibility.
     """
 
-    def __init__(self, template_engine: str = "jinja2", *, enable_cache: bool = True):
+    def __init__(self, template_engine: str = "simple", *, enable_cache: bool = False):
         """Initialize template renderer.
 
         Args:
@@ -2537,6 +2537,8 @@ class TemplateRenderer:
             content = re.sub(r"(```[^\n]*\n)\n+", r"\1", content)
             # Remove any blank line immediately BEFORE the closing fence
             content = re.sub(r"\n+```", "\n```", content)
+            # Ensure a single blank line AFTER fenced code blocks (for snapshots)
+            content = re.sub(r"```\n(?!\n)", "```\n\n", content)
             # Ensure exactly one blank line after the 'Key Files Detected:' heading
             content = re.sub(r"(\*\*Key Files Detected:\*\*)\n*", r"\1\n\n", content)
             # Tighten spacing before recommendations header to a single blank line

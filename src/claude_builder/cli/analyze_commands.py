@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import sys
 
 from pathlib import Path
 from typing import Any
@@ -153,9 +154,7 @@ def project(project_path: str, **options: Any) -> None:
 
         # Interactive scaffold (non-blocking)
         if options.get("interactive", False):
-            import sys as _sys
-
-            if not (_sys.stdin.isatty() and _sys.stdout.isatty()):
+            if not (sys.stdin.isatty() and sys.stdout.isatty()):
                 console.print(
                     "[yellow]Interactive mode requires a TTY environment; "
                     "continuing non-interactively[/yellow]"
@@ -170,9 +169,7 @@ def project(project_path: str, **options: Any) -> None:
             # Early short-circuit: if PyYAML is not present, do not attempt any import
             # Tests patch __import__("yaml") to raise ImportError; we avoid importing
             # and simply fail fast when the module is not already loaded.
-            import sys as _sys
-
-            if "yaml" not in _sys.modules:
+            if "yaml" not in sys.modules:
                 raise click.ClickException(PYYAML_NOT_AVAILABLE)
             _display_analysis_yaml(analysis, include_suggestions=include_suggestions)
         else:
@@ -481,8 +478,6 @@ def _display_analysis_json(analysis: Any, *, include_suggestions: bool = False) 
 def _display_analysis_yaml(analysis: Any, *, include_suggestions: bool = False) -> None:
     """Display analysis in YAML format."""
     # Avoid importing yaml under patched __import__ in tests; rely on sys.modules
-    import sys
-
     ymod = sys.modules.get("yaml")
     if ymod is None:
         console.print("[red]YAML format requires PyYAML to be installed[/red]")
