@@ -4,6 +4,15 @@ from pathlib import Path
 
 import pytest
 
+# Types used by fixtures
+from claude_builder.core.analyzer import (
+    DomainInfo,
+    FrameworkInfo,
+    LanguageInfo,
+    ProjectAnalysis,
+)
+from claude_builder.core.models import DevelopmentEnvironment, FileSystemInfo
+
 
 def create_test_project(base_dir: Path, language: str) -> Path:
     """Create a minimal test project structure for the given language.
@@ -98,3 +107,89 @@ def sample_rust_project(temp_dir: Path) -> Path:
 def sample_javascript_project(temp_dir: Path) -> Path:
     """Create a minimal sample JavaScript project (when needed)."""
     return create_test_project(temp_dir, "javascript")
+
+
+# --- Additional shared fixtures required by multiple suites ---
+
+
+@pytest.fixture
+def sample_project_path(sample_python_project: Path) -> Path:
+    """Alias fixture expected by some tests."""
+    return sample_python_project
+
+
+@pytest.fixture
+def sample_analysis(sample_python_project: Path) -> ProjectAnalysis:
+    """Provide a realistic ProjectAnalysis structure for tests.
+
+    Mirrors the structure used in CLI tests so intelligence/config
+    suites can consume consistent data without hitting the analyzer.
+    """
+    return ProjectAnalysis(
+        project_path=sample_python_project,
+        analysis_confidence=85.5,
+        analysis_timestamp="2025-01-01T00:00:00",
+        analyzer_version="1.0.0",
+        language_info=LanguageInfo(
+            primary="python",
+            secondary=["javascript"],
+            confidence=90.0,
+            file_counts={"python": 10, "javascript": 2},
+            total_lines=1000,
+        ),
+        framework_info=FrameworkInfo(
+            primary="fastapi",
+            secondary=["pytest"],
+            confidence=80.0,
+            version="0.100.0",
+            config_files=["requirements.txt"],
+        ),
+        domain_info=DomainInfo(
+            domain="web_development",
+            confidence=75.0,
+            indicators=["REST API", "web framework"],
+            specialized_patterns=["microservice"],
+        ),
+        project_type="api_service",
+        complexity_level="medium",
+        architecture_pattern="mvc",
+        dev_environment=DevelopmentEnvironment(
+            package_managers=["pip"],
+            testing_frameworks=["pytest"],
+            ci_cd_systems=["github-actions"],
+            containerization=["docker"],
+            databases=["postgresql"],
+            # include newer fields used in tables
+            infrastructure_as_code=["terraform"],
+            orchestration_tools=["kubernetes"],
+            secrets_management=["vault"],
+            observability=["prometheus"],
+            security_tools=["bandit"],
+            data_pipeline=["airflow"],
+            mlops_tools=["mlflow"],
+        ),
+        filesystem_info=FileSystemInfo(
+            total_files=50,
+            total_directories=10,
+            source_files=30,
+            test_files=10,
+            config_files=5,
+            documentation_files=5,
+            asset_files=0,
+            ignore_patterns=[],
+            root_files=["README.md"],
+        ),
+        warnings=["Missing test coverage"],
+        suggestions=["Add more unit tests"],
+    )
+
+
+@pytest.fixture
+def mock_git_repo(tmp_path: Path) -> Path:
+    """Provide a temporary path representing a git repo.
+
+    Current tests only verify analyzer works with a repo path; advanced
+    git operations are skipped. We return a clean temp directory and let
+    tests populate files as needed.
+    """
+    return tmp_path

@@ -267,6 +267,7 @@ jobs:
           **/*.md
           !.venv/**
           !node_modules/**
+        config: .markdownlint-cli2.jsonc
 
   security:
     runs-on: ubuntu-latest
