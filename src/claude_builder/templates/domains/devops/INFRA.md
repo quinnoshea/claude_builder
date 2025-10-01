@@ -5,15 +5,14 @@
 
 ## Infrastructure as Code (IaC) with Terraform
 
-**Detected Tool:** {{ tool.display_name }} (Confidence:
-{{ tool.confidence|capitalize }})
-{% if tool.score is not none %}_Detection score:
-{{ '%.1f'|format(tool.score) }}_{% endif %}
+**Detected Tool:** {{ tool.display_name }} (Confidence: {{ tool.confidence|capitalize }})
+{% if tool.score is not none %}_Detection score: {{ '%.1f'|format(tool.score) }}_{% endif %}
 
 Your project appears to use Terraform for managing infrastructure as code. This
 helps ensure infrastructure is reproducible, versionable, and scalable.
 
 **Key Files Detected:**
+
 ```text
 {% for file in tool.files %}
 - {{ file }}

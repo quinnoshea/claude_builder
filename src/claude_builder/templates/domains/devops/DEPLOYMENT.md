@@ -5,15 +5,14 @@
 
 ## Kubernetes Deployments
 
-**Detected Tool:** {{ kube.display_name }} (Confidence:
-{{ kube.confidence|capitalize }})
-{% if kube.score is not none %}_Detection score:
-{{ '%.1f'|format(kube.score) }}_{% endif %}
+**Detected Tool:** {{ kube.display_name }} (Confidence: {{ kube.confidence|capitalize }})
+{% if kube.score is not none %}_Detection score: {{ '%.1f'|format(kube.score) }}_{% endif %}
 
 We've detected Kubernetes configuration files, suggesting you are deploying
 your application to a Kubernetes cluster.
 
 **Key Files Detected:**
+
 ```text
 {% for file in kube.files %}
 - {{ file }}
@@ -46,15 +45,14 @@ your application to a Kubernetes cluster.
 
 ## Helm Chart for Kubernetes
 
-**Detected Tool:** {{ helm.display_name }} (Confidence:
-{{ helm.confidence|capitalize }})
-{% if helm.score is not none %}_Detection score:
-{{ '%.1f'|format(helm.score) }}_{% endif %}
+**Detected Tool:** {{ helm.display_name }} (Confidence: {{ helm.confidence|capitalize }})
+{% if helm.score is not none %}_Detection score: {{ '%.1f'|format(helm.score) }}_{% endif %}
 
 We've detected a Helm chart, which is a great way to package and deploy your
 application on Kubernetes.
 
 **Key Files Detected:**
+
 ```text
 {% for file in helm.files %}
 - {{ file }}
