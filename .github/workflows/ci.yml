@@ -3,7 +3,7 @@ name: CI
 
 on:
   push:
-    branches: ["main"]
+    branches: ["**"]
   pull_request:
     branches: ["**"]
   release:
@@ -16,6 +16,10 @@ on:
         default: true
         type: boolean
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ${{ matrix.os }}
@@ -23,6 +27,7 @@ jobs:
       CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest]
         python-version: ["3.11", "3.12", "3.13"]
@@ -64,21 +69,12 @@ jobs:
       run: |
         uv run bandit -r . -f json -o bandit-report.json || true
 
-    - name: Run tests with coverage (stable subset)
+    - name: Run tests with coverage (excluding failing)
       run: |
-        uv run pytest \
-          -m "not failing and not performance and not slow and not requires_network and not requires_git" \
-          -k "not advanced" \
-          --cov=claude_builder \
-          --cov-report=xml:coverage.xml \
-          --cov-report=html:htmlcov \
-          --cov-report=term-missing \
-          --junitxml=junit.xml \
-          --cov-fail-under=0 \
-          -v
+        uv run pytest -m "not failing" --cov=claude_builder --cov-report=xml:coverage.xml --cov-report=html:htmlcov --cov-report=term-missing --junitxml=junit.xml -v
 
     - name: Ensure coverage.xml exists
-      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      if: ${{ matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11' }}
       run: |
         if [ ! -f coverage.xml ]; then
           echo "coverage.xml missing, attempting to generate from .coverage"
@@ -87,7 +83,7 @@ jobs:
         ls -la coverage.xml || echo "coverage.xml not found after generation attempt"
 
     - name: Normalize coverage paths for Codacy (if needed)
-      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      if: ${{ matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11' }}
       run: |
         if grep -q "src/claude_builder" coverage.xml; then
           uv run python scripts/fix_coverage_paths.py coverage.xml || true
@@ -97,20 +93,20 @@ jobs:
         fi
 
     - name: Debug coverage file
-      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      if: ${{ matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11' }}
       run: |
         ls -la coverage.xml || echo "coverage.xml not found"
         cat coverage.xml | head -20 || echo "Cannot read coverage.xml"
 
     - name: Display coverage summary
-      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      if: ${{ matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11' }}
       run: |
         echo "## Coverage Summary" >> $GITHUB_STEP_SUMMARY
         uv run coverage report >> $GITHUB_STEP_SUMMARY || echo "Coverage report not available" >> $GITHUB_STEP_SUMMARY
 
     - name: Compute coverage percent
       id: cov
-      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      if: ${{ matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11' }}
       run: |
         if [ -f coverage.xml ]; then
           RATE=$(grep -o 'line-rate="[^"]*"' coverage.xml | head -1 | sed 's/[^0-9\.]//g' || true)
@@ -121,7 +117,7 @@ jobs:
         echo "percent=$PCT" >> "$GITHUB_OUTPUT"
 
     - name: Debug coverage file location
-      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      if: ${{ matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11' }}
       run: |
         pwd
         ls -la coverage.xml || echo "coverage.xml not found in current directory"
@@ -129,7 +125,7 @@ jobs:
 
     - name: Upload coverage to Codacy
       id: codacy
-      if: ${{ matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11' && env.CODACY_PROJECT_TOKEN != '' && hashFiles('coverage.xml') != '' }}
+      if: ${{ matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11' && hashFiles('coverage.xml') != '' && env.CODACY_PROJECT_TOKEN != '' }}
       uses: codacy/codacy-coverage-reporter-action@v1
       with:
         project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
@@ -139,7 +135,7 @@ jobs:
         CODACY_API_BASE_URL: https://api.codacy.com
 
     - name: Debug git refs for Codecov
-      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      if: ${{ matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11' }}
       env:
         GITHUB_REF_NAME: ${{ github.ref_name }}
         GITHUB_EVENT_BEFORE: ${{ github.event.before }}
@@ -176,7 +172,7 @@ jobs:
         flags: unittests
 
     - name: Append coverage status to summary
-      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      if: ${{ matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11' }}
       run: |
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "Coverage percent: ${{ steps.cov.outputs.percent }}%" >> $GITHUB_STEP_SUMMARY
@@ -265,12 +261,14 @@ jobs:
         directory: "${{ github.workspace }}/src"
 
     - name: Lint markdown files
-      uses: DavidAnson/markdownlint-cli2-action@v20
+      uses: DavidAnson/markdownlint-cli2-action@v16
       with:
         globs: |
           **/*.md
           !.venv/**
           !node_modules/**
+          !src/claude_builder/templates/**
+        config: .markdownlint-cli2.jsonc
 
   security:
     runs-on: ubuntu-latest
@@ -292,7 +290,7 @@ jobs:
         run: |
           bandit -r src/claude_builder -f json -o bandit-report.json || true
       - name: Upload security artifacts
-        if: always()
+        if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
           name: security-artifacts
@@ -352,7 +350,7 @@ jobs:
           uv run pytest -m "failing" --cov=claude_builder --cov-report=xml:coverage-failing.xml --cov-report=html:htmlcov-failing --junitxml=junit-failing.xml -v || true
 
       - name: Upload failing test artifacts
-        if: always()
+        if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
           name: failing-test-results
@@ -365,11 +363,11 @@ jobs:
   coverage-metrics:
     name: Coverage Metrics (post-test)
     runs-on: ubuntu-latest
+    needs: [test]
+    if: always()
     env:
       CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    needs: [test]
-    if: always()
     steps:
       - name: Download test artifacts
         uses: actions/download-artifact@v5
@@ -411,7 +409,7 @@ jobs:
           echo "percent=$PCT" >> "$GITHUB_OUTPUT"
 
       - name: Upload coverage to Codacy (only if tests failed)
-        if: ${{ needs.test.result != 'success' && env.CODACY_PROJECT_TOKEN != '' && hashFiles('coverage.xml') != '' }}
+        if: ${{ needs.test.result != 'success' && hashFiles('coverage.xml') != '' && env.CODACY_PROJECT_TOKEN != '' }}
         uses: codacy/codacy-coverage-reporter-action@v1
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
@@ -421,7 +419,7 @@ jobs:
           CODACY_API_BASE_URL: https://api.codacy.com
 
       - name: Upload coverage to Codecov (only if tests failed)
-        if: ${{ needs.test.result != 'success' && env.CODECOV_TOKEN != '' && hashFiles('coverage.xml') != '' }}
+        if: ${{ needs.test.result != 'success' && hashFiles('coverage.xml') != '' && env.CODECOV_TOKEN != '' }}
         uses: codecov/codecov-action@v5
         with:
           file: ./coverage.xml
@@ -499,8 +497,18 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     needs: [test, code-quality, security, performance, integration-tests, build]
-    if: always()
+    if: ${{ always() }}
     steps:
       - name: Summary
         run: |
           echo "CI completed. Check artifacts and job results above." >> $GITHUB_STEP_SUMMARY
+
+  workflows-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Lint GitHub workflows with actionlint
+        uses: reviewdog/action-actionlint@v1
+        continue-on-error: true
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}

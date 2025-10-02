@@ -122,9 +122,21 @@ def cli(ctx: click.Context, project_path: str | None, **kwargs: Any) -> None:
     Analyzes any project directory and generates optimized Claude Code development
     environments with intelligent project detection and customizable configurations.
 
+    \b
     Examples:
+        # Quick start - generate complete environment
         claude-builder ./my-project
-        claude-builder ./project --git-exclude --claude-mentions=minimal
+
+        # Focus analysis on specific domains
+        claude-builder analyze project ./k8s-app --domain infra --domain devops
+
+        # Suggest agents for MLOps
+        claude-builder agents suggest --domain mlops --project-path ./data-pipeline
+
+        # Interactive analysis (scaffold)
+        claude-builder analyze project ./app --interactive
+
+        # Dry run to preview changes
         claude-builder ./project --dry-run --verbose
     """
 

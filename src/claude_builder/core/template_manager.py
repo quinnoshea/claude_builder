@@ -1020,16 +1020,16 @@ See AGENTS.md for detailed usage instructions and coordination patterns.
         def render_template_if_exists(name: str) -> Optional[str]:
             # Try current core manager paths (user templates)
             try:
-                content = self.core_manager.load_template(name)
-                return self.core_manager.render_template(content, context)
+                # Use render_by_name to support Jinja2 imports/includes
+                return self.core_manager.render_template_by_name(name, context)
             except Exception:
                 pass
 
             # Fallback to default package template paths
             try:
                 default_core = CoreTemplateManager()  # uses built-in search paths
-                content = default_core.load_template(name)
-                return default_core.render_template(content, context)
+                # Use render_by_name to support Jinja2 imports/includes
+                return default_core.render_template_by_name(name, context)
             except Exception:
                 return None
 

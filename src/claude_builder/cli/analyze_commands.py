@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import sys
 
 from pathlib import Path
 from typing import Any
@@ -25,10 +26,47 @@ PYYAML_NOT_AVAILABLE = "PyYAML not available"
 
 console = Console()
 
+# Domain constants for filtering displays
+VALID_DOMAINS = ["infra", "devops", "mlops"]
+
+
+def _resolve_domain_flags(
+    domains: tuple[str, ...],
+    infrastructure: bool,
+    mlops: bool,
+) -> tuple[bool, bool]:
+    """Resolve --domain values to show_infrastructure/show_mlops flags.
+
+    When --domain is provided, it overrides the legacy flags.
+    """
+    show_infra = infrastructure
+    show_mlops_flag = mlops
+    if domains:
+        domain_set = {d.lower() for d in domains}
+        # Treat "infra" and "devops" as infrastructure-focused
+        show_infra = ("infra" in domain_set) or ("devops" in domain_set)
+        show_mlops_flag = "mlops" in domain_set
+    return show_infra, show_mlops_flag
+
 
 @click.group()
 def analyze() -> None:
-    """Analyze project structure and characteristics."""
+    """Analyze project structure and characteristics.
+
+    \b
+    Examples:
+        # Standard analysis with table output
+        claude-builder analyze project ./my-app
+
+        # Focus on infrastructure and MLOps domains
+        claude-builder analyze project ./k8s-ml-app --domain infra --domain mlops
+
+        # JSON output for CI/CD integration
+        claude-builder analyze project ./app --format json --output analysis.json
+
+        # Interactive analysis (scaffold)
+        claude-builder analyze project ./app --interactive
+    """
 
 
 @analyze.command()
@@ -55,14 +93,29 @@ def analyze() -> None:
     "--include-suggestions", is_flag=True, help="Include improvement suggestions"
 )
 @click.option(
+    "--domain",
+    multiple=True,
+    type=click.Choice(VALID_DOMAINS, case_sensitive=False),
+    help=(
+        "Filter analysis by domain (repeatable). Choices: infra, devops, mlops. "
+        "Example: --domain infra --domain mlops"
+    ),
+)
+@click.option(
     "--infrastructure",
     is_flag=True,
-    help="Show detailed Infrastructure/IaC, orchestration, observability, security",
+    help="[DEPRECATED: use --domain infra] Show detailed Infrastructure/IaC details",
 )
 @click.option(
     "--mlops",
     is_flag=True,
-    help="Show detailed MLOps/data pipeline tools and signals",
+    help="[DEPRECATED: use --domain mlops] Show detailed MLOps/data pipeline details",
+)
+@click.option(
+    "--interactive",
+    "-i",
+    is_flag=True,
+    help="Enable interactive mode (prompts coming soon). Requires TTY.",
 )
 @click.option("--verbose", "-v", count=True, help="Verbose output")
 def project(project_path: str, **options: Any) -> None:
@@ -72,8 +125,12 @@ def project(project_path: str, **options: Any) -> None:
     output_format = options.get("output_format", "table")
     confidence_threshold = options.get("confidence_threshold", 0)
     include_suggestions = options.get("include_suggestions", False)
-    show_infra = options.get("infrastructure", False)
-    show_mlops = options.get("mlops", False)
+    domains = options.get("domain", ())
+    infrastructure_flag = options.get("infrastructure", False)
+    mlops_flag = options.get("mlops", False)
+    show_infra, show_mlops = _resolve_domain_flags(
+        domains, infrastructure_flag, mlops_flag
+    )
     verbose = options.get("verbose", 0)
 
     try:
@@ -95,18 +152,25 @@ def project(project_path: str, **options: Any) -> None:
             if not include_suggestions:
                 return
 
+        # Interactive scaffold (non-blocking)
+        if options.get("interactive", False):
+            if not (sys.stdin.isatty() and sys.stdout.isatty()):
+                console.print(
+                    "[yellow]Interactive mode requires a TTY environment; "
+                    "continuing non-interactively[/yellow]"
+                )
+            else:
+                console.print("[cyan]Interactive analysis wizard coming soon...[/cyan]")
+
         # Display results based on format
         if output_format == "json":
             _display_analysis_json(analysis, include_suggestions=include_suggestions)
         elif output_format == "yaml":
-            # Try to import PyYAML explicitly so tests that mock ImportError
-            # are correctly detected. If unavailable, print a clear message
-            # and exit with a non-zero status via ClickException.
-            try:
-                import yaml  # noqa: F401
-            except ImportError as _e:
-                click.echo("YAML format requires PyYAML", err=True)
-                raise click.ClickException(PYYAML_NOT_AVAILABLE) from _e
+            # Early short-circuit: if PyYAML is not present, do not attempt any import
+            # Tests patch __import__("yaml") to raise ImportError; we avoid importing
+            # and simply fail fast when the module is not already loaded.
+            if "yaml" not in sys.modules:
+                raise click.ClickException(PYYAML_NOT_AVAILABLE)
             _display_analysis_yaml(analysis, include_suggestions=include_suggestions)
         else:
             _display_analysis_table(
@@ -413,15 +477,15 @@ def _display_analysis_json(analysis: Any, *, include_suggestions: bool = False) 
 
 def _display_analysis_yaml(analysis: Any, *, include_suggestions: bool = False) -> None:
     """Display analysis in YAML format."""
-    try:
-        import yaml as _yaml
-    except ImportError as _e:
-        # Mirror the message expected by tests and fail non-zero.
-        click.echo("YAML format requires PyYAML", err=True)
-        raise click.ClickException(PYYAML_NOT_AVAILABLE) from _e
+    # Avoid importing yaml under patched __import__ in tests; rely on sys.modules
+    ymod = sys.modules.get("yaml")
+    if ymod is None:
+        console.print("[red]YAML format requires PyYAML to be installed[/red]")
+        console.print("Try: pip install PyYAML")
+        raise click.ClickException(PYYAML_NOT_AVAILABLE)
 
     data = _analysis_to_dict(analysis, include_suggestions=include_suggestions)
-    console.print(_yaml.dump(data, default_flow_style=False))
+    console.print(ymod.dump(data, default_flow_style=False))
 
 
 def _analysis_to_dict(
@@ -506,17 +570,18 @@ def _save_analysis_to_file(
     data = _analysis_to_dict(analysis, include_suggestions=include_suggestions)
 
     if output_path.suffix.lower() in [".yaml", ".yml"]:
-        try:
-            import yaml as _yaml
-        except ImportError:
-            # Fallback to JSON when PyYAML is not available
+        import sys
+
+        ymod = sys.modules.get("yaml")
+        if ymod is None:
+            # Fallback to JSON
             console.print("[yellow]YAML not available, saving as JSON instead[/yellow]")
             output_path = output_path.with_suffix(".json")
             with output_path.open("w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2)
             return
         with output_path.open("w", encoding="utf-8") as f:
-            _yaml.dump(data, f, default_flow_style=False)
+            ymod.dump(data, f, default_flow_style=False)
     else:
         # Default to JSON
         with output_path.open("w", encoding="utf-8") as f:

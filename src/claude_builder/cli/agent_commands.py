@@ -29,10 +29,19 @@ console = Console()
 def agents() -> None:
     """Agent-related commands for Claude Builder.
 
+    \b
     Examples:
+        # Suggest agents based on project analysis
         claude-builder agents suggest --project-path ./my-project
+
+        # Suggest agents from natural language description
         claude-builder agents suggest --text "pipeline is failing"
-        claude-builder agents suggest --project-path . --mlops --json
+
+        # Filter by domain
+        claude-builder agents suggest --domain mlops --domain devops
+
+        # JSON output for automation
+        claude-builder agents suggest --text "k8s cluster security" --json
     """
 
 
@@ -44,6 +53,15 @@ def agents() -> None:
     help="Project directory to analyze (default: current directory)",
 )
 @click.option("--text", help="Suggest agents based on a natural-language phrase")
+@click.option(
+    "--domain",
+    multiple=True,
+    type=click.Choice(["infra", "devops", "mlops"], case_sensitive=False),
+    help=(
+        "Filter suggestions by domain (repeatable). Example: "
+        "--domain devops --domain mlops"
+    ),
+)
 @click.option("--mlops", is_flag=True, help="Filter suggestions to MLOps/Data agents")
 @click.option(
     "--devops", is_flag=True, help="Filter suggestions to DevOps/Infra agents"
@@ -53,6 +71,7 @@ def agents() -> None:
 def suggest(
     project_path: str,
     text: Optional[str],
+    domain: tuple[str, ...],
     mlops: bool,
     devops: bool,
     output_json: bool,
@@ -64,6 +83,12 @@ def suggest(
     Otherwise, a quick analysis runs and environment-driven suggestions are shown.
     Use --mlops/--devops to focus results, and --json for machine output.
     """
+    # Resolve unified domain option into legacy flags (back-compat)
+    if domain:
+        dset = {d.lower() for d in domain}
+        mlops = mlops or ("mlops" in dset)
+        devops = devops or ("devops" in dset) or ("infra" in dset)
+
     registry = AgentRegistry()
     selector = AgentSelector(registry)
 
