@@ -1,4 +1,4 @@
-{%- import '../_macros.md' as macros -%}
+{%- import '_macros.md' as macros -%}
 # MLOps: Governance Guidance
 
 {% set dbt_tool = dev_environment.tools.get('dbt') %}

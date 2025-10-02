@@ -7,7 +7,6 @@
 ## Kubernetes Deployments
 
 {{ macros.tool_header(kube) }}
-
 We've detected Kubernetes configuration files, suggesting you are deploying
 your application to a Kubernetes cluster.
 
@@ -29,7 +28,6 @@ your application to a Kubernetes cluster.
 ## Helm Chart for Kubernetes
 
 {{ macros.tool_header(helm) }}
-
 We've detected a Helm chart, which is a great way to package and deploy your
 application on Kubernetes.
 

@@ -1,4 +1,4 @@
-{%- import '../_macros.md' as macros -%}
+{%- import '_macros.md' as macros -%}
 # MLOps: Lifecycle Guidance
 
 {% set mlflow_tool = dev_environment.tools.get('mlflow') %}
@@ -7,7 +7,6 @@
 ## {{ mlflow_tool.display_name }} for MLOps
 
 {{ macros.tool_header(mlflow_tool) }}
-
 MLflow manages the end-to-end machine learning lifecycle.
 
 {% if mlflow_tool.files and mlflow_tool.files|length > 0 %}

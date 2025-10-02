@@ -7,7 +7,6 @@
 ## Prometheus Monitoring
 
 {{ macros.tool_header(prom) }}
-
 Prometheus configuration files were found, indicating you are using it for
 monitoring.
 
@@ -28,7 +27,6 @@ monitoring.
 ## Grafana Dashboards
 
 {{ macros.tool_header(grafana) }}
-
 We detected Grafana configurations. Visualizing metrics helps you understand
 system behavior.
 
@@ -49,7 +47,6 @@ system behavior.
 ## OpenTelemetry Tracing
 
 {{ macros.tool_header(otel) }}
-
 Distributed tracing helps debug and understand performance across services.
 
 {% if otel.recommendations %}

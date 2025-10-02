@@ -2,12 +2,9 @@
 
 {# Display tool detection header with confidence and score #}
 {% macro tool_header(tool) -%}
-**Detected Tool:** {{ tool.display_name }}
-**Confidence:** {{ tool.confidence|capitalize }}
-{%- if tool.score is not none %}
-**Detection Score:** {{ '%.1f'|format(tool.score) }}
-{%- endif %}
-{%- endmacro %}
+**Detected Tool:** {{ tool.display_name }} (Confidence: {{ tool.confidence|capitalize }})
+{% if tool.score is not none %}_Detection score: {{ '%.1f'|format(tool.score) }}_{% endif %}
+{%- endmacro -%}
 
 {# Display tool detection header (compact inline format) #}
 {% macro tool_header_inline(tool) -%}

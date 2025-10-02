@@ -1,4 +1,4 @@
-{%- import '../_macros.md' as macros -%}
+{%- import '_macros.md' as macros -%}
 # MLOps: Data Pipeline Guidance
 
 {% set airflow_tool = dev_environment.tools.get('airflow') %}
@@ -7,7 +7,6 @@
 ## {{ airflow_tool.display_name }} for Data Pipelines
 
 {{ macros.tool_header(airflow_tool) }}
-
 Airflow is a platform for authoring, scheduling, and monitoring workflows.
 
 {% if airflow_tool.files and airflow_tool.files|length > 0 %}

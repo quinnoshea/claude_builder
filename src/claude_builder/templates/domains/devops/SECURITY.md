@@ -7,7 +7,6 @@
 ## {{ vault_tool.display_name }} for Secrets Management
 
 {{ macros.tool_header(vault_tool) }}
-
 Vault helps manage secrets and protect sensitive data.
 
 {% if vault_tool.recommendations %}
@@ -45,4 +44,17 @@ Vault helps manage secrets and protect sensitive data.
   'Schedule regular filesystem and dependency scans to catch CVEs early.'
 ]) }}
 
+{% else %}
+{# Show generic security scanning guidance even without detected tools #}
+{% if vault_tool or tfsec_tool %}
+
+**Actionable Recommendations:**
+
+- Scan container images before pushing to registries and block failing
+  builds.
+- Use `.trivyignore` to suppress noisy findings while tracking rationale in
+  code review.
+- Schedule regular filesystem and dependency scans to catch CVEs early.
+
+{% endif %}
 {% endif %}

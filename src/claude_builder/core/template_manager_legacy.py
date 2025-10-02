@@ -2066,13 +2066,23 @@ class TemplateRenderer:
         self.jinja_env: Optional[Any] = None  # public alias expected by tests
         if self.template_engine == "jinja2":
             try:
-                from jinja2 import Environment, StrictUndefined
+                from jinja2 import Environment, FileSystemLoader, StrictUndefined
             except ImportError as exc:  # pragma: no cover - guard rails
                 raise RuntimeError(
                     "Jinja2 is required for template rendering. Please install the 'jinja2' package."
                 ) from exc
 
+            # Set up template search paths for imports/includes
+            from pathlib import Path
+
+            template_search_paths = [
+                Path(__file__).parent.parent / "templates" / "domains" / "devops",
+                Path(__file__).parent.parent / "templates" / "domains" / "mlops",
+                Path(__file__).parent.parent / "templates" / "domains",
+            ]
+
             env = Environment(
+                loader=FileSystemLoader([str(p) for p in template_search_paths]),
                 autoescape=False,
                 undefined=StrictUndefined,
                 trim_blocks=True,
@@ -2566,7 +2576,8 @@ class CoreTemplateManager:
     def __init__(self, template_dirs: Optional[List[str]] = None):
         """Initialize core template manager."""
         self.loader = TemplateLoader(template_dirs)
-        self.renderer = TemplateRenderer()
+        # Use jinja2 engine to support imports/includes in domain templates
+        self.renderer = TemplateRenderer(template_engine="jinja2")
 
     def load_template(self, template_name: str) -> str:
         """Load template content."""
@@ -2609,6 +2620,19 @@ class CoreTemplateManager:
         """Render template with context variables."""
         rendered = self.renderer.render_template(template_content, context)
         return str(rendered)
+
+    def render_template_by_name(
+        self, template_name: str, context: Dict[str, Any]
+    ) -> str:
+        """Render template by name using Jinja2 loader (supports imports/includes)."""
+        if self.renderer._jinja_env is not None:
+            # Use Jinja2 Environment's get_template which properly handles imports
+            template = self.renderer._jinja_env.get_template(template_name + ".md")
+            return str(template.render(**context))
+        else:
+            # Fallback to loading and rendering content
+            content = self.load_template(template_name)
+            return self.render_template(content, context)
 
     def generate_from_analysis(self, analysis: Any, template_name: str = "base") -> str:
         """Generate content from project analysis.
