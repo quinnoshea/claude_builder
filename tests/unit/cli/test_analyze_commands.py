@@ -244,11 +244,14 @@ class TestAnalyzeCommands:
                 raise ImportError("No module named 'yaml'")
             return orig_import(name, *args, **kwargs)
 
+        # Patch both __import__ and sys.modules to simulate yaml being unavailable
         with patch("builtins.__import__", side_effect=mock_import):
-            result = runner.invoke(
-                project, [str(sample_python_project), "--format", "yaml"]
-            )
-            # Should handle missing PyYAML gracefully
-            assert (
-                "YAML format requires PyYAML" in result.output or result.exit_code != 0
-            )
+            with patch.dict("sys.modules", {"yaml": None}):
+                result = runner.invoke(
+                    project, [str(sample_python_project), "--format", "yaml"]
+                )
+                # Should handle missing PyYAML gracefully
+                assert (
+                    "YAML format requires PyYAML" in result.output
+                    or result.exit_code != 0
+                )
