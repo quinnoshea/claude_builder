@@ -267,6 +267,7 @@ jobs:
           **/*.md
           !.venv/**
           !node_modules/**
+          !src/claude_builder/templates/**
         config: .markdownlint-cli2.jsonc
 
   security:

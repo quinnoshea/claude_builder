@@ -1,3 +1,4 @@
+{%- import '../_macros.md' as macros -%}
 # MLOps: Governance Guidance
 
 {% set dbt_tool = dev_environment.tools.get('dbt') %}
@@ -5,25 +6,14 @@
 
 ## {{ dbt_tool.display_name }} for Data Transformation
 
-**Detected Tool:** {{ dbt_tool.display_name }} (Confidence: {{ dbt_tool.confidence|capitalize }})
-{% if dbt_tool.score is not none %}_Detection score: {{ '%.1f'|format(dbt_tool.score) }}_{% endif %}
+{{ macros.tool_header(dbt_tool) }}
 
-**Key Files Detected:**
+{% if dbt_tool.files and dbt_tool.files|length > 0 %}
+{{ macros.key_files(dbt_tool.files) }}
 
-```text
-{% for file in dbt_tool.files %}
-- {{ file }}
-{% endfor %}
-{% if dbt_tool.files|length == 0 %}
-(no representative files captured yet)
 {% endif %}
-```
-
 {% if dbt_tool.recommendations %}
-**Actionable Recommendations:**
-
-{% for rec in dbt_tool.recommendations %}- {{ rec }}
-{% endfor %}
+{{ macros.recommendations(dbt_tool.recommendations) }}
 
 {% endif %}
 
@@ -34,14 +24,10 @@
 
 ## {{ gx_tool.display_name }} for Data Quality
 
-**Detected Tool:** {{ gx_tool.display_name }} (Confidence: {{ gx_tool.confidence|capitalize }})
-{% if gx_tool.score is not none %}_Detection score: {{ '%.1f'|format(gx_tool.score) }}_{% endif %}
+{{ macros.tool_header(gx_tool) }}
 
 {% if gx_tool.recommendations %}
-**Actionable Recommendations:**
-
-{% for rec in gx_tool.recommendations %}- {{ rec }}
-{% endfor %}
+{{ macros.recommendations(gx_tool.recommendations) }}
 
 {% endif %}
 
@@ -52,14 +38,10 @@
 
 ## {{ feast_tool.display_name }} for Feature Stores
 
-**Detected Tool:** {{ feast_tool.display_name }} (Confidence: {{ feast_tool.confidence|capitalize }})
-{% if feast_tool.score is not none %}_Detection score: {{ '%.1f'|format(feast_tool.score) }}_{% endif %}
+{{ macros.tool_header(feast_tool) }}
 
 {% if feast_tool.recommendations %}
-**Actionable Recommendations:**
-
-{% for rec in feast_tool.recommendations %}- {{ rec }}
-{% endfor %}
+{{ macros.recommendations(feast_tool.recommendations) }}
 
 {% endif %}
 

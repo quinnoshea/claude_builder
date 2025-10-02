@@ -1,3 +1,4 @@
+{%- import '_macros.md' as macros -%}
 # DevOps: Security Guidance
 
 {% set vault_tool = dev_environment.tools.get('vault') %}
@@ -5,16 +6,12 @@
 
 ## {{ vault_tool.display_name }} for Secrets Management
 
-**Detected Tool:** {{ vault_tool.display_name }} (Confidence: {{ vault_tool.confidence|capitalize }})
-{% if vault_tool.score is not none %}_Detection score: {{ '%.1f'|format(vault_tool.score) }}_{% endif %}
+{{ macros.tool_header(vault_tool) }}
 
 Vault helps manage secrets and protect sensitive data.
 
 {% if vault_tool.recommendations %}
-**Actionable Recommendations:**
-
-{% for rec in vault_tool.recommendations %}- {{ rec }}
-{% endfor %}
+{{ macros.recommendations(vault_tool.recommendations) }}
 
 {% endif %}
 
@@ -25,23 +22,13 @@ Vault helps manage secrets and protect sensitive data.
 
 ## {{ tfsec_tool.display_name }} for Terraform Security
 
-**Detected Tool:** {{ tfsec_tool.display_name }} (Confidence: {{ tfsec_tool.confidence|capitalize }})
-{% if tfsec_tool.score is not none %}_Detection score: {{ '%.1f'|format(tfsec_tool.score) }}_{% endif %}
+{{ macros.tool_header(tfsec_tool) }}
 
-{% if tfsec_tool.recommendations %}
-**Actionable Recommendations:**
-
-{% for rec in tfsec_tool.recommendations %}- {{ rec }}
-{% endfor %}
-
-{% else %}
-**Actionable Recommendations:**
-
-- Run `tfsec` in CI to scan every pull request.
-- Tune policies via configuration files to reduce false positives.
-- Keep `tfsec` updated to benefit from new rules.
-
-{% endif %}
+{{ macros.recommendations(tfsec_tool.recommendations, [
+  'Run `tfsec` in CI to scan every pull request.',
+  'Tune policies via configuration files to reduce false positives.',
+  'Keep `tfsec` updated to benefit from new rules.'
+]) }}
 
 {% endif %}
 
@@ -50,24 +37,12 @@ Vault helps manage secrets and protect sensitive data.
 
 ## {{ trivy_tool.display_name }} for Vulnerability Scanning
 
-**Detected Tool:** {{ trivy_tool.display_name }} (Confidence: {{ trivy_tool.confidence|capitalize }})
-{% if trivy_tool.score is not none %}_Detection score: {{ '%.1f'|format(trivy_tool.score) }}_{% endif %}
+{{ macros.tool_header(trivy_tool) }}
 
-{% if trivy_tool.recommendations %}
-**Actionable Recommendations:**
-
-{% for rec in trivy_tool.recommendations %}- {{ rec }}
-{% endfor %}
-
-{% else %}
-**Actionable Recommendations:**
-
-- Scan container images before pushing to registries and block failing
-  builds.
-- Use `.trivyignore` to suppress noisy findings while tracking rationale in
-  code review.
-- Schedule regular filesystem and dependency scans to catch CVEs early.
-
-{% endif %}
+{{ macros.recommendations(trivy_tool.recommendations, [
+  'Scan container images before pushing to registries; block failures.',
+  'Use `.trivyignore` to suppress noise; track rationale in code review.',
+  'Schedule regular filesystem and dependency scans to catch CVEs early.'
+]) }}
 
 {% endif %}

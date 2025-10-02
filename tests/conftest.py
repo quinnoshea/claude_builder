@@ -11,7 +11,13 @@ from claude_builder.core.analyzer import (
     LanguageInfo,
     ProjectAnalysis,
 )
-from claude_builder.core.models import DevelopmentEnvironment, FileSystemInfo
+from claude_builder.core.models import (
+    ArchitecturePattern,
+    ComplexityLevel,
+    DevelopmentEnvironment,
+    FileSystemInfo,
+    ProjectType,
+)
 
 
 def create_test_project(base_dir: Path, language: str) -> Path:
@@ -150,9 +156,9 @@ def sample_analysis(sample_python_project: Path) -> ProjectAnalysis:
             indicators=["REST API", "web framework"],
             specialized_patterns=["microservice"],
         ),
-        project_type="api_service",
-        complexity_level="medium",
-        architecture_pattern="mvc",
+        project_type=ProjectType.API_SERVICE,
+        complexity_level=ComplexityLevel.MODERATE,
+        architecture_pattern=ArchitecturePattern.MVC,
         dev_environment=DevelopmentEnvironment(
             package_managers=["pip"],
             testing_frameworks=["pytest"],
@@ -193,3 +199,54 @@ def mock_git_repo(tmp_path: Path) -> Path:
     tests populate files as needed.
     """
     return tmp_path
+
+
+@pytest.fixture
+def git_repo(tmp_path: Path) -> Path:
+    """Provide a real initialized git repository for integration tests.
+
+    This fixture creates a temporary directory with an initialized git repository,
+    complete with initial commit. Useful for tests that require actual git
+    operations (commits, branches, etc.).
+    """
+    import subprocess
+
+    repo_path = tmp_path / "test_repo"
+    repo_path.mkdir(parents=True, exist_ok=True)
+
+    # Initialize git repository
+    subprocess.run(
+        ["git", "init"], cwd=repo_path, check=True, capture_output=True, text=True
+    )
+
+    # Configure git for the test environment
+    subprocess.run(
+        ["git", "config", "user.name", "Test User"],
+        cwd=repo_path,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    subprocess.run(
+        ["git", "config", "user.email", "test@example.com"],
+        cwd=repo_path,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    # Create initial commit
+    readme = repo_path / "README.md"
+    readme.write_text("# Test Repository\n")
+    subprocess.run(
+        ["git", "add", "."], cwd=repo_path, check=True, capture_output=True, text=True
+    )
+    subprocess.run(
+        ["git", "commit", "-m", "Initial commit"],
+        cwd=repo_path,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    return repo_path

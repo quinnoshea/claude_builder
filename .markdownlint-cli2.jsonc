@@ -1,11 +1,24 @@
 {
   // Keep global defaults; relax only for template source files
+  "config": {
+    "default": true
+  },
+  "globs": ["**/*.md"],
+  "ignores": [".venv/**", "node_modules/**"],
+  "customRules": [],
   "overrides": [
     {
-      "files": ["src/claude_builder/templates/**"],
+      "files": ["src/claude_builder/templates/**/*.md"],
       "config": {
         // Long lines are common in templated content; allow them
-        "MD013": false
+        "MD013": false,
+        // Jinja2 imports appear before first heading; unavoidable
+        "MD041": false,
+        // Jinja2 imports prevent blank lines around headings; unavoidable
+        "MD022": false,
+        // Jinja2 code blocks in macros need flexibility
+        "MD031": false,
+        "MD032": false
       }
     }
   ]

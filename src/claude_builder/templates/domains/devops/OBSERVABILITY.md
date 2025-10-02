@@ -1,3 +1,4 @@
+{%- import '_macros.md' as macros -%}
 # DevOps: Observability Guidance
 
 {% set prom = dev_environment.tools.get('prometheus') %}
@@ -5,28 +6,17 @@
 
 ## Prometheus Monitoring
 
-**Detected Tool:** {{ prom.display_name }} (Confidence: {{ prom.confidence|capitalize }})
-{% if prom.score is not none %}_Detection score: {{ '%.1f'|format(prom.score) }}_{% endif %}
+{{ macros.tool_header(prom) }}
 
 Prometheus configuration files were found, indicating you are using it for
 monitoring.
 
-**Key Files Detected:**
+{% if prom.files and prom.files|length > 0 %}
+{{ macros.key_files(prom.files) }}
 
-```text
-{% for file in prom.files %}
-- {{ file }}
-{% endfor %}
-{% if prom.files|length == 0 %}
-(no representative files captured yet)
 {% endif %}
-```
-
 {% if prom.recommendations %}
-**Actionable Recommendations:**
-
-{% for rec in prom.recommendations %}- {{ rec }}
-{% endfor %}
+{{ macros.recommendations(prom.recommendations) }}
 
 {% endif %}
 
@@ -37,28 +27,17 @@ monitoring.
 
 ## Grafana Dashboards
 
-**Detected Tool:** {{ grafana.display_name }} (Confidence: {{ grafana.confidence|capitalize }})
-{% if grafana.score is not none %}_Detection score: {{ '%.1f'|format(grafana.score) }}_{% endif %}
+{{ macros.tool_header(grafana) }}
 
 We detected Grafana configurations. Visualizing metrics helps you understand
 system behavior.
 
-**Key Files Detected:**
+{% if grafana.files and grafana.files|length > 0 %}
+{{ macros.key_files(grafana.files) }}
 
-```text
-{% for file in grafana.files %}
-- {{ file }}
-{% endfor %}
-{% if grafana.files|length == 0 %}
-(no representative files captured yet)
 {% endif %}
-```
-
 {% if grafana.recommendations %}
-**Actionable Recommendations:**
-
-{% for rec in grafana.recommendations %}- {{ rec }}
-{% endfor %}
+{{ macros.recommendations(grafana.recommendations) }}
 
 {% endif %}
 
@@ -69,16 +48,12 @@ system behavior.
 
 ## OpenTelemetry Tracing
 
-**Detected Tool:** {{ otel.display_name }} (Confidence: {{ otel.confidence|capitalize }})
-{% if otel.score is not none %}_Detection score: {{ '%.1f'|format(otel.score) }}_{% endif %}
+{{ macros.tool_header(otel) }}
 
 Distributed tracing helps debug and understand performance across services.
 
 {% if otel.recommendations %}
-**Actionable Recommendations:**
-
-{% for rec in otel.recommendations %}- {{ rec }}
-{% endfor %}
+{{ macros.recommendations(otel.recommendations) }}
 
 {% endif %}
 
