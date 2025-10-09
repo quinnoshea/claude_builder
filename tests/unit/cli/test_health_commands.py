@@ -191,6 +191,7 @@ class TestHealthCommands:
                 status=HealthStatus.HEALTHY,
                 message="All systems operational",
                 duration_ms=100.0,
+                recommendations=[],  # Add recommendations attribute
             )
         ]
 

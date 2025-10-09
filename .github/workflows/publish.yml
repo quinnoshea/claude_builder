@@ -173,14 +173,16 @@ jobs:
 
     - name: Create deployment summary
       run: |
-        echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "✅ **Package successfully published to PyPI**" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "📦 **Package**: claude-builder" >> $GITHUB_STEP_SUMMARY
-        echo "🏷️ **Version**: ${GITHUB_REF#refs/tags/v}" >> $GITHUB_STEP_SUMMARY
-        echo "🔗 **PyPI URL**: https://pypi.org/project/claude-builder/" >> $GITHUB_STEP_SUMMARY
-        echo "📥 **Install command**: \`pip install claude-builder\`" >> $GITHUB_STEP_SUMMARY
+        {
+          echo "## 🚀 Deployment Summary"
+          echo ""
+          echo "✅ **Package successfully published to PyPI**"
+          echo ""
+          echo "📦 **Package**: claude-builder"
+          echo "🏷️ **Version**: ${GITHUB_REF#refs/tags/v}"
+          echo "🔗 **PyPI URL**: https://pypi.org/project/claude-builder/"
+          echo "📥 **Install command**: \`pip install claude-builder\`"
+        } >> $GITHUB_STEP_SUMMARY
 
   verify-installation:
     needs: [publish-pypi]
@@ -231,14 +233,16 @@ jobs:
     steps:
     - name: Create success notification
       run: |
-        echo "🎉 **Claude Builder ${GITHUB_REF#refs/tags/v} successfully published!**" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "The new version has been:" >> $GITHUB_STEP_SUMMARY
-        echo "✅ Published to PyPI" >> $GITHUB_STEP_SUMMARY
-        echo "✅ Verified on multiple platforms" >> $GITHUB_STEP_SUMMARY
-        echo "✅ Available for installation worldwide" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "🚀 Users can now install with: \`pip install claude-builder\`" >> $GITHUB_STEP_SUMMARY
+        {
+          echo "🎉 **Claude Builder ${GITHUB_REF#refs/tags/v} successfully published!**"
+          echo ""
+          echo "The new version has been:"
+          echo "✅ Published to PyPI"
+          echo "✅ Verified on multiple platforms"
+          echo "✅ Available for installation worldwide"
+          echo ""
+          echo "🚀 Users can now install with: \`pip install claude-builder\`"
+        } >> $GITHUB_STEP_SUMMARY
 
   notify-failure:
     needs: [validate-release, build, publish-pypi]
@@ -247,15 +251,17 @@ jobs:
     steps:
     - name: Create failure notification
       run: |
-        echo "## ❌ Publish Workflow Failed" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "One or more jobs failed in the publish pipeline." >> $GITHUB_STEP_SUMMARY
-        echo "Check the logs for validate-release, build, and publish-pypi." >> $GITHUB_STEP_SUMMARY
-        echo "❌ **Publication failed for Claude Builder**" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "Please check the workflow logs for details." >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "Common issues:" >> $GITHUB_STEP_SUMMARY
-        echo "- Version already exists on PyPI" >> $GITHUB_STEP_SUMMARY
-        echo "- Package validation failed" >> $GITHUB_STEP_SUMMARY
-        echo "- Missing or invalid API tokens" >> $GITHUB_STEP_SUMMARY
+        {
+          echo "## ❌ Publish Workflow Failed"
+          echo ""
+          echo "One or more jobs failed in the publish pipeline."
+          echo "Check the logs for validate-release, build, and publish-pypi."
+          echo "❌ **Publication failed for Claude Builder**"
+          echo ""
+          echo "Please check the workflow logs for details."
+          echo ""
+          echo "Common issues:"
+          echo "- Version already exists on PyPI"
+          echo "- Package validation failed"
+          echo "- Missing or invalid API tokens"
+        } >> $GITHUB_STEP_SUMMARY

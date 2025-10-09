@@ -82,19 +82,21 @@ jobs:
 
       - name: Run summary
         run: |
-          echo "## Codacy Issues Report" >> $GITHUB_STEP_SUMMARY
-          echo "Branch: \`${{ github.event.inputs.branch }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "Total issues: **${{ steps.fetch.outputs.total }}**" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### By level" >> $GITHUB_STEP_SUMMARY
-          echo '```json' >> $GITHUB_STEP_SUMMARY
-          cat summary.json | jq '.byLevel' >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          echo "### Top patterns" >> $GITHUB_STEP_SUMMARY
-          echo '```json' >> $GITHUB_STEP_SUMMARY
-          cat summary.json | jq '.topPatterns' >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          echo "### Top files" >> $GITHUB_STEP_SUMMARY
-          echo '```json' >> $GITHUB_STEP_SUMMARY
-          cat summary.json | jq '.topFiles' >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+          {
+            echo "## Codacy Issues Report"
+            echo "Branch: \`${{ github.event.inputs.branch }}\`"
+            echo "Total issues: **${{ steps.fetch.outputs.total }}**"
+            echo ""
+            echo "### By level"
+            echo '```json'
+            cat summary.json | jq '.byLevel'
+            echo '```'
+            echo "### Top patterns"
+            echo '```json'
+            cat summary.json | jq '.topPatterns'
+            echo '```'
+            echo "### Top files"
+            echo '```json'
+            cat summary.json | jq '.topFiles'
+            echo '```'
+          } >> $GITHUB_STEP_SUMMARY
