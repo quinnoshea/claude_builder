@@ -347,6 +347,14 @@ def _display_health_results(health: SystemHealth, verbose: bool, quiet: bool) ->
 
         table.add_row(*row)
 
+        # Show recommendations under the row when verbose
+        if verbose and getattr(result, "recommendations", None):
+            rec_text = "\n".join(f"  • {rec}" for rec in result.recommendations)
+            # Table includes Duration column when verbose, so add an empty cell to align
+            table.add_row(
+                "", "", "", f"[bold yellow]Recommendations:[/]\n{rec_text}", ""
+            )
+
     console.print(table)
 
     # Summary panel
