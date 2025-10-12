@@ -53,6 +53,7 @@ class HealthCheckResult:
     status: HealthStatus
     message: str
     details: Dict[str, Any] = field(default_factory=dict)
+    recommendations: List[str] = field(default_factory=list)
     timestamp: datetime = field(default_factory=datetime.now)
     duration_ms: float = 0.0
     metadata: Dict[str, Any] = field(default_factory=dict)
@@ -91,6 +92,7 @@ class HealthCheck(ABC):
         message: str,
         details: Optional[Dict[str, Any]] = None,
         duration_ms: float = 0.0,
+        recommendations: Optional[List[str]] = None,
     ) -> HealthCheckResult:
         """Create a standardized health check result."""
         return HealthCheckResult(
@@ -99,6 +101,7 @@ class HealthCheck(ABC):
             status=status,
             message=message,
             details=details or {},
+            recommendations=recommendations or [],
             duration_ms=duration_ms,
         )
 
@@ -183,6 +186,7 @@ class DependencyHealthCheck(HealthCheck):
 
         try:
             issues = []
+            recommendations: List[str] = []
             details: Dict[str, Any] = {}
 
             # Check Git availability
@@ -210,6 +214,65 @@ class DependencyHealthCheck(HealthCheck):
             else:
                 issues.append("Git not found in PATH")
                 details["git"] = {"available": False}
+                recommendations.append(
+                    "Install Git and ensure it is in your system's PATH: https://git-scm.com/downloads"
+                )
+
+            # Check DevOps tools availability and versions
+            devops_tools = {
+                "terraform": ["terraform", "--version"],
+                "kubectl": ["kubectl", "version", "--client"],
+                "docker": ["docker", "--version"],
+                "helm": ["helm", "version", "--short"],
+                "ansible": ["ansible", "--version"],
+            }
+            for tool_name, version_cmd in devops_tools.items():
+                tool_path = shutil.which(tool_name)
+                key = f"devops_{tool_name}"
+                if tool_path:
+                    details[key] = {"available": True, "path": tool_path}
+                    try:
+                        import subprocess
+
+                        result = subprocess.run(
+                            version_cmd,
+                            check=False,
+                            capture_output=True,
+                            text=True,
+                            timeout=1.5,
+                        )
+                        if result.returncode == 0:
+                            version_line = (
+                                (result.stdout or result.stderr or "")
+                                .strip()
+                                .split("\n")[0]
+                            )
+                            details[key]["version"] = version_line
+                        else:
+                            details[key]["notes"] = "Version check returned non-zero"
+                    except Exception as e:
+                        details[key]["notes"] = f"Version check error: {e}"
+                else:
+                    issues.append(f"DevOps tool not found: {tool_name}")
+                    details[key] = {"available": False, "notes": "Not found in PATH"}
+                    if tool_name == "terraform":
+                        recommendations.append(
+                            "Install Terraform: https://www.terraform.io/downloads"
+                        )
+                    elif tool_name == "kubectl":
+                        recommendations.append(
+                            "Install kubectl: https://kubernetes.io/docs/tasks/tools/"
+                        )
+                    elif tool_name == "docker":
+                        recommendations.append(
+                            "Install Docker: https://docs.docker.com/get-docker/ (and ensure the Docker daemon is running)"
+                        )
+                    elif tool_name == "helm":
+                        recommendations.append(
+                            "Install Helm: https://helm.sh/docs/intro/install/"
+                        )
+                    elif tool_name == "ansible":
+                        recommendations.append("Install Ansible: pip install ansible")
 
             # Check required Python packages
             required_packages = ["click", "rich", "toml", "pathlib", "psutil"]
@@ -225,6 +288,9 @@ class DependencyHealthCheck(HealthCheck):
 
             if missing_packages:
                 issues.append(f"Missing Python packages: {', '.join(missing_packages)}")
+                recommendations.append(
+                    f"Install missing Python packages: pip install {' '.join(missing_packages)}"
+                )
 
             # Check filesystem permissions (in probe directory or a temp dir)
             try:
@@ -241,6 +307,9 @@ class DependencyHealthCheck(HealthCheck):
             except (OSError, PermissionError) as e:
                 issues.append(f"Filesystem write access failed: {e}")
                 details["filesystem"] = {"write_access": False, "error": str(e)}
+                recommendations.append(
+                    "Check filesystem permissions for the project directory (write access)."
+                )
 
             duration_ms = (time.time() - start_time) * 1000
 
@@ -250,6 +319,7 @@ class DependencyHealthCheck(HealthCheck):
                     "All dependencies are available and operational",
                     details,
                     duration_ms,
+                    recommendations=[],
                 )
             status = (
                 HealthStatus.CRITICAL
@@ -261,6 +331,7 @@ class DependencyHealthCheck(HealthCheck):
                 f"Dependency issues detected: {'; '.join(issues)}",
                 details,
                 duration_ms,
+                recommendations=recommendations,
             )
 
         except Exception as e:
@@ -286,6 +357,7 @@ class SecurityHealthCheck(HealthCheck):
         try:
             details: Dict[str, Any] = {}
             issues = []
+            recommendations: List[str] = []
 
             # Test SecurityValidator functionality
             try:
@@ -435,6 +507,9 @@ class SecurityHealthCheck(HealthCheck):
                     issues.append(
                         f"Security validation tests failed: {', '.join(failed_tests)}"
                     )
+                    recommendations.append(
+                        "Review SecurityValidator failures; inspect details.test_results for failing cases."
+                    )
 
             except Exception as e:
                 issues.append(f"SecurityValidator failed: {e}")
@@ -501,6 +576,9 @@ class SecurityHealthCheck(HealthCheck):
             except Exception as e:
                 issues.append(f"Secure storage failed: {e}")
                 details["secure_storage"] = {"operational": False, "error": str(e)}
+                recommendations.append(
+                    "Verify secure storage backend (e.g., keyring/cryptography) is installed and configured."
+                )
 
             duration_ms = (time.time() - start_time) * 1000
 
@@ -510,12 +588,14 @@ class SecurityHealthCheck(HealthCheck):
                     "Security framework is operational with all validations passing",
                     details,
                     duration_ms,
+                    recommendations=[],
                 )
             return self._create_result(
                 HealthStatus.CRITICAL,
                 f"Security framework issues: {'; '.join(issues)}",
                 details,
                 duration_ms,
+                recommendations=recommendations,
             )
 
         except Exception as e:
@@ -541,6 +621,7 @@ class PerformanceHealthCheck(HealthCheck):
         try:
             issues = []
             details: Dict[str, Any] = {}
+            recommendations: List[str] = []
 
             # Memory usage
             memory = psutil.virtual_memory()
@@ -555,8 +636,14 @@ class PerformanceHealthCheck(HealthCheck):
 
             if memory_usage_percent > 90:
                 issues.append(f"High memory usage: {memory_usage_percent:.1f}%")
+                recommendations.append(
+                    "Close unnecessary applications to free memory; consider adding RAM if consistently high."
+                )
             elif memory_usage_percent > 80:
                 issues.append(f"Warning: Memory usage at {memory_usage_percent:.1f}%")
+                recommendations.append(
+                    "Monitor memory usage; optimize or stop high-memory processes."
+                )
 
             # CPU usage (non-blocking first, with tiny fallback interval for stability)
             cpu_percent = psutil.cpu_percent(interval=None)
@@ -566,6 +653,9 @@ class PerformanceHealthCheck(HealthCheck):
 
             if cpu_percent > 90:
                 issues.append(f"High CPU usage: {cpu_percent:.1f}%")
+                recommendations.append(
+                    "Reduce CPU-intensive workloads or wait for running jobs to finish."
+                )
 
             # Disk usage
             disk = psutil.disk_usage("/")
@@ -580,8 +670,14 @@ class PerformanceHealthCheck(HealthCheck):
 
             if disk_usage_percent > 95:
                 issues.append(f"Critical disk usage: {disk_usage_percent:.1f}%")
+                recommendations.append(
+                    "Free disk space immediately (remove unused files, expand storage)."
+                )
             elif disk_usage_percent > 85:
                 issues.append(f"High disk usage: {disk_usage_percent:.1f}%")
+                recommendations.append(
+                    "Plan disk cleanup/expansion to avoid running out of space."
+                )
 
             # Process information
             process = psutil.Process()
@@ -599,6 +695,7 @@ class PerformanceHealthCheck(HealthCheck):
                     "System performance is within normal ranges",
                     details,
                     duration_ms,
+                    recommendations=[],
                 )
             critical_issues = [
                 i
@@ -611,6 +708,7 @@ class PerformanceHealthCheck(HealthCheck):
                 f"Performance issues detected: {'; '.join(issues)}",
                 details,
                 duration_ms,
+                recommendations=recommendations,
             )
 
         except Exception as e:

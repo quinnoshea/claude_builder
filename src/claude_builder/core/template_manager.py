@@ -612,13 +612,16 @@ class ModernTemplateManager:
     # New multi-output generation methods for YAML subagent architecture
 
     def generate_complete_environment(
-        self, analysis: ProjectAnalysis
+        self, analysis: ProjectAnalysis, **kwargs: Any
     ) -> EnvironmentBundle:
         """Generate complete development environment - CLAUDE.md + individual subagents + AGENTS.md"""
         from datetime import datetime
 
         # Import agent system to generate project agents
         from claude_builder.core.agents import UniversalAgentSystem
+
+        # Optional domain gating (e.g., ("devops", "mlops"))
+        domains: Optional[tuple[str, ...]] = kwargs.get("domains")
 
         # Generate agent team configuration
         agent_system = UniversalAgentSystem()
@@ -628,7 +631,9 @@ class ModernTemplateManager:
         agent_definitions = self._create_agent_definitions(agent_config, analysis)
 
         # Create context for all three output types
-        context = self._create_environment_context(analysis, agent_definitions)
+        context = self._create_environment_context(
+            analysis, agent_definitions, domains=domains
+        )
 
         # Generate three distinct outputs
         claude_md = self._generate_claude_documentation(context, analysis)
@@ -742,7 +747,10 @@ class ModernTemplateManager:
         return base_prompt + "\n\n" + "\n".join(context_lines)
 
     def _create_environment_context(
-        self, analysis: ProjectAnalysis, agent_definitions: List[AgentDefinition]
+        self,
+        analysis: ProjectAnalysis,
+        agent_definitions: List[AgentDefinition],
+        domains: Optional[tuple[str, ...]] = None,
     ) -> Dict[str, Any]:
         """Create comprehensive context for template rendering."""
         # Derive DevOps/MLOps-friendly environment context (Phase 3)
@@ -857,6 +865,7 @@ class ModernTemplateManager:
                 "mlops_tools": mlops_tools,
                 "security_tools": security_tools,
                 "tools": tools_map,
+                "active_domains": list(domains) if domains else [],
             },
         }
 
@@ -1034,6 +1043,9 @@ See AGENTS.md for detailed usage instructions and coordination patterns.
                 return None
 
         tools_ctx = context.get("dev_environment", {}).get("tools", {})
+        active_domains: List[str] = context.get("dev_environment", {}).get(
+            "active_domains", []
+        )
 
         def _has_any(keys: list[str]) -> bool:
             return any(k in tools_ctx for k in keys)
@@ -1046,7 +1058,10 @@ See AGENTS.md for detailed usage instructions and coordination patterns.
             ("SECURITY", ["vault", "tfsec", "trivy"]),
         ]
         for name, keys in devops_templates:
-            if _has_any(keys):
+            should_render = (not active_domains) or any(
+                d in ("infra", "devops") for d in active_domains
+            )
+            if _has_any(keys) and should_render:
                 rendered = render_template_if_exists(name)
                 if rendered and rendered.strip():
                     sections.append(rendered.strip())
@@ -1058,7 +1073,8 @@ See AGENTS.md for detailed usage instructions and coordination patterns.
             ("ML_GOVERNANCE", ["dbt", "great_expectations", "feast"]),
         ]
         for name, keys in mlops_templates:
-            if _has_any(keys):
+            should_render = (not active_domains) or ("mlops" in active_domains)
+            if _has_any(keys) and should_render:
                 rendered = render_template_if_exists(name)
                 if rendered and rendered.strip():
                     sections.append(rendered.strip())
@@ -1378,7 +1394,7 @@ class TemplateManager(LegacyTemplateManager):
             # Keep legacy validator available
 
     def generate_complete_environment(
-        self, analysis: ProjectAnalysis
+        self, analysis: ProjectAnalysis, **kwargs: Any
     ) -> EnvironmentBundle:
         """Generate complete development environment - CLAUDE.md + individual subagents + AGENTS.md
 
@@ -1391,7 +1407,7 @@ class TemplateManager(LegacyTemplateManager):
                 str(self.templates_dir) if hasattr(self, "templates_dir") else None
             ),
         )
-        return modern_manager.generate_complete_environment(analysis)
+        return modern_manager.generate_complete_environment(analysis, **kwargs)
 
     # --- Coordination layer: delegate modular queries and normalize types ---
     def list_available_templates(

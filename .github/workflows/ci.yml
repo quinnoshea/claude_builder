@@ -154,7 +154,7 @@ jobs:
       if: ${{ matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11' && env.CODECOV_TOKEN != '' }}
       uses: codecov/codecov-action@v5
       with:
-        file: ./coverage.xml
+        files: ./coverage.xml
         flags: unittests
         name: codecov-umbrella
         fail_ci_if_error: false
@@ -174,11 +174,13 @@ jobs:
     - name: Append coverage status to summary
       if: ${{ matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11' }}
       run: |
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "Coverage percent: ${{ steps.cov.outputs.percent }}%" >> $GITHUB_STEP_SUMMARY
-        echo "Codacy upload:  ${{ steps.codacy.outcome }}" >> $GITHUB_STEP_SUMMARY
-        echo "Codecov upload: ${{ steps.codecov.outcome }}" >> $GITHUB_STEP_SUMMARY
-        echo "Test results:   ${{ steps.codecov-test-results.outcome }}" >> $GITHUB_STEP_SUMMARY
+        {
+          echo ""
+          echo "Coverage percent: ${{ steps.cov.outputs.percent }}%"
+          echo "Codacy upload:  ${{ steps.codacy.outcome }}"
+          echo "Codecov upload: ${{ steps.codecov.outcome }}"
+          echo "Test results:   ${{ steps.codecov-test-results.outcome }}"
+        } >> $GITHUB_STEP_SUMMARY
 
     - name: Upload test results and coverage artifacts
       if: always()
@@ -422,7 +424,7 @@ jobs:
         if: ${{ needs.test.result != 'success' && hashFiles('coverage.xml') != '' && env.CODECOV_TOKEN != '' }}
         uses: codecov/codecov-action@v5
         with:
-          file: ./coverage.xml
+          files: ./coverage.xml
           flags: unittests
           name: codecov-post-failure
           fail_ci_if_error: false
@@ -432,11 +434,13 @@ jobs:
 
       - name: Append coverage status to summary
         run: |
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Coverage Metrics (post-test)" >> $GITHUB_STEP_SUMMARY
-          echo "Test job result: ${{ needs.test.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "Coverage percent: ${{ steps.cov_post.outputs.percent }}%" >> $GITHUB_STEP_SUMMARY
-          if [ -f coverage.xml ]; then echo "coverage.xml present ✅" >> $GITHUB_STEP_SUMMARY; else echo "coverage.xml missing ⚠️" >> $GITHUB_STEP_SUMMARY; fi
+          {
+            echo ""
+            echo "### Coverage Metrics (post-test)"
+            echo "Test job result: ${{ needs.test.result }}"
+            echo "Coverage percent: ${{ steps.cov_post.outputs.percent }}%"
+            if [ -f coverage.xml ]; then echo "coverage.xml present ✅"; else echo "coverage.xml missing ⚠️"; fi
+          } >> $GITHUB_STEP_SUMMARY
 
       - name: Upload coverage-metrics artifacts
         uses: actions/upload-artifact@v4

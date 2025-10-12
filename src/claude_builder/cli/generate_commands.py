@@ -19,6 +19,7 @@ import click
 from rich.console import Console
 from rich.panel import Panel
 
+from claude_builder.cli.analyze_commands import VALID_DOMAINS
 from claude_builder.core.analyzer import ProjectAnalyzer
 from claude_builder.core.generator import DocumentGenerator
 from claude_builder.core.models import ProjectAnalysis
@@ -133,6 +134,8 @@ class GenerateConfig:
     backup_existing: bool = False
     dry_run: bool = False
     verbose: int = 0
+    # Domain-specific generation filter
+    domains: tuple[str, ...] = ()
 
     # Additional options for specific commands
     agents_dir: str | None = None
@@ -173,6 +176,13 @@ def generate() -> None:
     is_flag=True,
     help="Show what would be generated without creating files",
 )
+@click.option(
+    "--domain",
+    "domains",
+    multiple=True,
+    type=click.Choice(VALID_DOMAINS, case_sensitive=False),
+    help="Filter generation by domain (repeatable): infra, devops, mlops",
+)
 @click.option("--verbose", "-v", count=True, help="Verbose output")
 def docs(project_path: str, **kwargs: Any) -> None:
     """Generate documentation from project analysis."""
@@ -207,6 +217,19 @@ def docs(project_path: str, **kwargs: Any) -> None:
                 generated_content, sections_filter
             )
             generated_content.files = filtered_files
+
+        # If domains specified, re-source CLAUDE.md using TemplateManager for gated sections
+        if config.domains:
+            from claude_builder.core.template_manager import TemplateManager
+
+            if config.verbose > 0:
+                console.print(
+                    f"[yellow]Filtering domain sections: {', '.join(config.domains)}[/yellow]"
+                )
+            tm = TemplateManager()
+            env = tm.generate_complete_environment(analysis, domains=config.domains)
+            if "CLAUDE.md" in generated_content.files:
+                generated_content.files["CLAUDE.md"] = env.claude_md
 
         # Display what would be generated
         if config.dry_run or config.verbose > 0:
@@ -256,6 +279,13 @@ def docs(project_path: str, **kwargs: Any) -> None:
     is_flag=True,
     help="Show what would be generated without creating files",
 )
+@click.option(
+    "--domain",
+    "domains",
+    multiple=True,
+    type=click.Choice(VALID_DOMAINS, case_sensitive=False),
+    help="Filter generation by domain (repeatable): infra, devops, mlops",
+)
 @click.option("--verbose", "-v", count=True, help="Verbose output")
 def complete(project_path: str, **kwargs: Any) -> None:
     """Generate complete Claude Code environment (CLAUDE.md + individual subagents + AGENTS.md)."""
@@ -274,7 +304,10 @@ def complete(project_path: str, **kwargs: Any) -> None:
         from claude_builder.core.template_manager import TemplateManager
 
         template_manager = TemplateManager()
-        environment = template_manager.generate_complete_environment(analysis)
+        opts: dict[str, Any] = {}
+        if config.domains:
+            opts["domains"] = config.domains
+        environment = template_manager.generate_complete_environment(analysis, **opts)
 
         # Display what would be generated
         if config.dry_run or config.verbose > 0:
@@ -703,6 +736,13 @@ def _write_generated_files(
     is_flag=True,
     help="Show what would be generated without creating files",
 )
+@click.option(
+    "--domain",
+    "domains",
+    multiple=True,
+    type=click.Choice(VALID_DOMAINS, case_sensitive=False),
+    help="Filter CLAUDE.md by domain (repeatable): infra, devops, mlops",
+)
 @click.option("--verbose", "-v", count=True, help="Verbose output")
 def claude_md(project_path: str, **kwargs: Any) -> None:
     """Generate CLAUDE.md file."""
@@ -742,6 +782,18 @@ def claude_md(project_path: str, **kwargs: Any) -> None:
         if not claude_content:
             console.print("[red]Failed to generate CLAUDE.md content[/red]")
             return
+
+        # If domains specified, re-source CLAUDE.md via TemplateManager
+        if config.domains:
+            from claude_builder.core.template_manager import TemplateManager
+
+            if config.verbose > 0:
+                console.print(
+                    f"[yellow]Filtering domain sections: {', '.join(config.domains)}[/yellow]"
+                )
+            tm = TemplateManager()
+            env = tm.generate_complete_environment(analysis, domains=config.domains)
+            claude_content = env.claude_md
 
         if config.dry_run or config.verbose > 0:
             console.print(
