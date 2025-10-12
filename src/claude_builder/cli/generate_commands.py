@@ -19,7 +19,6 @@ import click
 from rich.console import Console
 from rich.panel import Panel
 
-from claude_builder.cli.analyze_commands import VALID_DOMAINS
 from claude_builder.core.analyzer import ProjectAnalyzer
 from claude_builder.core.generator import DocumentGenerator
 from claude_builder.core.models import ProjectAnalysis
@@ -33,6 +32,10 @@ FAILED_TO_GENERATE_CLAUDE_MD = "Failed to generate CLAUDE.md"
 FAILED_TO_GENERATE_AGENTS_MD = "Failed to generate AGENTS.md"
 
 console = Console()
+
+
+# Domain constants retained for backwards-compatible generation filters
+VALID_DOMAINS = ["infra", "devops", "mlops"]
 
 
 def _filter_generated_content_by_sections(
