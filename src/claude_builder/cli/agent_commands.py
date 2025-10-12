@@ -37,9 +37,6 @@ def agents() -> None:
         # Suggest agents from natural language description
         claude-builder agents suggest --text "pipeline is failing"
 
-        # Filter by domain
-        claude-builder agents suggest --domain mlops --domain devops
-
         # JSON output for automation
         claude-builder agents suggest --text "k8s cluster security" --json
     """
@@ -53,27 +50,11 @@ def agents() -> None:
     help="Project directory to analyze (default: current directory)",
 )
 @click.option("--text", help="Suggest agents based on a natural-language phrase")
-@click.option(
-    "--domain",
-    multiple=True,
-    type=click.Choice(["infra", "devops", "mlops"], case_sensitive=False),
-    help=(
-        "Filter suggestions by domain (repeatable). Example: "
-        "--domain devops --domain mlops"
-    ),
-)
-@click.option("--mlops", is_flag=True, help="Filter suggestions to MLOps/Data agents")
-@click.option(
-    "--devops", is_flag=True, help="Filter suggestions to DevOps/Infra agents"
-)
 @click.option("--json", "output_json", is_flag=True, help="Output results as JSON")
 @click.option("--verbose", "-v", count=True, help="Verbose output")
 def suggest(
     project_path: str,
     text: Optional[str],
-    domain: tuple[str, ...],
-    mlops: bool,
-    devops: bool,
     output_json: bool,
     verbose: int,
 ) -> None:
@@ -81,14 +62,8 @@ def suggest(
 
     If --text is provided, suggestions are based on trigger phrases.
     Otherwise, a quick analysis runs and environment-driven suggestions are shown.
-    Use --mlops/--devops to focus results, and --json for machine output.
+    Use --json for machine output.
     """
-    # Resolve unified domain option into legacy flags (back-compat)
-    if domain:
-        dset = {d.lower() for d in domain}
-        mlops = mlops or ("mlops" in dset)
-        devops = devops or ("devops" in dset) or ("infra" in dset)
-
     registry = AgentRegistry()
     selector = AgentSelector(registry)
 
@@ -124,30 +99,19 @@ def suggest(
                     reasons[a.name] = "env: detected tools"
 
         # If no specific focus requested, include comparative core/domain/workflow picks
-        if not mlops and not devops:
-            for a in selector.select_core_agents(analysis):
-                if a.name not in reasons:
-                    suggestions.append(a)
-                    reasons[a.name] = (
-                        f"core: {analysis.language_info.primary or 'general'}"
-                    )
-            for a in selector.select_domain_agents(analysis):
-                if a.name not in reasons:
-                    suggestions.append(a)
-                    reasons[a.name] = (
-                        f"domain: {analysis.domain_info.domain or 'general'}"
-                    )
-            for a in selector.select_workflow_agents(analysis):
-                if a.name not in reasons:
-                    suggestions.append(a)
-                    reasons[a.name] = f"workflow: {analysis.complexity_level.value}"
+        for a in selector.select_core_agents(analysis):
+            if a.name not in reasons:
+                suggestions.append(a)
+                reasons[a.name] = f"core: {analysis.language_info.primary or 'general'}"
+        for a in selector.select_domain_agents(analysis):
+            if a.name not in reasons:
+                suggestions.append(a)
+                reasons[a.name] = f"domain: {analysis.domain_info.domain or 'general'}"
+        for a in selector.select_workflow_agents(analysis):
+            if a.name not in reasons:
+                suggestions.append(a)
+                reasons[a.name] = f"workflow: {analysis.complexity_level.value}"
         source = "env"
-
-    # Focus filters
-    if mlops:
-        suggestions = [a for a in suggestions if _is_mlops_agent(a.name)]
-    if devops:
-        suggestions = [a for a in suggestions if _is_devops_agent(a.name)]
 
     # Sort by confidence (desc)
     suggestions.sort(key=lambda a: (a.confidence or 0.5), reverse=True)

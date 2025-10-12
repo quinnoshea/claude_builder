@@ -1,4 +1,4 @@
-"""P1.5 enhancements: tests for new analyze CLI flags and output rows."""
+"""P1.5 enhancements: tests for analyze CLI output sections."""
 
 from pathlib import Path
 from unittest.mock import Mock, patch
@@ -43,7 +43,9 @@ def _base_mock_analysis() -> ProjectAnalysis:
 
 
 @patch("claude_builder.cli.analyze_commands.ProjectAnalyzer")
-def test_infrastructure_flag_prints_details(mock_analyzer_class, tmp_path):
+def test_infrastructure_section_prints_when_tools_detected(
+    mock_analyzer_class, tmp_path
+):
     mock_analysis = _base_mock_analysis()
     # Inject new fields dynamically to simulate P1.4 analyzer support
     mock_analysis.dev_environment.infrastructure_as_code = ["terraform", "ansible"]
@@ -57,7 +59,7 @@ def test_infrastructure_flag_prints_details(mock_analyzer_class, tmp_path):
     mock_analyzer_class.return_value = mock_analyzer
 
     runner = CliRunner()
-    result = runner.invoke(project, [str(tmp_path), "--infrastructure"])
+    result = runner.invoke(project, [str(tmp_path)])
     assert result.exit_code == 0
     assert "Infrastructure & Platform Details" in result.output
     assert "Infrastructure as Code" in result.output
@@ -65,7 +67,7 @@ def test_infrastructure_flag_prints_details(mock_analyzer_class, tmp_path):
 
 
 @patch("claude_builder.cli.analyze_commands.ProjectAnalyzer")
-def test_mlops_flag_prints_details(mock_analyzer_class, tmp_path):
+def test_mlops_section_prints_when_tools_detected(mock_analyzer_class, tmp_path):
     mock_analysis = _base_mock_analysis()
     mock_analysis.dev_environment.data_pipeline = ["airflow", "dbt"]
     mock_analysis.dev_environment.mlops_tools = ["mlflow", "dvc"]
@@ -75,7 +77,7 @@ def test_mlops_flag_prints_details(mock_analyzer_class, tmp_path):
     mock_analyzer_class.return_value = mock_analyzer
 
     runner = CliRunner()
-    result = runner.invoke(project, [str(tmp_path), "--mlops"])
+    result = runner.invoke(project, [str(tmp_path)])
     assert result.exit_code == 0
     assert "MLOps & Data Pipeline Details" in result.output
     assert "Data Pipeline" in result.output

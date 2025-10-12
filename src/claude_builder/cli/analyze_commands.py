@@ -26,28 +26,6 @@ PYYAML_NOT_AVAILABLE = "PyYAML not available"
 
 console = Console()
 
-# Domain constants for filtering displays
-VALID_DOMAINS = ["infra", "devops", "mlops"]
-
-
-def _resolve_domain_flags(
-    domains: tuple[str, ...],
-    infrastructure: bool,
-    mlops: bool,
-) -> tuple[bool, bool]:
-    """Resolve --domain values to show_infrastructure/show_mlops flags.
-
-    When --domain is provided, it overrides the legacy flags.
-    """
-    show_infra = infrastructure
-    show_mlops_flag = mlops
-    if domains:
-        domain_set = {d.lower() for d in domains}
-        # Treat "infra" and "devops" as infrastructure-focused
-        show_infra = ("infra" in domain_set) or ("devops" in domain_set)
-        show_mlops_flag = "mlops" in domain_set
-    return show_infra, show_mlops_flag
-
 
 @click.group()
 def analyze() -> None:
@@ -57,9 +35,6 @@ def analyze() -> None:
     Examples:
         # Standard analysis with table output
         claude-builder analyze project ./my-app
-
-        # Focus on infrastructure and MLOps domains
-        claude-builder analyze project ./k8s-ml-app --domain infra --domain mlops
 
         # JSON output for CI/CD integration
         claude-builder analyze project ./app --format json --output analysis.json
@@ -93,25 +68,6 @@ def analyze() -> None:
     "--include-suggestions", is_flag=True, help="Include improvement suggestions"
 )
 @click.option(
-    "--domain",
-    multiple=True,
-    type=click.Choice(VALID_DOMAINS, case_sensitive=False),
-    help=(
-        "Filter analysis by domain (repeatable). Choices: infra, devops, mlops. "
-        "Example: --domain infra --domain mlops"
-    ),
-)
-@click.option(
-    "--infrastructure",
-    is_flag=True,
-    help="[DEPRECATED: use --domain infra] Show detailed Infrastructure/IaC details",
-)
-@click.option(
-    "--mlops",
-    is_flag=True,
-    help="[DEPRECATED: use --domain mlops] Show detailed MLOps/data pipeline details",
-)
-@click.option(
     "--interactive",
     "-i",
     is_flag=True,
@@ -125,12 +81,6 @@ def project(project_path: str, **options: Any) -> None:
     output_format = options.get("output_format", "table")
     confidence_threshold = options.get("confidence_threshold", 0)
     include_suggestions = options.get("include_suggestions", False)
-    domains = options.get("domain", ())
-    infrastructure_flag = options.get("infrastructure", False)
-    mlops_flag = options.get("mlops", False)
-    show_infra, show_mlops = _resolve_domain_flags(
-        domains, infrastructure_flag, mlops_flag
-    )
     verbose = options.get("verbose", 0)
 
     try:
@@ -177,8 +127,6 @@ def project(project_path: str, **options: Any) -> None:
                 analysis,
                 include_suggestions=include_suggestions,
                 verbose=verbose,
-                show_infrastructure=show_infra,
-                show_mlops=show_mlops,
             )
 
         # Save to file if requested
@@ -199,8 +147,6 @@ def _display_analysis_table(
     *,
     include_suggestions: bool = False,
     verbose: int = 0,
-    show_infrastructure: bool = False,
-    show_mlops: bool = False,
 ) -> None:
     """Display analysis in table format."""
     _show_analysis_summary(analysis)
@@ -212,10 +158,8 @@ def _display_analysis_table(
         _show_filesystem_table(analysis)
 
     _show_dev_environment_table(analysis, show_verbose=verbose > 0)
-    if show_infrastructure:
-        _show_infrastructure_table(analysis)
-    if show_mlops:
-        _show_mlops_table(analysis)
+    _show_infrastructure_table(analysis)
+    _show_mlops_table(analysis)
     _show_domain_table(analysis)
     _show_warnings_and_suggestions(analysis, include_suggestions=include_suggestions)
 

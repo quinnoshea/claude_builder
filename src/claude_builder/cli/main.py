@@ -127,11 +127,11 @@ def cli(ctx: click.Context, project_path: str | None, **kwargs: Any) -> None:
         # Quick start - generate complete environment
         claude-builder ./my-project
 
-        # Focus analysis on specific domains
-        claude-builder analyze project ./k8s-app --domain infra --domain devops
+        # Analyze and generate documentation in one step
+        claude-builder analyze project ./k8s-app
 
-        # Suggest agents for MLOps
-        claude-builder agents suggest --domain mlops --project-path ./data-pipeline
+        # Suggest agents for a data-heavy pipeline project
+        claude-builder agents suggest --project-path ./data-pipeline
 
         # Interactive analysis (scaffold)
         claude-builder analyze project ./app --interactive

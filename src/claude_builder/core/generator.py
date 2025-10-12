@@ -865,16 +865,16 @@ Representative DevOps agents available via the registry. Triggers mirror the sel
 
 | Agent | Focus | Triggers / Signals | Example |
 |---|---|---|---|
-| `ci-pipeline-engineer` | CI/CD troubleshooting & config | "pipeline failing" | `claude-builder agents suggest --text "pipeline failing" --devops` |
-| `terraform-specialist` | IaC drift, plan/apply | "terraform drift" | `claude-builder agents suggest --text "terraform drift" --devops` |
-| `kubernetes-operator` | Cluster ops, deploys, RBAC | "harden kubernetes" | `claude-builder agents suggest --text "harden kubernetes" --devops` |
-| `security-auditor` | Scans, policies, hardening | "harden cluster" | `claude-builder agents suggest --text "harden cluster" --devops` |
-| `observability-engineer` | Metrics, logs, alerts | "add metrics", "observability" | `claude-builder agents suggest --text "add metrics" --devops` |
-| `helm-specialist` | Helm charts & values | env: `helm` | `claude-builder agents suggest --project-path . --devops` |
-| `ansible-automator` | Config mgmt & playbooks | env: `ansible` | `claude-builder agents suggest --project-path . --devops` |
-| `pulumi-engineer` | Pulumi IaC | env: `pulumi` | `claude-builder agents suggest --project-path . --devops` |
-| `cloudformation-specialist` | AWS CloudFormation | env: `cloudformation` | `claude-builder agents suggest --project-path . --devops` |
-| `packer-builder` | Image building | env: `packer` | `claude-builder agents suggest --project-path . --devops` |
+| `ci-pipeline-engineer` | CI/CD troubleshooting & config | "pipeline failing" | `claude-builder agents suggest --text "pipeline failing"` |
+| `terraform-specialist` | IaC drift, plan/apply | "terraform drift" | `claude-builder agents suggest --text "terraform drift"` |
+| `kubernetes-operator` | Cluster ops, deploys, RBAC | "harden kubernetes" | `claude-builder agents suggest --text "harden kubernetes"` |
+| `security-auditor` | Scans, policies, hardening | "harden cluster" | `claude-builder agents suggest --text "harden cluster"` |
+| `observability-engineer` | Metrics, logs, alerts | "add metrics", "observability" | `claude-builder agents suggest --text "add metrics"` |
+| `helm-specialist` | Helm charts & values | env: `helm` | `claude-builder agents suggest --project-path .` |
+| `ansible-automator` | Config mgmt & playbooks | env: `ansible` | `claude-builder agents suggest --project-path .` |
+| `pulumi-engineer` | Pulumi IaC | env: `pulumi` | `claude-builder agents suggest --project-path .` |
+| `cloudformation-specialist` | AWS CloudFormation | env: `cloudformation` | `claude-builder agents suggest --project-path .` |
+| `packer-builder` | Image building | env: `packer` | `claude-builder agents suggest --project-path .` |
 
 ---
 
@@ -884,22 +884,22 @@ Representative MLOps agents available via the registry.
 
 | Agent | Focus | Triggers / Signals | Example |
 |---|---|---|---|
-| `mlops-engineer` | End‑to‑end ML pipelines & infra | "ml pipeline", "mlops" | `claude-builder agents suggest --text "ml pipeline" --mlops` |
-| `mlflow-ops` | Model registry & versioning | "version models" | `claude-builder agents suggest --text "version models" --mlops` |
-| `airflow-orchestrator` | DAGs for ETL/ML | "orchestrate dags", "airflow" | `claude-builder agents suggest --text "orchestrate dags" --mlops` |
-| `prefect-orchestrator` | Flows for ETL/ML | "prefect" | `claude-builder agents suggest --text "prefect" --mlops` |
-| `data-quality-engineer` | Expectations & data gates | "data quality" | `claude-builder agents suggest --text "data quality" --mlops` |
-| `dbt-analyst` | Modeling & transforms | env: `dbt` | `claude-builder agents suggest --project-path . --mlops` |
-| `dvc-ops` | Data versioning & pipelines | env: `dvc` | `claude-builder agents suggest --project-path . --mlops` |
-| `kubeflow-operator` | ML platform ops | env: `kubeflow` | `claude-builder agents suggest --project-path . --mlops` |
-| `data-pipeline-engineer` | Cross‑tool pipeline glue | env: data_pipeline | `claude-builder agents suggest --project-path . --mlops` |
+| `mlops-engineer` | End‑to‑end ML pipelines & infra | "ml pipeline", "mlops" | `claude-builder agents suggest --text "ml pipeline"` |
+| `mlflow-ops` | Model registry & versioning | "version models" | `claude-builder agents suggest --text "version models"` |
+| `airflow-orchestrator` | DAGs for ETL/ML | "orchestrate dags", "airflow" | `claude-builder agents suggest --text "orchestrate dags"` |
+| `prefect-orchestrator` | Flows for ETL/ML | "prefect" | `claude-builder agents suggest --text "prefect"` |
+| `data-quality-engineer` | Expectations & data gates | "data quality" | `claude-builder agents suggest --text "data quality"` |
+| `dbt-analyst` | Modeling & transforms | env: `dbt` | `claude-builder agents suggest --project-path .` |
+| `dvc-ops` | Data versioning & pipelines | env: `dvc` | `claude-builder agents suggest --project-path .` |
+| `kubeflow-operator` | ML platform ops | env: `kubeflow` | `claude-builder agents suggest --project-path .` |
+| `data-pipeline-engineer` | Cross‑tool pipeline glue | env: data_pipeline | `claude-builder agents suggest --project-path .` |
 
 ---
 
 ## 🔄 Workflow Examples
 
 ### 🏗️ Infrastructure Deployment
-1. Discover agents: `claude-builder agents suggest --project-path . --devops`
+1. Discover agents: `claude-builder agents suggest --project-path .`
 2. Plan IaC: ask `terraform-specialist` to init/validate/drift-check and produce a plan.
 3. Apply safely: `devops-automator` wires CI apply with approvals.
 4. Deploy services: `kubernetes-operator` updates manifests/Helm values and rolls out.
@@ -907,7 +907,7 @@ Representative MLOps agents available via the registry.
 6. Guardrails: `security-auditor` adds policy/image/signature checks.
 
 ### 🧪 MLOps Experiment
-1. Discover agents: `claude-builder agents suggest --project-path . --mlops`
+1. Discover agents: `claude-builder agents suggest --project-path .`
 2. Version data/artifacts: `dvc-ops` sets remotes and tracks datasets/models.
 3. Orchestrate runs: `airflow-orchestrator` or `prefect-orchestrator` creates train/eval.
 4. Track + register: `mlflow-ops` logs params/metrics and registers a model.
@@ -915,7 +915,7 @@ Representative MLOps agents available via the registry.
 6. Promote: `mlops-engineer` wires staging promotion and packaging.
 
 ### 🔐 Security Hardening
-1. Discover agents: `claude-builder agents suggest --project-path . --devops`
+1. Discover agents: `claude-builder agents suggest --project-path .`
 2. Baseline scan: `security-auditor` reviews IaC, images, and cluster posture.
 3. Harden cluster: `kubernetes-operator` enforces RBAC, PodSecurity, and network policies.
 4. Shift‑left: `ci-pipeline-engineer` adds CI gates (SAST/DAST, IaC scan, SBOM, signatures).

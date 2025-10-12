@@ -67,12 +67,9 @@ def test_suggest_json_output(monkeypatch: Any) -> None:
     assert all("name" in item and "role" in item for item in payload)
 
 
-def test_suggest_mlops_filter(monkeypatch: Any) -> None:
-    """--mlops should filter to MLOps-oriented agents."""
+def test_suggest_text_ml_pipeline_surfaces_mlops_agent(monkeypatch: Any) -> None:
+    """Natural language triggers should still surface MLOps agents."""
     runner = CliRunner()
-    res = runner.invoke(agents_group, ["suggest", "--text", "ml pipeline", "--mlops"])
+    res = runner.invoke(agents_group, ["suggest", "--text", "ml pipeline"])
     assert res.exit_code == 0
-    # Should include mlops-engineer (mapped from 'ml pipeline')
     assert "mlops-engineer" in res.output
-    # And should not include CI agent
-    assert "ci-pipeline-engineer" not in res.output
