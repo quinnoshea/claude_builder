@@ -20,6 +20,10 @@ from rich.table import Table
 
 from claude_builder.core.analyzer import ProjectAnalyzer
 
+from .error_handling import handle_exception
+from .next_steps import build_presenter
+from .ux import UXConfig, build_ux_config
+
 
 FAILED_TO_ANALYZE_PROJECT = "Failed to analyze project"
 PYYAML_NOT_AVAILABLE = "PyYAML not available"
@@ -74,7 +78,13 @@ def analyze() -> None:
     help="Enable interactive mode (prompts coming soon). Requires TTY.",
 )
 @click.option("--verbose", "-v", count=True, help="Verbose output")
-def project(project_path: str, **options: Any) -> None:
+@click.option(
+    "--no-suggestions",
+    is_flag=True,
+    help="Disable post-analysis suggestions",
+)
+@click.pass_context
+def project(ctx: click.Context, project_path: str, **options: Any) -> None:
     """Analyze a project directory."""
     # Extract options
     output = options.get("output")
@@ -82,6 +92,19 @@ def project(project_path: str, **options: Any) -> None:
     confidence_threshold = options.get("confidence_threshold", 0)
     include_suggestions = options.get("include_suggestions", False)
     verbose = options.get("verbose", 0)
+
+    root_obj = ctx.find_root().obj if ctx.find_root() else None
+    ux_config: UXConfig | None = None
+    if isinstance(root_obj, dict):
+        ux_config = root_obj.get("ux_config")
+    if ux_config is None:
+        plain_output = not bool(console.is_terminal)
+        ux_config = build_ux_config(
+            quiet=False,
+            verbose=options.get("verbose", 0),
+            no_suggestions=options.get("no_suggestions", False),
+            plain_output=plain_output,
+        )
 
     try:
         path = Path(project_path).resolve()
@@ -136,10 +159,19 @@ def project(project_path: str, **options: Any) -> None:
             )
             console.print(f"[green]Analysis saved to: {output}[/green]")
 
+        # Show inline suggestions for --include-suggestions flag
+        if not options.get("no_suggestions"):
+            if ux_config.suggestions_enabled:
+                presenter = build_presenter(ux_config)
+                presenter.show_analysis(path, analysis)
+            elif include_suggestions:
+                presenter = build_presenter(ux_config.without_suggestions())
+                for suggestion in presenter.suggestions.for_analysis(analysis, path):
+                    console.print(f"• {suggestion}")
+
     except Exception as e:
-        error_msg = f"{FAILED_TO_ANALYZE_PROJECT}: {e}"
-        console.print(f"[red]Error analyzing project: {e}[/red]")
-        raise click.ClickException(error_msg) from e
+        exit_code = handle_exception(e, config=ux_config, console=console)
+        raise click.exceptions.Exit(exit_code) from e
 
 
 def _display_analysis_table(

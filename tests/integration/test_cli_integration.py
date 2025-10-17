@@ -67,6 +67,9 @@ class TestAnalyzeCLI:
                 ],
             )
 
+            if result.exception:
+                raise result.exception
+
             assert result.exit_code == 0
             assert Path("analysis.json").exists()
 
