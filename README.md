@@ -198,6 +198,14 @@ During tests, you can inject or clear the registry to control which checks run.
 
 ### ✅ **WORKING COMPONENTS**
 
+#### Enhanced CLI Experience (Phase 4.1)
+
+- Detection-aware error panels with actionable recovery hints
+- Optional contextual suggestions and next-step prompts after analysis/generation
+- Rich help primer surfaced automatically when no arguments are provided
+- Progress indicators honour quiet/plain/legacy modes
+- Opt-out controls: `--no-suggestions`, `CLAUDE_BUILDER_SHOW_SUGGESTIONS=0`, `CLAUDE_BUILDER_LEGACY_MODE=1`
+
 #### Project Analysis Engine
 
 - **Language Detection**: 15+ languages including Python, JavaScript,

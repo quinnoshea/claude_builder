@@ -28,8 +28,8 @@ jobs:
           # Build JSON arrays from comma lists
           cat_json=$(printf '%s' "$CAT" | awk -F',' '{printf "["; for(i=1;i<=NF;i++){gsub(/^ +| +$/,"",$i); printf (i>1?"," :"")"\""$i"\""} printf "]"}')
           lvl_json=$(printf '%s' "$LVL" | awk -F',' '{printf "["; for(i=1;i<=NF;i++){gsub(/^ +| +$/,"",$i); printf (i>1?"," :"")"\""$i"\""} printf "]"}')
-          echo "cat=$cat_json" >> $GITHUB_OUTPUT
-          echo "lvl=$lvl_json" >> $GITHUB_OUTPUT
+          echo "cat=$cat_json" >> "$GITHUB_OUTPUT"
+          echo "lvl=$lvl_json" >> "$GITHUB_OUTPUT"
 
       - name: Fetch issues (paged)
         id: fetch
@@ -57,7 +57,7 @@ jobs:
             [ "$page" -gt 20 ] && break  # safety cap
           done
           total=$(jq '.data | length' issues.json)
-          echo "total=$total" >> $GITHUB_OUTPUT
+          echo "total=$total" >> "$GITHUB_OUTPUT"
 
       - name: Aggregate summary
         id: agg
@@ -99,4 +99,4 @@ jobs:
             echo '```json'
             cat summary.json | jq '.topFiles'
             echo '```'
-          } >> $GITHUB_STEP_SUMMARY
+          } >> "$GITHUB_STEP_SUMMARY"

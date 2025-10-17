@@ -24,6 +24,10 @@ from claude_builder.core.generator import DocumentGenerator
 from claude_builder.core.models import ProjectAnalysis
 from claude_builder.utils.exceptions import ClaudeBuilderError
 
+from .error_handling import handle_exception
+from .next_steps import build_presenter
+from .ux import UXConfig, build_ux_config
+
 
 FAILED_TO_GENERATE_DOCUMENTATION = "Failed to generate documentation"
 FAILED_TO_GENERATE_AGENTS = "Failed to generate agents"
@@ -137,6 +141,7 @@ class GenerateConfig:
     backup_existing: bool = False
     dry_run: bool = False
     verbose: int = 0
+    no_suggestions: bool = False
     # Domain-specific generation filter
     domains: tuple[str, ...] = ()
 
@@ -187,9 +192,29 @@ def generate() -> None:
     help="Filter generation by domain (repeatable): infra, devops, mlops",
 )
 @click.option("--verbose", "-v", count=True, help="Verbose output")
-def docs(project_path: str, **kwargs: Any) -> None:
+@click.option(
+    "--no-suggestions",
+    is_flag=True,
+    help="Disable contextual suggestions after generation",
+)
+@click.pass_context
+def docs(ctx: click.Context, project_path: str, **kwargs: Any) -> None:
     """Generate documentation from project analysis."""
     config = GenerateConfig(**kwargs)
+
+    root_obj = ctx.find_root().obj if ctx.find_root() else None
+    ux_config: UXConfig | None = None
+    if isinstance(root_obj, dict):
+        ux_config = root_obj.get("ux_config")
+        if ux_config and config.no_suggestions:
+            ux_config = ux_config.without_suggestions()
+    if ux_config is None:
+        ux_config = build_ux_config(
+            quiet=False,
+            verbose=config.verbose,
+            no_suggestions=config.no_suggestions,
+            plain_output=not console.is_terminal(),
+        )
 
     try:
         path = Path(project_path).resolve()
@@ -244,7 +269,7 @@ def docs(project_path: str, **kwargs: Any) -> None:
 
         # Write files
         output_path = Path(config.output_dir) if config.output_dir else path
-        _write_generated_files(
+        written_files = _write_generated_files(
             generated_content,
             output_path,
             backup_existing=config.backup_existing,
@@ -254,10 +279,13 @@ def docs(project_path: str, **kwargs: Any) -> None:
         console.print("[green]✓ Documentation generated successfully[/green]")
         console.print(f"Output location: {output_path}")
 
+        if ux_config.suggestions_enabled:
+            presenter = build_presenter(ux_config)
+            presenter.show_generation(path, written_files)
+
     except Exception as e:
-        error_msg = f"{FAILED_TO_GENERATE_DOCUMENTATION}: {e}"
-        console.print(f"[red]Error generating documentation: {e}[/red]")
-        raise click.ClickException(error_msg) from e
+        exit_code = handle_exception(e, config=ux_config, console=console)
+        raise click.exceptions.Exit(exit_code) from e
 
 
 @generate.command()
@@ -290,9 +318,29 @@ def docs(project_path: str, **kwargs: Any) -> None:
     help="Filter generation by domain (repeatable): infra, devops, mlops",
 )
 @click.option("--verbose", "-v", count=True, help="Verbose output")
-def complete(project_path: str, **kwargs: Any) -> None:
+@click.option(
+    "--no-suggestions",
+    is_flag=True,
+    help="Disable contextual suggestions after generation",
+)
+@click.pass_context
+def complete(ctx: click.Context, project_path: str, **kwargs: Any) -> None:
     """Generate complete Claude Code environment (CLAUDE.md + individual subagents + AGENTS.md)."""
     config = GenerateConfig(**kwargs)
+
+    root_obj = ctx.find_root().obj if ctx.find_root() else None
+    ux_config: UXConfig | None = None
+    if isinstance(root_obj, dict):
+        ux_config = root_obj.get("ux_config")
+        if ux_config and config.no_suggestions:
+            ux_config = ux_config.without_suggestions()
+    if ux_config is None:
+        ux_config = build_ux_config(
+            quiet=False,
+            verbose=config.verbose,
+            no_suggestions=config.no_suggestions,
+            plain_output=not console.is_terminal(),
+        )
 
     try:
         path = Path(project_path).resolve()
@@ -328,10 +376,13 @@ def complete(project_path: str, **kwargs: Any) -> None:
             else output_dir / ".claude" / "agents"
         )
 
+        written_files: list[str] = []
+
         # Write CLAUDE.md
         claude_path = output_dir / "CLAUDE.md"
         with claude_path.open("w", encoding="utf-8") as f:
             f.write(environment.claude_md)
+        written_files.append("CLAUDE.md")
 
         # Write individual subagents
         agents_dir.mkdir(parents=True, exist_ok=True)
@@ -339,11 +390,16 @@ def complete(project_path: str, **kwargs: Any) -> None:
             agent_path = agents_dir / subagent.name
             with agent_path.open("w", encoding="utf-8") as f:
                 f.write(subagent.content)
+            try:
+                written_files.append(str(agent_path.relative_to(path)))
+            except ValueError:
+                written_files.append(str(agent_path))
 
         # Write AGENTS.md
         agents_guide_path = output_dir / "AGENTS.md"
         with agents_guide_path.open("w", encoding="utf-8") as f:
             f.write(environment.agents_md)
+        written_files.append("AGENTS.md")
 
         console.print("[green]✓ Complete environment generated successfully[/green]")
         console.print("Generated:")
@@ -353,11 +409,13 @@ def complete(project_path: str, **kwargs: Any) -> None:
         )
         console.print("   • AGENTS.md - User guide")
 
+        if ux_config.suggestions_enabled:
+            presenter = build_presenter(ux_config)
+            presenter.show_generation(path, written_files)
+
     except Exception as e:
-        console.print(f"[red]Error generating complete environment: {e}[/red]")
-        raise click.ClickException(
-            f"Failed to generate complete environment: {e}"
-        ) from e
+        exit_code = handle_exception(e, config=ux_config, console=console)
+        raise click.exceptions.Exit(exit_code) from e
 
 
 @generate.command()
@@ -687,9 +745,9 @@ def _display_generation_preview(generated_content: Any) -> None:
 
 def _write_generated_files(
     generated_content: Any, output_path: Path, *, backup_existing: bool, verbose: int
-) -> int:
-    """Write generated files to disk."""
-    files_written = 0
+) -> list[str]:
+    """Write generated files to disk and return list of written filenames."""
+    written_filenames = []
 
     for filename, content in generated_content.files.items():
         file_path = output_path / filename
@@ -710,15 +768,15 @@ def _write_generated_files(
         with file_path.open("w", encoding="utf-8") as f:
             f.write(content)
 
-        files_written += 1
+        written_filenames.append(filename)
 
         if verbose > 1:
             console.print(f"[green]✓ {filename}[/green]")
 
     if verbose > 0:
-        console.print(f"[green]Wrote {files_written} files[/green]")
+        console.print(f"[green]Wrote {len(written_filenames)} files[/green]")
 
-    return files_written
+    return written_filenames
 
 
 @generate.command()

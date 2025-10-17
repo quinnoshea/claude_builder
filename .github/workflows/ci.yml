@@ -101,8 +101,8 @@ jobs:
     - name: Display coverage summary
       if: ${{ matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11' }}
       run: |
-        echo "## Coverage Summary" >> $GITHUB_STEP_SUMMARY
-        uv run coverage report >> $GITHUB_STEP_SUMMARY || echo "Coverage report not available" >> $GITHUB_STEP_SUMMARY
+        echo "## Coverage Summary" >> "$GITHUB_STEP_SUMMARY"
+        uv run coverage report >> "$GITHUB_STEP_SUMMARY" || echo "Coverage report not available" >> "$GITHUB_STEP_SUMMARY"
 
     - name: Compute coverage percent
       id: cov
@@ -180,7 +180,7 @@ jobs:
           echo "Codacy upload:  ${{ steps.codacy.outcome }}"
           echo "Codecov upload: ${{ steps.codecov.outcome }}"
           echo "Test results:   ${{ steps.codecov-test-results.outcome }}"
-        } >> $GITHUB_STEP_SUMMARY
+        } >> "$GITHUB_STEP_SUMMARY"
 
     - name: Upload test results and coverage artifacts
       if: always()
@@ -440,7 +440,7 @@ jobs:
             echo "Test job result: ${{ needs.test.result }}"
             echo "Coverage percent: ${{ steps.cov_post.outputs.percent }}%"
             if [ -f coverage.xml ]; then echo "coverage.xml present ✅"; else echo "coverage.xml missing ⚠️"; fi
-          } >> $GITHUB_STEP_SUMMARY
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload coverage-metrics artifacts
         uses: actions/upload-artifact@v4
@@ -505,7 +505,7 @@ jobs:
     steps:
       - name: Summary
         run: |
-          echo "CI completed. Check artifacts and job results above." >> $GITHUB_STEP_SUMMARY
+          echo "CI completed. Check artifacts and job results above." >> "$GITHUB_STEP_SUMMARY"
 
   workflows-lint:
     runs-on: ubuntu-latest
