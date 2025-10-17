@@ -222,7 +222,7 @@ class TestAnalyzeCommands:
         runner = CliRunner()
         result = runner.invoke(project, [str(sample_python_project)])
         assert result.exit_code != 0
-        assert "Error analyzing project" in result.output
+        assert "Error: Analysis failed" in result.output
 
     @patch("claude_builder.cli.analyze_commands.ProjectAnalyzer")
     def test_project_command_yaml_output_no_yaml(
