@@ -182,6 +182,131 @@ class TestDependencyHealthCheck:
         assert result.status in [HealthStatus.WARNING, HealthStatus.CRITICAL]
         assert result.details["filesystem"]["write_access"] is False
 
+    @patch("shutil.which")
+    @patch("subprocess.run")
+    @patch("pathlib.Path.write_text")
+    @patch("pathlib.Path.unlink")
+    def test_dependency_health_check_devops_tools(
+        self, mock_unlink, mock_write, mock_subprocess, mock_which
+    ):
+        """Test DevOps tools validation (terraform, kubectl, docker, helm, ansible)."""
+
+        def which_side_effect(tool_name):
+            devops_tools = ["git", "terraform", "kubectl", "docker", "helm", "ansible"]
+            return f"/usr/bin/{tool_name}" if tool_name in devops_tools else None
+
+        mock_which.side_effect = which_side_effect
+
+        # Mock successful version checks
+        mock_result = Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = "version 1.0.0"
+        mock_subprocess.return_value = mock_result
+
+        check = DependencyHealthCheck(scope="devops")
+        result = check.check()
+
+        # Verify devops tools are checked
+        assert "devops_terraform" in result.details
+        assert "devops_kubectl" in result.details
+        assert "devops_docker" in result.details
+        assert "devops_helm" in result.details
+        assert "devops_ansible" in result.details
+
+        # Verify all are available
+        assert result.details["devops_terraform"]["available"] is True
+        assert result.details["devops_kubectl"]["available"] is True
+        assert result.details["devops_docker"]["available"] is True
+        assert result.details["devops_helm"]["available"] is True
+        assert result.details["devops_ansible"]["available"] is True
+
+    @patch("shutil.which")
+    @patch("subprocess.run")
+    @patch("pathlib.Path.write_text")
+    @patch("pathlib.Path.unlink")
+    def test_dependency_health_check_cloud_tools(
+        self, mock_unlink, mock_write, mock_subprocess, mock_which
+    ):
+        """Test cloud CLI tools validation (aws, gcloud, az)."""
+
+        def which_side_effect(tool_name):
+            cloud_tools = ["git", "aws", "gcloud", "az"]
+            return f"/usr/bin/{tool_name}" if tool_name in cloud_tools else None
+
+        mock_which.side_effect = which_side_effect
+
+        # Mock successful version checks
+        mock_result = Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = "version 1.0.0"
+        mock_subprocess.return_value = mock_result
+
+        check = DependencyHealthCheck(scope="cloud")
+        result = check.check()
+
+        # Verify cloud tools are checked
+        assert "cloud_aws" in result.details
+        assert "cloud_gcloud" in result.details
+        assert "cloud_az" in result.details
+
+        # Verify all are available
+        assert result.details["cloud_aws"]["available"] is True
+        assert result.details["cloud_gcloud"]["available"] is True
+        assert result.details["cloud_az"]["available"] is True
+
+    @patch("shutil.which")
+    @patch("subprocess.run")
+    @patch("pathlib.Path.write_text")
+    @patch("pathlib.Path.unlink")
+    def test_dependency_health_check_scope_core(
+        self, mock_unlink, mock_write, mock_subprocess, mock_which
+    ):
+        """Test scope filtering - core scope should only check git and python packages."""
+        mock_which.return_value = "/usr/bin/git"
+
+        mock_result = Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = "git version 2.34.1"
+        mock_subprocess.return_value = mock_result
+
+        check = DependencyHealthCheck(scope="core")
+        result = check.check()
+
+        # Git should be checked
+        assert "git" in result.details
+
+        # Python packages should be checked
+        assert "package_click" in result.details
+
+        # DevOps and cloud tools should NOT be checked
+        assert "devops_terraform" not in result.details
+        assert "cloud_aws" not in result.details
+
+    @patch("shutil.which")
+    def test_dependency_health_check_missing_devops_tools_recommendations(
+        self, mock_which
+    ):
+        """Test that missing DevOps tools generate structured recommendations."""
+        # Only git is available
+        mock_which.side_effect = lambda tool: (
+            "/usr/bin/git" if tool == "git" else None
+        )
+
+        check = DependencyHealthCheck(scope="devops")
+        result = check.check()
+
+        # Should have recommendations for missing tools
+        assert len(result.recommendations) > 0
+
+        # Check for at least one DevOps tool recommendation
+        rec_text = "\n".join(result.recommendations)
+        # At least one of these should be mentioned
+        has_devops_rec = any(
+            tool in rec_text.lower()
+            for tool in ["terraform", "kubectl", "docker", "helm", "ansible"]
+        )
+        assert has_devops_rec
+
 
 class TestSecurityHealthCheck:
     """Test SecurityHealthCheck implementation."""

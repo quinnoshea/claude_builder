@@ -61,7 +61,15 @@ def health() -> None:
     default=60,
     help="Health check timeout in seconds (default: 60)",
 )
-def check(check_type: Optional[str], verbose: bool, quiet: bool, timeout: int) -> None:
+@click.option(
+    "--scope",
+    type=click.Choice(["core", "devops", "cloud", "all"]),
+    default="all",
+    help="Scope of dependency checks: core (git+python), devops (terraform, docker, etc.), cloud (aws, gcloud, az), or all",
+)
+def check(
+    check_type: Optional[str], verbose: bool, quiet: bool, timeout: int, scope: str
+) -> None:
     """Run health checks and display results.
 
     Performs comprehensive health checks on application components,
@@ -74,7 +82,7 @@ def check(check_type: Optional[str], verbose: bool, quiet: bool, timeout: int) -
         claude-builder health check --quiet            # Status only
     """
     try:
-        manager = HealthCheckManager(timeout=timeout)
+        manager = HealthCheckManager(timeout=timeout, scope=scope)
 
         if not quiet:
             console.print(
