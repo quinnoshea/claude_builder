@@ -156,7 +156,90 @@ python -m pip install -e .[dev]
 pytest -q
 ```
 
-## Health Command Exit Codes
+## Health Check System
+
+The health check system validates your development environment and provides
+actionable recommendations for missing tools or misconfigurations.
+
+### Health Command Usage
+
+```bash
+# Run all health checks
+claude-builder health check
+
+# Check specific scopes
+claude-builder health check --scope core
+claude-builder health check --scope devops
+claude-builder health check --scope cloud
+claude-builder health check --scope all
+
+# Verbose output with recommendations
+claude-builder health check --verbose
+
+# Check specific types
+claude-builder health check --type dependency
+claude-builder health check --type security
+```
+
+### What Gets Checked
+
+**Core Dependencies (--scope core):**
+
+- Git availability and version
+- Required Python packages (click, rich, toml, psutil)
+- Filesystem write access
+
+**DevOps Tools (--scope devops):**
+
+- Terraform - Infrastructure as Code
+- kubectl - Kubernetes CLI
+- Docker - Container runtime
+- Helm - Kubernetes package manager
+- Ansible - Configuration management
+
+**Cloud CLIs (--scope cloud):**
+
+- AWS CLI (aws)
+- Google Cloud CLI (gcloud)
+- Azure CLI (az)
+
+**Other Checks:**
+
+- Application core functionality
+- Security framework validation
+- System performance metrics (CPU, memory, disk)
+- Configuration system health
+
+### Platform-Specific Recommendations
+
+When tools are missing, the health check provides platform-specific installation
+commands:
+
+**Linux:**
+
+```bash
+# Example: Missing Terraform
+Install Terraform from HashiCorp's official repository
+  Command: wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor...
+```
+
+**macOS:**
+
+```bash
+# Example: Missing kubectl
+Install kubectl using Homebrew
+  Command: brew install kubectl
+```
+
+**Windows:**
+
+```bash
+# Example: Missing Docker
+Install Docker Desktop for Windows
+  Command: winget install Docker.DockerDesktop
+```
+
+### Exit Codes
 
 The `claude-builder health check` command uses exit codes to indicate status:
 
@@ -165,6 +248,19 @@ The `claude-builder health check` command uses exit codes to indicate status:
 - 1: CRITICAL — at least one critical failure
 
 These are validated by unit tests under `tests/unit/cli/test_health_commands.py`.
+
+### Monitoring and Reports
+
+```bash
+# Continuous monitoring
+claude-builder health monitor --interval 60
+
+# Generate detailed report
+claude-builder health report --output health-report.json --verbose
+
+# Quick status check
+claude-builder health status
+```
 
 ## Adding a New Health Check (Registry)
 

@@ -57,7 +57,7 @@ class TestHealthCommands:
         result = self.runner.invoke(health, ["check"])
 
         assert result.exit_code == 0
-        mock_manager_class.assert_called_once_with(timeout=60)
+        mock_manager_class.assert_called_once_with(timeout=60, scope="all")
         mock_manager.run_all_checks.assert_called_once()
 
     @patch("claude_builder.cli.health_commands.HealthCheckManager")
@@ -219,7 +219,84 @@ class TestHealthCommands:
         result = self.runner.invoke(health, ["check", "--timeout", "120"])
 
         assert result.exit_code == 0
-        mock_manager_class.assert_called_once_with(timeout=120)
+        mock_manager_class.assert_called_once_with(timeout=120, scope="all")
+
+    @patch("claude_builder.cli.health_commands.HealthCheckManager")
+    def test_check_command_scope_core(self, mock_manager_class):
+        """Test health check command with core scope."""
+        # Mock HealthCheckManager
+        mock_manager = Mock()
+        mock_manager_class.return_value = mock_manager
+
+        # Mock healthy system health
+        mock_health = Mock()
+        mock_health.overall_status = HealthStatus.HEALTHY
+        mock_health.check_results = []
+
+        mock_manager.run_all_checks.return_value = mock_health
+
+        result = self.runner.invoke(health, ["check", "--scope", "core"])
+
+        assert result.exit_code == 0
+        mock_manager_class.assert_called_once_with(timeout=60, scope="core")
+
+    @patch("claude_builder.cli.health_commands.HealthCheckManager")
+    def test_check_command_scope_devops(self, mock_manager_class):
+        """Test health check command with devops scope."""
+        # Mock HealthCheckManager
+        mock_manager = Mock()
+        mock_manager_class.return_value = mock_manager
+
+        # Mock healthy system health
+        mock_health = Mock()
+        mock_health.overall_status = HealthStatus.HEALTHY
+        mock_health.check_results = []
+
+        mock_manager.run_all_checks.return_value = mock_health
+
+        result = self.runner.invoke(health, ["check", "--scope", "devops"])
+
+        assert result.exit_code == 0
+        mock_manager_class.assert_called_once_with(timeout=60, scope="devops")
+
+    @patch("claude_builder.cli.health_commands.HealthCheckManager")
+    def test_check_command_scope_cloud(self, mock_manager_class):
+        """Test health check command with cloud scope."""
+        # Mock HealthCheckManager
+        mock_manager = Mock()
+        mock_manager_class.return_value = mock_manager
+
+        # Mock healthy system health
+        mock_health = Mock()
+        mock_health.overall_status = HealthStatus.HEALTHY
+        mock_health.check_results = []
+
+        mock_manager.run_all_checks.return_value = mock_health
+
+        result = self.runner.invoke(health, ["check", "--scope", "cloud"])
+
+        assert result.exit_code == 0
+        mock_manager_class.assert_called_once_with(timeout=60, scope="cloud")
+
+    @patch("claude_builder.cli.health_commands.HealthCheckManager")
+    def test_check_command_scope_all_default(self, mock_manager_class):
+        """Test health check command defaults to 'all' scope."""
+        # Mock HealthCheckManager
+        mock_manager = Mock()
+        mock_manager_class.return_value = mock_manager
+
+        # Mock healthy system health
+        mock_health = Mock()
+        mock_health.overall_status = HealthStatus.HEALTHY
+        mock_health.check_results = []
+
+        mock_manager.run_all_checks.return_value = mock_health
+
+        result = self.runner.invoke(health, ["check"])
+
+        assert result.exit_code == 0
+        # Default scope should be "all"
+        mock_manager_class.assert_called_once_with(timeout=60, scope="all")
 
     @patch("claude_builder.cli.health_commands.HealthCheckManager")
     def test_status_command_table_format(self, mock_manager_class):

@@ -23,6 +23,7 @@ from typing import Any, Dict, Iterable, List, Optional
 import psutil
 
 from claude_builder.utils.exceptions import SecurityError
+from claude_builder.utils.health_recommendations import RecommendationProvider
 
 
 class HealthStatus(Enum):
@@ -174,11 +175,18 @@ class DependencyHealthCheck(HealthCheck):
     Adds a probe directory seam to avoid writing into the repository during tests
     or in restricted environments. When ``probe_dir`` is None, a temporary
     directory is used for the write test.
+
+    Args:
+        probe_dir: Optional directory for filesystem write tests
+        scope: Scope of checks - "core" (git+python), "devops" (terraform, docker, etc.),
+               "cloud" (aws, gcloud, az), or "all" (default)
     """
 
-    def __init__(self, probe_dir: Optional[Path] = None) -> None:
+    def __init__(self, probe_dir: Optional[Path] = None, scope: str = "all") -> None:
         super().__init__("Dependencies", HealthCheckType.DEPENDENCY)
         self.probe_dir = probe_dir
+        self.scope = scope
+        self.recommendation_provider = RecommendationProvider()
 
     def check(self) -> HealthCheckResult:
         """Check external dependencies health."""
@@ -189,108 +197,163 @@ class DependencyHealthCheck(HealthCheck):
             recommendations: List[str] = []
             details: Dict[str, Any] = {}
 
-            # Check Git availability
-            git_path = shutil.which("git")
-            if git_path:
-                details["git"] = {"available": True, "path": git_path}
+            # Determine what to check based on scope
+            check_core = self.scope in ["core", "all"]
+            check_devops = self.scope in ["devops", "all"]
+            check_cloud = self.scope in ["cloud", "all"]
 
-                # Check Git version
-                try:
-                    import subprocess
+            # Check Git availability (core)
+            if check_core:
+                git_path = shutil.which("git")
+                if git_path:
+                    details["git"] = {"available": True, "path": git_path}
 
-                    result = subprocess.run(
-                        ["git", "--version"],
-                        check=False,
-                        capture_output=True,
-                        text=True,
-                        timeout=2,
-                    )
-                    if result.returncode == 0:
-                        details["git"]["version"] = result.stdout.strip()
-                    else:
-                        issues.append("Git version check failed")
-                except (subprocess.TimeoutExpired, OSError) as e:
-                    issues.append(f"Git version check error: {e}")
-            else:
-                issues.append("Git not found in PATH")
-                details["git"] = {"available": False}
-                recommendations.append(
-                    "Install Git and ensure it is in your system's PATH: https://git-scm.com/downloads"
-                )
-
-            # Check DevOps tools availability and versions
-            devops_tools = {
-                "terraform": ["terraform", "--version"],
-                "kubectl": ["kubectl", "version", "--client"],
-                "docker": ["docker", "--version"],
-                "helm": ["helm", "version", "--short"],
-                "ansible": ["ansible", "--version"],
-            }
-            for tool_name, version_cmd in devops_tools.items():
-                tool_path = shutil.which(tool_name)
-                key = f"devops_{tool_name}"
-                if tool_path:
-                    details[key] = {"available": True, "path": tool_path}
+                    # Check Git version
                     try:
                         import subprocess
 
                         result = subprocess.run(
-                            version_cmd,
+                            ["git", "--version"],
                             check=False,
                             capture_output=True,
                             text=True,
-                            timeout=1.5,
+                            timeout=2,
                         )
                         if result.returncode == 0:
-                            version_line = (
-                                (result.stdout or result.stderr or "")
-                                .strip()
-                                .split("\n")[0]
-                            )
-                            details[key]["version"] = version_line
+                            details["git"]["version"] = result.stdout.strip()
                         else:
-                            details[key]["notes"] = "Version check returned non-zero"
-                    except Exception as e:
-                        details[key]["notes"] = f"Version check error: {e}"
+                            issues.append("Git version check failed")
+                    except (subprocess.TimeoutExpired, OSError) as e:
+                        issues.append(f"Git version check error: {e}")
                 else:
-                    issues.append(f"DevOps tool not found: {tool_name}")
-                    details[key] = {"available": False, "notes": "Not found in PATH"}
-                    if tool_name == "terraform":
-                        recommendations.append(
-                            "Install Terraform: https://www.terraform.io/downloads"
-                        )
-                    elif tool_name == "kubectl":
-                        recommendations.append(
-                            "Install kubectl: https://kubernetes.io/docs/tasks/tools/"
-                        )
-                    elif tool_name == "docker":
-                        recommendations.append(
-                            "Install Docker: https://docs.docker.com/get-docker/ (and ensure the Docker daemon is running)"
-                        )
-                    elif tool_name == "helm":
-                        recommendations.append(
-                            "Install Helm: https://helm.sh/docs/intro/install/"
-                        )
-                    elif tool_name == "ansible":
-                        recommendations.append("Install Ansible: pip install ansible")
+                    issues.append("Git not found in PATH")
+                    details["git"] = {"available": False}
+                    recommendations.append(
+                        "Install Git and ensure it is in your system's PATH: https://git-scm.com/downloads"
+                    )
 
-            # Check required Python packages
-            required_packages = ["click", "rich", "toml", "pathlib", "psutil"]
+            # Check DevOps tools availability and versions (devops scope)
+            if check_devops:
+                devops_tools = {
+                    "terraform": ["terraform", "--version"],
+                    "kubectl": ["kubectl", "version", "--client"],
+                    "docker": ["docker", "--version"],
+                    "helm": ["helm", "version", "--short"],
+                    "ansible": ["ansible", "--version"],
+                }
+                for tool_name, version_cmd in devops_tools.items():
+                    tool_path = shutil.which(tool_name)
+                    key = f"devops_{tool_name}"
+                    if tool_path:
+                        details[key] = {"available": True, "path": tool_path}
+                        try:
+                            import subprocess
 
+                            result = subprocess.run(
+                                version_cmd,
+                                check=False,
+                                capture_output=True,
+                                text=True,
+                                timeout=1.5,
+                            )
+                            if result.returncode == 0:
+                                version_line = (
+                                    (result.stdout or result.stderr or "")
+                                    .strip()
+                                    .split("\n")[0]
+                                )
+                                details[key]["version"] = version_line
+                            else:
+                                details[key][
+                                    "notes"
+                                ] = "Version check returned non-zero"
+                        except Exception as e:
+                            details[key]["notes"] = f"Version check error: {e}"
+                    else:
+                        issues.append(f"DevOps tool not found: {tool_name}")
+                        details[key] = {
+                            "available": False,
+                            "notes": "Not found in PATH",
+                        }
+                        # Use structured recommendations
+                        rec = self.recommendation_provider.get_tool_recommendation(
+                            tool_name
+                        )
+                        rec_text = rec["message"]
+                        if rec.get("command"):
+                            rec_text += f"\n  Command: {rec['command']}"
+                        recommendations.append(rec_text)
+
+            # Check cloud CLI tools availability and versions (cloud scope)
+            if check_cloud:
+                cloud_tools = {
+                    "aws": ["aws", "--version"],
+                    "gcloud": ["gcloud", "--version"],
+                    "az": ["az", "--version"],
+                }
+                for tool_name, version_cmd in cloud_tools.items():
+                    tool_path = shutil.which(tool_name)
+                    key = f"cloud_{tool_name}"
+                    if tool_path:
+                        details[key] = {"available": True, "path": tool_path}
+                        try:
+                            import subprocess
+
+                            result = subprocess.run(
+                                version_cmd,
+                                check=False,
+                                capture_output=True,
+                                text=True,
+                                timeout=1.5,
+                            )
+                            if result.returncode == 0:
+                                version_line = (
+                                    (result.stdout or result.stderr or "")
+                                    .strip()
+                                    .split("\n")[0]
+                                )
+                                details[key]["version"] = version_line
+                            else:
+                                details[key][
+                                    "notes"
+                                ] = "Version check returned non-zero"
+                        except Exception as e:
+                            details[key]["notes"] = f"Version check error: {e}"
+                    else:
+                        # Cloud tools are optional, so we add to details but not to issues
+                        details[key] = {
+                            "available": False,
+                            "notes": "Not found in PATH (optional)",
+                        }
+                        # Still provide recommendations for optional tools
+                        rec = self.recommendation_provider.get_tool_recommendation(
+                            tool_name
+                        )
+                        rec_text = f"[Optional] {rec['message']}"
+                        if rec.get("command"):
+                            rec_text += f"\n  Command: {rec['command']}"
+                        recommendations.append(rec_text)
+
+            # Check required Python packages (core)
             missing_packages = []
-            for package in required_packages:
-                try:
-                    __import__(package)
-                    details[f"package_{package}"] = {"available": True}
-                except ImportError:
-                    missing_packages.append(package)
-                    details[f"package_{package}"] = {"available": False}
+            if check_core:
+                required_packages = ["click", "rich", "toml", "pathlib", "psutil"]
 
-            if missing_packages:
-                issues.append(f"Missing Python packages: {', '.join(missing_packages)}")
-                recommendations.append(
-                    f"Install missing Python packages: pip install {' '.join(missing_packages)}"
-                )
+                for package in required_packages:
+                    try:
+                        __import__(package)
+                        details[f"package_{package}"] = {"available": True}
+                    except ImportError:
+                        missing_packages.append(package)
+                        details[f"package_{package}"] = {"available": False}
+
+                if missing_packages:
+                    issues.append(
+                        f"Missing Python packages: {', '.join(missing_packages)}"
+                    )
+                    recommendations.append(
+                        f"Install missing Python packages: pip install {' '.join(missing_packages)}"
+                    )
 
             # Check filesystem permissions (in probe directory or a temp dir)
             try:
@@ -810,10 +873,14 @@ class HealthCheckManager:
     """Central manager for all health checks."""
 
     def __init__(
-        self, timeout: int = 60, registry: "HealthCheckRegistry | None" = None
+        self,
+        timeout: int = 60,
+        registry: "HealthCheckRegistry | None" = None,
+        scope: str = "all",
     ) -> None:
         self.timeout = timeout
         self.registry = registry or default_health_check_registry
+        self.scope = scope
         self.checks: List[HealthCheck] = []
         self._register_default_checks()
 
@@ -823,7 +890,7 @@ class HealthCheckManager:
         if not self.registry.get_checks():
             self.registry.register(
                 ApplicationHealthCheck(),
-                DependencyHealthCheck(),
+                DependencyHealthCheck(scope=self.scope),
                 SecurityHealthCheck(),
                 PerformanceHealthCheck(),
                 ConfigurationHealthCheck(),

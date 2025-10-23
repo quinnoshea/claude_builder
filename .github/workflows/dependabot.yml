@@ -55,32 +55,14 @@ jobs:
           uv run ruff check src/ tests/
           uv run mypy src/
 
-      - name: Check if auto-merge is safe
-        id: auto-merge-check
+      - name: Summarize update details
         run: |
-          echo "Auto-merge conditions:"
-          echo "- Update type: ${{ steps.metadata.outputs.update-type }}"
+          echo "Dependabot update summary:"
           echo "- Package ecosystem: ${{ steps.metadata.outputs.package-ecosystem }}"
           echo "- Dependency type: ${{ steps.metadata.outputs.dependency-type }}"
-
-          # Safe auto-merge conditions
-          if [[ "${{ steps.metadata.outputs.update-type }}" == "version-update:semver-patch" ]] || \
-             [[ "${{ steps.metadata.outputs.update-type }}" == "version-update:semver-minor" && "${{ steps.metadata.outputs.dependency-type }}" == "development" ]] || \
-             [[ "${{ steps.metadata.outputs.package-ecosystem }}" == "github-actions" && "${{ steps.metadata.outputs.update-type }}" != "version-update:semver-major" ]]; then
-            echo "auto-merge=true" >> $GITHUB_OUTPUT
-            echo "✅ Auto-merge conditions met"
-          else
-            echo "auto-merge=false" >> $GITHUB_OUTPUT
-            echo "❌ Auto-merge conditions not met - manual review required"
-          fi
-
-      - name: Enable auto-merge for safe updates
-        if: steps.auto-merge-check.outputs.auto-merge == 'true'
-        run: |
-          gh pr merge --auto --squash "$PR_URL"
-        env:
-          PR_URL: ${{ github.event.pull_request.html_url }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          echo "- Update type: ${{ steps.metadata.outputs.update-type }}"
+          echo "- Dependency: ${{ steps.metadata.outputs.dependency-name }}"
+          echo "Manual review required before merging."
 
       - name: Add labels based on update type
         uses: actions/github-script@v8
