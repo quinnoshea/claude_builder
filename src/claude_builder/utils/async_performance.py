@@ -103,7 +103,7 @@ class AsyncPerformanceMonitor:
             yield operation_context
         except Exception as e:
             self._metrics[operation_name]["errors"] += 1
-            self.logger.error(f"Operation {operation_name} failed: {e}")
+            self.logger.exception(f"Operation {operation_name} failed: {e}")
             raise
         finally:
             end_time = time.perf_counter()
@@ -226,8 +226,9 @@ class AsyncFileProcessor:
                 async with aiofiles.open(file_path, encoding="utf-8") as f:
                     yield f
             except Exception as e:
-                self.logger.error(f"Error processing file {file_path}: {e}")
-                raise PerformanceError(f"File processing failed: {e}") from e
+                self.logger.exception(f"Error processing file {file_path}: {e}")
+                msg = f"File processing failed: {e}"
+                raise PerformanceError(msg) from e
 
     async def read_file_chunks(self, file_path: Path) -> AsyncGenerator[str, None]:
         """Read file in chunks for memory efficiency."""
@@ -250,8 +251,9 @@ class AsyncFileProcessor:
                         # Yield control periodically for other operations
                         await asyncio.sleep(0)
             except Exception as e:
-                self.logger.error(f"Error writing file {file_path}: {e}")
-                raise PerformanceError(f"File writing failed: {e}") from e
+                self.logger.exception(f"Error writing file {file_path}: {e}")
+                msg = f"File writing failed: {e}"
+                raise PerformanceError(msg) from e
 
 
 class AsyncCache:
@@ -349,7 +351,8 @@ def async_retry(
 
             if last_exception:
                 raise last_exception
-            raise Exception("Retry failed without exception")
+            msg = "Retry failed without exception"
+            raise Exception(msg)
 
         return wrapper  # type: ignore[return-value]
 

@@ -1,5 +1,7 @@
 """Universal Agent System for Claude Builder."""
 
+import contextlib
+
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
@@ -1006,9 +1008,11 @@ class Agent:
         timeout = self.config.get("timeout", 300)
         max_retries = self.config.get("max_retries", 0)
         if not isinstance(timeout, int) or timeout < 0:
-            raise ValueError("Invalid timeout")
+            msg = "Invalid timeout"
+            raise ValueError(msg)
         if not isinstance(max_retries, int) or max_retries < 0:
-            raise ValueError("Invalid max_retries")
+            msg = "Invalid max_retries"
+            raise ValueError(msg)
         self.state = "initialized"
         self.execution_context: Dict[str, Any] = {}
         self.last_error: Optional[Exception] = None
@@ -1104,17 +1108,13 @@ class AgentCoordinator:
         # Try underlying mock name
         mock_name = getattr(a, "_mock_name", None)
         if isinstance(mock_name, str) and mock_name:
-            try:
-                setattr(a, "name", mock_name)
-            except Exception:
-                pass
+            with contextlib.suppress(Exception):
+                a.name = mock_name
             return mock_name
         # Fallback to stringified name
         s = str(name)
-        try:
-            setattr(a, "name", s)
-        except Exception:
-            pass
+        with contextlib.suppress(Exception):
+            a.name = s
         return s
 
     def add_agent(self, agent: Agent) -> None:
@@ -1501,7 +1501,7 @@ class AgentCoordinator:
             except Exception:
                 return 999
 
-        ordered = sorted(list(workflow.agents), key=prio)
+        ordered = sorted(workflow.agents, key=prio)
         # Normalize names for test expectations
         for a in ordered:
             self._normalize_name(a)
@@ -1563,7 +1563,7 @@ class AgentCoordinator:
                     remaining.remove(n)
                     progressed = True
             if not progressed:
-                ordered.extend([name_map[n] for n in name_map.keys() if n in remaining])
+                ordered.extend([name_map[n] for n in name_map if n in remaining])
                 break
         return ordered
 
@@ -1711,7 +1711,8 @@ class AgentManager:
         if getattr(agent, "requires_templates", False):
             required = getattr(agent, "template_dependencies", []) or []
             if not self._check_template_availability(required):
-                raise RuntimeError("Required templates not available")
+                msg = "Required templates not available"
+                raise RuntimeError(msg)
         return agent.execute("template_task")
 
     def execute_agent_with_git(
@@ -1789,9 +1790,9 @@ class AgentWorkflow:
             start = time.time()
             try:
                 res: Any = agent.execute("run")
-            except Exception as e:
+            except Exception:
                 self.status = "failed"
-                raise e
+                raise
             finally:
                 self.execution_times.append(time.time() - start)
             if isinstance(res, dict):
@@ -1799,10 +1800,8 @@ class AgentWorkflow:
             else:
                 results.append({"result": res})
             if self._progress_cb:
-                try:
+                with contextlib.suppress(Exception):
                     self._progress_cb(idx, total)
-                except Exception:
-                    pass
         self.status = "completed"
         return results
 

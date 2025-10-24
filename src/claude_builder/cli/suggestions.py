@@ -3,17 +3,20 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Iterable
+from typing import TYPE_CHECKING, Iterable
 
-from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
 
-from claude_builder.core.models import ProjectAnalysis
 
-from .ux import UXConfig
+if TYPE_CHECKING:
+    from pathlib import Path
 
+    from rich.console import Console
+
+    from claude_builder.core.models import ProjectAnalysis
+
+    from .ux import UXConfig
 
 LANGUAGE_HINTS: dict[str, tuple[str, ...]] = {
     "python": (

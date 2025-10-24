@@ -118,12 +118,12 @@ class AsyncProjectAnalyzer:
 
             try:
                 if not project_path.exists():
-                    raise AnalysisError(f"Project path does not exist: {project_path}")
+                    msg = f"Project path does not exist: {project_path}"
+                    raise AnalysisError(msg)
 
                 if not project_path.is_dir():
-                    raise AnalysisError(
-                        f"Project path is not a directory: {project_path}"
-                    )
+                    msg = f"Project path is not a directory: {project_path}"
+                    raise AnalysisError(msg)
 
                 # Perform concurrent analysis
                 analysis_tasks = [
@@ -144,23 +144,20 @@ class AsyncProjectAnalyzer:
 
                 # Type validation for runtime safety
                 if not isinstance(filesystem_info, FileSystemInfo):
-                    raise TypeError(
-                        f"Expected FileSystemInfo, got {type(filesystem_info)}"
-                    )
+                    msg = f"Expected FileSystemInfo, got {type(filesystem_info)}"
+                    raise TypeError(msg)
                 if not isinstance(languages, list):
-                    raise TypeError(
-                        f"Expected list for languages, got {type(languages)}"
-                    )
+                    msg = f"Expected list for languages, got {type(languages)}"
+                    raise TypeError(msg)
                 if not isinstance(frameworks, list):
-                    raise TypeError(
-                        f"Expected list for frameworks, got {type(frameworks)}"
-                    )
+                    msg = f"Expected list for frameworks, got {type(frameworks)}"
+                    raise TypeError(msg)
                 if not isinstance(architecture, ArchitecturePattern):
-                    raise TypeError(
-                        f"Expected ArchitecturePattern, got {type(architecture)}"
-                    )
+                    msg = f"Expected ArchitecturePattern, got {type(architecture)}"
+                    raise TypeError(msg)
                 if not isinstance(domain_info, DomainInfo):
-                    raise TypeError(f"Expected DomainInfo, got {type(domain_info)}")
+                    msg = f"Expected DomainInfo, got {type(domain_info)}"
+                    raise TypeError(msg)
 
                 # Calculate complexity (CPU-intensive, run in thread)
                 # Ensure we have proper objects for complexity assessment
@@ -211,7 +208,8 @@ class AsyncProjectAnalyzer:
             except Exception as e:
                 if isinstance(e, (AnalysisError, PerformanceError)):
                     raise
-                raise AnalysisError(f"Project analysis failed: {e}") from e
+                msg = f"Project analysis failed: {e}"
+                raise AnalysisError(msg) from e
 
     async def _analyze_filesystem_async(self, project_path: Path) -> FileSystemInfo:
         """Analyze filesystem structure asynchronously."""
@@ -701,8 +699,7 @@ class AsyncProjectAnalyzer:
                 if isinstance(result, Exception):
                     # Skip failed analyses
                     continue
-                else:
-                    analyses.append(result)  # type: ignore[arg-type]
+                analyses.append(result)  # type: ignore[arg-type]
 
             return analyses
 

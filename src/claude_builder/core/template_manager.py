@@ -12,6 +12,7 @@ PHASE 3.1 REFACTORING: Core Module Separation
 
 import logging
 
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, cast
 
@@ -158,8 +159,8 @@ class ModernTemplateManager:
         self.logger = logging.getLogger(__name__)
 
         # Type annotations for async components
-        self._async_manager: Optional["AsyncTemplateManager"] = None
-        self._sync_compat: Optional["SyncTemplateManagerCompat"] = None
+        self._async_manager: Optional[AsyncTemplateManager] = None
+        self._sync_compat: Optional[SyncTemplateManagerCompat] = None
 
         # Async performance optimization (Phase 3.4)
         self.enable_async_performance = self.config.get(
@@ -196,7 +197,7 @@ class ModernTemplateManager:
         if self.community_manager is None:
             return []
         raw: List[Any] = cast(
-            List[Any],
+            "List[Any]",
             self.community_manager.list_available_templates(
                 include_installed=include_installed, include_community=include_community
             ),
@@ -240,7 +241,8 @@ class ModernTemplateManager:
         if self.community_manager is None:
             return []
         raw: List[Any] = cast(
-            List[Any], self.community_manager.search_templates(query, project_analysis)
+            "List[Any]",
+            self.community_manager.search_templates(query, project_analysis),
         )
         results: List[CommunityTemplate] = []
         for item in raw:
@@ -363,7 +365,8 @@ class ModernTemplateManager:
             with urlopen(req, timeout=10) as resp:  # patched in tests
                 content = resp.read(1024 * 1024)
                 if len(content) >= 1024 * 1024:
-                    raise SecurityError("Template index too large (>1MB)")
+                    msg = "Template index too large (>1MB)"
+                    raise SecurityError(msg)
                 data = json.loads(content.decode("utf-8"))
 
             for item in data.get("templates", []):
@@ -379,13 +382,13 @@ class ModernTemplateManager:
                     logger.warning(f"Invalid template metadata: {e}")
 
         except SecurityError as e:
-            logger.error(
+            logger.exception(
                 f"Security violation accessing template source {source_url}: {e}"
             )
         except (HTTPError, URLError) as e:
             logger.warning(f"Network error accessing template source {source_url}: {e}")
         except Exception as e:
-            logger.error(f"Unexpected error fetching from {source_url}: {e}")
+            logger.exception(f"Unexpected error fetching from {source_url}: {e}")
 
         return templates
 
@@ -408,9 +411,8 @@ class ModernTemplateManager:
                 if content_len:
                     size = int(content_len)
                     if size > 50 * 1024 * 1024:
-                        raise SecurityError(
-                            f"File too large: {size} bytes > 52428800 bytes"
-                        )
+                        msg = f"File too large: {size} bytes > 52428800 bytes"
+                        raise SecurityError(msg)
 
                 downloaded = 0
                 chunk = 8192
@@ -423,9 +425,8 @@ class ModernTemplateManager:
                             break
                         downloaded += len(buf)
                         if downloaded > max_bytes:
-                            raise SecurityError(
-                                f"Download exceeded size limit: {downloaded} bytes"
-                            )
+                            msg = f"Download exceeded size limit: {downloaded} bytes"
+                            raise SecurityError(msg)
                         f.write(buf)
 
         except SecurityError:
@@ -615,7 +616,6 @@ class ModernTemplateManager:
         self, analysis: ProjectAnalysis, **kwargs: Any
     ) -> EnvironmentBundle:
         """Generate complete development environment - CLAUDE.md + individual subagents + AGENTS.md"""
-        from datetime import datetime
 
         # Import agent system to generate project agents
         from claude_builder.core.agents import UniversalAgentSystem
@@ -651,7 +651,7 @@ class ModernTemplateManager:
                 "framework": analysis.framework,
                 "agent_count": len(agent_definitions),
             },
-            generation_timestamp=datetime.now().isoformat(),
+            generation_timestamp=datetime.now(tz=timezone.utc).isoformat(),
         )
 
     def _create_agent_definitions(
@@ -1421,7 +1421,7 @@ class TemplateManager(LegacyTemplateManager):
             return []
 
         raw: List[Any] = cast(
-            List[Any],
+            "List[Any]",
             self.community_manager.list_available_templates(
                 include_installed=include_installed, include_community=include_community
             ),
@@ -1479,32 +1479,32 @@ class TemplateManager(LegacyTemplateManager):
 
 # Export all necessary classes and functions
 __all__ = [
-    # Main classes
-    "TemplateManager",
-    "ModernTemplateManager",
+    "FAILED_TO_LOAD_TEMPLATE",
+    # Constants
+    "TEMPLATE_NOT_FOUND",
+    "AgentDefinition",
     # Community template classes
     "CommunityTemplate",
-    "TemplateMetadata",
+    "CoreTemplateManager",
+    "EnvironmentBundle",
+    "ModernTemplateManager",
     "RemoteTemplateRepository",
-    # Validation
-    "ValidationResult",
     # New YAML subagent classes
     "SubagentFile",
-    "EnvironmentBundle",
-    "AgentDefinition",
     # Legacy compatibility classes
     "Template",
     "TemplateBuilder",
     "TemplateContext",
     "TemplateEcosystem",
     "TemplateError",
-    "TemplateMarketplace",
     "TemplateLoader",
+    # Main classes
+    "TemplateManager",
+    "TemplateMarketplace",
+    "TemplateMetadata",
     "TemplateRenderer",
-    "CoreTemplateManager",
     "TemplateRepository",
     "TemplateVersion",
-    # Constants
-    "TEMPLATE_NOT_FOUND",
-    "FAILED_TO_LOAD_TEMPLATE",
+    # Validation
+    "ValidationResult",
 ]

@@ -3,18 +3,21 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
-from typing import Any, Iterator
+from typing import TYPE_CHECKING, Any, Iterator
 
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
+from typing_extensions import Self
 
-from .ux import UXConfig
+
+if TYPE_CHECKING:
+    from .ux import UXConfig
 
 
 class NullProgress:
     """Fallback progress object mimicking :class:`Progress`."""
 
-    def __enter__(self) -> "NullProgress":
+    def __enter__(self) -> Self:
         return self
 
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:

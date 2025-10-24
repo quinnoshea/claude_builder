@@ -71,9 +71,8 @@ class AsyncCompatibilityManager:
             if isinstance(e, (ValueError, RuntimeError, TypeError, AnalysisError)):
                 raise
             # Only wrap unexpected exceptions
-            raise PerformanceError(
-                f"Failed to run async operation in sync context: {e}"
-            ) from e
+            msg = f"Failed to run async operation in sync context: {e}"
+            raise PerformanceError(msg) from e
 
     def _run_in_thread_pool(self, coro: Any) -> Any:
         """Run coroutine in thread pool when already in async context."""
@@ -104,7 +103,7 @@ class AsyncCompatibilityManager:
         analyzer = getattr(self._tls, "async_analyzer", None)
         if analyzer is None:
             analyzer = _async_analyzer_mod.AsyncProjectAnalyzer(config)
-            setattr(self._tls, "async_analyzer", analyzer)
+            self._tls.async_analyzer = analyzer
             # Maintain legacy attribute for compatibility with tests
             self._async_analyzer = analyzer
         return analyzer
@@ -129,7 +128,7 @@ class AsyncCompatibilityManager:
         generator = getattr(self._tls, "async_generator", None)
         if generator is None:
             generator = AsyncDocumentGenerator(config)
-            setattr(self._tls, "async_generator", generator)
+            self._tls.async_generator = generator
             self._async_generator = generator
         return generator
 
@@ -140,7 +139,7 @@ class AsyncCompatibilityManager:
         manager = getattr(self._tls, "async_template_manager", None)
         if manager is None:
             manager = AsyncTemplateManager(config)
-            setattr(self._tls, "async_template_manager", manager)
+            self._tls.async_template_manager = manager
             self._async_template_manager = manager
         return manager
 
@@ -191,22 +190,19 @@ class SyncProjectAnalyzerCompat:
     @async_to_sync
     async def analyze(self, project_path: Union[str, Path]) -> ProjectAnalysis:
         """Analyze project synchronously using async implementation."""
-        result = await self._async_analyzer.analyze_async(project_path)
-        return result  # type: ignore[no-any-return]
+        return await self._async_analyzer.analyze_async(project_path)  # type: ignore[no-any-return]
 
     @async_to_sync
     async def batch_analyze(
         self, project_paths: List[Union[str, Path]]
     ) -> List[ProjectAnalysis]:
         """Batch analyze projects synchronously."""
-        results = await self._async_analyzer.batch_analyze_async(project_paths)
-        return results  # type: ignore[no-any-return]
+        return await self._async_analyzer.batch_analyze_async(project_paths)  # type: ignore[no-any-return]
 
     def get_performance_stats(self) -> Dict[str, Any]:
         """Get performance statistics."""
         analyzer = _compat_manager.get_async_analyzer(self.config)
-        stats = analyzer.get_performance_stats()
-        return stats  # type: ignore[no-any-return]
+        return analyzer.get_performance_stats()  # type: ignore[no-any-return]
 
 
 class SyncDocumentGeneratorCompat:

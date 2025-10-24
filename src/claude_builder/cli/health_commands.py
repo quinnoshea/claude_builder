@@ -9,7 +9,7 @@ from __future__ import annotations
 import sys
 
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import click
 
@@ -19,6 +19,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 from rich.text import Text
 
+from claude_builder.utils.exceptions import PerformanceError, SecurityError
 from claude_builder.utils.health import (
     HealthCheckManager,
     HealthCheckType,
@@ -68,7 +69,7 @@ def health() -> None:
     help="Scope of dependency checks: core (git+python), devops (terraform, docker, etc.), cloud (aws, gcloud, az), or all",
 )
 def check(
-    check_type: Optional[str], verbose: bool, quiet: bool, timeout: int, scope: str
+    check_type: str | None, verbose: bool, quiet: bool, timeout: int, scope: str
 ) -> None:
     """Run health checks and display results.
 
@@ -88,12 +89,12 @@ def check(
             console.print(
                 Panel(
                     "[bold blue]Claude Builder Health Check[/bold blue]\n"
-                    f"Running {'all' if not check_type else check_type} health checks...",
+                    f"Running {check_type if check_type else 'all'} health checks...",
                     title="Health Monitor",
                 )
             )
 
-        health: Optional[SystemHealth] = None
+        health: SystemHealth | None = None
         # Run health checks with progress indicator
         with Progress(
             SpinnerColumn(),
@@ -158,13 +159,13 @@ def check(
         # Exit with appropriate code (use Click Exit for predictable testing)
         if health.overall_status == HealthStatus.CRITICAL:
             raise click.exceptions.Exit(1)
-        elif health.overall_status == HealthStatus.WARNING:
+        if health.overall_status == HealthStatus.WARNING:
             raise click.exceptions.Exit(2)
         # For HEALTHY status, return normally without raising exception
     except click.exceptions.Exit:
         # Re-raise Click Exit exceptions (don't catch our own exit codes)
         raise
-    except Exception as e:  # Match test expectation for failure messaging
+    except (PerformanceError, SecurityError, OSError, RuntimeError, ValueError) as e:
         console.print(f"[red]Health check failed: {e}[/red]")
         raise click.exceptions.Exit(1)
 
@@ -196,7 +197,7 @@ def status(format: str) -> None:
         else:
             _display_status_table(health)
 
-    except Exception as e:
+    except (PerformanceError, SecurityError, OSError, RuntimeError, ValueError) as e:
         console.print(f"[red]Status check failed: {e}[/red]")
         sys.exit(1)
 
@@ -212,7 +213,7 @@ def status(format: str) -> None:
     help="Number of consecutive failures before alert (default: 3)",
 )
 @click.option("--output", type=click.Path(), help="Log monitoring output to file")
-def monitor(interval: int, alert_threshold: int, output: Optional[str]) -> None:
+def monitor(interval: int, alert_threshold: int, output: str | None) -> None:
     """Start continuous health monitoring.
 
     Runs health checks at regular intervals and triggers alerts
@@ -246,7 +247,7 @@ def monitor(interval: int, alert_threshold: int, output: Optional[str]) -> None:
 
     except KeyboardInterrupt:
         console.print("\n[yellow]Monitoring stopped by user[/yellow]")
-    except Exception as e:
+    except (PerformanceError, SecurityError, OSError, RuntimeError, ValueError) as e:
         console.print(f"[red]Monitoring failed: {e}[/red]")
         sys.exit(1)
 
@@ -264,7 +265,7 @@ def monitor(interval: int, alert_threshold: int, output: Optional[str]) -> None:
 @click.option(
     "--verbose", "-v", is_flag=True, help="Include detailed diagnostic information"
 )
-def report(output: Optional[str], format: str, verbose: bool) -> None:
+def report(output: str | None, format: str, verbose: bool) -> None:
     """Generate detailed health report.
 
     Creates a comprehensive health report with detailed diagnostics,
@@ -299,7 +300,7 @@ def report(output: Optional[str], format: str, verbose: bool) -> None:
 
         # Show summary
         _display_report_summary(health, output_path)
-    except Exception as e:
+    except (PerformanceError, SecurityError, OSError, RuntimeError, ValueError) as e:
         console.print(f"[red]Report generation failed: {e}[/red]")
         raise click.exceptions.Exit(1)
 
@@ -433,7 +434,7 @@ def _display_report_summary(health: SystemHealth, output_path: Path) -> None:
     def _to_int(x: Any) -> int:
         try:
             return int(x)
-        except Exception:
+        except (TypeError, ValueError):
             return 0
 
     total = _to_int(getattr(health, "total_checks", 0))

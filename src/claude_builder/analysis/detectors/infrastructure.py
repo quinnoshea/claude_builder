@@ -8,7 +8,6 @@ based on aggregate pattern scores to help downstream consumers tune output.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, Tuple
 
 from claude_builder.analysis.tool_recommendations import (
     get_display_name,
@@ -107,11 +106,11 @@ class InfrastructureDetector:
 
     def detect_with_metadata(
         self,
-    ) -> Tuple[dict[str, list[str]], Dict[str, ToolMetadata]]:
+    ) -> tuple[dict[str, list[str]], dict[str, ToolMetadata]]:
         """Return categorized lists plus rich metadata for each detected tool."""
 
         categorized, confidence_map = self.detect_with_confidence()
-        metadata: Dict[str, ToolMetadata] = {}
+        metadata: dict[str, ToolMetadata] = {}
 
         for category in ("infrastructure", "observability", "security"):
             for tool, score in self._raw.get(category, {}).items():

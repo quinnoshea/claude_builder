@@ -5,7 +5,7 @@ from __future__ import annotations
 import traceback
 
 from dataclasses import dataclass
-from typing import Iterable, Sequence
+from typing import TYPE_CHECKING, Iterable, Sequence
 
 import click
 
@@ -15,7 +15,9 @@ from rich.text import Text
 
 from claude_builder.utils.exceptions import ClaudeBuilderError
 
-from .ux import UXConfig
+
+if TYPE_CHECKING:
+    from .ux import UXConfig
 
 
 @dataclass

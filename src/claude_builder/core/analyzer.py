@@ -3,7 +3,7 @@
 import json
 
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
@@ -68,7 +68,7 @@ class ProjectAnalyzer:
             # Initialize analysis
             analysis = ProjectAnalysis(
                 project_path=project_path,
-                analysis_timestamp=datetime.now().isoformat(),
+                analysis_timestamp=datetime.now(tz=timezone.utc).isoformat(),
                 analyzer_version="0.1.0",
             )
 

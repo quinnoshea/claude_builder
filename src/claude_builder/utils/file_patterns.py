@@ -1008,10 +1008,9 @@ class FilePatterns:
                     # Glob pattern - check if any files match recursively
                     if any(project_path.rglob(pattern)):
                         score += 4.0
-                else:
-                    # Exact file match
-                    if (project_path / pattern).exists():
-                        score += 3.0
+                # Exact file match
+                elif (project_path / pattern).exists():
+                    score += 3.0
 
             if score > 0:
                 detected[tool] = score
@@ -1035,10 +1034,9 @@ class FilePatterns:
                     # Glob pattern - check if any files match recursively
                     if any(project_path.rglob(pattern)):
                         score += 4.0
-                else:
-                    # Exact file match
-                    if (project_path / pattern).exists():
-                        score += 3.0
+                # Exact file match
+                elif (project_path / pattern).exists():
+                    score += 3.0
 
             if score > 0:
                 detected[tool] = score
@@ -1062,10 +1060,9 @@ class FilePatterns:
                     # Glob pattern - check if any files match recursively
                     if any(project_path.rglob(pattern)):
                         score += 4.0
-                else:
-                    # Exact file match
-                    if (project_path / pattern).exists():
-                        score += 3.0
+                # Exact file match
+                elif (project_path / pattern).exists():
+                    score += 3.0
 
             if score > 0:
                 detected[tool] = score
@@ -1095,10 +1092,9 @@ class FilePatterns:
                     # Glob pattern - search recursively
                     if any(project_path.rglob(pattern)):
                         score += 4.0
-                else:
-                    # Exact file match
-                    if (project_path / pattern).exists():
-                        score += 3.0
+                # Exact file match
+                elif (project_path / pattern).exists():
+                    score += 3.0
 
             if score > 0:
                 detected[tool] = score

@@ -28,9 +28,9 @@ __all__ = [
     "ConfigError",
     "GenerationError",
     "ValidationResult",
-    "validate_project_path",
     # CLI UI (may be None if optional module missing)
     "confirm_action",
     "is_interactive_tty",
     "status_indicator",
+    "validate_project_path",
 ]

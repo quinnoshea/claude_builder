@@ -7,10 +7,8 @@ multiple templates while making it easy to evolve recommendations over time.
 
 from __future__ import annotations
 
-from typing import Dict, List
 
-
-DISPLAY_NAMES: Dict[str, str] = {
+DISPLAY_NAMES: dict[str, str] = {
     # Infrastructure-as-code
     "terraform": "Terraform",
     "pulumi": "Pulumi",
@@ -53,7 +51,7 @@ DISPLAY_NAMES: Dict[str, str] = {
     "notebooks": "Jupyter Notebooks",
 }
 
-RECOMMENDATIONS: Dict[str, List[str]] = {
+RECOMMENDATIONS: dict[str, list[str]] = {
     "terraform": [
         "Introduce separate workspaces or state files per environment (dev/staging/prod).",
         "Enable state locking via Terraform Cloud, S3 + DynamoDB, or another backend.",
@@ -157,7 +155,7 @@ def get_display_name(slug: str) -> str:
     return DISPLAY_NAMES.get(slug, slug.replace("_", " ").title())
 
 
-def get_recommendations(slug: str) -> List[str]:
+def get_recommendations(slug: str) -> list[str]:
     """Return curated recommendations for a tool, falling back to generic advice."""
 
     return RECOMMENDATIONS.get(slug, [])

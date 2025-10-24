@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 import click
 
@@ -19,8 +19,10 @@ from rich.table import Table
 
 from claude_builder.core.agents import AgentRegistry, AgentSelector
 from claude_builder.core.analyzer import ProjectAnalyzer
-from claude_builder.core.models import AgentInfo
 
+
+if TYPE_CHECKING:
+    from claude_builder.core.models import AgentInfo
 
 console = Console()
 
@@ -54,7 +56,7 @@ def agents() -> None:
 @click.option("--verbose", "-v", count=True, help="Verbose output")
 def suggest(
     project_path: str,
-    text: Optional[str],
+    text: str | None,
     output_json: bool,
     verbose: int,
 ) -> None:
@@ -67,8 +69,8 @@ def suggest(
     registry = AgentRegistry()
     selector = AgentSelector(registry)
 
-    suggestions: List[AgentInfo] = []
-    reasons: Dict[str, str] = {}
+    suggestions: list[AgentInfo] = []
+    reasons: dict[str, str] = {}
 
     if text:
         if verbose:
@@ -158,8 +160,8 @@ def _is_mlops_agent(name: str) -> bool:
     return any(k in name_l for k in mlops_keywords)
 
 
-def _print_json(agents: List[AgentInfo], reasons: Dict[str, str], source: str) -> None:
-    payload: List[Dict[str, Any]] = []
+def _print_json(agents: list[AgentInfo], reasons: dict[str, str], source: str) -> None:
+    payload: list[dict[str, Any]] = []
     for a in agents:
         payload.append(
             {
@@ -177,10 +179,10 @@ def _print_json(agents: List[AgentInfo], reasons: Dict[str, str], source: str) -
 
 
 def _print_table(
-    agents: List[AgentInfo],
-    reasons: Dict[str, str],
+    agents: list[AgentInfo],
+    reasons: dict[str, str],
     project_path: str,
-    text: Optional[str],
+    text: str | None,
 ) -> None:
     if not agents:
         console.print("[yellow]No agent suggestions found.[/yellow]")
