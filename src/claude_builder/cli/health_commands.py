@@ -165,7 +165,14 @@ def check(
     except click.exceptions.Exit:
         # Re-raise Click Exit exceptions (don't catch our own exit codes)
         raise
-    except (PerformanceError, SecurityError, OSError, RuntimeError, ValueError) as e:
+    except (
+        PerformanceError,
+        SecurityError,
+        OSError,
+        RuntimeError,
+        ValueError,
+        Exception,
+    ) as e:
         console.print(f"[red]Health check failed: {e}[/red]")
         raise click.exceptions.Exit(1)
 
@@ -197,7 +204,14 @@ def status(format: str) -> None:
         else:
             _display_status_table(health)
 
-    except (PerformanceError, SecurityError, OSError, RuntimeError, ValueError) as e:
+    except (
+        PerformanceError,
+        SecurityError,
+        OSError,
+        RuntimeError,
+        ValueError,
+        Exception,
+    ) as e:
         console.print(f"[red]Status check failed: {e}[/red]")
         sys.exit(1)
 
@@ -247,7 +261,14 @@ def monitor(interval: int, alert_threshold: int, output: str | None) -> None:
 
     except KeyboardInterrupt:
         console.print("\n[yellow]Monitoring stopped by user[/yellow]")
-    except (PerformanceError, SecurityError, OSError, RuntimeError, ValueError) as e:
+    except (
+        PerformanceError,
+        SecurityError,
+        OSError,
+        RuntimeError,
+        ValueError,
+        Exception,
+    ) as e:
         console.print(f"[red]Monitoring failed: {e}[/red]")
         sys.exit(1)
 
@@ -300,7 +321,14 @@ def report(output: str | None, format: str, verbose: bool) -> None:
 
         # Show summary
         _display_report_summary(health, output_path)
-    except (PerformanceError, SecurityError, OSError, RuntimeError, ValueError) as e:
+    except (
+        PerformanceError,
+        SecurityError,
+        OSError,
+        RuntimeError,
+        ValueError,
+        Exception,
+    ) as e:
         console.print(f"[red]Report generation failed: {e}[/red]")
         raise click.exceptions.Exit(1)
 
