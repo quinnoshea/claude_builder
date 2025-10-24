@@ -1,5 +1,7 @@
 """Configuration management for Claude Builder."""
 
+import contextlib
+
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Callable, ClassVar, Dict, List, Optional, Tuple, Union
@@ -561,7 +563,8 @@ class AdvancedConfigManager:
 
     def activate_environment(self, name: str) -> None:
         if name not in self.environments:
-            raise ConfigError(f"Environment not found: {name}")
+            msg = f"Environment not found: {name}"
+            raise ConfigError(msg)
         self.current_environment = name
 
     def get_config(self, dot_path: str) -> Any:
@@ -587,16 +590,19 @@ class AdvancedConfigManager:
 
     def update_config(self, dot_path: str, value: Any) -> None:
         if self.current_environment is None:
-            raise ConfigError("No active environment")
+            msg = "No active environment"
+            raise ConfigError(msg)
         env = self.environments[self.current_environment]
         _set_by_path(env, dot_path, value)
 
     def save_configuration(self, file: Path) -> None:
         if not self._loader:
-            raise ConfigError("No loader available")
+            msg = "No loader available"
+            raise ConfigError(msg)
         env = self.environments.get(self.current_environment or "")
         if env is None:
-            raise ConfigError("No active environment")
+            msg = "No active environment"
+            raise ConfigError(msg)
         if str(file).endswith(".toml"):
             self._loader.save_toml_config(env, Path(file))
         else:
@@ -608,7 +614,8 @@ class AdvancedConfigManager:
 
     def activate_profile(self, name: str) -> None:
         if name not in self._profiles:
-            raise ConfigError(f"Profile not found: {name}")
+            msg = f"Profile not found: {name}"
+            raise ConfigError(msg)
         self.environments.setdefault("_profile", {}).clear()
         self.environments["_profile"].update(self._profiles[name])
         self.current_environment = "_profile"
@@ -641,10 +648,8 @@ class AdvancedConfigManager:
         for path, func in plan.get("transform", {}).items():
             val = _get_by_path(data, path)
             if val is not None:
-                try:
+                with contextlib.suppress(Exception):
                     _set_by_path(data, path, func(val))
-                except Exception:
-                    pass
 
         # adds
         for path, val in plan.get("add", {}).items():
@@ -790,7 +795,7 @@ class ConfigSchema:
         for path, (
             tp,
             required,
-            default,
+            _default,
             choices,
             min_v,
             max_v,

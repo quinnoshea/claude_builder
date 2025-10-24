@@ -1110,13 +1110,13 @@ class AgentRepositoryScanner:
                     except concurrent.futures.TimeoutError:
                         error_msg = f"Repository scan timeout for {repo_config['name']}"
                         result.errors.append(error_msg)
-                        self._logger.error(error_msg)
+                        self._logger.exception(error_msg)
                     except Exception as e:
                         error_msg = (
                             f"Failed to scan repository {repo_config['name']}: {e}"
                         )
                         result.errors.append(error_msg)
-                        self._logger.error(error_msg)
+                        self._logger.exception(error_msg)
 
             result.scan_duration = time.time() - start_time
             self._logger.info(
@@ -1139,7 +1139,8 @@ class AgentRepositoryScanner:
 
             # Fetch agents from repository
             if self.github_client is None:
-                raise RuntimeError("GitHub client not available")
+                msg = "GitHub client not available"
+                raise RuntimeError(msg)
             agents_data = self.github_client.fetch_repository_agents(repo_url)
             result.total_agents = len(agents_data)
 
@@ -1182,7 +1183,7 @@ class AgentRepositoryScanner:
 
         except Exception as e:
             result.errors.append(f"Repository scan failed for {repo_name}: {e}")
-            self._logger.error(f"Repository scan failed for {repo_name}: {e}")
+            self._logger.exception(f"Repository scan failed for {repo_name}: {e}")
 
         return result
 
@@ -1294,7 +1295,7 @@ class AgentRepositoryScanner:
                 except Exception as e:
                     error_msg = f"Failed to sync repository {repo_config['name']}: {e}"
                     result.errors.append(error_msg)
-                    self._logger.error(error_msg)
+                    self._logger.exception(error_msg)
 
             result.sync_duration = time.time() - start_time
 

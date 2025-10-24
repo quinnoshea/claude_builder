@@ -26,7 +26,7 @@ class UXConfig:
     legacy_mode: bool
     plain_output: bool
 
-    def without_suggestions(self) -> "UXConfig":
+    def without_suggestions(self) -> UXConfig:
         """Return a copy with suggestions disabled."""
 
         return UXConfig(

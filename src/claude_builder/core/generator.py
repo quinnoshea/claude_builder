@@ -1,6 +1,6 @@
 """Document generator for Claude Builder."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from string import Template
 from typing import Any, Dict, List, Optional, Union
@@ -57,7 +57,8 @@ class DocumentGenerator:
             if analysis is None:
                 analysis = self._default_analysis
             if analysis is None:
-                raise ValueError("analysis is required")
+                msg = "analysis is required"
+                raise ValueError(msg)
             # Create template request (optional for tests; ignore user errors)
             try:
                 TemplateRequest(
@@ -88,7 +89,7 @@ class DocumentGenerator:
             return GeneratedContent(
                 files=generated_files,
                 metadata={
-                    "generation_timestamp": datetime.now().isoformat(),
+                    "generation_timestamp": datetime.now(tz=timezone.utc).isoformat(),
                     "analyzer_version": "0.1.0",
                     "template_version": "0.1.0",
                 },
@@ -100,7 +101,8 @@ class DocumentGenerator:
             raise ValueError(str(e))
         except (AttributeError, TypeError) as e:
             # Invalid analysis objects (mocks) should raise a basic typing error
-            raise TypeError(f"Invalid analysis object provided: {e}")
+            msg = f"Invalid analysis object provided: {e}"
+            raise TypeError(msg)
         except Exception as e:
             msg = f"{FAILED_TO_GENERATE_DOCUMENTATION}: {e}"
             raise GenerationError(msg)
@@ -182,9 +184,8 @@ class DocumentGenerator:
                     getattr(analysis, "project_type", None)
                     and getattr(analysis.project_type, "value", "").lower()
                     == "api_service"
-                ):
-                    if "web" not in claude_content.lower():
-                        claude_content += "\n\nWeb API\n"
+                ) and "web" not in claude_content.lower():
+                    claude_content += "\n\nWeb API\n"
                 files["CLAUDE.md"] = claude_content
 
         except Exception:
@@ -332,8 +333,8 @@ class DocumentGenerator:
             "is_containerized": (
                 "Yes" if (dev and getattr(dev, "containerization", [])) else "No"
             ),
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "date": datetime.now().strftime("%Y-%m-%d"),
+            "timestamp": datetime.now(tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
+            "date": datetime.now(tz=timezone.utc).strftime("%Y-%m-%d"),
             # Language-specific variables
             "package_managers": ", ".join(getattr(dev, "package_managers", []) or []),
             "testing_frameworks": ", ".join(
@@ -1199,7 +1200,7 @@ ${uses_database == 'Yes' and '''
                 analysis = getattr(self, "_default_analysis", None)
                 if analysis is not None and hasattr(template, "name"):
                     base = Path(analysis.project_path).parent
-                    alt = base / "templates" / str(getattr(template, "name"))
+                    alt = base / "templates" / str(template.name)
                     if alt.exists():
                         base_vars: Dict[str, Any] = {}
                         if hasattr(template_manager, "_create_context_from_analysis"):
@@ -1247,8 +1248,8 @@ ${uses_database == 'Yes' and '''
 
                             base = _P(analysis.project_path).parent
                             cand = [
-                                base / "templates" / str(getattr(template, "name")),
-                                base / "templates" / f"{getattr(template, 'name')}.md",
+                                base / "templates" / str(template.name),
+                                base / "templates" / f"{template.name}.md",
                             ]
                             for p in cand:
                                 if p.exists():
@@ -1291,7 +1292,7 @@ ${uses_database == 'Yes' and '''
                             from pathlib import Path as _P
 
                             base = _P(analysis.project_path).parent
-                            alt = base / "templates" / str(getattr(template, "name"))
+                            alt = base / "templates" / str(template.name)
                             if alt.exists():
                                 alt_vars: Dict[str, Any] = {}
                                 if hasattr(
@@ -1358,10 +1359,7 @@ ${uses_database == 'Yes' and '''
             parts = name.split(".")
             val = locals_.get(parts[0], ctx.get(parts[0]))
             for p in parts[1:]:
-                if isinstance(val, dict):
-                    val = val.get(p)
-                else:
-                    val = getattr(val, p, None)
+                val = val.get(p) if isinstance(val, dict) else getattr(val, p, None)
             return val
 
         def safe_eval(expr: str, locals_: Dict[str, Any]) -> bool:
@@ -1383,7 +1381,8 @@ ${uses_database == 'Yes' and '''
             )
             for n in ast.walk(node):
                 if not isinstance(n, allowed):
-                    raise ValueError("Disallowed expression")
+                    msg = "Disallowed expression"
+                    raise ValueError(msg)
             return bool(
                 eval(compile(node, "<expr>", "eval"), {"__builtins__": {}}, locals_)
             )
@@ -1516,16 +1515,17 @@ class TemplateLoader:
 
             # Prefer modern API if available (tests patch this symbol)
             if hasattr(self.template_manager, "get_template"):
-                res = getattr(self.template_manager, "get_template")(template_name)
+                res = self.template_manager.get_template(template_name)
             elif hasattr(self.template_manager, "load_template"):
-                res = getattr(self.template_manager, "load_template")(template_name)
+                res = self.template_manager.load_template(template_name)
             else:
-                raise AttributeError("Template manager lacks get/load_template")
+                msg = "Template manager lacks get/load_template"
+                raise AttributeError(msg)
             # Manager may return a Template object or a raw string (tests patch this)
             if isinstance(res, str):
                 return res
             if hasattr(res, "content"):
-                return str(getattr(res, "content"))
+                return str(res.content)
             # Fallback: stringify anything else
             return str(res)
         except Exception:
@@ -1585,7 +1585,6 @@ class TemplateLoader:
             val = variables.get(key)
             return str(val) if val is not None else ""
 
-        content = re.sub(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}", var_repl, content)
-        return content
+        return re.sub(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}", var_repl, content)
 
     # (Note: duplicate legacy overload removed)

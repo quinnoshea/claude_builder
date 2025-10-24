@@ -8,9 +8,11 @@ from __future__ import annotations
 import sys
 
 from contextlib import contextmanager
-from typing import Generator
+from typing import TYPE_CHECKING, Generator
 
-from rich.console import Console
+
+if TYPE_CHECKING:
+    from rich.console import Console
 
 
 def is_interactive_tty() -> bool:

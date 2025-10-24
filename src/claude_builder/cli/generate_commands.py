@@ -492,7 +492,8 @@ def subagents(project_path: str, **kwargs: Any) -> None:
 
     except Exception as e:
         console.print(f"[red]Error generating subagents: {e}[/red]")
-        raise click.ClickException(f"Failed to generate subagents: {e}") from e
+        msg = f"Failed to generate subagents: {e}"
+        raise click.ClickException(msg) from e
 
 
 @generate.command()

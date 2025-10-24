@@ -1,6 +1,7 @@
 """Data models for Claude Builder."""
 
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
@@ -375,11 +376,9 @@ class AnalysisResult:
 
     def __post_init__(self) -> None:
         """Process nested dictionaries into proper objects."""
-        from datetime import datetime
-
         # Auto-generate timestamp if not provided
         if self.analysis_timestamp is None:
-            self.analysis_timestamp = datetime.now()
+            self.analysis_timestamp = datetime.now(tz=timezone.utc)
 
         # Normalize project_info from dict
         if isinstance(self.project_info, dict):
@@ -398,7 +397,7 @@ class AnalysisResult:
             )
 
         # Normalize frameworks from dicts
-        normalized_frameworks: List["TestFrameworkInfo"] = []
+        normalized_frameworks: List[TestFrameworkInfo] = []
         for f in self.frameworks:
             if isinstance(f, dict):
                 normalized_frameworks.append(
@@ -414,7 +413,7 @@ class AnalysisResult:
         self.frameworks = normalized_frameworks  # type: ignore[assignment]
 
         # Normalize dependencies from dicts
-        normalized_deps: List["DependencyInfo"] = []
+        normalized_deps: List[DependencyInfo] = []
         for d in self.dependencies:
             if isinstance(d, dict):
                 normalized_deps.append(
@@ -481,7 +480,7 @@ class AnalysisResult:
         from typing import cast
 
         return cast(
-            List["DependencyInfo"],
+            "List[DependencyInfo]",
             [
                 d
                 for d in self.dependencies
@@ -702,11 +701,14 @@ class SubagentFile:
     def __post_init__(self) -> None:
         """Validate fields after initialization."""
         if not self.name or not self.name.strip():
-            raise ValueError("Subagent name cannot be empty")
+            msg = "Subagent name cannot be empty"
+            raise ValueError(msg)
         if not self.content:
-            raise ValueError("Subagent content cannot be empty")
+            msg = "Subagent content cannot be empty"
+            raise ValueError(msg)
         if not self.path:
-            raise ValueError("Subagent path cannot be empty")
+            msg = "Subagent path cannot be empty"
+            raise ValueError(msg)
 
 
 @dataclass
@@ -747,13 +749,17 @@ class AgentDefinition:
     def __post_init__(self) -> None:
         """Validate fields after initialization."""
         if not self.name or not self.name.strip():
-            raise ValueError("Agent name cannot be empty")
+            msg = "Agent name cannot be empty"
+            raise ValueError(msg)
         if not self.description:
-            raise ValueError("Agent description cannot be empty")
+            msg = "Agent description cannot be empty"
+            raise ValueError(msg)
         if not self.tools:
-            raise ValueError("Agent tools cannot be empty")
+            msg = "Agent tools cannot be empty"
+            raise ValueError(msg)
         if not self.system_prompt:
-            raise ValueError("Agent system prompt cannot be empty")
+            msg = "Agent system prompt cannot be empty"
+            raise ValueError(msg)
 
     @property
     def yaml_name(self) -> str:

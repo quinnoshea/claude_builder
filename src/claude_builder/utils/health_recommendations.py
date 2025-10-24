@@ -8,8 +8,6 @@ from __future__ import annotations
 
 import platform
 
-from typing import Dict, List, Optional
-
 
 class RecommendationProvider:
     """Provides actionable, platform-specific recommendations for health check issues."""
@@ -17,7 +15,7 @@ class RecommendationProvider:
     def __init__(self) -> None:
         self.platform = platform.system().lower()
 
-    def get_tool_recommendation(self, tool_name: str) -> Dict[str, str]:
+    def get_tool_recommendation(self, tool_name: str) -> dict[str, str]:
         """Get installation recommendation for a specific tool.
 
         Args:
@@ -45,7 +43,7 @@ class RecommendationProvider:
             },
         )
 
-    def get_multiple_tools_summary(self, missing_tools: List[str]) -> str:
+    def get_multiple_tools_summary(self, missing_tools: list[str]) -> str:
         """Generate a summary message for multiple missing tools.
 
         Args:
@@ -62,26 +60,26 @@ class RecommendationProvider:
 
         return f"Missing {len(missing_tools)} tools: {', '.join(missing_tools)}"
 
-    def _get_git_recommendation(self) -> Dict[str, str]:
+    def _get_git_recommendation(self) -> dict[str, str]:
         """Git installation recommendation."""
         if self.platform == "linux":
             return {
                 "message": "Install Git using your package manager",
                 "command": "sudo apt-get install git  # Debian/Ubuntu\nsudo yum install git      # RHEL/CentOS",
             }
-        elif self.platform == "darwin":
+        if self.platform == "darwin":
             return {
                 "message": "Install Git using Homebrew or Xcode Command Line Tools",
                 "command": "brew install git  # or: xcode-select --install",
             }
-        elif self.platform == "windows":
+        if self.platform == "windows":
             return {
                 "message": "Download Git from git-scm.com",
                 "command": "winget install Git.Git",
             }
         return {"message": "Install Git: https://git-scm.com/downloads"}
 
-    def _get_terraform_recommendation(self) -> Dict[str, str]:
+    def _get_terraform_recommendation(self) -> dict[str, str]:
         """Terraform installation recommendation."""
         if self.platform == "linux":
             return {
@@ -90,19 +88,19 @@ class RecommendationProvider:
                 'echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list\n'
                 "sudo apt-get update && sudo apt-get install terraform",
             }
-        elif self.platform == "darwin":
+        if self.platform == "darwin":
             return {
                 "message": "Install Terraform using Homebrew",
                 "command": "brew tap hashicorp/tap && brew install hashicorp/tap/terraform",
             }
-        elif self.platform == "windows":
+        if self.platform == "windows":
             return {
                 "message": "Install Terraform using Chocolatey or download binary",
                 "command": "choco install terraform",
             }
         return {"message": "Install Terraform: https://www.terraform.io/downloads"}
 
-    def _get_kubectl_recommendation(self) -> Dict[str, str]:
+    def _get_kubectl_recommendation(self) -> dict[str, str]:
         """kubectl installation recommendation."""
         if self.platform == "linux":
             return {
@@ -110,19 +108,19 @@ class RecommendationProvider:
                 "command": "curl -LO https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl\n"
                 "sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl",
             }
-        elif self.platform == "darwin":
+        if self.platform == "darwin":
             return {
                 "message": "Install kubectl using Homebrew",
                 "command": "brew install kubectl",
             }
-        elif self.platform == "windows":
+        if self.platform == "windows":
             return {
                 "message": "Install kubectl using Chocolatey or download binary",
                 "command": "choco install kubernetes-cli",
             }
         return {"message": "Install kubectl: https://kubernetes.io/docs/tasks/tools/"}
 
-    def _get_docker_recommendation(self) -> Dict[str, str]:
+    def _get_docker_recommendation(self) -> dict[str, str]:
         """Docker installation recommendation."""
         if self.platform == "linux":
             return {
@@ -131,45 +129,45 @@ class RecommendationProvider:
                 "sudo systemctl start docker && sudo systemctl enable docker\n"
                 "sudo usermod -aG docker $USER  # Add current user to docker group",
             }
-        elif self.platform == "darwin":
+        if self.platform == "darwin":
             return {
                 "message": "Install Docker Desktop for Mac",
                 "command": "brew install --cask docker",
             }
-        elif self.platform == "windows":
+        if self.platform == "windows":
             return {
                 "message": "Install Docker Desktop for Windows",
                 "command": "winget install Docker.DockerDesktop",
             }
         return {"message": "Install Docker: https://docs.docker.com/get-docker/"}
 
-    def _get_helm_recommendation(self) -> Dict[str, str]:
+    def _get_helm_recommendation(self) -> dict[str, str]:
         """Helm installation recommendation."""
         if self.platform == "linux":
             return {
                 "message": "Install Helm using the official install script",
                 "command": "curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash",
             }
-        elif self.platform == "darwin":
+        if self.platform == "darwin":
             return {
                 "message": "Install Helm using Homebrew",
                 "command": "brew install helm",
             }
-        elif self.platform == "windows":
+        if self.platform == "windows":
             return {
                 "message": "Install Helm using Chocolatey or Scoop",
                 "command": "choco install kubernetes-helm",
             }
         return {"message": "Install Helm: https://helm.sh/docs/intro/install/"}
 
-    def _get_ansible_recommendation(self) -> Dict[str, str]:
+    def _get_ansible_recommendation(self) -> dict[str, str]:
         """Ansible installation recommendation."""
         return {
             "message": "Install Ansible using pip (cross-platform)",
             "command": "pip install ansible",
         }
 
-    def _get_aws_cli_recommendation(self) -> Dict[str, str]:
+    def _get_aws_cli_recommendation(self) -> dict[str, str]:
         """AWS CLI installation recommendation."""
         if self.platform == "linux":
             return {
@@ -177,19 +175,19 @@ class RecommendationProvider:
                 "command": "curl 'https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip' -o 'awscliv2.zip'\n"
                 "unzip awscliv2.zip && sudo ./aws/install",
             }
-        elif self.platform == "darwin":
+        if self.platform == "darwin":
             return {
                 "message": "Install AWS CLI using Homebrew or the official installer",
                 "command": "brew install awscli",
             }
-        elif self.platform == "windows":
+        if self.platform == "windows":
             return {
                 "message": "Install AWS CLI using the MSI installer",
                 "command": "winget install Amazon.AWSCLI",
             }
         return {"message": "Install AWS CLI: https://aws.amazon.com/cli/"}
 
-    def _get_gcloud_cli_recommendation(self) -> Dict[str, str]:
+    def _get_gcloud_cli_recommendation(self) -> dict[str, str]:
         """Google Cloud CLI installation recommendation."""
         if self.platform == "linux":
             return {
@@ -198,12 +196,12 @@ class RecommendationProvider:
                 "exec -l $SHELL  # Restart shell\n"
                 "gcloud init",
             }
-        elif self.platform == "darwin":
+        if self.platform == "darwin":
             return {
                 "message": "Install Google Cloud CLI using Homebrew or the official installer",
                 "command": "brew install --cask google-cloud-sdk",
             }
-        elif self.platform == "windows":
+        if self.platform == "windows":
             return {
                 "message": "Install Google Cloud CLI using the Windows installer",
                 "command": "Download from: https://cloud.google.com/sdk/docs/install",
@@ -212,19 +210,19 @@ class RecommendationProvider:
             "message": "Install Google Cloud CLI: https://cloud.google.com/sdk/docs/install"
         }
 
-    def _get_azure_cli_recommendation(self) -> Dict[str, str]:
+    def _get_azure_cli_recommendation(self) -> dict[str, str]:
         """Azure CLI installation recommendation."""
         if self.platform == "linux":
             return {
                 "message": "Install Azure CLI using the official script",
                 "command": "curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash",
             }
-        elif self.platform == "darwin":
+        if self.platform == "darwin":
             return {
                 "message": "Install Azure CLI using Homebrew",
                 "command": "brew update && brew install azure-cli",
             }
-        elif self.platform == "windows":
+        if self.platform == "windows":
             return {
                 "message": "Install Azure CLI using the MSI installer",
                 "command": "winget install Microsoft.AzureCLI",
@@ -234,7 +232,7 @@ class RecommendationProvider:
         }
 
 
-def get_recommendation_for_tool(tool_name: str) -> Dict[str, str]:
+def get_recommendation_for_tool(tool_name: str) -> dict[str, str]:
     """Get installation recommendation for a tool (convenience function).
 
     Args:
@@ -248,7 +246,7 @@ def get_recommendation_for_tool(tool_name: str) -> Dict[str, str]:
 
 
 def format_recommendation(
-    tool_name: str, recommendation: Optional[Dict[str, str]] = None
+    tool_name: str, recommendation: dict[str, str] | None = None
 ) -> str:
     """Format a recommendation as a user-friendly string.
 

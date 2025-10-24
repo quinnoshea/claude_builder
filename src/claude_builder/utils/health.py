@@ -15,14 +15,14 @@ import time
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Iterable
 
 import psutil
 
-from claude_builder.utils.exceptions import SecurityError
+from claude_builder.utils.exceptions import PerformanceError, SecurityError
 from claude_builder.utils.health_recommendations import RecommendationProvider
 
 
@@ -53,11 +53,11 @@ class HealthCheckResult:
     check_type: HealthCheckType
     status: HealthStatus
     message: str
-    details: Dict[str, Any] = field(default_factory=dict)
-    recommendations: List[str] = field(default_factory=list)
-    timestamp: datetime = field(default_factory=datetime.now)
+    details: dict[str, Any] = field(default_factory=dict)
+    recommendations: list[str] = field(default_factory=list)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(tz=timezone.utc))
     duration_ms: float = 0.0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -65,9 +65,9 @@ class SystemHealth:
     """Overall system health report."""
 
     overall_status: HealthStatus
-    check_results: List[HealthCheckResult]
-    summary: Dict[str, Any]
-    timestamp: datetime = field(default_factory=datetime.now)
+    check_results: list[HealthCheckResult]
+    summary: dict[str, Any]
+    timestamp: datetime = field(default_factory=lambda: datetime.now(tz=timezone.utc))
     total_checks: int = 0
     healthy_checks: int = 0
     warning_checks: int = 0
@@ -91,9 +91,9 @@ class HealthCheck(ABC):
         self,
         status: HealthStatus,
         message: str,
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
         duration_ms: float = 0.0,
-        recommendations: Optional[List[str]] = None,
+        recommendations: list[str] | None = None,
     ) -> HealthCheckResult:
         """Create a standardized health check result."""
         return HealthCheckResult(
@@ -159,7 +159,14 @@ class ApplicationHealthCheck(HealthCheck):
                     {"import_error": str(e)},
                 )
 
-        except Exception as e:
+        except (
+            OSError,
+            RuntimeError,
+            ValueError,
+            SecurityError,
+            PerformanceError,
+            AttributeError,
+        ) as e:
             duration_ms = (time.time() - start_time) * 1000
             return self._create_result(
                 HealthStatus.CRITICAL,
@@ -182,7 +189,7 @@ class DependencyHealthCheck(HealthCheck):
                "cloud" (aws, gcloud, az), or "all" (default)
     """
 
-    def __init__(self, probe_dir: Optional[Path] = None, scope: str = "all") -> None:
+    def __init__(self, probe_dir: Path | None = None, scope: str = "all") -> None:
         super().__init__("Dependencies", HealthCheckType.DEPENDENCY)
         self.probe_dir = probe_dir
         self.scope = scope
@@ -194,8 +201,8 @@ class DependencyHealthCheck(HealthCheck):
 
         try:
             issues = []
-            recommendations: List[str] = []
-            details: Dict[str, Any] = {}
+            recommendations: list[str] = []
+            details: dict[str, Any] = {}
 
             # Determine what to check based on scope
             check_core = self.scope in ["core", "all"]
@@ -418,9 +425,9 @@ class SecurityHealthCheck(HealthCheck):
         start_time = time.time()
 
         try:
-            details: Dict[str, Any] = {}
+            details: dict[str, Any] = {}
             issues = []
-            recommendations: List[str] = []
+            recommendations: list[str] = []
 
             # Test SecurityValidator functionality
             try:
@@ -436,7 +443,7 @@ class SecurityHealthCheck(HealthCheck):
                     ("/absolute/path/file.txt", False, "absolute_path_rejection"),
                 ]
 
-                path_validation_results: Dict[str, Dict[str, Any]] = {}
+                path_validation_results: dict[str, dict[str, Any]] = {}
                 for test_path_str, expected_valid, test_name in test_cases:
                     try:
                         # Pass string directly to validate_file_path
@@ -478,7 +485,7 @@ class SecurityHealthCheck(HealthCheck):
                     ("ftp://example.com/file", False, "non_https_protocol"),
                 ]
 
-                url_validation_results: Dict[str, Dict[str, Any]] = {}
+                url_validation_results: dict[str, dict[str, Any]] = {}
                 for test_url, expected_valid, test_name in url_test_cases:
                     try:
                         validator.validate_url(test_url)
@@ -514,7 +521,7 @@ class SecurityHealthCheck(HealthCheck):
                     ("import os; os.system('rm -rf /')", "python_system_call"),
                 ]
 
-                sanitization_results: Dict[str, Dict[str, Any]] = {}
+                sanitization_results: dict[str, dict[str, Any]] = {}
                 for test_content, test_name in malicious_content_tests:
                     try:
                         # Use validate_file_content method - it throws exceptions for dangerous content
@@ -606,7 +613,12 @@ class SecurityHealthCheck(HealthCheck):
                         },
                     }
 
-                except Exception as storage_error:
+                except (
+                    RuntimeError,
+                    ValueError,
+                    OSError,
+                    SecurityError,
+                ) as storage_error:
                     # If SecureTokenManager fails, fall back to checking fallback storage
                     try:
                         from claude_builder.utils.secure_storage import (
@@ -627,7 +639,12 @@ class SecurityHealthCheck(HealthCheck):
                                 ),
                             },
                         }
-                    except Exception as fallback_error:
+                    except (
+                        RuntimeError,
+                        ValueError,
+                        OSError,
+                        SecurityError,
+                    ) as fallback_error:
                         issues.append(
                             f"Both secure storage and fallback failed: {storage_error}, {fallback_error}"
                         )
@@ -636,7 +653,7 @@ class SecurityHealthCheck(HealthCheck):
                             "error": f"Storage: {storage_error}, Fallback: {fallback_error}",
                         }
 
-            except Exception as e:
+            except (ImportError, RuntimeError, ValueError, OSError, SecurityError) as e:
                 issues.append(f"Secure storage failed: {e}")
                 details["secure_storage"] = {"operational": False, "error": str(e)}
                 recommendations.append(
@@ -683,8 +700,8 @@ class PerformanceHealthCheck(HealthCheck):
 
         try:
             issues = []
-            details: Dict[str, Any] = {}
-            recommendations: List[str] = []
+            details: dict[str, Any] = {}
+            recommendations: list[str] = []
 
             # Memory usage
             memory = psutil.virtual_memory()
@@ -795,7 +812,7 @@ class ConfigurationHealthCheck(HealthCheck):
         start_time = time.time()
 
         try:
-            details: Dict[str, Any] = {}
+            details: dict[str, Any] = {}
             issues = []
 
             # Test configuration manager
@@ -875,13 +892,13 @@ class HealthCheckManager:
     def __init__(
         self,
         timeout: int = 60,
-        registry: "HealthCheckRegistry | None" = None,
+        registry: HealthCheckRegistry | None = None,
         scope: str = "all",
     ) -> None:
         self.timeout = timeout
         self.registry = registry or default_health_check_registry
         self.scope = scope
-        self.checks: List[HealthCheck] = []
+        self.checks: list[HealthCheck] = []
         self._register_default_checks()
 
     def _register_default_checks(self) -> None:
@@ -970,7 +987,7 @@ class HealthCheckManager:
             total_duration_ms=total_duration_ms,
         )
 
-    def run_check_by_name(self, check_name: str) -> Optional[HealthCheckResult]:
+    def run_check_by_name(self, check_name: str) -> HealthCheckResult | None:
         """Run a specific health check by name."""
         for check in self.checks:
             if check.name == check_name:
@@ -979,7 +996,7 @@ class HealthCheckManager:
 
     def run_checks_by_type(
         self, check_type: HealthCheckType
-    ) -> List[HealthCheckResult]:
+    ) -> list[HealthCheckResult]:
         """Run all health checks of a specific type."""
         results = []
         for check in self.checks:
@@ -998,13 +1015,13 @@ class HealthCheckManager:
                     results.append(error_result)
         return results
 
-    def get_health_report(self) -> Dict[str, Any]:
+    def get_health_report(self) -> dict[str, Any]:
         """Get a comprehensive health report as dictionary."""
         system_health = self.run_all_checks()
 
         # Convert to dictionary format for JSON serialization
-        checks_list: List[Dict[str, Any]] = []
-        report: Dict[str, Any] = {
+        checks_list: list[dict[str, Any]] = []
+        report: dict[str, Any] = {
             "timestamp": system_health.timestamp.isoformat(),
             "overall_status": system_health.overall_status.value,
             "summary": system_health.summary,
@@ -1035,7 +1052,8 @@ class HealthCheckManager:
             with output_path.open("w", encoding="utf-8") as f:
                 json.dump(report, f, indent=2, sort_keys=True)
         else:
-            raise ValueError(f"Unsupported export format: {format}")
+            msg = f"Unsupported export format: {format}"
+            raise ValueError(msg)
 
 
 class HealthCheckRegistry:
@@ -1047,7 +1065,7 @@ class HealthCheckRegistry:
     """
 
     def __init__(self) -> None:
-        self._checks: List[HealthCheck] = []
+        self._checks: list[HealthCheck] = []
 
     def clear(self) -> None:
         self._checks.clear()
@@ -1076,7 +1094,6 @@ class HealthMonitor:
     def start_monitoring(self) -> None:
         """Start continuous health monitoring."""
         self.is_monitoring = True
-        print(f"Health monitoring started (interval: {self.check_interval}s)")
 
         while self.is_monitoring:
             try:
@@ -1087,9 +1104,6 @@ class HealthMonitor:
                     HealthStatus.WARNING,
                 ]:
                     self.failure_count += 1
-                    print(
-                        f"Health check failed ({self.failure_count}/{self.alert_threshold}): {health.overall_status.value}"
-                    )
 
                     if self.failure_count >= self.alert_threshold:
                         self._trigger_alert(health)
@@ -1101,10 +1115,8 @@ class HealthMonitor:
                 time.sleep(self.check_interval)
 
             except KeyboardInterrupt:
-                print("\nHealth monitoring stopped by user")
                 break
-            except Exception as e:
-                print(f"Health monitoring error: {e}")
+            except Exception:
                 time.sleep(self.check_interval)
 
         self.is_monitoring = False
@@ -1115,13 +1127,8 @@ class HealthMonitor:
 
     def _trigger_alert(self, health: SystemHealth) -> None:
         """Trigger health alert."""
-        timestamp = datetime.now().isoformat()
-        print(f"\n🚨 HEALTH ALERT - {timestamp}")
-        print(f"Overall Status: {health.overall_status.value.upper()}")
-        print(f"Critical Checks: {health.critical_checks}")
-        print(f"Warning Checks: {health.warning_checks}")
+        datetime.now(tz=timezone.utc).isoformat()
 
         for result in health.check_results:
             if result.status in [HealthStatus.CRITICAL, HealthStatus.WARNING]:
-                print(f"  - {result.name}: {result.status.value} - {result.message}")
-        print()
+                pass

@@ -3,7 +3,7 @@
 import json
 
 from dataclasses import asdict
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List
 
@@ -82,7 +82,7 @@ class ConfigEnvironment:
         profile_data = {
             "name": profile_name,
             "description": description,
-            "created_at": datetime.now().isoformat(),
+            "created_at": datetime.now(tz=timezone.utc).isoformat(),
             "config": asdict(config),
         }
 

@@ -625,10 +625,9 @@ def reset(project_path: str, *, force: bool) -> None:
         project_path_obj = Path(project_path).resolve()
         config_manager = ConfigManager()
 
-        if not force:
-            if not Confirm.ask("Reset configuration to defaults?"):
-                console.print("[yellow]Reset cancelled[/yellow]")
-                return
+        if not force and not Confirm.ask("Reset configuration to defaults?"):
+            console.print("[yellow]Reset cancelled[/yellow]")
+            return
 
         # Create default config
         config = config_manager.create_default_config(project_path_obj)

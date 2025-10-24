@@ -6,7 +6,7 @@ import json
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Sequence, Union
+from typing import Any, Sequence, Union
 
 import click
 
@@ -28,9 +28,6 @@ from claude_builder.core.template_manager_legacy import (
 # Type alias for compatibility
 CommunityTemplate = Union[ModernCommunityTemplate, LegacyCommunityTemplate]
 
-
-if TYPE_CHECKING:
-    pass
 
 FAILED_TO_LIST_TEMPLATES = "Failed to list templates"
 FAILED_TO_SEARCH_TEMPLATES = "Failed to search templates"

@@ -23,6 +23,8 @@ try:
 except ImportError:
     CRYPTO_AVAILABLE = False
 
+import contextlib
+
 from claude_builder.utils.exceptions import SecurityError
 
 
@@ -39,10 +41,11 @@ class SecureTokenManager:
             SecurityError: If cryptography libraries are not available
         """
         if not CRYPTO_AVAILABLE:
-            raise SecurityError(
+            msg = (
                 "Cryptography libraries required for secure storage are not available. "
                 "Please install with: pip install cryptography keyring"
             )
+            raise SecurityError(msg)
 
         self.service_name = service_name
         self.logger = logging.getLogger(__name__)
@@ -73,7 +76,8 @@ class SecureTokenManager:
             return self._fernet
 
         except Exception as e:
-            raise SecurityError(f"Failed to initialize encryption key: {e}") from e
+            msg = f"Failed to initialize encryption key: {e}"
+            raise SecurityError(msg) from e
 
     def store_token(self, token_name: str, token_value: str) -> None:
         """Store an encrypted token.
@@ -87,7 +91,8 @@ class SecureTokenManager:
         """
         try:
             if not token_value or not token_value.strip():
-                raise SecurityError("Cannot store empty token")
+                msg = "Cannot store empty token"
+                raise SecurityError(msg)
 
             # Get encryption key
             fernet = self._get_or_create_encryption_key()
@@ -105,7 +110,8 @@ class SecureTokenManager:
         except Exception as e:
             if isinstance(e, SecurityError):
                 raise
-            raise SecurityError(f"Failed to store token {token_name}: {e}") from e
+            msg = f"Failed to store token {token_name}: {e}"
+            raise SecurityError(msg) from e
 
     def get_token(
         self, token_name: str, prompt_if_missing: bool = True
@@ -151,7 +157,8 @@ class SecureTokenManager:
         except Exception as e:
             if isinstance(e, SecurityError):
                 raise
-            raise SecurityError(f"Failed to retrieve token {token_name}: {e}") from e
+            msg = f"Failed to retrieve token {token_name}: {e}"
+            raise SecurityError(msg) from e
 
     def delete_token(self, token_name: str) -> bool:
         """Delete a stored token.
@@ -172,8 +179,9 @@ class SecureTokenManager:
             self.logger.warning(f"Token {token_name} not found for deletion")
             return False
         except Exception as e:
-            self.logger.error(f"Error deleting token {token_name}: {e}")
-            raise SecurityError(f"Failed to delete token {token_name}: {e}") from e
+            self.logger.exception(f"Error deleting token {token_name}: {e}")
+            msg = f"Failed to delete token {token_name}: {e}"
+            raise SecurityError(msg) from e
 
     def list_stored_tokens(self) -> list[str]:
         """List all stored token names.
@@ -195,10 +203,8 @@ class SecureTokenManager:
         """
         try:
             # Delete old encryption key
-            try:
+            with contextlib.suppress(keyring.errors.PasswordDeleteError):
                 keyring.delete_password(self.service_name, "encryption_key")
-            except keyring.errors.PasswordDeleteError:
-                pass
 
             # Clear cached key to force regeneration
             self._fernet = None
@@ -208,7 +214,8 @@ class SecureTokenManager:
             )
 
         except Exception as e:
-            raise SecurityError(f"Failed to rotate encryption key: {e}") from e
+            msg = f"Failed to rotate encryption key: {e}"
+            raise SecurityError(msg) from e
 
 
 class FallbackSecureStorage:
@@ -233,7 +240,8 @@ class FallbackSecureStorage:
     def store_token(self, token_name: str, token_value: str) -> None:
         """Store token with basic encoding (NOT secure encryption)."""
         if not token_value or not token_value.strip():
-            raise SecurityError("Cannot store empty token")
+            msg = "Cannot store empty token"
+            raise SecurityError(msg)
 
         # Basic base64 encoding (NOT secure - just obfuscation)
         encoded_token = base64.b64encode(token_value.encode()).decode()
@@ -258,10 +266,10 @@ class FallbackSecureStorage:
         if token_file.exists():
             try:
                 encoded_token = token_file.read_text(encoding="utf-8").strip()
-                decoded_token = base64.b64decode(encoded_token).decode()
-                return decoded_token
+                return base64.b64decode(encoded_token).decode()
             except Exception as e:
-                raise SecurityError(f"Failed to decode token {token_name}: {e}") from e
+                msg = f"Failed to decode token {token_name}: {e}"
+                raise SecurityError(msg) from e
 
         elif prompt_if_missing:
             token_value = getpass(f"Enter {token_name} token: ")

@@ -61,9 +61,8 @@ class TemplateDownloader:
                 if content_length:
                     size = int(content_length)
                     if size > self.max_download_size:
-                        raise SecurityError(
-                            f"File too large: {size} bytes > {self.max_download_size} bytes"
-                        )
+                        msg = f"File too large: {size} bytes > {self.max_download_size} bytes"
+                        raise SecurityError(msg)
 
                 # Read with size limit to prevent zip bombs
                 with destination.open("wb") as f:
@@ -77,9 +76,8 @@ class TemplateDownloader:
 
                         downloaded += len(chunk)
                         if downloaded > self.max_download_size:
-                            raise SecurityError(
-                                f"Download exceeded size limit: {downloaded} bytes"
-                            )
+                            msg = f"Download exceeded size limit: {downloaded} bytes"
+                            raise SecurityError(msg)
 
                         f.write(chunk)
 
@@ -91,11 +89,13 @@ class TemplateDownloader:
             # Re-raise security errors as-is
             raise
         except (HTTPError, URLError) as e:
-            self.logger.error(f"Failed to download {url}: {e}")
-            raise SecurityError(f"Download failed: {e}") from e
+            self.logger.exception(f"Failed to download {url}: {e}")
+            msg = f"Download failed: {e}"
+            raise SecurityError(msg) from e
         except Exception as e:
-            self.logger.error(f"Unexpected error downloading {url}: {e}")
-            raise SecurityError(f"Download error: {e}") from e
+            self.logger.exception(f"Unexpected error downloading {url}: {e}")
+            msg = f"Download error: {e}"
+            raise SecurityError(msg) from e
 
     def fetch_template_index(self, source_url: str) -> Dict[str, Any]:
         """Fetch template index from repository source.
@@ -125,11 +125,13 @@ class TemplateDownloader:
             content = response.read(max_index_size)
 
             if len(content) >= max_index_size:
-                raise SecurityError("Template index too large (>1MB)")
+                msg = "Template index too large (>1MB)"
+                raise SecurityError(msg)
 
             data = json.loads(content.decode("utf-8"))
             if not isinstance(data, dict):
-                raise SecurityError("Template index must be a JSON object")
+                msg = "Template index must be a JSON object"
+                raise SecurityError(msg)
             return data
 
     def download_and_extract_template(
@@ -169,9 +171,8 @@ class TemplateDownloader:
             # Find template root (may be in subdirectory)
             template_root = self._find_template_root(extract_path)
             if not template_root:
-                raise SecurityError(
-                    "Downloaded template does not contain template.json"
-                )
+                msg = "Downloaded template does not contain template.json"
+                raise SecurityError(msg)
 
             return template_root
 
@@ -179,7 +180,8 @@ class TemplateDownloader:
             # Clean up temporary directory on error
             if temp_dir_obj:
                 temp_dir_obj.cleanup()
-            raise SecurityError(f"Failed to download and extract template: {e}") from e
+            msg = f"Failed to download and extract template: {e}"
+            raise SecurityError(msg) from e
 
     def _find_template_root(self, extract_path: Path) -> Optional[Path]:
         """Find the root directory of an extracted template.
@@ -274,7 +276,7 @@ class TemplateRepositoryClient:
 
         except SecurityError as e:
             # Log security violations in template source
-            self.logger.error(
+            self.logger.exception(
                 f"Security violation accessing template source {source_url}: {e}"
             )
         except (URLError, HTTPError) as e:

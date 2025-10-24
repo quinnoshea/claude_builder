@@ -267,7 +267,8 @@ class AsyncTemplateManager:
                 return result
 
             except Exception as e:
-                raise PerformanceError(f"Template validation failed: {e}") from e
+                msg = f"Template validation failed: {e}"
+                raise PerformanceError(msg) from e
 
     async def install_template_async(
         self, template_source: str, destination: Optional[Path] = None
@@ -302,7 +303,8 @@ class AsyncTemplateManager:
                     )
 
                 except Exception as e:
-                    raise TemplateError(f"Template installation failed: {e}") from e
+                    msg = f"Template installation failed: {e}"
+                    raise TemplateError(msg) from e
 
     async def _install_remote_template(
         self, template_url: str, destination: Optional[Path]
@@ -339,7 +341,8 @@ class AsyncTemplateManager:
         template = await self.get_template_async(template_name)
 
         if not template:
-            raise TemplateError(f"Template not found: {template_name}")
+            msg = f"Template not found: {template_name}"
+            raise TemplateError(msg)
 
         if destination is None:
             destination = Path.cwd() / "templates" / template_name

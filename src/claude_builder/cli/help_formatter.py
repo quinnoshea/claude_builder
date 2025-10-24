@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.panel import Panel
 
-from .ux import UXConfig
+
+if TYPE_CHECKING:
+    from .ux import UXConfig
 
 
 def show_getting_started(config: UXConfig, *, console: Console | None = None) -> None:

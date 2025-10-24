@@ -98,40 +98,45 @@ class SecurityValidator:
 
             # Protocol validation - only allow HTTPS (more secure)
             if parsed.scheme not in ("https",):
-                raise SecurityError(
-                    f"Only HTTPS protocol allowed, got: {parsed.scheme}"
-                )
+                msg = f"Only HTTPS protocol allowed, got: {parsed.scheme}"
+                raise SecurityError(msg)
 
             # Hostname validation
             if not parsed.hostname:
-                raise SecurityError("URL must have a valid hostname")
+                msg = "URL must have a valid hostname"
+                raise SecurityError(msg)
 
             # IP address blocking first (prevent direct IP access)
             try:
                 ip = ipaddress.ip_address(parsed.hostname)
                 for blocked_range in BLOCKED_IP_RANGES:
                     if ip in blocked_range:
-                        raise SecurityError(f"IP address blocked: {ip}")
+                        msg = f"IP address blocked: {ip}"
+                        raise SecurityError(msg)
                 # If IP is not in blocked ranges but is an IP, still block it
-                raise SecurityError(f"Direct IP access not allowed: {ip}")
+                msg = f"Direct IP access not allowed: {ip}"
+                raise SecurityError(msg)
             except ValueError:
                 # Not an IP address, continue with domain validation
                 pass
 
             # Domain whitelist check
             if parsed.hostname not in ALLOWED_DOMAINS:
-                raise SecurityError(f"Domain not whitelisted: {parsed.hostname}")
+                msg = f"Domain not whitelisted: {parsed.hostname}"
+                raise SecurityError(msg)
 
             # Port validation (only standard ports)
             if parsed.port and parsed.port not in (80, 443):
-                raise SecurityError(f"Non-standard port not allowed: {parsed.port}")
+                msg = f"Non-standard port not allowed: {parsed.port}"
+                raise SecurityError(msg)
 
             return True
 
         except Exception as e:
             if isinstance(e, SecurityError):
                 raise
-            raise SecurityError(f"URL validation failed: {e}") from e
+            msg = f"URL validation failed: {e}"
+            raise SecurityError(msg) from e
 
     def validate_file_path(
         self, file_path: str, base_path: Optional[str] = None
@@ -153,11 +158,13 @@ class SecurityValidator:
 
         # Check for null bytes first (path injection)
         if "\x00" in file_path:
-            raise SecurityError(f"Null byte detected in path: {file_path}")
+            msg = f"Null byte detected in path: {file_path}"
+            raise SecurityError(msg)
 
         # Check for directory traversal patterns
         if ".." in normalized:
-            raise SecurityError(f"Path traversal detected: {file_path}")
+            msg = f"Path traversal detected: {file_path}"
+            raise SecurityError(msg)
 
         # Check for absolute paths (should be relative)
         # Check both Unix and Windows absolute path patterns
@@ -166,7 +173,8 @@ class SecurityValidator:
             and normalized[1] == ":"
             and normalized[2] in ("\\", "/")
         ):
-            raise SecurityError(f"Absolute paths not allowed: {file_path}")
+            msg = f"Absolute paths not allowed: {file_path}"
+            raise SecurityError(msg)
 
         # If base_path provided, ensure resolved path is within base
         if base_path:
@@ -177,9 +185,11 @@ class SecurityValidator:
 
                 # Check if the resolved path is within the base directory
                 if not str(full_resolved).startswith(str(base_resolved)):
-                    raise SecurityError(f"Path escapes base directory: {file_path}")
+                    msg = f"Path escapes base directory: {file_path}"
+                    raise SecurityError(msg)
             except (OSError, ValueError) as e:
-                raise SecurityError(f"Path validation failed: {e}") from e
+                msg = f"Path validation failed: {e}"
+                raise SecurityError(msg) from e
 
         return True
 
@@ -199,14 +209,14 @@ class SecurityValidator:
         # Check file extension
         file_path_lower = file_path.lower()
         if any(file_path_lower.endswith(ext) for ext in BLOCKED_EXTENSIONS):
-            raise SecurityError(f"Blocked file extension: {file_path}")
+            msg = f"Blocked file extension: {file_path}"
+            raise SecurityError(msg)
 
         # Check for dangerous patterns
         for pattern in DANGEROUS_PATTERNS:
             if pattern.search(content):
-                raise SecurityError(
-                    f"Dangerous content pattern detected in {file_path}: {pattern.pattern}"
-                )
+                msg = f"Dangerous content pattern detected in {file_path}: {pattern.pattern}"
+                raise SecurityError(msg)
 
         # HTML escape content for template files
         if file_path_lower.endswith((".md", ".txt", ".html")):
@@ -233,9 +243,8 @@ class SecurityValidator:
         """
         # Check zip file size
         if zip_path.stat().st_size > max_size:
-            raise SecurityError(
-                f"Zip file too large: {zip_path.stat().st_size} > {max_size}"
-            )
+            msg = f"Zip file too large: {zip_path.stat().st_size} > {max_size}"
+            raise SecurityError(msg)
 
         try:
             with zipfile.ZipFile(zip_path, "r") as zip_file:
@@ -246,26 +255,28 @@ class SecurityValidator:
 
                     # Individual file size check
                     if info.file_size > MAX_TEMPLATE_FILE_SIZE:
-                        raise SecurityError(
-                            f"File too large in zip: {info.filename} ({info.file_size} bytes)"
-                        )
+                        msg = f"File too large in zip: {info.filename} ({info.file_size} bytes)"
+                        raise SecurityError(msg)
 
                     # Path validation for each file
                     self.validate_file_path(info.filename)
 
                 # Total extracted size check
                 if total_size > MAX_EXTRACTED_SIZE:
-                    raise SecurityError(f"Total extracted size too large: {total_size}")
+                    msg = f"Total extracted size too large: {total_size}"
+                    raise SecurityError(msg)
 
                 # Compression ratio check (potential zip bomb)
                 compressed_size = zip_path.stat().st_size
                 if compressed_size > 0:
                     ratio = total_size / compressed_size
                     if ratio > 100:  # More than 100:1 compression ratio is suspicious
-                        raise SecurityError(f"Suspicious compression ratio: {ratio}")
+                        msg = f"Suspicious compression ratio: {ratio}"
+                        raise SecurityError(msg)
 
         except zipfile.BadZipFile as e:
-            raise SecurityError(f"Invalid zip file: {e}") from e
+            msg = f"Invalid zip file: {e}"
+            raise SecurityError(msg) from e
 
         return True
 
@@ -297,9 +308,8 @@ class SecurityValidator:
 
                 # Ensure target is within extract directory
                 if not str(target_resolved).startswith(str(extract_resolved)):
-                    raise SecurityError(
-                        f"Zip member would extract outside target: {member.filename}"
-                    )
+                    msg = f"Zip member would extract outside target: {member.filename}"
+                    raise SecurityError(msg)
 
                 # Extract the member
                 zip_file.extract(member, extract_path)
@@ -347,10 +357,7 @@ class SecurityValidator:
                 if expected_type == str and value is not None:
                     value = str(value)
                 elif expected_type == list and value is not None:
-                    if isinstance(value, str):
-                        value = [value]
-                    else:
-                        value = list(value)
+                    value = [value] if isinstance(value, str) else list(value)
                 else:
                     self.validation_warnings.append(
                         f"Invalid type for {key}: expected {expected_type.__name__}"

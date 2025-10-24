@@ -1,5 +1,6 @@
 """GitHub API client for agent repositories."""
 
+import contextlib
 import json
 import os
 import time
@@ -486,10 +487,8 @@ class GitHubAgentClient:
         """Get current rate limit status."""
         if not self.rate_limit:
             # Make a test request to get rate limit info
-            try:
+            with contextlib.suppress(ConfigError):
                 self._make_request(f"{GITHUB_API_BASE}/rate_limit", use_cache=False)
-            except ConfigError:
-                pass
 
         if self.rate_limit:
             return {

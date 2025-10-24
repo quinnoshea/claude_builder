@@ -12,7 +12,7 @@ import logging
 import tempfile
 
 from pathlib import Path
-from typing import Any, AsyncGenerator, Dict, List, Optional
+from typing import Any, AsyncGenerator
 
 import aiofiles
 import aiohttp
@@ -40,7 +40,7 @@ def _get_security_validator() -> Any:
         from claude_builder.utils import security as _secmod
 
         utils_sv = _secmod.security_validator
-    except Exception:  # pragma: no cover - ultra-defensive
+    except ImportError:  # pragma: no cover - ultra-defensive
         utils_sv = None
 
     local_sv = globals().get("security_validator", None)
@@ -52,10 +52,10 @@ def _get_security_validator() -> Any:
         def _is_mock(obj: Any) -> bool:
             try:
                 return isinstance(obj, Base)
-            except Exception:
+            except TypeError:
                 return hasattr(obj, "assert_called")
 
-    except Exception:  # pragma: no cover
+    except ImportError:  # pragma: no cover
 
         def _is_mock(obj: Any) -> bool:
             return hasattr(obj, "assert_called")
@@ -188,27 +188,26 @@ class AsyncTemplateDownloader:
                 cm = await _resolve_async_cm(session.get(url))
                 async with cm as response:
                     if response.status != 200:
-                        raise PerformanceError(
-                            f"HTTP error {response.status} for URL: {url}"
-                        )
+                        msg = f"HTTP error {response.status} for URL: {url}"
+                        raise PerformanceError(msg)
 
                     # Check content length
                     content_length = response.headers.get("Content-Length")
                     if content_length:
                         size = int(content_length)
                         if size > self.max_download_size:
-                            raise SecurityError(
-                                f"File too large: {size} bytes > {self.max_download_size} bytes"
-                            )
+                            msg = f"File too large: {size} bytes > {self.max_download_size} bytes"
+                            raise SecurityError(msg)
 
                     # Stream download with size monitoring
                     await self._stream_download(response, destination)
 
         except (SecurityError, PerformanceError):
             raise
-        except Exception as e:
-            self.logger.error(f"Download failed for {url}: {e}")
-            raise PerformanceError(f"Download error: {e}") from e
+        except (aiohttp.ClientError, asyncio.TimeoutError, OSError, ValueError) as e:
+            self.logger.exception(f"Download failed for {url}: {e}")
+            msg = f"Download error: {e}"
+            raise PerformanceError(msg) from e
 
     async def _stream_download(
         self, response: aiohttp.ClientResponse, destination: Path
@@ -223,9 +222,8 @@ class AsyncTemplateDownloader:
             ):
                 downloaded += len(chunk)
                 if downloaded > self.max_download_size:
-                    raise SecurityError(
-                        f"Download exceeded size limit: {downloaded} bytes"
-                    )
+                    msg = f"Download exceeded size limit: {downloaded} bytes"
+                    raise SecurityError(msg)
 
                 await f.write(chunk)
 
@@ -236,7 +234,7 @@ class AsyncTemplateDownloader:
         self.logger.info(f"Downloaded {downloaded} bytes to {destination}")
 
     @async_retry(max_attempts=2, delay=0.5)
-    async def fetch_template_index_async(self, source_url: str) -> Dict[str, Any]:
+    async def fetch_template_index_async(self, source_url: str) -> dict[str, Any]:
         """Fetch template index asynchronously with caching.
 
         Args:
@@ -266,9 +264,8 @@ class AsyncTemplateDownloader:
                     cm = await _resolve_async_cm(session.get(index_url))
                     async with cm as response:
                         if response.status != 200:
-                            raise PerformanceError(
-                                f"Failed to fetch index: HTTP {response.status}"
-                            )
+                            msg = f"Failed to fetch index: HTTP {response.status}"
+                            raise PerformanceError(msg)
 
                         content = await response.text()
                         result = json.loads(content)
@@ -280,12 +277,21 @@ class AsyncTemplateDownloader:
                         return result  # type: ignore[no-any-return]
 
             except json.JSONDecodeError as e:
-                raise PerformanceError(f"Invalid JSON in template index: {e}") from e
-            except Exception as e:
-                self.logger.error(
+                msg = f"Invalid JSON in template index: {e}"
+                raise PerformanceError(msg) from e
+            except (
+                aiohttp.ClientError,
+                asyncio.TimeoutError,
+                OSError,
+                ValueError,
+                PerformanceError,
+                SecurityError,
+            ) as e:
+                self.logger.exception(
                     f"Failed to fetch template index from {source_url}: {e}"
                 )
-                raise PerformanceError(f"Template index fetch failed: {e}") from e
+                msg = f"Template index fetch failed: {e}"
+                raise PerformanceError(msg) from e
 
     async def download_template_bundle_async(
         self, bundle_url: str, extract_to: Path
@@ -331,13 +337,14 @@ class AsyncTemplateDownloader:
 
             self.logger.info(f"Extracted template bundle to {extract_to}")
 
-        except Exception as e:
-            self.logger.error(f"Failed to extract bundle {bundle_path}: {e}")
-            raise PerformanceError(f"Bundle extraction failed: {e}") from e
+        except (OSError, RuntimeError, ValueError) as e:
+            self.logger.exception(f"Failed to extract bundle {bundle_path}: {e}")
+            msg = f"Bundle extraction failed: {e}"
+            raise PerformanceError(msg) from e
 
     async def batch_download_async(
-        self, download_requests: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+        self, download_requests: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
         """Batch download multiple files asynchronously.
 
         Args:
@@ -378,8 +385,8 @@ class AsyncTemplateDownloader:
             return processed_results
 
     async def _download_with_result(
-        self, index: int, request: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, index: int, request: dict[str, Any]
+    ) -> dict[str, Any]:
         """Download file and return detailed result."""
         start_time = asyncio.get_event_loop().time()
 
@@ -397,7 +404,14 @@ class AsyncTemplateDownloader:
                 "file_size": request["destination"].stat().st_size,
             }
 
-        except Exception as e:
+        except (
+            PerformanceError,
+            SecurityError,
+            aiohttp.ClientError,
+            asyncio.TimeoutError,
+            OSError,
+            ValueError,
+        ) as e:
             end_time = asyncio.get_event_loop().time()
 
             return {
@@ -430,9 +444,10 @@ class AsyncTemplateDownloader:
                     cm = await _resolve_async_cm(session.get(url))
                     async with cm as response:
                         if response.status != 200:
-                            raise PerformanceError(
+                            msg = (
                                 f"HTTP error {response.status} for streaming URL: {url}"
                             )
+                            raise PerformanceError(msg)
 
                         total_downloaded = 0
                         async for chunk in _normalize_iter_chunks(
@@ -441,9 +456,8 @@ class AsyncTemplateDownloader:
                             total_downloaded += len(chunk)
 
                             if total_downloaded > self.max_download_size:
-                                raise SecurityError(
-                                    f"Stream exceeded size limit: {total_downloaded} bytes"
-                                )
+                                msg = f"Stream exceeded size limit: {total_downloaded} bytes"
+                                raise SecurityError(msg)
 
                             yield chunk
 
@@ -453,11 +467,17 @@ class AsyncTemplateDownloader:
 
             except (SecurityError, PerformanceError):
                 raise
-            except Exception as e:
-                self.logger.error(f"Failed to stream {url}: {e}")
-                raise PerformanceError(f"Streaming failed: {e}") from e
+            except (
+                aiohttp.ClientError,
+                asyncio.TimeoutError,
+                OSError,
+                ValueError,
+            ) as e:
+                self.logger.exception(f"Failed to stream {url}: {e}")
+                msg = f"Streaming failed: {e}"
+                raise PerformanceError(msg) from e
 
-    def get_performance_stats(self) -> Dict[str, Any]:
+    def get_performance_stats(self) -> dict[str, Any]:
         """Get performance statistics for download operations."""
         return {
             "downloader_config": {
@@ -480,22 +500,30 @@ class AsyncTemplateRepositoryClient:
         self,
         base_url: str,
         *,
-        downloader: Optional[AsyncTemplateDownloader] = None,
+        downloader: AsyncTemplateDownloader | None = None,
     ):
         self.base_url = base_url.rstrip("/")
         self.downloader = downloader or AsyncTemplateDownloader()
         self.logger = logging.getLogger(__name__)
 
-    async def list_templates_async(self) -> List[Dict[str, Any]]:
+    async def list_templates_async(self) -> list[dict[str, Any]]:
         """List available templates from repository."""
         try:
             index = await self.downloader.fetch_template_index_async(self.base_url)
             return index.get("templates", [])  # type: ignore[no-any-return]
-        except Exception as e:
-            self.logger.error(f"Failed to list templates from {self.base_url}: {e}")
-            raise PerformanceError(f"Template listing failed: {e}") from e
+        except (
+            PerformanceError,
+            SecurityError,
+            aiohttp.ClientError,
+            asyncio.TimeoutError,
+            OSError,
+            ValueError,
+        ) as e:
+            self.logger.exception(f"Failed to list templates from {self.base_url}: {e}")
+            msg = f"Template listing failed: {e}"
+            raise PerformanceError(msg) from e
 
-    async def get_template_metadata_async(self, template_name: str) -> Dict[str, Any]:
+    async def get_template_metadata_async(self, template_name: str) -> dict[str, Any]:
         """Get metadata for specific template."""
         templates = await self.list_templates_async()
 
@@ -503,17 +531,19 @@ class AsyncTemplateRepositoryClient:
             if template.get("name") == template_name:
                 return template
 
-        raise PerformanceError(f"Template not found: {template_name}")
+        msg = f"Template not found: {template_name}"
+        raise PerformanceError(msg)
 
     async def download_template_async(
         self, template_name: str, destination: Path
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Download specific template."""
         metadata = await self.get_template_metadata_async(template_name)
         download_url = metadata.get("download_url")
 
         if not download_url:
-            raise PerformanceError(f"No download URL for template: {template_name}")
+            msg = f"No download URL for template: {template_name}"
+            raise PerformanceError(msg)
 
         # Create full URL if relative
         if download_url.startswith("/"):
@@ -525,7 +555,7 @@ class AsyncTemplateRepositoryClient:
 
     async def search_templates_async(
         self, query: str, limit: int = 10
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Search templates by query."""
         templates = await self.list_templates_async()
 

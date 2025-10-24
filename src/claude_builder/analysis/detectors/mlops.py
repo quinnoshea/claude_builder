@@ -212,7 +212,7 @@ class MLOpsDetector(BaseDetector):
         }
         mlops_tools = {"mlflow", "feast", "kubeflow", "bentoml"}
 
-        for tool in self._patterns.keys():
+        for tool in self._patterns:
             if tool == "notebooks":
                 continue
             confidence = self._calculate_confidence(target, tool)
@@ -265,7 +265,7 @@ class MLOpsDetector(BaseDetector):
         HIGH = 12
         MEDIUM = 8
 
-        for tool in self._patterns.keys():
+        for tool in self._patterns:
             if tool == "notebooks":
                 continue
             confidence_score = self._calculate_confidence(target, tool)

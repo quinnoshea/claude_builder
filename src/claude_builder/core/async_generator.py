@@ -125,7 +125,8 @@ class AsyncDocumentGenerator:
                 )
 
             except Exception as e:
-                raise GenerationError(f"Document generation failed: {e}") from e
+                msg = f"Document generation failed: {e}"
+                raise GenerationError(msg) from e
 
     async def _generate_core_docs_async(
         self, analysis: ProjectAnalysis, output_path: Path
@@ -348,9 +349,8 @@ class AsyncDocumentGenerator:
             return rendered_content
 
         except Exception as e:
-            raise GenerationError(
-                f"Template rendering failed for {template_name}: {e}"
-            ) from e
+            msg = f"Template rendering failed for {template_name}: {e}"
+            raise GenerationError(msg) from e
 
     def _get_template_content(self, template_name: str) -> str:
         """Get template content (synchronous helper)."""
@@ -374,7 +374,8 @@ class AsyncDocumentGenerator:
             async with aiofiles.open(file_path, "w", encoding="utf-8") as f:
                 await f.write(content)
         except Exception as e:
-            raise PerformanceError(f"Failed to write file {file_path}: {e}") from e
+            msg = f"Failed to write file {file_path}: {e}"
+            raise PerformanceError(msg) from e
 
     async def _write_cached_files(
         self, cached_files: Dict[str, str], output_path: Path
@@ -396,7 +397,8 @@ class AsyncDocumentGenerator:
         """Handle generation errors."""
         if isinstance(error, (GenerationError, PerformanceError)):
             raise error
-        raise GenerationError(f"Unexpected generation error: {error}") from error
+        msg = f"Unexpected generation error: {error}"
+        raise GenerationError(msg) from error
 
     # Helper methods for template context
     def _get_setup_instructions(self, analysis: ProjectAnalysis) -> str:

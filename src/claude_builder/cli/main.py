@@ -523,7 +523,7 @@ cli.add_command(health)
 
 def main() -> None:
     """Main entry point for the CLI."""
-    cli()
+    cli(standalone_mode=True)
 
 
 if __name__ == "__main__":
