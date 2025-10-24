@@ -142,12 +142,25 @@ class AsyncProjectAnalyzer:
                 architecture = results[3]
                 domain_info = results[4]
 
-                # Type assertions for mypy
-                assert isinstance(filesystem_info, FileSystemInfo)
-                assert isinstance(languages, list)
-                assert isinstance(frameworks, list)
-                assert isinstance(architecture, ArchitecturePattern)
-                assert isinstance(domain_info, DomainInfo)
+                # Type validation for runtime safety
+                if not isinstance(filesystem_info, FileSystemInfo):
+                    raise TypeError(
+                        f"Expected FileSystemInfo, got {type(filesystem_info)}"
+                    )
+                if not isinstance(languages, list):
+                    raise TypeError(
+                        f"Expected list for languages, got {type(languages)}"
+                    )
+                if not isinstance(frameworks, list):
+                    raise TypeError(
+                        f"Expected list for frameworks, got {type(frameworks)}"
+                    )
+                if not isinstance(architecture, ArchitecturePattern):
+                    raise TypeError(
+                        f"Expected ArchitecturePattern, got {type(architecture)}"
+                    )
+                if not isinstance(domain_info, DomainInfo):
+                    raise TypeError(f"Expected DomainInfo, got {type(domain_info)}")
 
                 # Calculate complexity (CPU-intensive, run in thread)
                 # Ensure we have proper objects for complexity assessment

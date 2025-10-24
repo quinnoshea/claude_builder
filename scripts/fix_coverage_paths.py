@@ -11,11 +11,7 @@ import sys
 
 from pathlib import Path
 
-
-try:  # Prefer hardened XML parsing when available
-    from defusedxml import ElementTree as ET  # type: ignore[import-not-found]
-except Exception:  # Fallback remains safe for local CI artifact rewriting
-    import xml.etree.ElementTree as ET  # noqa: S314
+from defusedxml import ElementTree as ET  # type: ignore[import-not-found]
 
 
 LOGGER = logging.getLogger("fix_coverage_paths")
