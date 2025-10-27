@@ -73,7 +73,7 @@ jobs:
                 '{branch:$branch,total:($total|tonumber),byLevel:$by_level,topPatterns:$top_patterns,topFiles:$top_files}' > summary.json
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: codacy-issues-${{ github.event.inputs.branch }}
           path: |
