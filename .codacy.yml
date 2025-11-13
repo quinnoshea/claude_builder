@@ -6,6 +6,11 @@ engines:
     enabled: true
     python_version: 3
     base_sub_dir: src/
+    exclude_paths:
+      - ".github/**"
+      - "**/*.yml"
+      - "**/*.yaml"
+      - ".codacy.yml"
   bandit:
     enabled: true
     base_sub_dir: src/
