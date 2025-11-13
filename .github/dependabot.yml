@@ -24,45 +24,6 @@ updates:
       - "dependencies"
       - "python"
     versioning-strategy: "increase"
-    groups:
-      # Group development dependencies together
-      dev-dependencies:
-        patterns:
-          - "pytest*"
-          - "black"
-          - "ruff"
-          - "mypy"
-          - "types-*"
-          - "pre-commit"
-          - "bandit"
-          - "safety"
-          - "semgrep"
-          - "isort"
-          - "coverage*"
-          - "radon"
-          - "interrogate"
-          - "detect-secrets"
-        update-types:
-          - "minor"
-          - "patch"
-      # Group core runtime dependencies
-      runtime-dependencies:
-        patterns:
-          - "click"
-          - "pydantic"
-          - "rich"
-          - "toml"
-          - "pyyaml"
-          - "pathspec"
-          - "gitpython"
-          - "requests"
-          - "aiohttp"
-          - "aiofiles"
-          - "psutil"
-          - "cryptography"
-          - "keyring"
-        update-types:
-          - "patch"
     ignore:
       # Ignore major version updates for critical dependencies (manual review required)
       - dependency-name: "click"
@@ -92,13 +53,6 @@ updates:
       - "dependencies"
       - "github-actions"
       - "ci"
-    groups:
-      github-actions:
-        patterns:
-          - "*"
-        update-types:
-          - "minor"
-          - "patch"
 
   # Pre-commit hooks
   - package-ecosystem: "gitsubmodule"
