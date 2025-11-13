@@ -43,6 +43,7 @@ updates:
           - "interrogate"
           - "detect-secrets"
         update-types:
+          - "major"
           - "minor"
           - "patch"
       # Group core runtime dependencies
@@ -62,6 +63,8 @@ updates:
           - "cryptography"
           - "keyring"
         update-types:
+          - "major"
+          - "minor"
           - "patch"
     ignore:
       # Ignore major version updates for critical dependencies (manual review required)
