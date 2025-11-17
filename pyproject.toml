@@ -245,22 +245,3 @@ lines_between_types = 1
 multi_line_output = 3
 use_parentheses = true
 filter_files = true
-
-[dependency-groups]
-dev = [
-    "black>=24.8.0",
-    "coverage>=7.6.1",
-    "mypy>=1.14.1",
-    "pylint>=3.2.7",
-    "pytest>=8.3.5",
-    "pytest-asyncio>=0.24.0",
-    "pytest-benchmark>=4.0.0",
-    "pytest-cov>=5.0.0",
-    "ruff>=0.12.9",
-    "types-pyyaml>=6.0.12.20241230",
-    "types-requests>=2.32.0.20241016",
-    "types-toml>=0.10.8.20240310",
-    "types-aiofiles>=23.2.0.20241106",
-    "types-psutil>=6.1.0.20241221",
-    "build>=1.2.2.post1",
-]
