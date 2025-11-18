@@ -29,7 +29,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        uv sync --dev
+        uv pip install -e ".[dev]"
 
     - name: Run full test suite
       run: |
@@ -89,7 +89,7 @@ jobs:
 
     - name: Install build dependencies
       run: |
-        uv sync --dev
+        uv pip install -e ".[dev]"
 
     - name: Build package
       run: |
