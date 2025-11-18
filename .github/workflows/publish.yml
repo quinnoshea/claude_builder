@@ -93,7 +93,7 @@ jobs:
 
     - name: Build package
       run: |
-        uvx build
+        uvx --from build pyproject-build
 
     - name: Check package integrity
       run: |

@@ -490,7 +490,7 @@ jobs:
           enable-cache: true
       - name: Build sdist and wheel
         run: |
-          uvx build
+          uvx --from build pyproject-build
       - name: Upload build artifacts
         uses: actions/upload-artifact@v5
         with:
