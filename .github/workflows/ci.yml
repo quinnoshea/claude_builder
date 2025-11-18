@@ -51,7 +51,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        uv pip install -e ".[dev]"
+        uv pip install --system -e ".[dev]"
 
     - name: Lint with ruff
       run: |
@@ -212,7 +212,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        uv pip install -e ".[dev]"
+        uv pip install --system -e ".[dev]"
 
     - name: Check Codacy token availability
       run: |
@@ -314,7 +314,7 @@ jobs:
           enable-cache: true
       - name: Install project (dev)
         run: |
-          uv pip install -e ".[dev]"
+          uv pip install --system -e ".[dev]"
       - name: Run performance smoke tests (if present)
         env:
           PYTHONPATH: src
@@ -345,7 +345,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv pip install -e ".[dev]"
+          uv pip install --system -e ".[dev]"
 
       - name: Run failing tests (non-blocking)
         run: |
@@ -465,7 +465,7 @@ jobs:
           enable-cache: true
       - name: Install project (dev)
         run: |
-          uv pip install -e ".[dev]"
+          uv pip install --system -e ".[dev]"
       - name: Run integration tests
         env:
           PYTHONPATH: src
