@@ -645,7 +645,7 @@ claude-builder ./project deploy "with security audit and performance testing"
 ### Languages (90%+ Detection Accuracy)
 
 | Language | Status | Confidence | Specialized Agents |
-|----------|--------|------------|-------------------|
+| -------- | ------ | ---------- | ----------------- |
 | **Python** | ✅ Excellent | 95%+ | backend-architect, api-tester |
 | **Rust** | ✅ Excellent | 93%+ | systems-programmer, optimizer |
 | **JavaScript/TypeScript** | ✅ Excellent | 94%+ | frontend-developer |
