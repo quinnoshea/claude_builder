@@ -48,7 +48,7 @@ jobs:
       - name: Run security checks
         run: |
           uv run bandit -r src/ -f json -o bandit-report.json || true
-          uv run safety check --json --output safety-report.json || true
+          uv run safety check --output json > safety-report.json || true
 
       - name: Run linting
         run: |
