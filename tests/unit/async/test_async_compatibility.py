@@ -492,49 +492,67 @@ class TestIntegrationCompatibility:
                 analyzer.analyze("/nonexistent/path")
 
     def test_compatibility_with_concurrent_operations(self):
-        """Test compatibility layer with concurrent sync operations."""
+        """Test compatibility layer with concurrent sync operations.
+
+        Note: We patch at the class level before spawning threads to avoid
+        race conditions with concurrent patch context managers modifying
+        global state.
+        """
         import threading
 
         results = {}
         errors = {}
+        lock = threading.Lock()
 
-        def run_analysis(thread_id):
+        # Create mock analyses for each thread upfront
+        mock_analyses = {
+            i: MagicMock(spec=ProjectAnalysis, project_name=f"project_{i}")
+            for i in range(3)
+        }
+
+        def run_analysis(thread_id, analyzer):
             try:
-                with patch(
-                    "claude_builder.core.async_analyzer.AsyncProjectAnalyzer"
-                ) as mock_class:
-                    mock_instance = AsyncMock()
-                    mock_analysis = MagicMock(spec=ProjectAnalysis)
-                    mock_analysis.project_name = f"project_{thread_id}"
-
-                    async def mock_analyze_async(path):
-                        await asyncio.sleep(0.01)  # Simulate work
-                        return mock_analysis
-
-                    mock_instance.analyze_async = mock_analyze_async
-                    mock_instance.get_performance_stats.return_value = {}
-                    mock_class.return_value = mock_instance
-
-                    analyzer = SyncProjectAnalyzerCompat()
-                    result = analyzer.analyze(f"/tmp/project_{thread_id}")
+                result = analyzer.analyze(f"/tmp/project_{thread_id}")
+                with lock:
                     results[thread_id] = result
-
             except Exception as e:
-                errors[thread_id] = e
+                with lock:
+                    errors[thread_id] = e
 
-        # Run multiple threads concurrently
-        threads = []
-        for i in range(3):
-            thread = threading.Thread(target=run_analysis, args=(i,))
-            threads.append(thread)
-            thread.start()
+        # Patch once at the outer level to avoid race conditions
+        with patch(
+            "claude_builder.core.async_analyzer.AsyncProjectAnalyzer"
+        ) as mock_class:
+            mock_instance = AsyncMock()
 
-        for thread in threads:
-            thread.join(timeout=5)
+            # Thread-safe mock that returns appropriate analysis based on path
+            async def mock_analyze_async(path):
+                await asyncio.sleep(0.01)  # Simulate work
+                # Extract thread_id from path
+                thread_id = int(path.split("_")[-1])
+                return mock_analyses[thread_id]
+
+            mock_instance.analyze_async = mock_analyze_async
+            mock_instance.get_performance_stats.return_value = {}
+            mock_class.return_value = mock_instance
+
+            # Create analyzer once with the stable mock
+            analyzer = SyncProjectAnalyzerCompat()
+
+            # Run multiple threads concurrently
+            threads = []
+            for i in range(3):
+                thread = threading.Thread(target=run_analysis, args=(i, analyzer))
+                threads.append(thread)
+                thread.start()
+
+            for thread in threads:
+                thread.join(timeout=5)
 
         # All operations should succeed
-        assert len(results) == 3
-        assert len(errors) == 0
+        assert len(errors) == 0, f"Errors occurred: {errors}"
+        assert len(results) == 3, f"Expected 3 results, got {len(results)}: {results}"
 
         for i in range(3):
+            assert i in results, f"Missing result for thread {i}"
             assert results[i].project_name == f"project_{i}"
