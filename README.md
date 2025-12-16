@@ -54,7 +54,8 @@ agents by providing smart defaults and context-aware suggestions.
 
 ### 🔍 **Project Analysis**
 
-Detects languages, frameworks, project types, and complexity to understand your codebase
+Detects languages, frameworks, project types, and complexity to understand
+your codebase
 
 ```bash
 # Analyzes project characteristics
@@ -467,7 +468,8 @@ claude-builder /path/to/project templates list
 # Check configuration
 claude-builder /path/to/project config show
 
-# Note: Some advertised features like --dry-run, --agents-only may not be fully functional
+# Note: Some features like --dry-run, --agents-only may not be fully
+# functional
 ```
 
 ### Instant Results
@@ -652,7 +654,7 @@ claude-builder ./project deploy "with security audit and performance testing"
 | **Java** | ✅ Very Good | 88%+ | enterprise-architect, spring-specialist |
 | **Go** | ✅ Very Good | 87%+ | microservices-architect, api-designer |
 | **C#** | ✅ Good | 82%+ | dotnet-specialist, azure-deployer |
-| **PHP** | ✅ Good | 80%+ | web-developer, laravel-specialist, security-auditor |
+| **PHP** | ✅ Good | 80%+ | web-developer, laravel-specialist |
 | **Ruby** | ✅ Good | 79%+ | rails-developer, web-architect, gem-creator |
 
 ### Framework Intelligence (25+ Supported)
@@ -669,7 +671,8 @@ claude-builder ./project deploy "with security audit and performance testing"
 - **API Services**: REST APIs, GraphQL, gRPC, serverless functions
 - **CLI Tools**: System utilities, developer tools, automation scripts,
   command-line applications
-- **Libraries & Frameworks**: Reusable packages, shared components, open-source projects
+- **Libraries & Frameworks**: Reusable packages, shared components,
+  open-source projects
 - **Data Science**: ML pipelines, analysis notebooks, data processing workflows
 - **Mobile Applications**: Native and hybrid mobile development projects
 
@@ -732,7 +735,8 @@ intelligent agent orchestration:
 **Phase 1** ✅ **Infrastructure Complete**: Project analysis, template system,
 CLI foundation
 **Phase 2** ✅ **Agent Foundation**: Basic agent selection, team composition logic
-**Phase 3** 🔧 **Natural Language Orchestration**: Intuitive triggers, workflow automation
+**Phase 3** 🔧 **Natural Language Orchestration**: Intuitive triggers,
+workflow automation
 **Phase 4** 🎯 **Community Ecosystem**: Repository integration, shared intelligence
 
 ### How to Contribute
