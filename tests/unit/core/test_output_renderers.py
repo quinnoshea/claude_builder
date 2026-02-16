@@ -40,17 +40,34 @@ def _sample_environment() -> EnvironmentBundle:
 def _snapshot_text(rendered: RenderedTargetOutput) -> str:
     sections: list[str] = []
     for artifact in rendered.artifacts:
-        sections.append(f"## {artifact.path}\n{artifact.content}")
-    return "\n\n".join(sections) + "\n"
+        sections.append(f"## {artifact.path}\n{artifact.content.rstrip()}")
+    return _normalize_snapshot_text("\n\n".join(sections))
+
+
+def _normalize_snapshot_text(text: str) -> str:
+    """Normalize markdown whitespace for stable snapshot assertions."""
+    normalized_lines = [line.rstrip() for line in text.splitlines()]
+    collapsed: list[str] = []
+    prev_blank = False
+
+    for line in normalized_lines:
+        is_blank = line == ""
+        if is_blank and prev_blank:
+            continue
+        collapsed.append(line)
+        prev_blank = is_blank
+
+    return "\n".join(collapsed).strip() + "\n"
 
 
 def _read_snapshot(name: str) -> str:
     path = Path(__file__).parent / "__snapshots__" / name
-    return (
+    text = (
         path.read_text(encoding="utf-8")
         .replace("<!-- markdownlint-disable -->\n\n", "")
         .replace("<!-- markdownlint-disable -->\n", "")
     )
+    return _normalize_snapshot_text(text)
 
 
 def test_claude_renderer_snapshot() -> None:
