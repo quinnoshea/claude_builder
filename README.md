@@ -34,7 +34,7 @@ system for generating documentation.
 - MLOps detection: MLflow, Airflow, Prefect, dbt, DVC, Kubeflow, Great
   Expectations
 - Security & observability tools: Prometheus, Grafana, tfsec, Semgrep, Trivy
-- Generates CLAUDE.md and AGENTS.md from templates
+- Generates target-specific instruction files for Claude, Codex, and Gemini
 - CLI with subcommands for analyze, generate, config, templates, git, health
 - 1,227 tests demonstrating various features (71.5% coverage per Codacy)
 
@@ -76,14 +76,27 @@ Generated triggers: "optimize bundle size", "improve accessibility", "design com
 
 ### 📝 **Documentation Generation**
 
-Creates tailored `CLAUDE.md` and `AGENTS.md` files with project-specific guidance
+Creates tailored instruction files with project-specific guidance.
 
 ```bash
-claude-builder /your/project
-# Generates CLAUDE.md with development guidelines
-# Creates AGENTS.md with suggested agent teams
-# Includes project-specific best practices
+# Default target: Claude
+claude-builder generate complete /your/project
+
+# Codex profile
+claude-builder generate complete /your/project --target codex
+
+# Gemini profile
+claude-builder generate complete /your/project --target gemini
 ```
+
+#### Output Targets
+
+`generate complete --target ...` currently supports:
+
+- `claude` (default): `CLAUDE.md`, `AGENTS.md`, and `.claude/agents/*.md`
+- `codex`: `AGENTS.md` and `.agents/skills/<agent>/SKILL.md`
+- `gemini`: `GEMINI.md`, `AGENTS.md`, `.gemini/agents/*.md`, and
+  `.gemini/settings.json.example`
 
 ### 🛠️ **Template System**
 
@@ -475,18 +488,21 @@ claude-builder /path/to/project config show
 ### Instant Results
 
 ```bash
-# After running claude-builder on your project:
-your-project/
-├── CLAUDE.md                    # Project-specific development guidelines
-├── AGENTS.md                    # Intelligent agent team configuration
-    └── .claude/                     # Detailed development environment
-        ├── development_workflow.md  # Optimized development processes
-        ├── agent_coordination.md    # Multi-agent collaboration patterns
-        └── project_context.md       # Complete project analysis results
+# Claude target (default)
+claude-builder generate complete ./your-project --target claude
+# -> CLAUDE.md, AGENTS.md, .claude/agents/*.md
 
-When DevOps/MLOps tools are detected, CLAUDE.md includes domain-specific
-sections with actionable guidance (infrastructure, deployment, observability,
-security, MLOps, data pipelines, and governance).
+# Codex target
+claude-builder generate complete ./your-project --target codex
+# -> AGENTS.md, .agents/skills/<agent>/SKILL.md
+
+# Gemini target
+claude-builder generate complete ./your-project --target gemini
+# -> GEMINI.md, AGENTS.md, .gemini/agents/*.md, .gemini/settings.json.example
+
+# Domain-aware behavior
+# For Claude/Gemini docs, DevOps/MLOps signals append domain-specific guidance
+# (infrastructure, deployment, observability, security, MLOps, data pipelines).
 ```
 
 ---
@@ -922,8 +938,8 @@ adoption flexibility.
 
 ### 🙏 Acknowledgments
 
-- **Built for Claude Code Ecosystem**: Designed to maximize developer
-  productivity with AI-assisted development
+- **Built for Agentic CLI Ecosystems**: Designed to maximize developer
+  productivity across Claude, Codex, and Gemini workflows
 - **Inspired by Real Developer Pain**: Born from the need to eliminate friction
   in agent adoption and coordination
 - **Community Driven**: Thanks to beta testers, early adopters, and community
@@ -943,11 +959,13 @@ based on your project's characteristics.
 ```bash
 # Get started
 uv pip install -e ".[dev]"  # or pip install claude-builder
-claude-builder /your/project
+claude-builder generate complete /your/project
+claude-builder generate complete /your/project --target codex
+claude-builder generate complete /your/project --target gemini
 
 # See what it generates
-# ✅ Project-specific CLAUDE.md with development guidelines
-# ✅ AGENTS.md with relevant agent recommendations
+# ✅ Target-specific instructions (Claude, Codex, Gemini)
+# ✅ Project-specific guidance mapped to your stack
 # ✅ Context-aware suggestions based on your tech stack
 # ✅ Templates tailored to your project type
 ```
@@ -961,4 +979,4 @@ claude-builder /your/project
 
 ---
 
-*Claude Builder: Intelligent agent configuration for Claude Code projects.*
+*Claude Builder: Intelligent agent configuration for modern AI coding workflows.*
