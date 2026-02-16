@@ -12,9 +12,11 @@ from claude_builder.cli.main import (
     _display_analysis_results,
     _display_summary,
     _get_git_mode,
+    _get_output_mode,
     _list_templates,
     _write_generated_files,
 )
+from claude_builder.core.models import OutputTarget
 
 
 def test_exit_codes():
@@ -59,6 +61,29 @@ def test_get_git_mode_no_changes():
     kwargs = {"no_git": False, "git_exclude": False, "git_track": False}
     result = _get_git_mode(kwargs)
     assert result == "no changes"
+
+
+def test_get_output_mode_complete_claude():
+    """Test _get_output_mode default complete mode for Claude."""
+    kwargs = {"agents_only": False, "no_agents": False, "target": "claude"}
+    result = _get_output_mode(kwargs)
+    assert result == "complete environment (CLAUDE.md + subagents + AGENTS.md)"
+
+
+def test_get_output_mode_complete_codex():
+    """Test _get_output_mode complete mode for Codex."""
+    kwargs = {"agents_only": False, "no_agents": False, "target": "codex"}
+    result = _get_output_mode(kwargs)
+    assert result == "complete environment (AGENTS.md + .agents/skills/*/SKILL.md)"
+
+
+def test_get_output_mode_complete_gemini():
+    """Test _get_output_mode complete mode for Gemini."""
+    kwargs = {"agents_only": False, "no_agents": False, "target": "gemini"}
+    result = _get_output_mode(kwargs)
+    assert (
+        result == "complete environment (GEMINI.md + AGENTS.md + .gemini/agents/*.md)"
+    )
 
 
 @patch("claude_builder.cli.main.console")
@@ -326,7 +351,7 @@ def test_display_summary_dry_run(mock_console):
 
     mock_console.print.assert_any_call("\n[bold green]✓ Complete![/bold green]")
     mock_console.print.assert_any_call(
-        "Would generate Claude Code environment for [cyan]/test/project[/cyan]"
+        "Would generate Claude environment for [cyan]/test/project[/cyan]"
     )
 
 
@@ -339,16 +364,32 @@ def test_display_summary_actual_run(mock_console):
 
     mock_console.print.assert_any_call("\n[bold green]✓ Complete![/bold green]")
     mock_console.print.assert_any_call(
-        "Generated Claude Code environment for [cyan]/test/project[/cyan]"
+        "Generated Claude environment for [cyan]/test/project[/cyan]"
     )
 
     # Should print next steps
     mock_console.print.assert_any_call("1. Review generated CLAUDE.md file")
-    mock_console.print.assert_any_call(
-        "2. Configure agents using the generated AGENTS.md"
-    )
+    mock_console.print.assert_any_call("2. Review specialist files in .claude/agents/")
     mock_console.print.assert_any_call(
         "3. Start using Claude Code with your optimized environment!"
+    )
+
+
+@patch("claude_builder.cli.main.console")
+def test_display_summary_codex_actual_run(mock_console):
+    """Test _display_summary codex messaging for target-aware workflow."""
+    project_path = Path("/test/project")
+
+    _display_summary(project_path, dry_run=False, target=OutputTarget.CODEX)
+
+    mock_console.print.assert_any_call("\n[bold green]✓ Complete![/bold green]")
+    mock_console.print.assert_any_call(
+        "Generated Codex environment for [cyan]/test/project[/cyan]"
+    )
+    mock_console.print.assert_any_call("1. Review generated AGENTS.md file")
+    mock_console.print.assert_any_call("2. Review specialist files in .agents/skills/")
+    mock_console.print.assert_any_call(
+        "3. Start using Codex CLI with your optimized environment!"
     )
 
 

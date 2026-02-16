@@ -16,6 +16,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from claude_builder.core.analyzer import ProjectAnalyzer
 from claude_builder.core.config import ConfigManager
 from claude_builder.core.generator import DocumentGenerator
+from claude_builder.core.models import OutputTarget
 from claude_builder.core.template_manager import TemplateManager
 from claude_builder.utils.exceptions import ClaudeBuilderError
 from claude_builder.utils.git import GitIntegrationManager
@@ -114,6 +115,13 @@ class ExitCodes:
     type=click.Path(exists=True, file_okay=False),
     help="Include custom agents from directory",
 )
+@click.option(
+    "--target",
+    type=click.Choice([target.value for target in OutputTarget], case_sensitive=False),
+    default=OutputTarget.CLAUDE.value,
+    show_default=True,
+    help="Output target profile for complete generation",
+)
 @click.version_option()
 @click.pass_context
 def cli(ctx: click.Context, project_path: str | None, **kwargs: Any) -> None:
@@ -138,6 +146,9 @@ def cli(ctx: click.Context, project_path: str | None, **kwargs: Any) -> None:
 
         # Dry run to preview changes
         claude-builder ./project --dry-run --verbose
+
+        # Generate Codex-oriented artifacts from top-level workflow
+        claude-builder --target codex ./my-project
     """
 
     # Handle list templates
@@ -190,6 +201,8 @@ def _execute_main(project_path: str, **kwargs: Any) -> None:
         config_file=kwargs.get("config_file"),
         cli_overrides=kwargs,
     )
+    target = _resolve_target(kwargs)
+    output_mode = _get_output_mode(kwargs)
 
     if not kwargs["quiet"]:
         console.print(
@@ -197,7 +210,7 @@ def _execute_main(project_path: str, **kwargs: Any) -> None:
                 f"[bold blue]Claude Builder[/bold blue]\n"
                 f"Analyzing project at: [cyan]{project_path_obj}[/cyan]\n"
                 f"Template: [green]{kwargs.get('template', 'auto-detect')}[/green]\n"
-                f"Output mode: [blue]{_get_output_mode(kwargs)}[/blue]\n"
+                f"Output mode: [blue]{output_mode}[/blue]\n"
                 f"Git integration: [yellow]{_get_git_mode(kwargs)}[/yellow]",
                 title="Starting Analysis",
             )
@@ -223,34 +236,65 @@ def _execute_main(project_path: str, **kwargs: Any) -> None:
 
         # Step 2: Complete Environment Generation
         if not (kwargs["agents_only"] or kwargs["no_agents"]):
-            # Generate complete environment (CLAUDE.md + individual subagents + AGENTS.md)
-            task2 = progress.add_task("Generating complete environment...", total=None)
+            task2 = progress.add_task(
+                f"Generating {target.value} artifacts...", total=None
+            )
 
             template_manager = TemplateManager()
-            environment = template_manager.generate_complete_environment(analysis)
+            rendered_output = template_manager.generate_target_artifacts(
+                analysis,
+                target=target,
+            )
 
             progress.update(
-                task2, completed=True, description="✓ Complete environment generated"
+                task2,
+                completed=True,
+                description=f"✓ {target.value.title()} artifacts generated",
             )
 
             # Write files if not dry run
             if not kwargs["dry_run"]:
-                _write_environment_files(environment, project_path_obj, kwargs)
+                _write_target_artifacts(rendered_output, project_path_obj, kwargs)
 
         elif kwargs["agents_only"]:
             # Legacy: agents-only mode
             task2 = progress.add_task("Configuring agents...", total=None)
 
             template_manager = TemplateManager()
-            environment = template_manager.generate_complete_environment(analysis)
+            rendered_output = template_manager.generate_target_artifacts(
+                analysis,
+                target=target,
+            )
 
             progress.update(task2, completed=True, description="✓ Agents configured")
 
             # Write only AGENTS.md if not dry run
             if not kwargs["dry_run"]:
-                agents_path = project_path_obj / "AGENTS.md"
+                agents_artifact = next(
+                    (
+                        artifact
+                        for artifact in rendered_output.artifacts
+                        if artifact.path == "AGENTS.md"
+                    ),
+                    None,
+                )
+                if agents_artifact is None:
+                    msg = f"Generated {target.value} output is missing AGENTS.md"
+                    raise ClaudeBuilderError(msg, ExitCodes.AGENT_ERROR)
+
+                if kwargs.get("output_dir") is None:
+                    output_dir = project_path_obj
+                else:
+                    output_dir = Path(kwargs["output_dir"])
+                output_dir.mkdir(parents=True, exist_ok=True)
+
+                agents_path = output_dir / "AGENTS.md"
+                if kwargs["backup_existing"] and agents_path.exists():
+                    backup_path = agents_path.with_suffix(agents_path.suffix + ".bak")
+                    agents_path.rename(backup_path)
+
                 with agents_path.open("w", encoding="utf-8") as f:
-                    f.write(environment.agents_md)
+                    f.write(agents_artifact.content)
 
         elif not kwargs["no_agents"]:
             # Legacy: documentation without agents
@@ -276,7 +320,12 @@ def _execute_main(project_path: str, **kwargs: Any) -> None:
 
     # Summary
     if not kwargs["quiet"]:
-        _display_summary(project_path_obj, dry_run=kwargs["dry_run"])
+        _display_summary(
+            project_path_obj,
+            dry_run=kwargs["dry_run"],
+            target=target,
+            output_mode=output_mode,
+        )
 
 
 def _get_output_mode(kwargs: dict[str, Any]) -> str:
@@ -285,7 +334,18 @@ def _get_output_mode(kwargs: dict[str, Any]) -> str:
         return "agents only"
     if kwargs["no_agents"]:
         return "documentation only"
-    return "complete environment (CLAUDE.md + subagents + AGENTS.md)"
+    target = _resolve_target(kwargs)
+    if target == OutputTarget.CLAUDE:
+        return "complete environment (CLAUDE.md + subagents + AGENTS.md)"
+    if target == OutputTarget.CODEX:
+        return "complete environment (AGENTS.md + .agents/skills/*/SKILL.md)"
+    return "complete environment (GEMINI.md + AGENTS.md + .gemini/agents/*.md)"
+
+
+def _resolve_target(kwargs: dict[str, Any]) -> OutputTarget:
+    """Resolve target enum from CLI kwargs."""
+    raw_target = str(kwargs.get("target", OutputTarget.CLAUDE.value)).lower()
+    return OutputTarget(raw_target)
 
 
 def _get_git_mode(kwargs: dict[str, Any]) -> str:
@@ -463,6 +523,39 @@ def _write_environment_files(
         console.print(f"   • Total: {files_written} files written to {output_dir}")
 
 
+def _write_target_artifacts(
+    rendered_output: Any, project_path: Path, kwargs: dict[str, Any]
+) -> None:
+    """Write target-specific artifacts to disk."""
+    if kwargs.get("output_dir") is None:
+        output_dir = project_path
+    else:
+        output_dir = Path(kwargs["output_dir"])
+
+    files_written = 0
+    for artifact in rendered_output.artifacts:
+        file_path = output_dir / artifact.path
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+
+        if kwargs["backup_existing"] and file_path.exists():
+            backup_path = file_path.with_suffix(file_path.suffix + ".bak")
+            file_path.rename(backup_path)
+
+        with file_path.open("w", encoding="utf-8") as f:
+            f.write(artifact.content)
+
+        files_written += 1
+
+    if not kwargs["quiet"]:
+        target_name = getattr(rendered_output, "target", OutputTarget.CLAUDE)
+        if isinstance(target_name, OutputTarget):
+            target_label = target_name.value.title()
+        else:
+            target_label = str(target_name).title()
+        console.print(f"\n[green]✓ Generated {target_label} artifacts:[/green]")
+        console.print(f"   • Total: {files_written} files written to {output_dir}")
+
+
 def _write_generated_files(
     generated_content: Any, project_path: Path, kwargs: dict[str, Any]
 ) -> None:
@@ -498,17 +591,55 @@ def _write_generated_files(
     console.print(f"\n[green]✓ Wrote {files_written} files to {output_dir}[/green]")
 
 
-def _display_summary(project_path: Path, *, dry_run: bool) -> None:
+def _display_summary(
+    project_path: Path,
+    *,
+    dry_run: bool,
+    target: OutputTarget = OutputTarget.CLAUDE,
+    output_mode: str = "complete environment (CLAUDE.md + subagents + AGENTS.md)",
+) -> None:
     """Display operation summary."""
     action = "Would generate" if dry_run else "Generated"
     console.print("\n[bold green]✓ Complete![/bold green]")
-    console.print(f"{action} Claude Code environment for [cyan]{project_path}[/cyan]")
+    if output_mode == "documentation only":
+        console.print(f"{action} documentation for [cyan]{project_path}[/cyan]")
+    elif output_mode == "agents only":
+        console.print(f"{action} AGENTS.md for [cyan]{project_path}[/cyan]")
+    else:
+        console.print(
+            f"{action} {target.value.title()} environment for [cyan]{project_path}[/cyan]"
+        )
 
     if not dry_run:
         console.print("\nNext steps:")
-        console.print("1. Review generated CLAUDE.md file")
-        console.print("2. Configure agents using the generated AGENTS.md")
-        console.print("3. Start using Claude Code with your optimized environment!")
+        if output_mode == "documentation only":
+            console.print("1. Review generated documentation files")
+            console.print("2. Run full generation to include agent guidance")
+            console.print("3. Re-run after major project changes")
+            return
+
+        if output_mode == "agents only":
+            console.print("1. Review generated AGENTS.md guide")
+            console.print("2. Run full generation to include project context files")
+            console.print("3. Start using the agent guidance in your workflow")
+            return
+
+        if target == OutputTarget.CLAUDE:
+            primary_file = "CLAUDE.md"
+            specialist_dir = ".claude/agents/"
+            tool_name = "Claude Code"
+        elif target == OutputTarget.CODEX:
+            primary_file = "AGENTS.md"
+            specialist_dir = ".agents/skills/"
+            tool_name = "Codex CLI"
+        else:
+            primary_file = "GEMINI.md"
+            specialist_dir = ".gemini/agents/"
+            tool_name = "Gemini CLI"
+
+        console.print(f"1. Review generated {primary_file} file")
+        console.print(f"2. Review specialist files in {specialist_dir}")
+        console.print(f"3. Start using {tool_name} with your optimized environment!")
 
 
 # Register subcommands
