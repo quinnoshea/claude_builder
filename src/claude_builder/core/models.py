@@ -689,6 +689,52 @@ class ProjectInfo:
         }
 
 
+class OutputTarget(Enum):
+    """Supported output targets for generated agent instructions."""
+
+    CLAUDE = "claude"
+    CODEX = "codex"
+    GEMINI = "gemini"
+
+
+@dataclass
+class GeneratedArtifact:
+    """A generated file artifact with relative path and content."""
+
+    path: str
+    content: str
+    description: str = ""
+
+    def __post_init__(self) -> None:
+        """Validate fields after initialization."""
+        if not self.path or not self.path.strip():
+            msg = "Artifact path cannot be empty"
+            raise ValueError(msg)
+
+    @property
+    def size_bytes(self) -> int:
+        """Return artifact content size in bytes."""
+        return len(self.content.encode("utf-8"))
+
+
+@dataclass
+class RenderedTargetOutput:
+    """Rendered artifacts for a specific output target."""
+
+    target: OutputTarget
+    artifacts: List[GeneratedArtifact]
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+    @property
+    def total_files(self) -> int:
+        """Total number of artifacts in this output."""
+        return len(self.artifacts)
+
+    def get_paths(self) -> List[str]:
+        """Return artifact paths in render order."""
+        return [artifact.path for artifact in self.artifacts]
+
+
 # New data classes for YAML subagent architecture
 @dataclass
 class SubagentFile:

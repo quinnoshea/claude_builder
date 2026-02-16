@@ -21,7 +21,7 @@ from rich.panel import Panel
 
 from claude_builder.core.analyzer import ProjectAnalyzer
 from claude_builder.core.generator import DocumentGenerator
-from claude_builder.core.models import ProjectAnalysis
+from claude_builder.core.models import OutputTarget, ProjectAnalysis
 from claude_builder.utils.exceptions import ClaudeBuilderError
 
 from .error_handling import handle_exception
@@ -40,6 +40,15 @@ console = Console()
 
 # Domain constants retained for backwards-compatible generation filters
 VALID_DOMAINS = ["infra", "devops", "mlops"]
+
+
+def _default_agents_dir_for_target(target: OutputTarget) -> str:
+    """Return default specialist artifact directory for a target."""
+    if target == OutputTarget.CLAUDE:
+        return ".claude/agents"
+    if target == OutputTarget.CODEX:
+        return ".agents/skills"
+    return ".gemini/agents"
 
 
 def _filter_generated_content_by_sections(
@@ -148,6 +157,7 @@ class GenerateConfig:
     # Additional options for specific commands
     agents_dir: str | None = None
     output_file: str | None = None
+    target: str = OutputTarget.CLAUDE.value
 
 
 @click.group()
@@ -213,7 +223,7 @@ def docs(ctx: click.Context, project_path: str, **kwargs: Any) -> None:
             quiet=False,
             verbose=config.verbose,
             no_suggestions=config.no_suggestions,
-            plain_output=not console.is_terminal(),
+            plain_output=not console.is_terminal,
         )
 
     try:
@@ -303,7 +313,7 @@ def docs(ctx: click.Context, project_path: str, **kwargs: Any) -> None:
 @click.option(
     "--agents-dir",
     type=click.Path(),
-    help="Directory for individual agent files (default: .claude/agents)",
+    help="Directory for generated specialist files (default depends on --target)",
 )
 @click.option(
     "--dry-run",
@@ -317,6 +327,13 @@ def docs(ctx: click.Context, project_path: str, **kwargs: Any) -> None:
     type=click.Choice(VALID_DOMAINS, case_sensitive=False),
     help="Filter generation by domain (repeatable): infra, devops, mlops",
 )
+@click.option(
+    "--target",
+    type=click.Choice([target.value for target in OutputTarget], case_sensitive=False),
+    default=OutputTarget.CLAUDE.value,
+    show_default=True,
+    help="Output target profile",
+)
 @click.option("--verbose", "-v", count=True, help="Verbose output")
 @click.option(
     "--no-suggestions",
@@ -325,7 +342,7 @@ def docs(ctx: click.Context, project_path: str, **kwargs: Any) -> None:
 )
 @click.pass_context
 def complete(ctx: click.Context, project_path: str, **kwargs: Any) -> None:
-    """Generate complete Claude Code environment (CLAUDE.md + individual subagents + AGENTS.md)."""
+    """Generate complete environment artifacts for the selected target."""
     config = GenerateConfig(**kwargs)
 
     root_obj = ctx.find_root().obj if ctx.find_root() else None
@@ -339,7 +356,7 @@ def complete(ctx: click.Context, project_path: str, **kwargs: Any) -> None:
             quiet=False,
             verbose=config.verbose,
             no_suggestions=config.no_suggestions,
-            plain_output=not console.is_terminal(),
+            plain_output=not console.is_terminal,
         )
 
     try:
@@ -358,61 +375,60 @@ def complete(ctx: click.Context, project_path: str, **kwargs: Any) -> None:
         opts: dict[str, Any] = {}
         if config.domains:
             opts["domains"] = config.domains
-        environment = template_manager.generate_complete_environment(analysis, **opts)
+        target = OutputTarget(config.target.lower())
+        agents_dir = config.agents_dir or _default_agents_dir_for_target(target)
+        rendered_output = template_manager.generate_target_artifacts(
+            analysis,
+            target=target,
+            agents_dir=agents_dir,
+            **opts,
+        )
 
         # Display what would be generated
         if config.dry_run or config.verbose > 0:
-            _display_environment_preview(environment)
+            _display_target_preview(rendered_output)
 
         if config.dry_run:
             console.print("[yellow]Dry run complete - no files were created[/yellow]")
             return
 
-        # Determine output paths
         output_dir = Path(config.output_dir) if config.output_dir else path
-        agents_dir = (
-            Path(config.agents_dir)
-            if config.agents_dir
-            else output_dir / ".claude" / "agents"
+        written_files = _write_target_artifacts(
+            rendered_output,
+            output_dir,
+            backup_existing=config.backup_existing,
+            verbose=config.verbose,
         )
 
-        written_files: list[str] = []
-
-        # Write CLAUDE.md
-        claude_path = output_dir / "CLAUDE.md"
-        with claude_path.open("w", encoding="utf-8") as f:
-            f.write(environment.claude_md)
-        written_files.append("CLAUDE.md")
-
-        # Write individual subagents
-        agents_dir.mkdir(parents=True, exist_ok=True)
-        for subagent in environment.subagent_files:
-            agent_path = agents_dir / subagent.name
-            with agent_path.open("w", encoding="utf-8") as f:
-                f.write(subagent.content)
-            try:
-                written_files.append(str(agent_path.relative_to(path)))
-            except ValueError:
-                written_files.append(str(agent_path))
-
-        # Write AGENTS.md
-        agents_guide_path = output_dir / "AGENTS.md"
-        with agents_guide_path.open("w", encoding="utf-8") as f:
-            f.write(environment.agents_md)
-        written_files.append("AGENTS.md")
-
-        console.print("[green]✓ Complete environment generated successfully[/green]")
-        console.print("Generated:")
-        console.print("   • CLAUDE.md - Project documentation")
-        console.print(
-            f"   • {len(environment.subagent_files)} subagent files in {agents_dir.relative_to(path) if agents_dir.is_relative_to(path) else agents_dir}"
-        )
-        console.print("   • AGENTS.md - User guide")
+        if target == OutputTarget.CLAUDE:
+            subagent_count = max(rendered_output.total_files - 2, 0)
+            agents_dir_path = (
+                Path(config.agents_dir)
+                if config.agents_dir
+                else output_dir / ".claude" / "agents"
+            )
+            console.print(
+                "[green]✓ Complete environment generated successfully[/green]"
+            )
+            console.print("Generated:")
+            console.print("   • CLAUDE.md - Project documentation")
+            console.print(
+                f"   • {subagent_count} subagent files in {agents_dir_path.relative_to(path) if agents_dir_path.is_relative_to(path) else agents_dir_path}"
+            )
+            console.print("   • AGENTS.md - User guide")
+        else:
+            console.print(
+                f"[green]✓ {target.value.title()} artifacts generated successfully[/green]"
+            )
+            console.print(f"Output location: {output_dir}")
 
         if ux_config.suggestions_enabled:
             presenter = build_presenter(ux_config)
             presenter.show_generation(path, written_files)
 
+    except NotImplementedError as e:
+        console.print(f"[red]{e}[/red]")
+        raise click.ClickException(str(e)) from e
     except Exception as e:
         exit_code = handle_exception(e, config=ux_config, console=console)
         raise click.exceptions.Exit(exit_code) from e
@@ -724,6 +740,27 @@ def _display_environment_preview(environment: Any) -> None:
     console.print(Panel(preview_text, title="Environment Generation Preview"))
 
 
+def _display_target_preview(rendered_output: Any) -> None:
+    """Display preview for target-based artifact generation."""
+    preview_lines = [
+        "**Target Artifact Generation Preview**",
+        "",
+        f"Target: {rendered_output.target.value}",
+        f"Files: {rendered_output.total_files}",
+        "",
+    ]
+
+    for artifact in rendered_output.artifacts:
+        preview_lines.append(f"  • {artifact.path} ({len(artifact.content):,} chars)")
+
+    if getattr(rendered_output, "metadata", None):
+        preview_lines.extend(["", "**Metadata:**"])
+        for key, value in rendered_output.metadata.items():
+            preview_lines.append(f"  • {key}: {value}")
+
+    console.print(Panel("\n".join(preview_lines), title="Target Generation Preview"))
+
+
 def _display_generation_preview(generated_content: Any) -> None:
     """Display preview of what will be generated."""
     files_info = []
@@ -778,6 +815,41 @@ def _write_generated_files(
         console.print(f"[green]Wrote {len(written_filenames)} files[/green]")
 
     return written_filenames
+
+
+def _write_target_artifacts(
+    rendered_output: Any,
+    output_dir: Path,
+    *,
+    backup_existing: bool,
+    verbose: int,
+) -> list[str]:
+    """Write target artifacts to disk and return list of written paths."""
+    written_files: list[str] = []
+
+    for artifact in rendered_output.artifacts:
+        file_path = output_dir / artifact.path
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+
+        if backup_existing and file_path.exists():
+            backup_path = file_path.with_suffix(file_path.suffix + ".bak")
+            file_path.rename(backup_path)
+            if verbose > 0:
+                console.print(
+                    f"[yellow]Backed up existing file: {backup_path}[/yellow]"
+                )
+
+        with file_path.open("w", encoding="utf-8") as f:
+            f.write(artifact.content)
+
+        written_files.append(artifact.path)
+        if verbose > 1:
+            console.print(f"[green]✓ {artifact.path}[/green]")
+
+    if verbose > 0:
+        console.print(f"[green]Wrote {len(written_files)} files[/green]")
+
+    return written_files
 
 
 @generate.command()

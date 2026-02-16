@@ -25,11 +25,13 @@ def show_getting_started(config: UXConfig, *, console: Console | None = None) ->
 1. `claude-builder analyze project ./my-project`
 2. `claude-builder generate docs ./my-project`
 3. `claude-builder generate complete ./my-project`
+4. `claude-builder generate complete ./my-project --target codex`
 
 Common flags:
-- `--dry-run` – preview without writing files.
-- `--template <name>` – override detection with a specific template.
-- `--no-suggestions` – silence contextual hints.
+- `--dry-run` - preview without writing files.
+- `--template <name>` - override detection with a specific template.
+- `--target <claude|codex|gemini>` - choose output profile.
+- `--no-suggestions` - silence contextual hints.
 """
 
     render_console.print(

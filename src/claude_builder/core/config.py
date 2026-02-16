@@ -633,7 +633,8 @@ class AdvancedConfigManager:
     def migrate_configuration(self, file: Path, target_version: str) -> Dict[str, Any]:
         if not self._loader:
             return {}
-        data = self._loader.load_config_file(Path(file))
+        loaded = self._loader.load_config_file(Path(file))
+        data: Dict[str, Any] = loaded if isinstance(loaded, dict) else {}
         current_version = str(data.get("version", "1.0"))
         plan = self._migration_rules.get(current_version, {}).get(target_version, {})
 
