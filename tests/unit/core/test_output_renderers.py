@@ -2,8 +2,6 @@
 
 from pathlib import Path
 
-import pytest
-
 from claude_builder.core.models import (
     EnvironmentBundle,
     OutputTarget,
@@ -12,6 +10,8 @@ from claude_builder.core.models import (
 )
 from claude_builder.core.output_renderers import (
     ClaudeTargetRenderer,
+    CodexTargetRenderer,
+    GeminiContextRenderer,
     get_target_renderer,
 )
 
@@ -44,19 +44,20 @@ def _snapshot_text(rendered: RenderedTargetOutput) -> str:
     return "\n\n".join(sections) + "\n"
 
 
-def test_claude_renderer_snapshot() -> None:
-    renderer = ClaudeTargetRenderer()
-    rendered = renderer.render(_sample_environment())
-
-    snapshot_path = (
-        Path(__file__).parent / "__snapshots__" / "claude_target_artifacts_snapshot.md"
-    )
-    expected = (
-        snapshot_path.read_text(encoding="utf-8")
+def _read_snapshot(name: str) -> str:
+    path = Path(__file__).parent / "__snapshots__" / name
+    return (
+        path.read_text(encoding="utf-8")
         .replace("<!-- markdownlint-disable -->\n\n", "")
         .replace("<!-- markdownlint-disable -->\n", "")
     )
 
+
+def test_claude_renderer_snapshot() -> None:
+    renderer = ClaudeTargetRenderer()
+    rendered = renderer.render(_sample_environment())
+
+    expected = _read_snapshot("claude_target_artifacts_snapshot.md")
     assert rendered.target == OutputTarget.CLAUDE
     assert rendered.total_files == 4
     assert _snapshot_text(rendered) == expected
@@ -74,9 +75,39 @@ def test_claude_renderer_custom_agents_dir_paths() -> None:
     ]
 
 
-def test_get_target_renderer_rejects_unimplemented_targets() -> None:
-    with pytest.raises(NotImplementedError, match="not implemented yet"):
-        get_target_renderer(OutputTarget.CODEX)
+def test_codex_renderer_snapshot() -> None:
+    renderer = CodexTargetRenderer()
+    rendered = renderer.render(_sample_environment(), agents_dir=".agents/skills")
 
-    with pytest.raises(NotImplementedError, match="not implemented yet"):
-        get_target_renderer(OutputTarget.GEMINI)
+    expected = _read_snapshot("codex_target_artifacts_snapshot.md")
+    assert rendered.target == OutputTarget.CODEX
+    assert rendered.total_files == 3
+    assert _snapshot_text(rendered) == expected
+    assert rendered.get_paths() == [
+        "AGENTS.md",
+        ".agents/skills/test-writer-fixer/SKILL.md",
+        ".agents/skills/backend-architect/SKILL.md",
+    ]
+
+
+def test_gemini_renderer_snapshot() -> None:
+    renderer = GeminiContextRenderer()
+    rendered = renderer.render(_sample_environment(), agents_dir=".gemini/agents")
+
+    expected = _read_snapshot("gemini_target_artifacts_snapshot.md")
+    assert rendered.target == OutputTarget.GEMINI
+    assert rendered.total_files == 5
+    assert _snapshot_text(rendered) == expected
+    assert rendered.get_paths() == [
+        "GEMINI.md",
+        "AGENTS.md",
+        ".gemini/agents/test-writer-fixer.md",
+        ".gemini/agents/backend-architect.md",
+        ".gemini/settings.json.example",
+    ]
+
+
+def test_get_target_renderer_supports_all_targets() -> None:
+    assert isinstance(get_target_renderer(OutputTarget.CLAUDE), ClaudeTargetRenderer)
+    assert isinstance(get_target_renderer(OutputTarget.CODEX), CodexTargetRenderer)
+    assert isinstance(get_target_renderer(OutputTarget.GEMINI), GeminiContextRenderer)

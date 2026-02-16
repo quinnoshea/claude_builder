@@ -61,18 +61,27 @@ class TestGenerateCommands:
 
     @patch("claude_builder.cli.generate_commands.ProjectAnalyzer")
     @patch("claude_builder.core.template_manager.TemplateManager")
-    def test_complete_command_reports_unsupported_target(
+    def test_complete_command_supports_codex_target(
         self, mock_template_manager_class, mock_analyzer_class, sample_python_project
     ):
-        """Test generate complete surfaces unsupported target errors."""
+        """Test generate complete routes codex target with codex defaults."""
         mock_analyzer = Mock()
         mock_analysis = Mock()
         mock_analyzer.analyze.return_value = mock_analysis
         mock_analyzer_class.return_value = mock_analyzer
 
         mock_template_manager = Mock()
-        mock_template_manager.generate_target_artifacts.side_effect = (
-            NotImplementedError("Target 'codex' is defined but not implemented yet")
+        mock_template_manager.generate_target_artifacts.return_value = (
+            RenderedTargetOutput(
+                target=OutputTarget.CODEX,
+                artifacts=[
+                    GeneratedArtifact("AGENTS.md", "# Codex"),
+                    GeneratedArtifact(
+                        ".agents/skills/test-writer-fixer/SKILL.md", "# Skill"
+                    ),
+                ],
+                metadata={},
+            )
         )
         mock_template_manager_class.return_value = mock_template_manager
 
@@ -81,8 +90,58 @@ class TestGenerateCommands:
             generate, ["complete", str(sample_python_project), "--target", "codex"]
         )
 
-        assert result.exit_code != 0
-        assert "Target 'codex' is defined but not implemented yet" in result.output
+        assert result.exit_code == 0
+        call_kwargs = mock_template_manager.generate_target_artifacts.call_args.kwargs
+        assert call_kwargs["target"] == OutputTarget.CODEX
+        assert call_kwargs["agents_dir"] == ".agents/skills"
+        assert (sample_python_project / "AGENTS.md").exists()
+        assert (
+            sample_python_project
+            / ".agents"
+            / "skills"
+            / "test-writer-fixer"
+            / "SKILL.md"
+        ).exists()
+
+    @patch("claude_builder.cli.generate_commands.ProjectAnalyzer")
+    @patch("claude_builder.core.template_manager.TemplateManager")
+    def test_complete_command_supports_gemini_target(
+        self, mock_template_manager_class, mock_analyzer_class, sample_python_project
+    ):
+        """Test generate complete routes gemini target with gemini defaults."""
+        mock_analyzer = Mock()
+        mock_analysis = Mock()
+        mock_analyzer.analyze.return_value = mock_analysis
+        mock_analyzer_class.return_value = mock_analyzer
+
+        mock_template_manager = Mock()
+        mock_template_manager.generate_target_artifacts.return_value = (
+            RenderedTargetOutput(
+                target=OutputTarget.GEMINI,
+                artifacts=[
+                    GeneratedArtifact("GEMINI.md", "# Gemini"),
+                    GeneratedArtifact("AGENTS.md", "# Agents"),
+                    GeneratedArtifact(
+                        ".gemini/settings.json.example", '{"context": {}}'
+                    ),
+                ],
+                metadata={},
+            )
+        )
+        mock_template_manager_class.return_value = mock_template_manager
+
+        runner = CliRunner()
+        result = runner.invoke(
+            generate, ["complete", str(sample_python_project), "--target", "gemini"]
+        )
+
+        assert result.exit_code == 0
+        call_kwargs = mock_template_manager.generate_target_artifacts.call_args.kwargs
+        assert call_kwargs["target"] == OutputTarget.GEMINI
+        assert call_kwargs["agents_dir"] == ".gemini/agents"
+        assert (sample_python_project / "GEMINI.md").exists()
+        assert (sample_python_project / "AGENTS.md").exists()
+        assert (sample_python_project / ".gemini" / "settings.json.example").exists()
 
     @patch("claude_builder.cli.generate_commands.ProjectAnalyzer")
     @patch("claude_builder.cli.generate_commands.DocumentGenerator")

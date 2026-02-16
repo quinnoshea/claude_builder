@@ -42,6 +42,15 @@ console = Console()
 VALID_DOMAINS = ["infra", "devops", "mlops"]
 
 
+def _default_agents_dir_for_target(target: OutputTarget) -> str:
+    """Return default specialist artifact directory for a target."""
+    if target == OutputTarget.CLAUDE:
+        return ".claude/agents"
+    if target == OutputTarget.CODEX:
+        return ".agents/skills"
+    return ".gemini/agents"
+
+
 def _filter_generated_content_by_sections(
     generated_content: Any, sections_filter: list[str]
 ) -> dict[str, str]:
@@ -304,7 +313,7 @@ def docs(ctx: click.Context, project_path: str, **kwargs: Any) -> None:
 @click.option(
     "--agents-dir",
     type=click.Path(),
-    help="Directory for individual agent files (default: .claude/agents)",
+    help="Directory for generated specialist files (default depends on --target)",
 )
 @click.option(
     "--dry-run",
@@ -333,7 +342,7 @@ def docs(ctx: click.Context, project_path: str, **kwargs: Any) -> None:
 )
 @click.pass_context
 def complete(ctx: click.Context, project_path: str, **kwargs: Any) -> None:
-    """Generate complete Claude Code environment (CLAUDE.md + individual subagents + AGENTS.md)."""
+    """Generate complete environment artifacts for the selected target."""
     config = GenerateConfig(**kwargs)
 
     root_obj = ctx.find_root().obj if ctx.find_root() else None
@@ -367,7 +376,7 @@ def complete(ctx: click.Context, project_path: str, **kwargs: Any) -> None:
         if config.domains:
             opts["domains"] = config.domains
         target = OutputTarget(config.target.lower())
-        agents_dir = config.agents_dir or ".claude/agents"
+        agents_dir = config.agents_dir or _default_agents_dir_for_target(target)
         rendered_output = template_manager.generate_target_artifacts(
             analysis,
             target=target,
