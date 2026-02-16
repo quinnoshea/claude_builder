@@ -6,6 +6,11 @@ from unittest.mock import Mock, patch
 from click.testing import CliRunner
 
 from claude_builder.cli.generate_commands import agents_md, claude_md, generate
+from claude_builder.core.models import (
+    GeneratedArtifact,
+    OutputTarget,
+    RenderedTargetOutput,
+)
 
 
 class TestGenerateCommands:
@@ -17,6 +22,67 @@ class TestGenerateCommands:
         result = runner.invoke(generate, ["--help"])
         assert result.exit_code == 0
         assert "Generate documentation and configurations" in result.output
+
+    @patch("claude_builder.cli.generate_commands.ProjectAnalyzer")
+    @patch("claude_builder.core.template_manager.TemplateManager")
+    def test_complete_command_defaults_to_claude_target(
+        self, mock_template_manager_class, mock_analyzer_class, sample_python_project
+    ):
+        """Test generate complete defaults to Claude target rendering."""
+        mock_analyzer = Mock()
+        mock_analysis = Mock()
+        mock_analyzer.analyze.return_value = mock_analysis
+        mock_analyzer_class.return_value = mock_analyzer
+
+        mock_template_manager = Mock()
+        mock_template_manager.generate_target_artifacts.return_value = (
+            RenderedTargetOutput(
+                target=OutputTarget.CLAUDE,
+                artifacts=[
+                    GeneratedArtifact("CLAUDE.md", "# Claude"),
+                    GeneratedArtifact(".claude/agents/test-agent.md", "# Agent"),
+                    GeneratedArtifact("AGENTS.md", "# Agents"),
+                ],
+                metadata={},
+            )
+        )
+        mock_template_manager_class.return_value = mock_template_manager
+
+        runner = CliRunner()
+        result = runner.invoke(generate, ["complete", str(sample_python_project)])
+
+        assert result.exit_code == 0
+        call_kwargs = mock_template_manager.generate_target_artifacts.call_args.kwargs
+        assert call_kwargs["target"] == OutputTarget.CLAUDE
+        assert call_kwargs["agents_dir"] == ".claude/agents"
+        assert (sample_python_project / "CLAUDE.md").exists()
+        assert (sample_python_project / ".claude" / "agents" / "test-agent.md").exists()
+        assert (sample_python_project / "AGENTS.md").exists()
+
+    @patch("claude_builder.cli.generate_commands.ProjectAnalyzer")
+    @patch("claude_builder.core.template_manager.TemplateManager")
+    def test_complete_command_reports_unsupported_target(
+        self, mock_template_manager_class, mock_analyzer_class, sample_python_project
+    ):
+        """Test generate complete surfaces unsupported target errors."""
+        mock_analyzer = Mock()
+        mock_analysis = Mock()
+        mock_analyzer.analyze.return_value = mock_analysis
+        mock_analyzer_class.return_value = mock_analyzer
+
+        mock_template_manager = Mock()
+        mock_template_manager.generate_target_artifacts.side_effect = (
+            NotImplementedError("Target 'codex' is defined but not implemented yet")
+        )
+        mock_template_manager_class.return_value = mock_template_manager
+
+        runner = CliRunner()
+        result = runner.invoke(
+            generate, ["complete", str(sample_python_project), "--target", "codex"]
+        )
+
+        assert result.exit_code != 0
+        assert "Target 'codex' is defined but not implemented yet" in result.output
 
     @patch("claude_builder.cli.generate_commands.ProjectAnalyzer")
     @patch("claude_builder.cli.generate_commands.DocumentGenerator")

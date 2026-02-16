@@ -19,10 +19,13 @@ from typing import Any, Dict, List, Optional, cast
 from claude_builder.core.models import (
     AgentDefinition,
     EnvironmentBundle,
+    OutputTarget,
     ProjectAnalysis,
+    RenderedTargetOutput,
     SubagentFile,
     ValidationResult,
 )
+from claude_builder.core.output_renderers import get_target_renderer
 from claude_builder.core.template_management.community.template_repository import (
     CommunityTemplate,
     CommunityTemplateManager,
@@ -654,6 +657,19 @@ class ModernTemplateManager:
             generation_timestamp=datetime.now(tz=timezone.utc).isoformat(),
         )
 
+    def generate_target_artifacts(
+        self,
+        analysis: ProjectAnalysis,
+        *,
+        target: OutputTarget = OutputTarget.CLAUDE,
+        agents_dir: str = ".claude/agents",
+        **kwargs: Any,
+    ) -> RenderedTargetOutput:
+        """Generate target-specific output artifacts from project analysis."""
+        environment = self.generate_complete_environment(analysis, **kwargs)
+        renderer = get_target_renderer(target)
+        return renderer.render(environment, agents_dir=agents_dir)
+
     def _create_agent_definitions(
         self, agent_config: Any, analysis: ProjectAnalysis
     ) -> List[AgentDefinition]:
@@ -973,21 +989,21 @@ tools: {agent.get_yaml_tools()}"""
     ) -> str:
         """Generate regular CLAUDE.md project documentation (NO YAML)."""
         template_content = (
-            f"""# {context['project_name']} Development Environment
+            f"""# {context["project_name"]} Development Environment
 
 ## Project Overview
-{context['project_description']}
+{context["project_description"]}
 
-**Language**: {context['primary_language']}
-**Framework**: {context['primary_framework']}
-**Type**: {context['project_type']}
-**Complexity**: {context['complexity_level']}
+**Language**: {context["primary_language"]}
+**Framework**: {context["primary_framework"]}
+**Type**: {context["project_type"]}
+**Complexity**: {context["complexity_level"]}
 
 ## Development Standards
-{context['development_standards']}
+{context["development_standards"]}
 
 ## Agent Team
-This project includes {context['agent_count']} specialized subagents for optimal development:
+This project includes {context["agent_count"]} specialized subagents for optimal development:
 
 """
             + "\n".join(
@@ -1001,7 +1017,7 @@ This project includes {context['agent_count']} specialized subagents for optimal
 See AGENTS.md for detailed usage instructions and coordination patterns.
 
 ## Development Commands
-{context['development_commands']}
+{context["development_commands"]}
 
 ## Architecture Notes
 - Follow existing project patterns and conventions
@@ -1408,6 +1424,31 @@ class TemplateManager(LegacyTemplateManager):
             ),
         )
         return modern_manager.generate_complete_environment(analysis, **kwargs)
+
+    def generate_target_artifacts(
+        self,
+        analysis: ProjectAnalysis,
+        *,
+        target: OutputTarget = OutputTarget.CLAUDE,
+        agents_dir: str = ".claude/agents",
+        **kwargs: Any,
+    ) -> RenderedTargetOutput:
+        """Generate target-specific output artifacts.
+
+        Delegates to ModernTemplateManager for rendering.
+        """
+        modern_manager = ModernTemplateManager(
+            config=getattr(self, "config", {}),
+            template_directory=(
+                str(self.templates_dir) if hasattr(self, "templates_dir") else None
+            ),
+        )
+        return modern_manager.generate_target_artifacts(
+            analysis,
+            target=target,
+            agents_dir=agents_dir,
+            **kwargs,
+        )
 
     # --- Coordination layer: delegate modular queries and normalize types ---
     def list_available_templates(
