@@ -12,10 +12,18 @@ import time
 
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any, AsyncGenerator, AsyncIterable, Callable, Dict, Optional, TypeVar
+from typing import (
+    Any,
+    AsyncGenerator,
+    AsyncIterable,
+    Callable,
+    Dict,
+    Optional,
+    TypeVar,
+    cast,
+)
 from weakref import WeakSet
 
-import aiofiles
 import aiohttp
 import psutil
 
@@ -213,18 +221,42 @@ class AsyncFileProcessor:
     def __init__(self, *, chunk_size: int = 8192, max_concurrent_files: int = 5):
         self.chunk_size = chunk_size
         self.max_concurrent_files = max_concurrent_files
-        self._semaphore = asyncio.Semaphore(max_concurrent_files)
+        self._semaphore: Optional[asyncio.Semaphore] = None
+        self._semaphore_loop: Optional[asyncio.AbstractEventLoop] = None
         self.logger = logging.getLogger(__name__)
+
+    def _get_semaphore(self) -> asyncio.Semaphore:
+        """Get a semaphore bound to the current running event loop."""
+        loop = asyncio.get_running_loop()
+        if self._semaphore is None or self._semaphore_loop is not loop:
+            self._semaphore = asyncio.Semaphore(self.max_concurrent_files)
+            self._semaphore_loop = loop
+        return self._semaphore
+
+    class _AsyncTextFileHandle:
+        """Minimal async wrapper around a text file object."""
+
+        def __init__(self, file_obj: Any):
+            self._file_obj = file_obj
+
+        async def read(self, size: int = -1) -> str:
+            return cast(str, self._file_obj.read(size))
+
+        async def write(self, data: str) -> int:
+            return cast(int, self._file_obj.write(data))
 
     @asynccontextmanager
     async def process_file(
         self, file_path: Path
-    ) -> AsyncGenerator[aiofiles.threadpool.text.AsyncTextIOWrapper, None]:
+    ) -> AsyncGenerator["AsyncFileProcessor._AsyncTextFileHandle", None]:
         """Process file with memory-efficient streaming."""
-        async with self._semaphore:
+        async with self._get_semaphore():
             try:
-                async with aiofiles.open(file_path, encoding="utf-8") as f:
-                    yield f
+                file_obj = open(file_path, "r", encoding="utf-8")
+                try:
+                    yield self._AsyncTextFileHandle(file_obj)
+                finally:
+                    file_obj.close()
             except Exception as e:
                 self.logger.exception(f"Error processing file {file_path}: {e}")
                 msg = f"File processing failed: {e}"
@@ -243,13 +275,17 @@ class AsyncFileProcessor:
         self, file_path: Path, content_stream: AsyncIterable[str]
     ) -> None:
         """Write file from async stream with memory optimization."""
-        async with self._semaphore:
+        async with self._get_semaphore():
             try:
-                async with aiofiles.open(file_path, "w", encoding="utf-8") as f:
+                file_obj = open(file_path, "w", encoding="utf-8")
+                file_handle = self._AsyncTextFileHandle(file_obj)
+                try:
                     async for chunk in content_stream:
-                        await f.write(chunk)
+                        await file_handle.write(chunk)
                         # Yield control periodically for other operations
                         await asyncio.sleep(0)
+                finally:
+                    file_obj.close()
             except Exception as e:
                 self.logger.exception(f"Error writing file {file_path}: {e}")
                 msg = f"File writing failed: {e}"
