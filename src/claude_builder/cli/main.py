@@ -222,7 +222,6 @@ def _execute_main(project_path: str, **kwargs: Any) -> None:
         console=console,
         disable=kwargs["quiet"],
     ) as progress:
-
         # Step 1: Project Analysis
         task1 = progress.add_task("Analyzing project structure...", total=None)
         analyzer = ProjectAnalyzer(config=config.analysis.__dict__)
