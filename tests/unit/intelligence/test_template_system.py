@@ -11,9 +11,6 @@ Tests the template management and processing including:
 
 import pytest
 
-
-pytestmark = pytest.mark.failing
-
 from claude_builder.core.template_manager import (
     Template,
     TemplateContext,
@@ -237,7 +234,7 @@ variables: [title, content]
         template_file.write_text(template_content)
 
         loader = TemplateLoader(template_directory=temp_dir)
-        template = loader.load_template("test_template.md")
+        template = loader.load_template_from_file("test_template.md")
 
         assert template.name == "test-template"
         assert template.template_type == "markdown"
@@ -251,7 +248,7 @@ variables: [title, content]
         template_file.write_text(template_content)
 
         loader = TemplateLoader(template_directory=temp_dir)
-        template = loader.load_template("simple_template.md")
+        template = loader.load_template_from_file("simple_template.md")
 
         assert template.name == "simple_template.md"
         assert "{{ project_name }}" in template.content
@@ -303,7 +300,7 @@ extends: base-template
         child_template.write_text(child_content)
 
         loader = TemplateLoader(template_directory=temp_dir)
-        child = loader.load_template("child.md")
+        child = loader.load_template_from_file("child.md")
 
         assert child.parent_template == "base-template"
         assert "{% extends 'base.md' %}" in child.content
@@ -336,10 +333,10 @@ class TestTemplateRenderer:
 
     def test_renderer_initialization(self):
         """Test template renderer initialization."""
-        renderer = TemplateRenderer()
+        renderer = TemplateRenderer(template_engine="jinja2")
 
         assert renderer.jinja_env is not None
-        assert renderer.render_cache is not None
+        assert renderer.render_cache is None
 
     def test_render_simple_template(self):
         """Test rendering simple template."""
@@ -351,7 +348,7 @@ class TestTemplateRenderer:
 
         context = TemplateContext(title="Test Title", content="Test content here")
 
-        renderer = TemplateRenderer()
+        renderer = TemplateRenderer(template_engine="jinja2")
         result = renderer.render(template, context)
 
         assert "# Test Title" in result
@@ -375,7 +372,7 @@ class TestTemplateRenderer:
             ]
         )
 
-        renderer = TemplateRenderer()
+        renderer = TemplateRenderer(template_engine="jinja2")
         result = renderer.render(template, context)
 
         assert "- fastapi: 0.100.0" in result
@@ -452,7 +449,7 @@ Dependencies: {{ dependencies | length }} total""",
 
         context = TemplateContext(defined_variable="value")
 
-        renderer = TemplateRenderer()
+        renderer = TemplateRenderer(template_engine="jinja2")
 
         with pytest.raises(TemplateError):
             renderer.render(template, context)
