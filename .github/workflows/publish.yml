@@ -31,45 +31,14 @@ jobs:
       run: |
         uv pip install --system -e ".[dev]"
 
-    - name: Run full test suite
+    - name: Run release preflight checks
       run: |
-        uv run pytest --cov=claude_builder --cov-report=xml
-
-    - name: Validate version consistency
-      run: |
-        python -c "
-        import claude_builder
-        import toml
-
-        # Get version from __init__.py
-        init_version = claude_builder.__version__
-
-        # Get version from pyproject.toml
-        with open('pyproject.toml', 'r') as f:
-            pyproject = toml.load(f)
-        toml_version = pyproject['project']['version']
-
-        # Check if they match
-        if init_version != toml_version:
-            print(f'Version mismatch: __init__.py={init_version}, pyproject.toml={toml_version}')
-            exit(1)
-
-        print(f'Version validation passed: {init_version}')
-        "
-
-    - name: Check changelog entry
-      if: github.event_name == 'release'
-      run: |
-        # Extract version from tag
-        VERSION=${GITHUB_REF#refs/tags/v}
-
-        # Check if CHANGELOG.md contains this version
-        if ! grep -q "## \[${VERSION}\]" CHANGELOG.md; then
-          echo "❌ No changelog entry found for version ${VERSION}"
-          exit 1
+        if [ "${GITHUB_EVENT_NAME}" = "release" ]; then
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          ./scripts/release_preflight.sh "${VERSION}"
+        else
+          ./scripts/release_preflight.sh
         fi
-
-        echo "✅ Changelog entry found for version ${VERSION}"
 
   build:
     needs: validate-release

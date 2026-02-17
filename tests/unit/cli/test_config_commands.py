@@ -263,5 +263,6 @@ class TestConfigCommands:
 
         runner = CliRunner()
         result = runner.invoke(show, [str(sample_python_project), "--format", "yaml"])
-        # Should handle YAML format (or fallback gracefully)
         assert result.exit_code == 0
+        assert "project:" in result.output
+        assert "name: test" in result.output

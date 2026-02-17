@@ -525,10 +525,24 @@ class CommunityTemplateManager:
         This is a simplified implementation that would be expanded
         to integrate with the actual project analysis and generation system.
         """
+        source_project = config.get("source_project")
+        if source_project:
+            project_guidance = (
+                f"Follow the patterns established in the original project at "
+                f"{source_project}."
+            )
+            template_origin = "created from project analysis."
+        else:
+            project_guidance = (
+                "Customize this starter scaffold with your own conventions, "
+                "workflows, and engineering standards."
+            )
+            template_origin = "created as an empty starter scaffold."
+
         # Create basic template structure
         claude_instructions = f"""# {config.get('name', 'Custom Template')} - Claude Instructions
 
-This is a custom template created from project analysis.
+This is a custom template {template_origin}
 
 ## Project Overview
 - **Name**: {config.get('name', 'Custom Template')}
@@ -537,7 +551,7 @@ This is a custom template created from project analysis.
 
 ## Development Guidelines
 
-Follow the patterns established in the original project at {project_path}.
+{project_guidance}
 """
 
         # Write Claude instructions

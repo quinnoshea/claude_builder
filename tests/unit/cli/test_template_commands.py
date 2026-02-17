@@ -1,5 +1,6 @@
 """Tests for CLI template commands."""
 
+from pathlib import Path
 from unittest.mock import Mock, patch
 
 from click.testing import CliRunner
@@ -236,6 +237,61 @@ class TestTemplateCommands:
         )
         assert result.exit_code == 0
         assert "installed successfully" in result.output
+
+    @patch("claude_builder.cli.template_commands.TemplateManager")
+    def test_create_template_empty_scaffold(self, mock_template_manager_class):
+        """Test templates create without --project-path."""
+        mock_template_manager = Mock()
+        mock_result = Mock()
+        mock_result.is_valid = True
+        mock_result.suggestions = ["Template scaffold created"]
+        mock_result.warnings = []
+        mock_result.errors = []
+        mock_template_manager.create_custom_template.return_value = mock_result
+        mock_template_manager_class.return_value = mock_template_manager
+
+        runner = CliRunner()
+        result = runner.invoke(templates, ["create", "my-template"])
+        assert result.exit_code == 0
+        assert "not yet implemented" not in result.output.lower()
+        assert "created successfully" in result.output
+        mock_template_manager.create_custom_template.assert_called_once()
+
+        call_args = mock_template_manager.create_custom_template.call_args.args
+        assert call_args[0] == "my-template"
+        assert isinstance(call_args[1], Path)
+        assert call_args[2]["name"] == "my-template"
+        assert call_args[2]["source_project"] is None
+
+    @patch("claude_builder.cli.template_commands.TemplateManager")
+    def test_create_template_from_project_includes_source(
+        self, mock_template_manager_class
+    ):
+        """Test templates create with --project-path includes source_project metadata."""
+        mock_template_manager = Mock()
+        mock_result = Mock()
+        mock_result.is_valid = True
+        mock_result.suggestions = ["Template created"]
+        mock_result.warnings = []
+        mock_result.errors = []
+        mock_template_manager.create_custom_template.return_value = mock_result
+        mock_template_manager_class.return_value = mock_template_manager
+
+        runner = CliRunner()
+        with runner.isolated_filesystem():
+            project_dir = Path("sample_project")
+            project_dir.mkdir()
+
+            result = runner.invoke(
+                templates, ["create", "my-template", "--project-path", str(project_dir)]
+            )
+            assert result.exit_code == 0
+            mock_template_manager.create_custom_template.assert_called_once()
+
+            call_args = mock_template_manager.create_custom_template.call_args.args
+            assert call_args[0] == "my-template"
+            assert call_args[1] == project_dir.resolve()
+            assert call_args[2]["source_project"] == str(project_dir.resolve())
 
     @patch("claude_builder.cli.template_commands.TemplateManager")
     def test_uninstall_template_command(self, mock_template_manager_class):

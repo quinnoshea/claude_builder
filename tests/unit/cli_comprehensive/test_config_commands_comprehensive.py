@@ -197,20 +197,24 @@ class TestConfigCommandsComprehensive:
                 result = runner.invoke(show, [tmp_dir, "--section", "analysis"])
                 assert result.exit_code == 0
 
-    def test_config_show_yaml_format_not_implemented(self):
-        """Test config show with YAML format (not implemented)."""
+    def test_config_show_yaml_format(self):
+        """Test config show with YAML format output."""
         with patch(
             "claude_builder.cli.config_commands.ConfigManager"
         ) as mock_config_class:
             mock_config = Mock()
             mock_config.load_config.return_value = Config()
+            mock_config._config_to_dict.return_value = {
+                "analysis": {"confidence_threshold": 80}
+            }
             mock_config_class.return_value = mock_config
 
             runner = CliRunner()
             with tempfile.TemporaryDirectory() as tmp_dir:
                 result = runner.invoke(show, [tmp_dir, "--format", "yaml"])
                 assert result.exit_code == 0
-                assert "YAML output not yet implemented" in result.output
+                assert "analysis:" in result.output
+                assert "confidence_threshold: 80" in result.output
 
     def test_config_migrate_basic(self):
         """Test config migrate command."""

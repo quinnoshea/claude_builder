@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 
+from enum import Enum
 from pathlib import Path
 from typing import Any
 
@@ -19,6 +20,11 @@ from claude_builder.core.config import Config, ConfigManager
 from claude_builder.core.models import GitIntegrationMode
 from claude_builder.utils.exceptions import ConfigError
 
+try:
+    import yaml
+except ImportError:
+    yaml = None  # type: ignore[assignment]
+
 
 FAILED_TO_CREATE_CONFIGURATION = "Failed to create configuration"
 CONFIGURATION_VALIDATION_FAILED = "Configuration validation failed"
@@ -33,6 +39,17 @@ FAILED_TO_RESET_CONFIGURATION = "Failed to reset configuration"
 DESCRIPTION_MAX_LENGTH = 50
 
 console = Console()
+
+
+def _normalize_output_data(value: Any) -> Any:
+    """Normalize config values for JSON/YAML output serializers."""
+    if isinstance(value, Enum):
+        return value.value
+    if isinstance(value, dict):
+        return {k: _normalize_output_data(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_normalize_output_data(item) for item in value]
+    return value
 
 
 def _raise_validation_error_strict() -> None:
@@ -203,17 +220,28 @@ def show(project_path: str, output_format: str, section: str | None) -> None:
         config_manager = ConfigManager()
 
         config = config_manager.load_config(project_path_obj)
+        if output_format == "table":
+            _display_config_table(config, section)
+            return
+
+        config_dict: Any
+        if isinstance(config, dict):
+            config_dict = config
+        else:
+            config_dict = config_manager._config_to_dict(config)  # noqa: SLF001
+        config_dict = _normalize_output_data(config_dict)
+
+        if section and section in config_dict:
+            config_dict = {section: config_dict[section]}
 
         if output_format == "json":
-            config_dict = config_manager._config_to_dict(config)  # noqa: SLF001
-            if section and section in config_dict:
-                config_dict = {section: config_dict[section]}
             console.print(json.dumps(config_dict, indent=2, default=str))
         elif output_format == "yaml":
-            # Would need PyYAML for this
-            console.print("[yellow]YAML output not yet implemented[/yellow]")
-        else:
-            _display_config_table(config, section)
+            if yaml is None:
+                raise click.ClickException(
+                    "YAML support requires PyYAML. Install with `pip install pyyaml`."
+                )
+            console.print(yaml.safe_dump(config_dict, sort_keys=False))
 
     except Exception as e:
         console.print(f"[red]Error showing configuration: {e}[/red]")

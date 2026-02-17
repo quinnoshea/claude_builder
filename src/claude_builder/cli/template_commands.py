@@ -345,6 +345,7 @@ def create(name: str, **kwargs: Any) -> None:
 
         # Template configuration
         template_config = {
+            "name": name,
             "description": description,
             "author": author,
             "category": category,
@@ -357,22 +358,19 @@ def create(name: str, **kwargs: Any) -> None:
 
         if config.project_path:
             # Create from existing project
+            source_project = Path(config.project_path).resolve()
+            template_config["source_project"] = str(source_project)
             console.print(
                 f"[cyan]Creating template '{name}' from project: "
                 f"{config.project_path}[/cyan]"
             )
-            result = manager.create_custom_template(
-                name, Path(config.project_path), template_config
-            )
+            result = manager.create_custom_template(name, source_project, template_config)
         else:
             # Create empty template structure
-            console.print(f"[cyan]Creating empty template: {name}[/cyan]")
-            # TODO: Implement empty template creation
-            console.print(
-                "[yellow]Empty template creation not yet implemented[/yellow]"
-            )
-            console.print("Use --project-path to create template from existing project")
-            return
+            template_config["source_project"] = None
+            console.print(f"[cyan]Creating empty template scaffold: {name}[/cyan]")
+            # Reuse existing creation flow with a stable local context path.
+            result = manager.create_custom_template(name, Path.cwd(), template_config)
 
         if result.is_valid:
             console.print("[green]✓ Custom template created successfully[/green]")
