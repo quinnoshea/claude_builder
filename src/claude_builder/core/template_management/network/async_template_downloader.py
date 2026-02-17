@@ -14,7 +14,6 @@ import tempfile
 from pathlib import Path
 from typing import Any, AsyncGenerator
 
-import aiofiles
 import aiohttp
 
 from claude_builder.utils.async_performance import (
@@ -26,6 +25,11 @@ from claude_builder.utils.async_performance import (
     performance_monitor,
 )
 from claude_builder.utils.exceptions import PerformanceError, SecurityError
+
+try:
+    from claude_builder.utils.security import security_validator
+except ImportError:  # pragma: no cover - defensive for optional deps/mocks
+    security_validator = None  # type: ignore[assignment]
 
 
 def _get_security_validator() -> Any:
@@ -216,7 +220,9 @@ class AsyncTemplateDownloader:
         downloaded = 0
         chunk_size = 8192
 
-        async with aiofiles.open(destination, "wb") as f:
+        # Use sync file I/O inside async flow; aiofiles can hang under some
+        # mocked/unit-test environments and this path keeps behavior predictable.
+        with open(destination, "wb") as f:
             async for chunk in _normalize_iter_chunks(
                 response.content.iter_chunked(chunk_size)
             ):
@@ -225,7 +231,7 @@ class AsyncTemplateDownloader:
                     msg = f"Download exceeded size limit: {downloaded} bytes"
                     raise SecurityError(msg)
 
-                await f.write(chunk)
+                f.write(chunk)
 
                 # Yield control periodically to prevent blocking
                 if downloaded % (chunk_size * 10) == 0:
@@ -326,18 +332,18 @@ class AsyncTemplateDownloader:
     async def _extract_bundle_async(self, bundle_path: Path, extract_to: Path) -> None:
         """Extract bundle asynchronously with security validation."""
         try:
-            # Use sync method for zip extraction (no async zip library available)
-            # But run in thread pool to avoid blocking
-            await asyncio.get_event_loop().run_in_executor(
-                None,
-                lambda: _get_security_validator().safe_extract_zip(
-                    bundle_path, extract_to
-                ),
-            )
+            validator = _get_security_validator()
+            if validator is None:
+                msg = "Security validator is not available for bundle extraction"
+                raise PerformanceError(msg)
+
+            # Keep extraction synchronous for predictable teardown in tests and
+            # constrained environments; extraction sizes here are template-sized.
+            validator.safe_extract_zip(bundle_path, extract_to)
 
             self.logger.info(f"Extracted template bundle to {extract_to}")
 
-        except (OSError, RuntimeError, ValueError) as e:
+        except (OSError, RuntimeError, ValueError, SecurityError) as e:
             self.logger.exception(f"Failed to extract bundle {bundle_path}: {e}")
             msg = f"Bundle extraction failed: {e}"
             raise PerformanceError(msg) from e

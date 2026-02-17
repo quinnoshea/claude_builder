@@ -11,10 +11,6 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-
-pytestmark = pytest.mark.failing
-
-
 aiohttp = pytest.importorskip("aiohttp")
 
 from claude_builder.core.template_management.network.async_template_downloader import (
