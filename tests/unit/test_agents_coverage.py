@@ -2,9 +2,6 @@
 
 import pytest
 
-
-pytestmark = pytest.mark.failing
-
 from pathlib import Path
 
 from claude_builder.core.agents import (

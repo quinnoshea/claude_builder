@@ -131,6 +131,9 @@ class ProjectAnalyzer:
             )
             analysis.domain_info = domain_info
 
+            # Stage 8.5: Apply explicit config overrides when provided
+            self._apply_overrides(analysis)
+
             # Stage 9: Calculate overall confidence
             analysis.analysis_confidence = self._calculate_overall_confidence(analysis)
 
@@ -145,6 +148,22 @@ class ProjectAnalyzer:
         except Exception as e:
             msg = f"Failed to analyze project: {e}"
             raise AnalysisError(msg)
+
+    def _apply_overrides(self, analysis: ProjectAnalysis) -> None:
+        """Apply explicit language/framework overrides from analyzer config."""
+        overrides = self.config.get("overrides", {})
+        if not isinstance(overrides, dict):
+            return
+
+        language_override = overrides.get("language")
+        if isinstance(language_override, str) and language_override:
+            analysis.language_info.primary = language_override
+            analysis.language_info.confidence = 100.0
+
+        framework_override = overrides.get("framework")
+        if isinstance(framework_override, str) and framework_override:
+            analysis.framework_info.primary = framework_override
+            analysis.framework_info.confidence = 100.0
 
     def _analyze_filesystem(self, project_path: Path) -> FileSystemInfo:
         """Analyze project file system structure."""

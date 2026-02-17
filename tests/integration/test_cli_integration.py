@@ -11,9 +11,6 @@ Tests the complete CLI workflow including:
 
 import pytest
 
-
-pytestmark = pytest.mark.failing
-
 from pathlib import Path
 
 from click.testing import CliRunner

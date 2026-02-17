@@ -7,8 +7,6 @@ from pathlib import Path
 
 import pytest
 
-
-pytestmark = pytest.mark.failing
 from unittest.mock import Mock, patch
 
 
@@ -571,7 +569,7 @@ class TestGenerateHelperFunctions:
         mock_analysis = Mock()
 
         with patch("claude_builder.cli.generate_commands.console") as mock_console:
-            _display_generation_preview(mock_content, mock_analysis)
+            _display_generation_preview(mock_content)
             mock_console.print.assert_called()
 
     def test_write_generated_files_basic(self):
@@ -654,7 +652,7 @@ class TestGenerateCommandsErrorHandling:
             with tempfile.TemporaryDirectory() as tmp_dir:
                 result = runner.invoke(docs, [tmp_dir])
                 assert result.exit_code != 0
-                assert "Error generating documentation" in result.output
+                assert "Analysis failed" in result.output
 
     def test_agents_command_exception(self):
         """Test agents command exception handling."""
@@ -728,9 +726,10 @@ class TestGenerateCommandsErrorHandling:
             analysis_file = Path(tmp_dir) / "analysis.yaml"
             analysis_file.write_text("project_path: test")
 
-            # This should raise ClaudeBuilderError since yaml import fails
-            try:
-                _load_analysis_from_file(analysis_file)
-                assert False, "Expected ClaudeBuilderError"
-            except ClaudeBuilderError as e:
-                assert "Failed to load analysis" in str(e)
+            # Simulate optional YAML dependency unavailable.
+            with patch("claude_builder.cli.generate_commands.yaml", None):
+                try:
+                    _load_analysis_from_file(analysis_file)
+                    assert False, "Expected ClaudeBuilderError"
+                except ClaudeBuilderError as e:
+                    assert "Failed to load analysis" in str(e)

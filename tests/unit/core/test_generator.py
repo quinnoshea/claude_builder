@@ -11,9 +11,6 @@ from unittest.mock import Mock
 
 import pytest
 
-
-pytestmark = pytest.mark.failing
-
 from claude_builder.core.generator import DocumentGenerator, TemplateLoader
 from claude_builder.core.models import ComplexityLevel, ProjectType
 
@@ -23,7 +20,7 @@ from claude_builder.core.models import ComplexityLevel, ProjectType
 class TestDocumentGenerator:
     """Test the main DocumentGenerator class."""
 
-    def test_generator_initialization(self, default_config):
+    def test_generator_initialization(self):
         """Test generator initializes with correct defaults."""
         generator = DocumentGenerator()
         assert generator is not None

@@ -2,9 +2,6 @@
 
 import pytest
 
-
-pytestmark = pytest.mark.failing
-
 import tempfile
 
 from pathlib import Path
