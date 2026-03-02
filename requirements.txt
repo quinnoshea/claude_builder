@@ -78,7 +78,7 @@ pycparser==2.23
     # via cffi
 pydantic==2.12.5
     # via claude-builder (pyproject.toml)
-pydantic-core==2.41.5
+pydantic-core==2.42.0
     # via pydantic
 pygments==2.19.2
     # via rich
