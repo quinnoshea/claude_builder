@@ -198,7 +198,7 @@ jobs:
 
     - name: Upload test results and coverage artifacts
       if: always()
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: test-results-${{ matrix.os }}-${{ matrix.python-version }}
         path: |
@@ -307,7 +307,7 @@ jobs:
           bandit -r src/claude_builder -lll -iii -f json -o bandit-report.json
       - name: Upload security artifacts
         if: ${{ always() }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: security-artifacts
           path: |
@@ -367,7 +367,7 @@ jobs:
 
       - name: Upload failing test artifacts
         if: ${{ always() }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: failing-test-results
           path: |
@@ -457,7 +457,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload coverage-metrics artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-metrics
           path: |
@@ -506,7 +506,7 @@ jobs:
         run: |
           uvx --from build pyproject-build
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: dist-artifacts
           path: dist/*
