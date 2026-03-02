@@ -12,7 +12,7 @@ annotated-types==0.7.0
     # via pydantic
 attrs==25.4.0
     # via aiohttp
-certifi==2026.1.4
+certifi==2026.2.25
     # via requests
 cffi==2.0.0
     # via cryptography
