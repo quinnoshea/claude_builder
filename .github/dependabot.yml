@@ -32,6 +32,10 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "rich"
         update-types: ["version-update:semver-major"]
+      # Transitive dependencies managed by their parent packages — never bump independently
+      - dependency-name: "pydantic-core"
+      - dependency-name: "typing-inspection"
+      - dependency-name: "typing-extensions"
 
   # GitHub Actions dependencies
   - package-ecosystem: "github-actions"
