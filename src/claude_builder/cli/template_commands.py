@@ -6,7 +6,7 @@ import json
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Sequence, Union
+from typing import Any, Dict, Sequence, Union
 
 import click
 
@@ -344,7 +344,7 @@ def create(name: str, **kwargs: Any) -> None:
         ]
 
         # Template configuration
-        template_config = {
+        template_config: Dict[str, Any] = {
             "name": name,
             "description": description,
             "author": author,
@@ -364,7 +364,9 @@ def create(name: str, **kwargs: Any) -> None:
                 f"[cyan]Creating template '{name}' from project: "
                 f"{config.project_path}[/cyan]"
             )
-            result = manager.create_custom_template(name, source_project, template_config)
+            result = manager.create_custom_template(
+                name, source_project, template_config
+            )
         else:
             # Create empty template structure
             template_config["source_project"] = None
