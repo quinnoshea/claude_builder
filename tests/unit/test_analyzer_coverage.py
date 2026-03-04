@@ -139,8 +139,9 @@ def test_analyze_with_overrides(temp_dir):
 
     result = analyzer.analyze(project_path)
 
-    # Should still analyze the project successfully with config
-    assert result.language_info.primary == "python"  # Actual detected language
+    # Override should take effect over detected language
+    assert result.language_info.primary == "typescript"
+    assert result.language_info.confidence == 100.0
     assert result.analysis_confidence >= 50
 
 
