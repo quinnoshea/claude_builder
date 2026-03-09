@@ -90,7 +90,7 @@ rich==14.3.3
     # via claude-builder (pyproject.toml)
 secretstorage==3.4.1
     # via keyring
-smmap==5.0.2
+smmap==5.0.3
     # via gitdb
 toml==0.10.2
     # via claude-builder (pyproject.toml)
