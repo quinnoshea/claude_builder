@@ -38,7 +38,7 @@ jobs:
           BRANCH: ${{ github.event.inputs.branch }}
         run: |
           set -e
-          org=quinnoshea
+          org=bloqaudio
           repo=claude_builder
           cursor=""
           page=1

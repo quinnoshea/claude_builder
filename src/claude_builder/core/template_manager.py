@@ -338,10 +338,10 @@ class ModernTemplateManager:
 
     # Public attributes expected by tests for discovery
     official_repository: str = (
-        "https://raw.githubusercontent.com/quinnoshea/claude-builder-templates/main/"
+        "https://raw.githubusercontent.com/bloqaudio/claude-builder-templates/main/"
     )
     community_sources: List[str] = [
-        "https://raw.githubusercontent.com/quinnoshea/claude-builder-community/main/"
+        "https://raw.githubusercontent.com/bloqaudio/claude-builder-community/main/"
     ]
 
     def _fetch_templates_from_source(self, source_url: str) -> List[CommunityTemplate]:

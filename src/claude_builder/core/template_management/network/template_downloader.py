@@ -210,7 +210,7 @@ class TemplateRepositoryClient:
     def __init__(
         self,
         downloader: Optional[TemplateDownloader] = None,
-        official_repository: str = "https://raw.githubusercontent.com/quinnoshea/claude-builder-templates/main/",
+        official_repository: str = "https://raw.githubusercontent.com/bloqaudio/claude-builder-templates/main/",
         community_sources: Optional[List[str]] = None,
     ):
         """Initialize repository client.
@@ -223,7 +223,7 @@ class TemplateRepositoryClient:
         self.downloader = downloader or TemplateDownloader()
         self.official_repository = official_repository
         self.community_sources = community_sources or [
-            "https://raw.githubusercontent.com/quinnoshea/claude-builder-community/main/"
+            "https://raw.githubusercontent.com/bloqaudio/claude-builder-community/main/"
         ]
         self.logger = logging.getLogger(__name__)
 

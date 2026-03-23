@@ -14,9 +14,9 @@ updates:
       timezone: "America/New_York"
     open-pull-requests-limit: 10
     reviewers:
-      - "quinnoshea"
+      - "bloqaudio"
     assignees:
-      - "quinnoshea"
+      - "bloqaudio"
     commit-message:
       prefix: "deps"
       include: "scope"
@@ -47,9 +47,9 @@ updates:
       timezone: "America/New_York"
     open-pull-requests-limit: 5
     reviewers:
-      - "quinnoshea"
+      - "bloqaudio"
     assignees:
-      - "quinnoshea"
+      - "bloqaudio"
     commit-message:
       prefix: "ci"
       include: "scope"

@@ -77,10 +77,10 @@ test = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/quinnoshea/claude_builder"
-Repository = "https://github.com/quinnoshea/claude_builder"
-Documentation = "https://github.com/quinnoshea/claude_builder#readme"
-Issues = "https://github.com/quinnoshea/claude_builder/issues"
+Homepage = "https://github.com/bloqaudio/claude_builder"
+Repository = "https://github.com/bloqaudio/claude_builder"
+Documentation = "https://github.com/bloqaudio/claude_builder#readme"
+Issues = "https://github.com/bloqaudio/claude_builder/issues"
 
 [project.scripts]
 claude-builder = "claude_builder.cli.main:main"

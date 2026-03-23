@@ -3,15 +3,15 @@
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![codecov](https://codecov.io/gh/quinnoshea/claude_builder/branch/main/graph/badge.svg)](https://codecov.io/gh/quinnoshea/claude_builder)
-[![Development Status](https://img.shields.io/badge/status-alpha-yellow.svg)](https://github.com/quinnoshea/claude_builder)
-[![CI](https://github.com/quinnoshea/claude_builder/workflows/CI/badge.svg)](https://github.com/quinnoshea/claude_builder/actions)
-[![Codacy Badge](https://app.codacy.com/project/badge/Coverage/c0920529ab54462387f217498a4e01db)](https://app.codacy.com/gh/quinnoshea/claude_builder/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_coverage)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/c0920529ab54462387f217498a4e01db)](https://app.codacy.com/gh/quinnoshea/claude_builder/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
-[![GitHub stars](https://img.shields.io/github/stars/quinnoshea/claude_builder.svg)](https://github.com/quinnoshea/claude_builder/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/quinnoshea/claude_builder.svg)](https://github.com/quinnoshea/claude_builder/network)
-[![GitHub issues](https://img.shields.io/github/issues/quinnoshea/claude_builder.svg)](https://github.com/quinnoshea/claude_builder/issues)
-[![Last Commit](https://img.shields.io/github/last-commit/quinnoshea/claude_builder.svg)](https://github.com/quinnoshea/claude_builder/commits/main)
+[![codecov](https://codecov.io/gh/bloqaudio/claude_builder/branch/main/graph/badge.svg)](https://codecov.io/gh/bloqaudio/claude_builder)
+[![Development Status](https://img.shields.io/badge/status-alpha-yellow.svg)](https://github.com/bloqaudio/claude_builder)
+[![CI](https://github.com/bloqaudio/claude_builder/workflows/CI/badge.svg)](https://github.com/bloqaudio/claude_builder/actions)
+[![Codacy Badge](https://app.codacy.com/project/badge/Coverage/c0920529ab54462387f217498a4e01db)](https://app.codacy.com/gh/bloqaudio/claude_builder/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_coverage)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/c0920529ab54462387f217498a4e01db)](https://app.codacy.com/gh/bloqaudio/claude_builder/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+[![GitHub stars](https://img.shields.io/github/stars/bloqaudio/claude_builder.svg)](https://github.com/bloqaudio/claude_builder/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/bloqaudio/claude_builder.svg)](https://github.com/bloqaudio/claude_builder/network)
+[![GitHub issues](https://img.shields.io/github/issues/bloqaudio/claude_builder.svg)](https://github.com/bloqaudio/claude_builder/issues)
+[![Last Commit](https://img.shields.io/github/last-commit/bloqaudio/claude_builder.svg)](https://github.com/bloqaudio/claude_builder/commits/main)
 
 > **Analyzes your project and generates tailored Claude Code development environments
 > with intelligent agent selection and project-specific guidance.**
@@ -761,7 +761,7 @@ workflow automation
 
 ```bash
 # Set up development environment
-git clone https://github.com/quinnoshea/claude_builder.git
+git clone https://github.com/bloqaudio/claude_builder.git
 cd claude_builder
 uv pip install -e ".[dev]"
 pre-commit install
@@ -972,10 +972,10 @@ claude-builder generate complete /your/project --target gemini
 
 **Interested in contributing or trying it out?**
 
-[⭐ Star this repository](https://github.com/quinnoshea/claude_builder) |
+[⭐ Star this repository](https://github.com/bloqaudio/claude_builder) |
 [🚀 Quick start](#-quick-start) |
 [🤝 Contribute](#-contributing--community) |
-[💬 Discussions](https://github.com/quinnoshea/claude_builder/discussions)
+[💬 Discussions](https://github.com/bloqaudio/claude_builder/discussions)
 
 ---
 

@@ -461,9 +461,11 @@ class TemplateManager:
         self.templates: Dict[str, Any] = {}  # Template cache for test compatibility
 
         # Community template sources
-        self.official_repository = "https://raw.githubusercontent.com/quinnoshea/claude-builder-templates/main/"
+        self.official_repository = (
+            "https://raw.githubusercontent.com/bloqaudio/claude-builder-templates/main/"
+        )
         self.community_sources = [
-            "https://raw.githubusercontent.com/quinnoshea/claude-builder-community/main/"
+            "https://raw.githubusercontent.com/bloqaudio/claude-builder-community/main/"
         ]
 
     def list_available_templates(
